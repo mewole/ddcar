@@ -73,13 +73,26 @@
 			},             
 			success: function(data){  
 				EasyLoading.hide();			          
-				var obj = jQuery.parseJSON(data);              
-				if(obj.length > 0){				           
+				var obj;
+				try {
+					obj = (typeof data === "object") ? data : jQuery.parseJSON(data);
+				} catch(e) {
+					console.error("Parse JSON error in brand load:", e, data);
+					obj = null;
+				}
+				if(obj && obj.length > 0){
+					if(obj[obj.length - 1] === "last node"){
+						obj.pop();
+					}
+					obj.sort(function(a, b) {
+						var titleA = (a && a.title) ? String(a.title).trim() : "";
+						var titleB = (b && b.title) ? String(b.title).trim() : "";
+						return titleA.localeCompare(titleB, 'en', { numeric: true, sensitivity: 'base' });
+					});
 					$.each(obj, function(i, field){
-						if(obj.length-1 > i){
-							text_html = "<h3 class='brand' onclick='showsub(\""+obj[i].title+"\",1)'>"+obj[i].title+"</h3>";
-							$("#col-brand").append(text_html);							
-						}                                                 
+						var escapedTitle = String(obj[i].title || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+						text_html = "<h3 class='brand' onclick='showsub(\""+escapedTitle+"\",1)'>"+obj[i].title+"</h3>";
+						$("#col-brand").append(text_html);							
 					});               
 				}                               
 				                          
@@ -155,7 +168,9 @@
 		$("#append-prod").empty();
 		//$("#append-title").append('<h5 id="'+arg+'" onclick="page_back(\''+arg+'\')" class="prod-title">'+arg+'</h5>');
     	// ลองแก้เป็นแบบนี้ดู
-		$('#st').append('<span id="'+arg+'" onclick="page_back(\''+arg+'\')">  '+arg+'  >></span><span>');		
+		var safeId = String(arg).replace(/"/g, '&quot;');
+		var safeArg = String(arg).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+		$('#st').append('<span id="'+safeId+'" onclick="page_back(\''+safeArg+'\')">  '+arg+'  >></span>');		
 		p = 0;
 		$.ajax({
 			type: "POST",
@@ -172,96 +187,95 @@
 				EasyLoading.hide();
 				$('#col-prod').prop('hidden',false);				
 				if(data != "last node"){					
-					var obj = jQuery.parseJSON(data);
-					//console.log(obj)					         
-					if(obj[obj.length-1] == "last node"){
-						$("#append-prod").append('<h5 id="head-prod" class="prod-even">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="sort_prod(\''+parent+'\',\'code\')">รหัสสินค้า</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a  onclick="sort_prod(\''+parent+'\',\'name\')">ชื่อสินค้า</a></h5>');
+					var obj;
+					try {
+						obj = (typeof data === "object") ? data : jQuery.parseJSON(data);
+					} catch(e) {
+						console.error("Parse JSON error:", e, data);
+						obj = null;
+					}
+					if(!obj || obj.length === 0){
+						last_node = 2;
+						return;
+					}
+					var isLastNode = (obj[obj.length-1] === "last node");
+					if(isLastNode){
+						obj.pop();
+						var escapedParent = String(parent || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+						$("#append-prod").append('<h5 id="head-prod" class="prod-even">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="sort_prod(\''+escapedParent+'\',\'code\')">รหัสสินค้า</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="sort_prod(\''+escapedParent+'\',\'name\')">ชื่อสินค้า</a></h5>');
 						if(order_wat == "code"){
 							if(order_code == "ASC"){
 								obj.sort(function(a,b) {
-									if ( a.prod_code < b.prod_code)
-										return -1;
-									if ( a.prod_code > b.prod_code)
-										return 1;
-									return 0;
-								} );
-								order_code="DESC"
+									var codeA = (a && a.prod_code) ? String(a.prod_code) : "";
+									var codeB = (b && b.prod_code) ? String(b.prod_code) : "";
+									return codeA.localeCompare(codeB, undefined, { numeric: true });
+								});
+								order_code="DESC";
 							}else if(order_code == "DESC"){
 								obj.sort(function(a,b) {
-									if ( a.prod_code > b.prod_code)
-										return -1;
-									if ( a.prod_code < b.prod_code)
-										return 1;
-									return 0;
-								} );
-								order_code="ASC"
+									var codeA = (a && a.prod_code) ? String(a.prod_code) : "";
+									var codeB = (b && b.prod_code) ? String(b.prod_code) : "";
+									return codeB.localeCompare(codeA, undefined, { numeric: true });
+								});
+								order_code="ASC";
 							}							
 						}else if(order_wat == "name"){
 							if(order_name == "ASC"){
 								obj.sort(function(a,b) {
-									if ( a.prod_name < b.prod_name)
-										return -1;
-									if ( a.prod_name > b.prod_name)
-										return 1;
-									return 0;
-								} );
-								order_name="DESC"
+									var nameA = (a && a.prod_name) ? String(a.prod_name) : "";
+									var nameB = (b && b.prod_name) ? String(b.prod_name) : "";
+									return nameA.localeCompare(nameB, 'th', { numeric: true, sensitivity: 'base' });
+								});
+								order_name="DESC";
 							}else if(order_name == "DESC"){
 								obj.sort(function(a,b) {
-									if ( a.prod_name > b.prod_name)
-										return -1;
-									if ( a.prod_name < b.prod_name)
-										return 1;
-									return 0;
-								} );
-								order_name="ASC"
+									var nameA = (a && a.prod_name) ? String(a.prod_name) : "";
+									var nameB = (b && b.prod_name) ? String(b.prod_name) : "";
+									return nameB.localeCompare(nameA, 'th', { numeric: true, sensitivity: 'base' });
+								});
+								order_name="ASC";
 							}			
 						}else{
 							obj.sort(function(a,b) {
-									if ( a.prod_code < b.prod_code)
-										return -1;
-									if ( a.prod_code > b.prod_code)
-										return 1;
-									return 0;
-								} );
-							order_code="DESC"
+								var codeA = (a && a.prod_code) ? String(a.prod_code) : "";
+								var codeB = (b && b.prod_code) ? String(b.prod_code) : "";
+								return codeA.localeCompare(codeB, undefined, { numeric: true });
+							});
+							order_code="DESC";
 						}
 						
-					$.each(obj, function(i, field){					
-						if(obj.length-1 > i){
-							if(i % 2 == 0){
-								text_html = '<h5 id="prod-'+p+'" class="prod-odd" rel="popover" data-img="'+obj[i].img+'" onclick="choose('+p+')"><span id="id-'+p+'" hidden>'+obj[i].prod_id+'</span><input type="checkbox"><span id="span-code-'+p+'">'+obj[i].prod_code+'</span>&nbsp;&nbsp;&nbsp;&nbsp;<span id="span-name-'+p+'">'+obj[i].prod_name+'</span><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i><i class="fas fa-info-circle i-modal" data-toggle="modal" data-target="#detailModal" onclick="hideclick('+p+');"></i></h5>';
-							}else{
-								text_html = '<h5 id="prod-'+p+'" class="prod-even" rel="popover" data-img="'+obj[i].img+'" onclick="choose('+p+')"><span  id="id-'+p+'" hidden>'+obj[i].prod_id+'</span><input type="checkbox"><span id="span-code-'+p+'">'+obj[i].prod_code+'</span>&nbsp;&nbsp;&nbsp;&nbsp;<span id="span-name-'+p+'">'+obj[i].prod_name+'</span><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i><i class="fas fa-info-circle i-modal" data-toggle="modal" data-target="#detailModal" onclick="hideclick('+p+');"></i></h5>';
-							} 							 
-							                  
-						$("#append-prod").append(text_html + "<script>" +
-							"$('#prod-"+p+"[rel=popover]').popover({" +
-							"html: true," +
-							"trigger: 'hover'," +
-							"placement: 'left'," +
-							"content: function(){" +
-							"return '<img src='+$(this).data('img')+'>';}" +
-							"});" +
-						"</" + "script>");
-						 p++                  
-						}                                                 
-					});  
-					last_node = 1                                                              
+						$.each(obj, function(i, field){					
+							var cls = (i % 2 === 0) ? "prod-odd" : "prod-even";
+							text_html = '<h5 id="prod-'+p+'" class="'+cls+'" rel="popover" data-img="'+obj[i].img+'" onclick="choose('+p+')"><span id="id-'+p+'" hidden>'+obj[i].prod_id+'</span><input type="checkbox"><span id="span-code-'+p+'">'+obj[i].prod_code+'</span>&nbsp;&nbsp;&nbsp;&nbsp;<span id="span-name-'+p+'">'+obj[i].prod_name+'</span><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i><i class="fas fa-info-circle i-modal" data-toggle="modal" data-target="#detailModal" onclick="hideclick('+p+');"></i></h5>';
+							$("#append-prod").append(text_html + "<script>" +
+								"$('#prod-"+p+"[rel=popover]').popover({" +
+								"html: true," +
+								"trigger: 'hover'," +
+								"placement: 'left'," +
+								"content: function(){" +
+								"return '<img src='+$(this).data('img')+'>';}" +
+								"});" +
+							"</" + "script>");
+							p++;
+						});  
+						last_node = 1;
 					}else{
 						order_code="ASC";
 						order_name="ASC";
+						// Sort subfolders alphabetically with support for English & Thai
+						obj.sort(function(a, b) {
+							var titleA = (a && a.title) ? String(a.title).trim() : "";
+							var titleB = (b && b.title) ? String(b.title).trim() : "";
+							var res = titleA.localeCompare(titleB, 'en', { numeric: true, sensitivity: 'base' });
+							return (order_by === "DESC") ? -res : res;
+						});
 						$.each(obj, function(i, field){
-							if(obj.length-1 > i){
-								if(i % 2 == 0){
-									text_html = '<h5 class="prod-odd list" onclick="showsub(\''+obj[i].title+'\')"><i class="fas fa-folder"></i>'+ obj[i].title +'<i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i></h5>';
-								}else{
-									text_html = '<h5 class="prod-even list" onclick="showsub(\''+obj[i].title+'\')"><i class="fas fa-folder"></i>'+ obj[i].title +'<i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i></h5>';
-								}
-								$("#append-prod").append(text_html);							
-							}                                                 
+							var escapedTitle = String(obj[i].title || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+							var cls = (i % 2 === 0) ? "prod-odd list" : "prod-even list";
+							text_html = '<h5 class="'+cls+'" data-title="'+escapedTitle+'" onclick="showsub(\''+escapedTitle+'\')"><i class="fas fa-folder"></i>'+ obj[i].title +'<i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i></h5>';
+							$("#append-prod").append(text_html);							
 						});  
-						last_node = 0             
+						last_node = 0;             
 					}
 				}else{				
 					last_node = 2;
@@ -314,22 +328,23 @@
 
 	function sort_prod(arg,type){
 		var retrievedObject = localStorage.getItem('stack_folder');
-		var arr_data = JSON.parse(retrievedObject); 	
-		var element = document.getElementById(arr_data[arr_data.length-1]);
-		$(element).remove();				
-		arr_data.splice(arr_data.length-1,1);
-		localStorage.setItem('stack_folder', JSON.stringify(arr_data));		
+		var arr_data = retrievedObject ? JSON.parse(retrievedObject) : []; 	
+		if(arr_data.length > 0){
+			var element = document.getElementById(arr_data[arr_data.length-1]);
+			if(element) $(element).remove();				
+			arr_data.splice(arr_data.length-1,1);
+			localStorage.setItem('stack_folder', JSON.stringify(arr_data));		
+		}
 		showsub(arg,"",type);
 	}
 
 	function page_back(arg){
 		var retrievedObject = localStorage.getItem('stack_folder');
-		var arr_data = JSON.parse(retrievedObject); 
+		var arr_data = retrievedObject ? JSON.parse(retrievedObject) : []; 
 		if(arg){
 			for(var i = 1 ; i <= arr_data.length ; i++){
 				var element = document.getElementById(arr_data[arr_data.length-i]);
-				$(element).remove();
-				// $('#'+arr_data[arr_data.length-i]).remove();				
+				if(element) $(element).remove();				
 				if(arr_data[arr_data.length-i] == arg){
 					if(i == 1){
 						if(order_by == "ASC"){
@@ -345,15 +360,16 @@
 			localStorage.setItem('stack_folder', JSON.stringify(arr_data));  
 			showsub(arg);
 		}else{
-			for(var i = 1 ; i <= 2 ; i++){	
-				var element = document.getElementById(arr_data[arr_data.length-i]);
-				$(element).remove();
-				//$("span[id="+arr_data[arr_data.length-i]+"]").remove();
+			if(arr_data.length >= 2){
+				for(var i = 1 ; i <= 2 ; i++){	
+					var element = document.getElementById(arr_data[arr_data.length-i]);
+					if(element) $(element).remove();
+				}
+				var data = arr_data[arr_data.length-2];		
+				arr_data.splice(arr_data.length-2,2);
+				localStorage.setItem('stack_folder', JSON.stringify(arr_data));  
+				showsub(data);	
 			}
-			var data = arr_data[arr_data.length-2];		
-			arr_data.splice(arr_data.length-2,2);
-			localStorage.setItem('stack_folder', JSON.stringify(arr_data));  
-			showsub(data);	
 		}
 			
 	}   
@@ -767,9 +783,10 @@
 
   	function delspcfprod(arg){
 		if(last_node == 0){
+			var folderName = (arg && typeof arg.data === 'function' && arg.data('title')) ? arg.data('title') : arg.text();
 			$.confirm({
 			icon: 'fa fa-warning',
-				title: 'คุณต้องการลบ '+arg.text(),
+				title: 'คุณต้องการลบ '+folderName,
 				content: 'ต้องการลบออกจากรายการ!',
 				buttons: {
 					danger: {
@@ -779,7 +796,7 @@
 							$.ajax({
 								type: "POST",
 								url:"php/delete_folder.php",           
-								data: {'title' : arg.text()},               
+								data: {'title' : folderName},               
 								beforeSend: function(){
 									EasyLoading.show({                           
 										text: "กำลังโหลด"                            
@@ -874,16 +891,20 @@
   			$("input[type='checkbox']").prop('disabled', false);
   			for(var j = 0; j < p; j++){
   			  	$("#prod-"+j).attr('onclick', 'choose('+j+')');
-			  }
-			  $(".list").attr('onclick', 'showsub($(this).text())');
+			}
+			$(".list").each(function(){
+				var t = $(this).data('title') || $(this).text().trim();
+				var safeT = String(t).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+				$(this).attr('onclick', 'showsub(\'' + safeT + '\')');
+			});
   			return 0;
   		}
   		$("input[type='checkbox']").prop('disabled', true);
   		$(".i-trash").prop('hidden', false);
   		for(var i = 0; i < p; i++){
   			$("#prod-"+i).attr('onclick', 'delspcfprod('+i+')');
-		  }
-		  $(".list").attr('onclick', 'delspcfprod($(this))');
+		}
+		$(".list").attr('onclick', 'delspcfprod($(this))');
   	}
 
     function editspcfprod(arg){
@@ -893,11 +914,9 @@
 		  
 		if(last_node == 0){
 			arg.addClass('invis');
-			// prod-id[1];
-			text = arg.text();
-			//arg.text('แก้ไขรายการ : ');
-			//arg.append('<input type="checkbox" hidden>');
-			arg.after('<h5 id="editprod" class="prod-even">แก้ไขรายการ : <input type="text" class="form-control" style="margin: 0; margin-top: 2px; margin-bottom: 10px; font-size: 1em; width: 70%;" value="'+text+'"><div class="row" style="padding-left: 2%;"><button class="btn btn-primary" style="margin-right: 10px;" onclick="editprodconfirm(\''+text+'\')">บันทึกแก้ไข</button><button class="btn btn-danger" onclick="editprodcancle(\''+text+'\');">ยกเลิก</button></div></h5>');
+			var text = (arg && typeof arg.data === 'function' && arg.data('title')) ? arg.data('title') : arg.text().trim();
+			var safeText = String(text).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+			arg.after('<h5 id="editprod" class="prod-even">แก้ไขรายการ : <input type="text" class="form-control" style="margin: 0; margin-top: 2px; margin-bottom: 10px; font-size: 1em; width: 70%;" value="'+safeText+'"><div class="row" style="padding-left: 2%;"><button class="btn btn-primary" style="margin-right: 10px;" onclick="editprodconfirm(\''+safeText+'\')">บันทึกแก้ไข</button><button class="btn btn-danger" onclick="editprodcancle(\''+safeText+'\');">ยกเลิก</button></div></h5>');
 			arg.prop('hidden', true);
 		}else if(last_node == 1){		
 			name = $("#span-name-"+arg).text();			
@@ -932,8 +951,10 @@
 					EasyLoading.hide();       
 					if(data == "success"){					                    
 						$("#editprod").remove();
+						$(".invis").data('title', text);
+						var safeText = String(text).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+						$(".invis").attr('onclick', 'showsub(\'' + safeText + '\')');
 						$(".invis").text(text);
-						// $("#"+arg2).text(text);			
 					
 						$(".invis").prepend('<i class="fas fa-folder"></i>');
 						
@@ -1023,11 +1044,6 @@
 							if(b64){
 								$('#prod-'+arg).data('img', b64);
 							}							
-							// $("#"+arg2).text(text);
-							
-							//$("#prod-"+arg).prepend('<input type="checkbox" disabled>');
-						
-							//$("#prod-"+arg).append('<i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit"></i>');
 							$("#prod-"+arg).prop('hidden', false);						
 						}else{
 							$.confirm({
@@ -1054,6 +1070,9 @@
   	function editprodcancle(old_name,code,arg){		  
 		  if(last_node == 0){
 			$("#editprod").remove();
+			$(".invis").data('title', old_name);
+			var safeOld = String(old_name).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+			$(".invis").attr('onclick', 'showsub(\'' + safeOld + '\')');
 			$(".invis").text(old_name);
 			$(".invis").prepend('<i class="fas fa-folder"></i>');
 			$(".invis").append('<i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit"></i>');
@@ -1063,8 +1082,6 @@
 			$("#newprod-"+arg).remove();
 			$("#span-name-"+arg).text(old_name);
 			$("#span-code-"+arg).text(code);		
-			//$("#prod-"+arg).prepend('<input type="checkbox" disabled>');		
-			//$("#prod-"+arg).append('<i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit"></i>');
 			$("#prod-"+arg).prop('hidden', false);
 		  } 
   	}
@@ -1075,8 +1092,12 @@
   			$("input[type='checkbox']").prop('disabled', false);
   			for(var j = 0; j < p; j++){
   			  	$("#prod-"+j).attr('onclick', 'choose('+j+')');
-			  }
-			  $(".list").attr('onclick', 'showsub($(this).text())');
+			}
+			$(".list").each(function(){
+				var t = $(this).data('title') || $(this).text().trim();
+				var safeT = String(t).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+				$(this).attr('onclick', 'showsub(\'' + safeT + '\')');
+			});
   			return 0;
   		}
   		$("input[type='checkbox']").prop('disabled', true);

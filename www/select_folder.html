@@ -91,8 +91,20 @@
                 }                  
               }           
             }else{           
-              var obj = jQuery.parseJSON(data);              
-              if(obj[obj.length-1] == "last node"){
+              var obj;
+              try {
+                obj = (typeof data === "object") ? data : jQuery.parseJSON(data);
+              } catch(e) {
+                console.error("Parse JSON error in select_folder:", e, data);
+                obj = null;
+              }
+              if(!obj || obj.length === 0){
+                last_node = 2;
+                return;
+              }
+              var isLastNode = (obj[obj.length-1] === "last node");
+              if(isLastNode){
+                obj.pop();
                 // case last node have product                    
                   if(from == "add"){
                     $("#navs-bttm").prop("hidden", false);
@@ -103,14 +115,11 @@
                     }                                      
                   } 
                   obj.sort(function(a,b) {
-                    if ( a.prod_code < b.prod_code)
-                      return -1;
-                    if ( a.prod_code > b.prod_code)
-                      return 1;
-                    return 0;
-                  } );			
+                    var codeA = (a && a.prod_code) ? String(a.prod_code) : "";
+                    var codeB = (b && b.prod_code) ? String(b.prod_code) : "";
+                    return codeA.localeCompare(codeB, undefined, { numeric: true });
+                  });			
                   $.each(obj, function(i, field){
-                    if(obj.length-1 > i){
                       text_html = "<div id='row-title-"+i+"' class='row'>" +
                         "<span id='span-"+i+"' hidden>" + obj[i].prod_id + "</span>" +
                         "<div class='col-2 text-center'><i id='box-"+i+"' class='far fa-check-square six box' onclick='check("+i+")' hidden></i><i class='fa fa-trash-alt i-trash' onclick='remove("+i+")' style='color: #666;' hidden></i><i class='fa fa-edit i-edit' onclick='edit("+i+")' style='color: #666;' hidden></i></div>" +                        
@@ -122,26 +131,29 @@
                         "<hr id='hr-"+i+"'>";
                       $("#in-ctn").append(text_html);
                       index = i;
-                      }                                                 
-                    });
-                    last_node = 1;                                                 
+                  });
+                  last_node = 1;                                                 
               }else{
                 // case have folder 
                 if(from == "add"){
                   $("#navs-bttm").prop("hidden", false);
-                }                
+                }
+                obj.sort(function(a, b) {
+                  var titleA = (a && a.title) ? String(a.title).trim() : "";
+                  var titleB = (b && b.title) ? String(b.title).trim() : "";
+                  return titleA.localeCompare(titleB, 'en', { numeric: true, sensitivity: 'base' });
+                });                
                 $.each(obj, function(i, field){
-                if(obj.length-1 > i){
+                  var safeTitle = String(obj[i].title || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
                   text_html = "<div id='row-title-"+i+"' class='row'>" +
                     "<span id='span-"+i+"' hidden>" + obj[i].title + "</span>" +
                     "<div class='col-2'><i class='fa fa-trash-alt i-trash' onclick='remove("+i+")' style='color: #666;' hidden></i><i class='fa fa-edit i-edit' onclick='edit("+i+")' style='color: #666;' hidden></i></div>" +
-                    "<div id='getin-"+i+"' class='col-8 text-center title' onclick='getIn(\"" + obj[i].title + "\")'>" +
+                    "<div id='getin-"+i+"' class='col-8 text-center title' onclick='getIn(\"" + safeTitle + "\")'>" +
                     "<h5 id='title-"+i+"'>" + obj[i].title + "</h5></div>" +
                     "<div class='col-2'></div>" +
                     "</div ><hr id='hr-"+i+"'>";
                   $("#in-ctn").append(text_html);
                   index = i;
-                  }                                                 
                 });               
               }                               
             }                          

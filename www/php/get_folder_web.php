@@ -20,7 +20,7 @@
             FROM tree AS node
             LEFT JOIN product AS p ON p.prod_id = node.title 
             WHERE node.parent_title = '$parent'
-            ORDER BY node.lft $order_by;";
+            ORDER BY node.title $order_by;";
 
     $result = mysqli_query($conn, $sql); 
   
