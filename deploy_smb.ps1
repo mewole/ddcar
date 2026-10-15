@@ -25,6 +25,7 @@ $files = @(
     "js\navbar.js",
     "js\scanqr.js",
     "css\untitled.css",
+    "css\web_folder.css",
     "php\folder_helper.php",
     "php\get_folder_web.php",
     "php\get_folder.php",

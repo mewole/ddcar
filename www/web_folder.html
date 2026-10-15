@@ -7,7 +7,7 @@
 	<meta name="description" content="">
 	<meta name="author" content="">
 
-	<title>หมวดหมู่สินค้า</title>
+	<title>หมวดหมู่สินค้า - DD MOTOR SPORT</title>
 
 	<!-- Bootstrap Import -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
@@ -34,22 +34,7 @@
 	<!-- Main -->
 	<link href="css/untitled.css" rel="stylesheet">
 	<link href="css/web_folder.css" rel="stylesheet">
-
-	<style>
-		.i-trash{
-  		float: right; margin-right: 10%; color: white;
-  	}
-  	.i-edit{
-  		float: right; margin-right: 6%; color: white;
-  	}
-	.i-modal{
-		float: right; margin-right: 6%; color: white; padding-top: 2px;
-	}
-	img{
-		height: 200px;
-		width: 200px;
-	}
-  </style>
+</head>
 
 	<script>
 		arr_prod = [];
@@ -61,6 +46,42 @@
 		localStorage.stack_folder = "";
 		url = new URL(window.location.href);		
 		from = url.searchParams.get("from");
+
+		// Context banner when navigating from POS, stock, etc.
+		if (from) {
+			var fromMeta = {
+				'stock': { name: 'เช็คสต๊อกสินค้า', url: 'web_stock.html', icon: 'fa-boxes' },
+				'sale': { name: 'ขายสินค้า (POS)', url: 'web_sale.html', icon: 'fa-shopping-cart' },
+				'import': { name: 'นำสินค้าเข้า', url: 'web_import.html', icon: 'fa-arrow-down' },
+				'export': { name: 'สินค้าออกโกดัง', url: 'web_export.html', icon: 'fa-arrow-up' },
+				'transfer': { name: 'โอนย้ายสินค้า', url: 'web_transfer_in.html', icon: 'fa-exchange-alt' },
+				'qr': { name: 'พิมพ์คิวอาร์โค้ด', url: 'web_qrprint.html', icon: 'fa-qrcode' }
+			};
+			var meta = fromMeta[from] || { name: from, url: 'javascript:history.back()', icon: 'fa-folder' };
+			$('#context-banner').html(
+				'<div class="from-context-title">' +
+					'<i class="fas ' + meta.icon + ' text-dark mr-1"></i>' +
+					'กำลังเลือกสินค้าสำหรับ: <span class="badge-context">' + meta.name + '</span>' +
+				'</div>' +
+				'<a href="' + meta.url + '" class="btn-context-back">' +
+					'<i class="fas fa-chevron-left mr-1"></i> ย้อนกลับไป' + meta.name +
+				'</a>'
+			).show();
+		}
+
+		// Real-time Brand quick search filter
+		$(document).on('input', '#brand-filter', function() {
+			var q = $(this).val().toLowerCase().trim();
+			$('.brand').each(function() {
+				var t = $(this).text().toLowerCase();
+				if (t.indexOf(q) !== -1) {
+					$(this).show();
+				} else {
+					$(this).hide();
+				}
+			});
+		});
+
 		$.ajax({
 			type: "POST",
 			url:"php/get_folder.php",
@@ -109,6 +130,17 @@
 
 	function next(){
 	  if(num_prod == 0){
+		  $.confirm({
+			  title: 'แจ้งเตือน',
+			  content: 'กรุณาเลือกสินค้าอย่างน้อย 1 รายการก่อนดำเนินการต่อ',
+			  backgroundDismiss: true,
+			  buttons: {
+				  ok: {
+					  text: 'ตกลง',
+					  btnClass: 'btn-dark'
+				  }
+			  }
+		  });
 		  return 0;
 	  }
 	  json = [];
@@ -149,7 +181,26 @@
 		if(arg2){		
 			$(".prod-title").empty();
 			localStorage.stack_folder = "";
-			$('.prod-title').append('<span id="st"><i id="i-back" onclick="page_back();" class="fas fa-angle-left" hidden></i></span>&emsp;<i class="fas fa-trash" style="float: right; margin-right: 1.5%;" onclick="removeprod();"></i><i class="fas fa-pen" style="float: right; margin-right: 1.5%;" onclick="editprod();"></i><i id="i-prod-add" class="fas fa-plus-circle" style="float: right; margin-right: 1.5%;" onclick="addprod()"></i>');
+			$('.prod-title').append(
+				'<div id="st">' +
+					'<span id="i-back" onclick="page_back();" title="ย้อนกลับ" hidden><i class="fas fa-angle-left"></i></span>' +
+				'</div>' +
+				'<div class="d-flex align-items-center ml-auto">' +
+					'<i id="i-prod-add" class="fas fa-plus-circle" title="เพิ่มรายการ/สินค้า" onclick="addprod()"></i>' +
+					'<i class="fas fa-pen" title="แก้ไขรายการ" onclick="editprod();"></i>' +
+					'<i class="fas fa-trash" title="ลบรายการ" onclick="removeprod();"></i>' +
+				'</div>'
+			);
+
+			$('.brand').removeClass('active-brand');
+			$('.brand').filter(function() {
+				return $(this).text().trim() === String(arg).trim();
+			}).addClass('active-brand');
+
+			$('#prod-empty-state').hide();
+			$('#col-prod').prop('hidden', false);
+			$('.prod-title').show();
+			$('#append-prod').show();
 		}
 		if(localStorage.stack_folder){
 			var retrievedObject = localStorage.getItem('stack_folder');
@@ -166,11 +217,10 @@
 		arr_data.push(arg); 
 		localStorage.setItem('stack_folder', JSON.stringify(arr_data));		
 		$("#append-prod").empty();
-		//$("#append-title").append('<h5 id="'+arg+'" onclick="page_back(\''+arg+'\')" class="prod-title">'+arg+'</h5>');
-    	// ลองแก้เป็นแบบนี้ดู
+
 		var safeId = String(arg).replace(/"/g, '&quot;');
 		var safeArg = String(arg).replace(/'/g, "\\'").replace(/"/g, "&quot;");
-		$('#st').append('<span id="'+safeId+'" onclick="page_back(\''+safeArg+'\')">  '+arg+'  >></span>');		
+		$('#st').append('<span id="'+safeId+'" onclick="page_back(\''+safeArg+'\')"><i class="fas fa-folder mr-1 text-warning"></i>'+arg+'</span>');		
 		p = 0;
 		$.ajax({
 			type: "POST",
@@ -202,7 +252,15 @@
 					if(isLastNode){
 						obj.pop();
 						var escapedParent = String(parent || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
-						$("#append-prod").append('<h5 id="head-prod" class="prod-even">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="sort_prod(\''+escapedParent+'\',\'code\')">รหัสสินค้า</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="sort_prod(\''+escapedParent+'\',\'name\')">ชื่อสินค้า</a></h5>');
+						$("#append-prod").append(
+							'<div id="head-prod">' +
+								'<span style="width: 32px;"></span>' +
+								'<a onclick="sort_prod(\''+escapedParent+'\',\'code\')"><i class="fas fa-sort text-muted mr-1"></i>รหัสสินค้า</a>' +
+								'<span style="margin: 0 16px;"></span>' +
+								'<a onclick="sort_prod(\''+escapedParent+'\',\'name\')"><i class="fas fa-sort text-muted mr-1"></i>ชื่อสินค้า</a>' +
+								'<span class="ml-auto text-muted d-none d-sm-inline" style="font-size: 0.8rem; font-weight: normal;"><i class="fas fa-info-circle mr-1"></i>คลิกเพื่อเลือก / ชี้เพื่อดูรูป</span>' +
+							'</div>'
+						);
 						if(order_wat == "code"){
 							if(order_code == "ASC"){
 								obj.sort(function(a,b) {
@@ -246,7 +304,7 @@
 						
 						$.each(obj, function(i, field){					
 							var cls = (i % 2 === 0) ? "prod-odd" : "prod-even";
-							text_html = '<h5 id="prod-'+p+'" class="'+cls+'" rel="popover" data-img="'+obj[i].img+'" onclick="choose('+p+')"><span id="id-'+p+'" hidden>'+obj[i].prod_id+'</span><input type="checkbox"><span id="span-code-'+p+'">'+obj[i].prod_code+'</span>&nbsp;&nbsp;&nbsp;&nbsp;<span id="span-name-'+p+'">'+obj[i].prod_name+'</span><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i><i class="fas fa-info-circle i-modal" data-toggle="modal" data-target="#detailModal" onclick="hideclick('+p+');"></i></h5>';
+							text_html = '<h5 id="prod-'+p+'" class="'+cls+'" rel="popover" data-img="'+obj[i].img+'" onclick="choose('+p+')"><span id="id-'+p+'" hidden>'+obj[i].prod_id+'</span><input type="checkbox"><span id="span-code-'+p+'">'+obj[i].prod_code+'</span><span id="span-name-'+p+'">'+obj[i].prod_name+'</span><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i><i class="fas fa-map-marker-alt i-modal" title="ที่อยู่สินค้า (โกดัง/หน้าร้าน)" data-toggle="modal" data-target="#detailModal" onclick="hideclick('+p+');"></i></h5>';
 							$("#append-prod").append(text_html + "<script>" +
 								"$('#prod-"+p+"[rel=popover]').popover({" +
 								"html: true," +
@@ -272,7 +330,7 @@
 						$.each(obj, function(i, field){
 							var escapedTitle = String(obj[i].title || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
 							var cls = (i % 2 === 0) ? "prod-odd list" : "prod-even list";
-							text_html = '<h5 class="'+cls+'" data-title="'+escapedTitle+'" onclick="showsub(\''+escapedTitle+'\')"><i class="fas fa-folder"></i>'+ obj[i].title +'<i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i></h5>';
+							text_html = '<h5 class="'+cls+'" data-title="'+escapedTitle+'" onclick="showsub(\''+escapedTitle+'\')"><i class="fas fa-folder"></i><span>'+ obj[i].title +'</span><i class="fas fa-chevron-right ml-auto text-muted" style="font-size: 0.8rem;"></i><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i></h5>';
 							$("#append-prod").append(text_html);							
 						});  
 						last_node = 0;             
@@ -304,6 +362,7 @@
 			}
 			if(!ch){         
 				arg.prop('checked', true); 
+				$('#prod-'+arg2).addClass('is-checked');
 				item = {};   
 				item ["arg"] = arg2;        
 				item ["prod_id"] = prod_id; 
@@ -311,10 +370,12 @@
 				item ["img"] = img;        
 				arr_prod.push(item); 
 				num_prod++;				
-			$('#btn-next').text("เลือกสินค้า("+num_prod+")");           
+				$('#btn-next').html('<i class="fas fa-check-circle mr-1"></i> ยืนยันเลือกสินค้า ('+num_prod+')');
+				$('#lbl-count').text(num_prod);           
 			}
 		}else if(isenable){
 			arg.prop('checked', false);
+			$('#prod-'+arg2).removeClass('is-checked');
 			for(var i = 0 ; i < arr_prod.length ; i++){
 				if(arr_prod[i].prod_id == prod_id){
 					arr_prod[i].prod_id = 0;
@@ -322,7 +383,8 @@
 				}
 			} 
 			num_prod--;
-			$('#btn-next').text("เลือกสินค้า("+num_prod+")");
+			$('#btn-next').html('<i class="fas fa-check-circle mr-1"></i> ยืนยันเลือกสินค้า ('+num_prod+')');
+			$('#lbl-count').text(num_prod);
 		}
 	}
 
@@ -393,7 +455,7 @@
 				success: function(data){  
 					EasyLoading.hide();
 					if (data == "success") {
-						$("#brand-tools").after('<h3 class="brand" onclick="showsub(\''+brandname+'\',1)">'+brandname+'</h3>');
+						$("#col-brand").append('<h3 class="brand" onclick="showsub(\''+brandname+'\',1)">'+brandname+'</h3>');
 						$(".newbrand").remove();
 						$("#addbrandbtn").remove();
 					} else {
@@ -432,7 +494,7 @@
   		if($(".newbrand").is(":visible")){
   			return 0;
   		}
-  		$("#brand-tools").after('<input type="text" class="form-control text-center newbrand"><div id="addbrandbtn" class="row justify-content-center"><button class="btn btn-sm btn-success" style="margin-right: 10px; color: #fff" onclick="addbrandconfirm();">เพิ่ม</button><button class="btn btn-sm btn-danger" style="color: #fff" onclick="addbrandcancle();">ยกเลิก</button></div>');
+  		$("#brand-tools").after('<input type="text" class="form-control text-center newbrand" placeholder="พิมพ์ชื่อหมวดหมู่..."><div id="addbrandbtn" class="row justify-content-center"><button class="btn btn-sm btn-success" style="margin-right: 10px; color: #fff" onclick="addbrandconfirm();">เพิ่ม</button><button class="btn btn-sm btn-danger" style="color: #fff" onclick="addbrandcancle();">ยกเลิก</button></div>');
   	}
 	
   	function dialogbrandremove(arg){
@@ -764,19 +826,19 @@
 		}
 		
 		if(last_node == 0){
-			$(".prod-title").after('<h5 id="newprod-'+np+'" class="'+cls+'">เพิ่มรายการ : <input type="text" class="form-control" style="margin: 0; margin-top: 2px; margin-bottom: 10px; font-size: 1em; width: 70%;"><div class="row" style="padding-left: 2%;"><button class="btn btn-success" style="margin-right: 10px;" onclick="addprodconfirm('+np+');">เพิ่ม</button><button class="btn btn-danger" onclick="addprodcancle('+np+');">ยกเลิก</button></div></h5>');
+			$(".prod-title").after('<h5 id="newprod-'+np+'" class="'+cls+'">เพิ่มโฟลเดอร์ : <input type="text" class="form-control" style="margin: 0; margin-top: 4px; margin-bottom: 10px; font-size: 0.95rem; width: 70%;" placeholder="ระบุชื่อโฟลเดอร์..."><div class="row" style="padding-left: 2%;"><button class="btn btn-sm btn-success" style="margin-right: 10px;" onclick="addprodconfirm('+np+');">เพิ่ม</button><button class="btn btn-sm btn-danger" onclick="addprodcancle('+np+');">ยกเลิก</button></div></h5>');
 		}else if(last_node == 1){
 			$(".prod-title").after('<h5 id="newprod-'+np+'" class="'+cls+'">เพิ่มสินค้า : <div class="row">'+
-				'<input id="code-'+np+'" placeholder="รหัส" type="text" class="form-control" style="margin: 0; margin-top: 2px; margin-bottom: 10px; margin-right: 2px; font-size: 1em; width: 20%;">'+
-				'<input id="name-'+np+'" placeholder="ชื่อสินค้า" type="text" class="form-control" style="margin: 0; margin-top: 2px; margin-bottom: 10px; margin-right: 2px; font-size: 1em; width: 25%;">'+
-				'<input id="min-'+np+'" placeholder="จำนวนขั้นต่ำ" type="number" class="form-control" style="margin: 0; margin-top: 2px; margin-bottom: 10px; margin-right: 2px; font-size: 1em; width: 15%;">'+					
-				'</div><div class="row" style="padding-left: 2%;"><button class="btn btn-success" style="margin-right: 10px;" onclick="addprodconfirm('+np+');">เพิ่ม</button><button class="btn btn-danger" style="margin-right: 10px;" onclick="addprodcancle('+np+');">ยกเลิก</button>'+
+				'<input id="code-'+np+'" placeholder="รหัสสินค้า" type="text" class="form-control" style="margin: 0; margin-top: 4px; margin-bottom: 10px; margin-right: 4px; font-size: 0.95rem; width: 22%;">'+
+				'<input id="name-'+np+'" placeholder="ชื่อสินค้า" type="text" class="form-control" style="margin: 0; margin-top: 4px; margin-bottom: 10px; margin-right: 4px; font-size: 0.95rem; width: 35%;">'+
+				'<input id="min-'+np+'" placeholder="ขั้นต่ำ" type="number" class="form-control" style="margin: 0; margin-top: 4px; margin-bottom: 10px; margin-right: 4px; font-size: 0.95rem; width: 18%;">'+					
+				'</div><div class="row" style="padding-left: 2%;"><button class="btn btn-sm btn-success" style="margin-right: 10px;" onclick="addprodconfirm('+np+');">เพิ่ม</button><button class="btn btn-sm btn-danger" style="margin-right: 10px;" onclick="addprodcancle('+np+');">ยกเลิก</button>'+
 					'<form id="imageUploadForm" method="post" enctype="multipart/form-data">'+
 						'<input id="fileSelect" onchange="select_img()" type="file" name="file" accept="image/*" rel="popover" data-img="">'+
 					'</form>'+		
 				'</div></h5>');
 		}else if(last_node == 2){
-			$(".prod-title").after('<h5 id="newprod-'+np+'" class="'+cls+'"><div class="row" style="padding-left: 2%;"><button class="btn btn-success" style="margin-right: 10px;" onclick="addF('+np+');">เพิ่มโฟลเดอร์</button><button class="btn btn-primary"  style="margin-right: 10px;" onclick="addP('+np+');">เพิ่มสินค้า</button><button class="btn btn-danger" onclick="addprodcancle('+np+');">ยกเลิก</button></div></h5>');
+			$(".prod-title").after('<h5 id="newprod-'+np+'" class="'+cls+'"><div class="row" style="padding-left: 2%;"><button class="btn btn-sm btn-success" style="margin-right: 10px;" onclick="addF('+np+');">เพิ่มโฟลเดอร์</button><button class="btn btn-sm btn-primary"  style="margin-right: 10px;" onclick="addP('+np+');">เพิ่มสินค้า</button><button class="btn btn-sm btn-danger" onclick="addprodcancle('+np+');">ยกเลิก</button></div></h5>');
 		}
 
   	}
@@ -1382,115 +1444,140 @@
   </script>
 </head>
 
-<body style="overflow: hidden">
-	<div class="container-fullwidth justify-content-center h-100">
-		<div class="row" style="padding-left: 1.5%; padding-right: 1.5%; margin-top: 3%; margin-bottom: 15px; height: 85%;">
-			<div id="col-brand" class="col-md-3 text-center" style="height: 100%; overflow-y: scroll">
-				<h3 id="title-lft" class="folder-title">หมวดหมู่สินค้า</h3>
-				<div id="brand-tools" class="row justify-content-center" style="margin-top: -5%;">
-					<div id="brand-add" class="col-2">
-						<h4><i id="i-brand-add" class="fas fa-plus-circle" onclick="addbrand();"></i></h4>
-					</div>
-					<div id="brand-edit" class="col-2">
-						<h4><i id="i-brand-edit" class="fas fa-pen" onclick="editbrand('fa-pen');"></i></h4>
-					</div>
-					<div id="brand-remove" class="col-2">
-						<h4><i id="i-brand-trash" class="fas fa-trash" onclick="removebrand('fa-trash');"></i></h4>
-					</div>
-				</div>
+<body>
+	<div id="ddcar-nav-mount"></div>
 
+	<div class="container-fullwidth folder-page-wrapper">
+		<!-- Context Banner (when navigated from stock, sale, etc.) -->
+		<div id="context-banner" class="from-context-banner" style="display: none;"></div>
+
+		<!-- Main Split Row -->
+		<div class="row folder-split-row">
+			<!-- Left Column: Brands / Categories -->
+			<div class="col-12 col-md-4 col-lg-3 mb-3 mb-md-0">
+				<div id="col-brand">
+					<div id="brand-header-sticky">
+						<h4 id="title-lft" class="folder-title">
+							<span><i class="fas fa-tags mr-2 text-dark"></i>หมวดหมู่หลัก</span>
+						</h4>
+						<div id="brand-tools">
+							<div id="brand-add" class="col-2">
+								<h4><i id="i-brand-add" class="fas fa-plus-circle" title="เพิ่มหมวดหมู่ใหม่" onclick="addbrand();"></i></h4>
+							</div>
+							<div id="brand-edit" class="col-2">
+								<h4><i id="i-brand-edit" class="fas fa-pen" title="แก้ไขชื่อหมวดหมู่" onclick="editbrand('fa-pen');"></i></h4>
+							</div>
+							<div id="brand-remove" class="col-2">
+								<h4><i id="i-brand-trash" class="fas fa-trash" title="ลบหมวดหมู่" onclick="removebrand('fa-trash');"></i></h4>
+							</div>
+						</div>
+						<div class="brand-search-box">
+							<input type="text" id="brand-filter" class="form-control" placeholder="🔍 ค้นหายี่ห้อ/หมวดหมู่...">
+						</div>
+					</div>
+					<!-- Brands will be appended here -->
+				</div>
 			</div>
-			<div id="col-prod" class="col-md-9" style="height: 100%; overflow-y: scroll" hidden>
-				<h5 class="prod-title">					
-					<!-- <i id="i-back" onclick="page_back();" class="fas fa-angle-left"></i> ชื่อสินค้า <span> < ชื่อสินค้า 2</span> <span> < ชื่อสินค้า 3</span><i id="i-prod-add" class="fas fa-plus-circle" style="margin-left: 75%; margin-right: 1.5%;" onclick="addprod()"></i><i class="fas fa-trash" style="margin-right: 1.5%;" onclick="removeprod();"></i><i class="fas fa-pen" onclick="editprod();"></i> -->
-				</h5>
-				<div id="append-prod">						
-					<!--<h5 id="prod-1" class="prod-odd" rel="popover" data-img="'+obj[i][2].img+'" onclick="choose(1);"><span id="id-'+p+'"
-						 hidden>'+obj[i].title+'</span><input type="checkbox"><span id="span-code-'+p+'">'+obj[i][2].prod_code+'</span>&nbsp;&nbsp;&nbsp;&nbsp;<span
-						 id="span-name-'+p+'">'+obj[i][2].prod_name+'</span><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit"
-						 hidden></i><i class="fas fa-info-circle i-modal" data-toggle="modal" data-target="#detailModal" onclick="hideclick(1);"></i></h5>-->
-					<!-- append prod or folder -->
+
+			<!-- Right Column: Subfolders & Products -->
+			<div class="col-12 col-md-8 col-lg-9">
+				<div id="col-prod">
+					<!-- Breadcrumb Navigation Bar -->
+					<h5 class="prod-title" style="display: none;">
+						<!-- Breadcrumb trail and action icons injected by showsub -->
+					</h5>
+
+					<!-- Initial Empty State Placeholder -->
+					<div id="prod-empty-state">
+						<i class="fas fa-folder-open"></i>
+						<h5>กรุณาเลือกหมวดหมู่สินค้า</h5>
+						<p>คลิกเลือกยี่ห้อหรือหมวดหมู่จากรายการทางด้านซ้ายมือ เพื่อดูโฟลเดอร์ย่อยและรายการสินค้าภายใน</p>
+					</div>
+
+					<!-- Products / Subfolders List -->
+					<div id="append-prod" style="display: none;">
+						<!-- dynamically appended items -->
+					</div>
 				</div>
 			</div>
 		</div>
-		<div class="row justify-content-end">
-			<div class="col-2 text-center">
-				<button id="btn-next" class="btn btn-success" onclick="next()">เลือกสินค้า(0)</button>
+
+		<!-- Bottom Selection Bar -->
+		<div class="folder-bottom-bar">
+			<div class="selection-info-badge">
+				<i class="fas fa-shopping-basket mr-2 text-dark"></i>
+				เลือกสินค้าแล้ว&nbsp;<strong id="lbl-count">0</strong>&nbsp;รายการ
+			</div>
+			<div>
+				<button id="btn-next" class="btn btn-success" onclick="next()">
+					<i class="fas fa-check-circle mr-1"></i> ยืนยันเลือกสินค้า (0)
+				</button>
 			</div>
 		</div>
 	</div>
 
-	<!-- Detail Modal -->
+	<!-- Detail Modal (ที่อยู่สินค้า) -->
 	<div class="modal fade" id="detailModal" tabindex='-1'>
 		<div class="modal-dialog modal-md modal-dialog-centered">
 			<div class="modal-content">
 				<!-- Modal Header -->
-				<div class="col-12 text-center" style="margin-top: 15px;">
-					<h4 class="modal-title">ที่อยู่สินค้า</h4>
-					<hr style="width: 70%;">
+				<div class="modal-header-custom">
+					<h4 class="modal-title">
+						<i class="fas fa-map-marked-alt text-danger"></i>
+						<span>ที่อยู่จัดเก็บสินค้า</span>
+					</h4>
+					<p class="text-muted mb-0" style="font-size: 0.85rem;">ระบุตำแหน่งจัดเก็บในโกดังและหน้าร้าน</p>
 				</div>
 
-				<!-- Shop body -->
-				<div class="modal-body">
-					<div class="row justify-content-center r">					
-						<div class="dropdown">
-							<button class="btn btn-outline-dark dropdown-toggle" type="button" id="btn-ware" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							  เลือกโกดัง
-							</button>
-							<div id="ware" class="dropdown-menu" aria-labelledby="btn-ware">
-							
+				<!-- Modal Body -->
+				<div class="modal-body p-4">
+					<!-- Warehouse Section -->
+					<div class="location-section-card">
+						<div class="d-flex align-items-center justify-content-between mb-2">
+							<span class="font-weight-bold" style="font-size: 0.95rem;">
+								<i class="fas fa-warehouse text-primary mr-1"></i> ตำแหน่งในโกดัง
+							</span>
+							<div class="dropdown">
+								<button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="btn-ware" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									เลือกโกดัง
+								</button>
+								<div id="ware" class="dropdown-menu dropdown-menu-right" aria-labelledby="btn-ware"></div>
 							</div>
-						  </div>
-					</div><hr style="margin-top: 0px; width: 25%;">
-					<div class="row" id="addr-ware">
-					
-					</div>
-					<div class="row" id="input-addr-ware">
-					
+						</div>
+						<div class="row" id="addr-ware"></div>
+						<div class="row" id="input-addr-ware"></div>
 					</div>
 
-					<hr style="width: 95%;">
-
-					<div class="row justify-content-center">
-						<div class="dropdown">
-							<button class="btn btn-outline-dark dropdown-toggle" type="button" id="btn-shop" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							  เลือกหน้าร้าน
-							</button>
-							<div id="shop" class="dropdown-menu" aria-labelledby="btn-shop">
-							
+					<!-- Storefront Section -->
+					<div class="location-section-card">
+						<div class="d-flex align-items-center justify-content-between mb-2">
+							<span class="font-weight-bold" style="font-size: 0.95rem;">
+								<i class="fas fa-store text-success mr-1"></i> ตำแหน่งหน้าร้าน
+							</span>
+							<div class="dropdown">
+								<button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" id="btn-shop" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									เลือกหน้าร้าน
+								</button>
+								<div id="shop" class="dropdown-menu dropdown-menu-right" aria-labelledby="btn-shop"></div>
 							</div>
-						  </div>
-					</div><hr style="margin-top: 0px; width: 25%;">
-					<div class="row" id="addr-shop">
-						<!-- <div class="col-4 text-center">ชื่อ 1</div>
-						<div class="col-4 text-center">ชื่อ 2</div>
-						<div class="col-4 text-center">-</div> -->
-					</div>
-					<div class="row" id="input-addr-shop">
-						<!-- <div class="col-4 input-group-append align-items-end">
-							<input type="text" class="form-control form-control-sm" style="margin-right: 2px;">
-							<button type="button" class="btn btn-sm btn-danger" style="height: 40%; margin-bottom: 8%;"><i class="fas fa-times-circle"></i></button>
 						</div>
-						<div class="col-4 input-group-append align-items-end">
-							<input type="text" class="form-control form-control-sm" style="margin-right: 2px;">
-							<button type="button" class="btn btn-sm btn-danger" style="height: 40%; margin-bottom: 8%;"><i class="fas fa-times-circle"></i></button>
-						</div>
-						<div class="col-4 input-group-append align-items-end">
-							<input type="text" class="form-control form-control-sm" style="margin-right: 2px;">
-							<button type="button" class="btn btn-sm btn-danger" style="height: 40%; margin-bottom: 8%;"><i class="fas fa-times-circle"></i></button>
-						</div> -->
+						<div class="row" id="addr-shop"></div>
+						<div class="row" id="input-addr-shop"></div>
 					</div>
-					<br>
-					<!-- Modal footer -->
-					<div class="col-12 text-center">
-						<button type="button" class="btn btn-primary" data-dismiss="modal" onclick="showclick();" style="width: 150px;;">บันทึก</button>
+
+					<!-- Modal Footer -->
+					<div class="text-center mt-3">
+						<button type="button" class="btn btn-dark px-4" data-dismiss="modal" onclick="showclick();">
+							<i class="fas fa-save mr-1"></i> บันทึกข้อมูลที่อยู่
+						</button>
 					</div>
-					<br>
 				</div>
 			</div>
 		</div>
 	</div>
 
+	<!-- Central Navbar Script -->
+	<script src="js/navbar.js"></script>
 </body>
 
 </html>

@@ -57,6 +57,7 @@
             case 'web_mng_transfer.html': return 'รายงานสินค้าโอนเข้าโกดัง';
             case 'web_mng_export.html': return 'รายงานสินค้าออกโกดัง';
             case 'web_admin_user.html': return 'จัดการผู้ใช้งาน';
+            case 'web_folder.html': return 'หมวดหมู่สินค้า';
             default: return 'DD Accessories';
         }
     }
