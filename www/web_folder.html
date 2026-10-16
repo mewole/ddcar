@@ -1298,16 +1298,19 @@
 	}
 
 	function removeplace(index,prod_id,id,type){
+		var placeText = "";
 		if(type == "ware"){
-			datastr = {'prod_id':prod_id,'ware_id':id};
+			placeText = $('#ware-shop-'+index).text().trim();
+			datastr = {'prod_id':prod_id,'ware_id':id,'place':placeText};
 		}else if(type == "shop"){
-			datastr = {'prod_id':prod_id,'shop_id':id};
+			placeText = $('#name-shop-'+index).text().trim();
+			datastr = {'prod_id':prod_id,'shop_id':id,'place':placeText};
 		}
 		
 		$.confirm({
 		icon: 'fa fa-warning',
 			title: 'ลบ',
-			content: 'ต้องการลบออกจากรายการใช่หรือไม่!',
+			content: 'ต้องการลบ "' + placeText + '" ออกจากที่อยู่สินค้าใช่หรือไม่!',
 			buttons: {
 				danger: {
 					btnClass: 'btn-danger',
@@ -1326,7 +1329,7 @@
 								EasyLoading.hide();                           
 								if(data == "success"){
 									if(type == "ware"){
-										$("#name-ware-"+index).remove();
+										$("#ware-shop-"+index).remove();
 										$("#ware-"+index).remove();		
 									}else if(type == "shop"){
 										$("#name-shop-"+index).remove();

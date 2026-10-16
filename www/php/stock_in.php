@@ -67,10 +67,24 @@
             $prod_id = $data['prod_id'];
             $cost = $data['cost'];    
             $amt = $data['amt'];  
-            $addr = $data['addr']; 
+            $addr = isset($data['addr']) ? mysqli_real_escape_string($conn, trim($data['addr'])) : ''; 
+            $from = isset($data['from']) ? mysqli_real_escape_string($conn, trim($data['from'])) : '';
             $amount = 0;
+
+            static $stockColChecked = false;
+            if (!$stockColChecked) {
+                $stockColChecked = true;
+                $chk = mysqli_query($conn, "SHOW COLUMNS FROM stock_in_item LIKE 'source_from'");
+                if ($chk && mysqli_num_rows($chk) == 0) {
+                    @mysqli_query($conn, "ALTER TABLE stock_in_item ADD COLUMN source_from VARCHAR(50) NULL DEFAULT NULL AFTER amount");
+                }
+            }
     
-            $sql_item = "INSERT INTO stock_in_item (stock_id,item_id,prod_id,stock_cost,amount) VALUE ('$last_id','$item','$prod_id','$cost','$amt')"; 
+            if (!empty($from)) {
+                $sql_item = "INSERT INTO stock_in_item (stock_id,item_id,prod_id,stock_cost,amount,source_from) VALUE ('$last_id','$item','$prod_id','$cost','$amt','$from')"; 
+            } else {
+                $sql_item = "INSERT INTO stock_in_item (stock_id,item_id,prod_id,stock_cost,amount) VALUE ('$last_id','$item','$prod_id','$cost','$amt')"; 
+            }
             $result_item = mysqli_query($conn, $sql_item);
             if(!$result_item){
                 mysqli_rollback($conn);
@@ -213,10 +227,24 @@
             $prod_id = $data['prod_id'];
             $cost = $data['cost'];    
             $amt = $data['amt'];  
-            $addr = $data['addr']; 
+            $addr = isset($data['addr']) ? mysqli_real_escape_string($conn, trim($data['addr'])) : ''; 
+            $from = isset($data['from']) ? mysqli_real_escape_string($conn, trim($data['from'])) : '';
             $amount = 0;
+
+            static $tranColChecked = false;
+            if (!$tranColChecked) {
+                $tranColChecked = true;
+                $chk = mysqli_query($conn, "SHOW COLUMNS FROM transfer_in_item LIKE 'source_from'");
+                if ($chk && mysqli_num_rows($chk) == 0) {
+                    @mysqli_query($conn, "ALTER TABLE transfer_in_item ADD COLUMN source_from VARCHAR(50) NULL DEFAULT NULL AFTER amount");
+                }
+            }
     
-            $sql_item = "INSERT INTO transfer_in_item (tran_id,item_id,prod_id,tran_cost,amount) VALUE ('$last_id','$item','$prod_id','$cost','$amt')"; 
+            if (!empty($from)) {
+                $sql_item = "INSERT INTO transfer_in_item (tran_id,item_id,prod_id,tran_cost,amount,source_from) VALUE ('$last_id','$item','$prod_id','$cost','$amt','$from')"; 
+            } else {
+                $sql_item = "INSERT INTO transfer_in_item (tran_id,item_id,prod_id,tran_cost,amount) VALUE ('$last_id','$item','$prod_id','$cost','$amt')"; 
+            }
             $result_item = mysqli_query($conn, $sql_item);
             if(!$result_item){
                 mysqli_rollback($conn);
