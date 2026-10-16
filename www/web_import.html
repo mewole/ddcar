@@ -513,6 +513,9 @@
 			if($('#name').val() == ""){
 				return;
 			}
+			if(prod_id){
+				get_supplier_history(prod_id, $('#name').val());
+			}
 			var dataStr;
 			if(localStorage.type_im == "โกดัง"){
 				dataStr = {'prod_id' : prod_id,"ware_id":localStorage.ware_id_im};
@@ -899,7 +902,8 @@
 			$('#amount').val("1");
 			$('#at').val("");
 			$('#from_shop').val("");
-			$('#best-price-badge').hide();
+			$('#best-price-badge').hide().empty();
+			current_supplier_data = null;
 			$('#name').focus(); 
 			//print();
 		}
@@ -1348,7 +1352,10 @@
 										flag = 1;
 									}                        
 								});  
-								get_place();                                                           
+								get_place();
+								if(prod_id){
+									get_supplier_history(prod_id, $('#name').val());
+								}
 							}               
 						});                    
 					}else{
@@ -1367,36 +1374,21 @@
 	<div class="modal fade" id="supplierModal" tabindex="-1" role="dialog" aria-hidden="true">
 	  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
 	    <div class="modal-content">
-	      <div class="modal-header bg-dark text-white">
-	        <h5 class="modal-title"><i class="fas fa-chart-line text-warning"></i> ประวัติราคาแต่ละร้าน & เลือกร้านที่ถูกที่สุด</h5>
+	      <div class="modal-header bg-dark text-white py-2">
+	        <h5 class="modal-title font-weight-bold" style="font-size: 1.1em;"><i class="fas fa-chart-line text-warning mr-1"></i> ประวัติราคาแต่ละร้าน & เลือกร้านที่ถูกที่สุด</h5>
 	        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
 	          <span aria-hidden="true">&times;</span>
 	        </button>
 	      </div>
 	      <div class="modal-body">
-	        <div class="d-flex justify-content-between align-items-center mb-3">
-	          <h6 id="modal-supplier-prod-name" class="font-weight-bold text-primary mb-0"></h6>
-	          <span class="badge badge-info p-2"><i class="fas fa-info-circle"></i> เรียงจากร้านที่ราคาถูกที่สุดไปแพง</span>
+	        <div class="mb-3">
+	          <div id="modal-supplier-prod-name" class="font-weight-bold text-dark" style="font-size: 1.05em;"></div>
 	        </div>
-	        <div class="table-responsive">
-	          <table class="table table-bordered table-hover table-sm text-center mb-0">
-	            <thead class="thead-light">
-	              <tr>
-	                <th style="width: 10%;">อันดับ</th>
-	                <th style="width: 22%;">ร้านค้า (From)</th>
-	                <th style="width: 18%;">ราคาทุนล่าสุด</th>
-	                <th style="width: 20%;">วันที่สั่งล่าสุด</th>
-	                <th style="width: 18%;">คำแนะนำ</th>
-	                <th style="width: 12%;">เลือก</th>
-	              </tr>
-	            </thead>
-	            <tbody id="supplier-history-tbody">
-	              <!-- rows -->
-	            </tbody>
-	          </table>
+	        <div id="supplier-modal-content">
+	          <!-- dynamic table & content -->
 	        </div>
 	      </div>
-	      <div class="modal-footer">
+	      <div class="modal-footer py-2">
 	        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">ปิดหน้าต่าง</button>
 	      </div>
 	    </div>
@@ -1404,7 +1396,8 @@
 	</div>
 
 	<script>
-		var current_supplier_history = [];
+		var current_supplier_data = null;
+
 		function get_supplier_history(pid, pname) {
 			if (!pid) return;
 			$.ajax({
@@ -1413,62 +1406,196 @@
 				data: { 'prod_id': pid },
 				dataType: 'json',
 				success: function(data) {
-					current_supplier_history = data || [];
-					if (current_supplier_history.length > 0) {
-						var best = current_supplier_history[0];
-						$('#best-shop-tag').text(best.supplier + ' (' + best.min_cost + '.-)');
-						
-						var sortedByDate = current_supplier_history.slice().sort(function(a, b) {
-							return new Date(b.last_date) - new Date(a.last_date);
-						});
-						var latest = sortedByDate[0];
-						$('#last-shop-tag').text(latest.supplier + ' (' + (latest.last_cost || latest.min_cost) + '.-)');
-						
-						$('#best-price-badge').show();
-						
-						// Auto fill datalist
-						var dl = $('#supplier-datalist');
-						dl.empty();
-						$.each(current_supplier_history, function(idx, item) {
-							dl.append('<option value="' + item.supplier + '">ถูกสุด: ' + item.min_cost + ' บาท (สั่งล่าสุด: ' + (item.last_date ? item.last_date.split(' ')[0] : '-') + ')</option>');
-						});
-					} else {
-						$('#best-price-badge').hide();
+					if (!data || data.status !== 'success') {
+						$('#best-price-badge').hide().empty();
+						return;
 					}
+					current_supplier_data = data;
+					renderSupplierBadge(data);
+					populateSupplierDatalist(data);
 				},
 				error: function() {
-					$('#best-price-badge').hide();
+					$('#best-price-badge').hide().empty();
 				}
 			});
 		}
 
-		function openSupplierModal() {
-			var pname = $('#name').val() || 'สินค้า';
-			$('#modal-supplier-prod-name').text('📦 ' + pname + ' (รหัส: ' + $('#barcode').val() + ')');
-			var tbody = $('#supplier-history-tbody');
-			tbody.empty();
-			if (!current_supplier_history || current_supplier_history.length === 0) {
-				tbody.append('<tr><td colspan="6" class="text-muted py-4"><i class="fas fa-box-open fa-2x mb-2 d-block"></i>ยังไม่มีประวัติการสั่งซื้อจากร้านค้าสำหรับสินค้านี้</td></tr>');
+		function renderSupplierBadge(data) {
+			var badgeEl = $('#best-price-badge');
+			var history = data.history || [];
+			var currentCost = data.current_cost || parseFloat($('#fund').val()) || 0;
+			var html = '';
+
+			if (history.length > 0) {
+				var best = history[0];
+				var sortedByDate = history.slice().sort(function(a, b) {
+					return new Date(b.last_date) - new Date(a.last_date);
+				});
+				var latest = sortedByDate[0];
+
+				html += '<div class="d-inline-flex flex-wrap align-items-center" style="gap: 4px; line-height: 1.4;">';
+				html += '  <span class="badge badge-success p-1" style="cursor: pointer; font-size: 0.9em;" onclick="openSupplierModal()" title="คลิกเพื่อเปรียบเทียบทุกร้าน">';
+				html += '    <i class="fas fa-trophy text-warning"></i> ถูกสุด: <b>' + best.supplier + '</b> (' + parseFloat(best.min_cost).toLocaleString() + '.-)';
+				html += '  </span>';
+
+				if (latest.supplier !== best.supplier) {
+					var lastPrice = parseFloat(latest.last_cost || latest.min_cost);
+					html += '  <span class="badge badge-secondary p-1" style="cursor: pointer; font-size: 0.85em;" onclick="openSupplierModal()" title="ร้านที่สั่งล่าสุด">';
+					html += '    <i class="fas fa-history"></i> ล่าสุด: ' + latest.supplier + ' (' + lastPrice.toLocaleString() + '.-)';
+					html += '  </span>';
+				}
+
+				html += '  <a href="javascript:void(0)" onclick="openSupplierModal()" class="text-primary font-weight-bold ml-1" style="font-size: 0.88em; text-decoration: underline;" title="คลิกดูประวัติและเปรียบเทียบราคา">';
+				html += '    <i class="fas fa-search"></i> เทียบ ' + history.length + ' ร้าน';
+				html += '  </a>';
+				html += '</div>';
 			} else {
-				$.each(current_supplier_history, function(i, item) {
-					var badge = '';
-					if (item.is_best) {
-						badge = '<span class="badge badge-success p-1"><i class="fas fa-star"></i> ถูกที่สุด (โทรเช็คก่อน)</span>';
-					} else {
-						var diff = parseFloat(item.min_cost) - parseFloat(current_supplier_history[0].min_cost);
-						badge = '<span class="badge badge-warning text-dark p-1">+ ' + diff.toFixed(0) + ' บาท</span>';
-					}
-					var rowHtml = '<tr>' +
-						'<td class="align-middle font-weight-bold">' + (i === 0 ? '🥇 1' : (i === 1 ? '🥈 2' : (i === 2 ? '🥉 3' : (i+1)))) + '</td>' +
-						'<td class="align-middle font-weight-bold text-primary">' + item.supplier + '</td>' +
-						'<td class="align-middle font-weight-bold text-success">' + item.min_cost + ' ฿</td>' +
-						'<td class="align-middle text-muted">' + (item.last_date ? item.last_date.split(' ')[0] : '-') + '</td>' +
-						'<td class="align-middle">' + badge + '</td>' +
-						'<td class="align-middle"><button type="button" class="btn btn-sm btn-outline-primary" onclick="selectSupplierChoice(\'' + item.supplier + '\', ' + item.min_cost + ')">เลือก</button></td>' +
-					'</tr>';
-					tbody.append(rowHtml);
+				var costTxt = currentCost > 0 ? (parseFloat(currentCost).toLocaleString() + ' ฿') : 'ยังไม่ระบุ';
+				html += '<div class="d-inline-flex flex-wrap align-items-center" style="gap: 4px; line-height: 1.4;">';
+				html += '  <span class="badge badge-info p-1" style="cursor: pointer; font-size: 0.88em;" onclick="openSupplierModal()" title="คลิกดูประวัติการรับเข้า">';
+				html += '    <i class="fas fa-tag"></i> ทุนเดิม: <b>' + costTxt + '</b>';
+				html += '  </span>';
+				html += '  <span class="badge badge-warning text-dark p-1" style="cursor: pointer; font-size: 0.85em;" onclick="openSupplierModal()" title="คลิกเพื่อดูวิธีบันทึกร้าน">';
+				html += '    <i class="fas fa-lightbulb"></i> ใส่ตัวย่อร้านที่ช่อง <b>[จาก]</b>';
+				html += '  </span>';
+				html += '  <a href="javascript:void(0)" onclick="openSupplierModal()" class="text-primary font-weight-bold ml-1" style="font-size: 0.88em; text-decoration: underline;" title="ดูประวัติการซื้อย้อนหลัง">';
+				html += '    <i class="fas fa-history"></i> ประวัติ';
+				html += '  </a>';
+				html += '</div>';
+			}
+
+			badgeEl.html(html).show();
+		}
+
+		function populateSupplierDatalist(data) {
+			var dl = $('#supplier-datalist');
+			dl.empty();
+			var seen = {};
+			if (data.history && data.history.length > 0) {
+				$.each(data.history, function(idx, item) {
+					seen[item.supplier] = true;
+					dl.append('<option value="' + item.supplier + '">ถูกสุด: ' + item.min_cost + ' ฿ (สั่งล่าสุด: ' + (item.last_date ? item.last_date.split(' ')[0] : '-') + ')</option>');
 				});
 			}
+			if (data.all_suppliers && data.all_suppliers.length > 0) {
+				$.each(data.all_suppliers, function(idx, sup) {
+					if (!seen[sup]) {
+						dl.append('<option value="' + sup + '">ร้านในระบบ</option>');
+					}
+				});
+			}
+		}
+
+		function openSupplierModal() {
+			if (!current_supplier_data) {
+				var pname = $('#name').val() || 'สินค้า';
+				$('#modal-supplier-prod-name').html('<i class="fas fa-box text-primary mr-1"></i> ' + pname + ' (รหัส: ' + ($('#barcode').val() || '-') + ')');
+				$('#supplier-modal-content').html('<div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin fa-2x"></i> กำลังโหลดข้อมูล...</div>');
+				$('#supplierModal').modal('show');
+				return;
+			}
+
+			var d = current_supplier_data;
+			var pname = d.prod_name || $('#name').val() || 'สินค้า';
+			var pcode = d.prod_code || $('#barcode').val() || '-';
+			var currentCost = d.current_cost || parseFloat($('#fund').val()) || 0;
+
+			$('#modal-supplier-prod-name').html('<i class="fas fa-box text-primary mr-1"></i> <b>' + pname + '</b> <span class="badge badge-secondary ml-2">รหัส: ' + pcode + '</span> <span class="badge badge-info ml-1">ทุนในระบบ: ' + (currentCost > 0 ? parseFloat(currentCost).toLocaleString() + ' ฿' : '-') + '</span>');
+
+			var contentHtml = '';
+
+			if (d.history && d.history.length > 0) {
+				var bestSup = String(d.history[0].supplier).replace(/'/g, "\\'");
+				contentHtml += '<div class="alert alert-success d-flex justify-content-between align-items-center py-2 px-3 mb-3">';
+				contentHtml += '  <div><i class="fas fa-trophy text-warning mr-1"></i> <b>ร้านที่ราคาถูกที่สุด: ' + d.history[0].supplier + '</b> ที่ราคาทุน <b>' + parseFloat(d.history[0].min_cost).toLocaleString() + ' บาท</b></div>';
+				contentHtml += '  <button class="btn btn-sm btn-success font-weight-bold" onclick="selectSupplierChoice(\'' + bestSup + '\', ' + d.history[0].min_cost + ')"><i class="fas fa-check"></i> เลือกร้านถูกสุดนี้</button>';
+				contentHtml += '</div>';
+
+				contentHtml += '<div class="table-responsive">';
+				contentHtml += '  <table class="table table-bordered table-hover table-sm text-center mb-0">';
+				contentHtml += '    <thead class="thead-light">';
+				contentHtml += '      <tr>';
+				contentHtml += '        <th style="width: 12%;">อันดับ</th>';
+				contentHtml += '        <th style="width: 24%;">ร้านค้า / ตัวย่อ (From)</th>';
+				contentHtml += '        <th style="width: 18%;">ราคาทุนถูกสุด</th>';
+				contentHtml += '        <th style="width: 18%;">วันที่สั่งล่าสุด</th>';
+				contentHtml += '        <th style="width: 16%;">ส่วนต่าง</th>';
+				contentHtml += '        <th style="width: 12%;">เลือก</th>';
+				contentHtml += '      </tr>';
+				contentHtml += '    </thead>';
+				contentHtml += '    <tbody>';
+
+				var bestCost = parseFloat(d.history[0].min_cost);
+				$.each(d.history, function(i, item) {
+					var itemCost = parseFloat(item.min_cost);
+					var diff = itemCost - bestCost;
+					var isBest = (i === 0);
+					var badgeHtml = isBest 
+						? '<span class="badge badge-success p-1"><i class="fas fa-star"></i> ถูกที่สุด</span>'
+						: '<span class="badge badge-warning text-dark p-1">+' + diff.toLocaleString() + ' บาท</span>';
+					var rankMedal = i === 0 ? '🥇 1' : (i === 1 ? '🥈 2' : (i === 2 ? '🥉 3' : (i + 1)));
+					var safeSup = String(item.supplier).replace(/'/g, "\\'");
+
+					contentHtml += '<tr class="' + (isBest ? 'table-success font-weight-bold' : '') + '">';
+					contentHtml += '  <td class="align-middle">' + rankMedal + '</td>';
+					contentHtml += '  <td class="align-middle text-primary font-weight-bold" style="font-size: 1.05em;">' + item.supplier + '</td>';
+					contentHtml += '  <td class="align-middle text-success font-weight-bold">' + itemCost.toLocaleString() + ' ฿</td>';
+					contentHtml += '  <td class="align-middle text-muted">' + (item.last_date ? item.last_date.split(' ')[0] : '-') + '</td>';
+					contentHtml += '  <td class="align-middle">' + badgeHtml + '</td>';
+					contentHtml += '  <td class="align-middle"><button type="button" class="btn btn-sm ' + (isBest ? 'btn-success' : 'btn-outline-primary') + '" onclick="selectSupplierChoice(\'' + safeSup + '\', ' + itemCost + ')">เลือก</button></td>';
+					contentHtml += '</tr>';
+				});
+
+				contentHtml += '    </tbody>';
+				contentHtml += '  </table>';
+				contentHtml += '</div>';
+
+			} else {
+				contentHtml += '<div class="alert alert-warning border-warning mb-3">';
+				contentHtml += '  <h6 class="font-weight-bold text-dark mb-1"><i class="fas fa-info-circle text-warning mr-1"></i> ยังไม่มีการบันทึกตัวย่อร้านค้าสำหรับสินค้านี้</h6>';
+				contentHtml += '  <p class="mb-2" style="font-size: 0.9em; color: #555;">สินค้านี้ยังไม่เคยบันทึกว่าสั่งมาจากร้านไหน (ราคาทุนปัจจุบันในระบบ: <b>' + (currentCost > 0 ? parseFloat(currentCost).toLocaleString() + ' บาท' : 'ยังไม่ระบุ') + '</b>)</p>';
+				contentHtml += '  <div class="p-2 bg-white rounded border" style="font-size: 0.88em;">';
+				contentHtml += '    <b class="text-primary">💡 วิธีเริ่มใช้งานระบบจำราคาแต่ละร้าน:</b><br>';
+				contentHtml += '    พิมพ์ตัวย่อร้าน เช่น <code>A</code>, <code>B</code>, <code>BKK</code> หรือชื่อร้านที่สั่งซื้อ ลงในช่อง <b>[จาก (From)]</b> ในหน้านำเข้าสินค้า<br>';
+				contentHtml += '    เมื่อกดเพิ่มสินค้า ระบบจะเริ่มเก็บประวัติราคาและจัดอันดับร้านที่ถูกที่สุดให้ดูในครั้งต่อไปอัตโนมัติ!';
+				contentHtml += '  </div>';
+				contentHtml += '</div>';
+			}
+
+			if (d.recent_orders && d.recent_orders.length > 0) {
+				contentHtml += '<h6 class="font-weight-bold text-secondary mt-3 mb-2"><i class="fas fa-history mr-1"></i> ประวัติการรับเข้าสินค้าล่าสุด (' + d.recent_orders.length + ' ครั้งล่าสุดในระบบ)</h6>';
+				contentHtml += '<div class="table-responsive">';
+				contentHtml += '  <table class="table table-bordered table-sm text-center mb-0">';
+				contentHtml += '    <thead class="thead-light">';
+				contentHtml += '      <tr>';
+				contentHtml += '        <th>วันที่รับเข้า</th>';
+				contentHtml += '        <th>จำนวน</th>';
+				contentHtml += '        <th>ราคาทุนที่รับเข้า</th>';
+				contentHtml += '        <th>ร้าน (จาก)</th>';
+				contentHtml += '        <th>นำราคานี้มาใช้</th>';
+				contentHtml += '      </tr>';
+				contentHtml += '    </thead>';
+				contentHtml += '    <tbody>';
+
+				$.each(d.recent_orders, function(idx, ro) {
+					var roCost = parseFloat(ro.stock_cost || 0);
+					var roSup = ro.source_from ? ('<span class="badge badge-primary">' + ro.source_from + '</span>') : '<span class="text-muted">(ไม่ได้ระบุร้าน)</span>';
+					var safeRoSup = ro.source_from ? String(ro.source_from).replace(/'/g, "\\'") : '';
+					contentHtml += '<tr>';
+					contentHtml += '  <td class="align-middle text-muted">' + (ro.date_time || '-') + '</td>';
+					contentHtml += '  <td class="align-middle">' + (ro.amount || '1') + '</td>';
+					contentHtml += '  <td class="align-middle font-weight-bold text-success">' + (roCost > 0 ? roCost.toLocaleString() + ' ฿' : '-') + '</td>';
+					contentHtml += '  <td class="align-middle">' + roSup + '</td>';
+					contentHtml += '  <td class="align-middle"><button type="button" class="btn btn-sm btn-outline-info" onclick="applyCostOnly(' + roCost + ', \'' + safeRoSup + '\')">ใช้ราคานี้</button></td>';
+					contentHtml += '</tr>';
+				});
+
+				contentHtml += '    </tbody>';
+				contentHtml += '  </table>';
+				contentHtml += '</div>';
+			}
+
+			$('#supplier-modal-content').html(contentHtml);
 			$('#supplierModal').modal('show');
 		}
 
@@ -1479,6 +1606,17 @@
 			}
 			$('#supplierModal').modal('hide');
 			$('#at').focus();
+		}
+
+		function applyCostOnly(cost, supplier) {
+			if (cost > 0) {
+				$('#fund').val(cost);
+			}
+			if (supplier && supplier.trim() !== '') {
+				$('#from_shop').val(supplier.trim());
+			}
+			$('#supplierModal').modal('hide');
+			$('#amount').focus();
 		}
 	</script>
 

@@ -2,14 +2,19 @@
     include "db.php";
     header("Content-Type: application/json; charset=UTF-8");
 
-    $prod_id = isset($_POST['prod_id']) ? mysqli_real_escape_string($conn, $_POST['prod_id']) : '';
+    $prod_id = isset($_POST['prod_id']) ? mysqli_real_escape_string($conn, trim($_POST['prod_id'])) : '';
 
     if (empty($prod_id)) {
-        echo json_encode([]);
+        echo json_encode([
+            'status' => 'empty',
+            'prod_id' => '',
+            'current_cost' => 0,
+            'history' => [],
+            'recent_orders' => [],
+            'all_suppliers' => []
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
-
-    $output = array();
 
     // 1. ตรวจสอบว่าคอลัมน์ source_from มีใน stock_in_item หรือไม่ หากยังไม่มีให้สร้างอัตโนมัติ
     $checkCol = mysqli_query($conn, "SHOW COLUMNS FROM stock_in_item LIKE 'source_from'");
@@ -17,7 +22,19 @@
         @mysqli_query($conn, "ALTER TABLE stock_in_item ADD COLUMN source_from VARCHAR(50) NULL DEFAULT NULL AFTER amount");
     }
 
-    // 2. ดึงประวัติราคาทุนตามร้าน (จากถูกสุดไปแพงสุด)
+    // 2. ดึงข้อมูลต้นทุนปัจจุบันของสินค้า
+    $current_cost = 0;
+    $prod_name = '';
+    $prod_code = '';
+    $res_prod = mysqli_query($conn, "SELECT prod_name, prod_code, prod_cost FROM product WHERE prod_id = '$prod_id'");
+    if ($res_prod && ($row_p = mysqli_fetch_assoc($res_prod))) {
+        $current_cost = floatval($row_p['prod_cost']);
+        $prod_name = $row_p['prod_name'];
+        $prod_code = $row_p['prod_code'];
+    }
+
+    // 3. ดึงประวัติราคาทุนแยกตามร้านค้า (ที่มี source_from ระบุไว้)
+    $history = array();
     $query = "SELECT 
                 si.source_from AS supplier,
                 MIN(si.stock_cost) AS min_cost,
@@ -28,22 +45,54 @@
               JOIN stock_in s ON si.stock_id = s.stock_id
               WHERE si.prod_id = '$prod_id' 
                 AND si.source_from IS NOT NULL 
-                AND si.source_from != ''
+                AND TRIM(si.source_from) != ''
               GROUP BY si.source_from
               ORDER BY min_cost ASC, last_date DESC";
 
     $result = mysqli_query($conn, $query);
-
     if ($result && mysqli_num_rows($result) > 0) {
         $rank = 1;
         while ($row = mysqli_fetch_assoc($result)) {
             $row['rank'] = $rank;
             $row['is_best'] = ($rank === 1);
-            $output[] = $row;
+            $history[] = $row;
             $rank++;
         }
     }
 
-    echo json_encode($output, JSON_UNESCAPED_UNICODE);
+    // 4. ดึงประวัติการรับเข้าย้อนหลังล่าสุด (5 รายการล่าสุดใน stock_in_item)
+    $recent_orders = array();
+    $sql_recent = "SELECT si.stock_cost, s.date_time, si.amount, si.source_from
+                   FROM stock_in_item si
+                   JOIN stock_in s ON si.stock_id = s.stock_id
+                   WHERE si.prod_id = '$prod_id'
+                   ORDER BY s.date_time DESC
+                   LIMIT 5";
+    $res_recent = mysqli_query($conn, $sql_recent);
+    if ($res_recent && mysqli_num_rows($res_recent) > 0) {
+        while ($rr = mysqli_fetch_assoc($res_recent)) {
+            $recent_orders[] = $rr;
+        }
+    }
+
+    // 5. ดึงรายชื่อตัวย่อร้านทั้งหมดที่เคยมีในระบบ (สำหรับทำ Autocomplete)
+    $all_suppliers = array();
+    $res_supp = mysqli_query($conn, "SELECT DISTINCT source_from FROM stock_in_item WHERE source_from IS NOT NULL AND TRIM(source_from) != '' ORDER BY source_from ASC");
+    if ($res_supp) {
+        while ($rs = mysqli_fetch_assoc($res_supp)) {
+            $all_suppliers[] = $rs['source_from'];
+        }
+    }
+
+    echo json_encode([
+        'status' => 'success',
+        'prod_id' => $prod_id,
+        'prod_name' => $prod_name,
+        'prod_code' => $prod_code,
+        'current_cost' => $current_cost,
+        'history' => $history,
+        'recent_orders' => $recent_orders,
+        'all_suppliers' => $all_suppliers
+    ], JSON_UNESCAPED_UNICODE);
     mysqli_close($conn);
 ?>

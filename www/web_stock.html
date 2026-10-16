@@ -465,6 +465,7 @@
 							' <hr class="jumbohr">' +
 							img_html +
 							msg +
+							(canViewCost() ? '<div id="supplier-badge-' + prod_id + '" class="supplier-badge-wrap"></div>' : '') +
 						'</div>'
 					);
 
@@ -482,6 +483,9 @@
 						.data('prod-name', name);
 
 					$('#append-ctn').append($card);
+					if (canViewCost()) {
+						load_stock_supplier_badge(prod_id, name, code);
+					}
 				}               
 			});
 			set_fullImage();
@@ -818,6 +822,34 @@
     	</div>
     </div>
 
+	<!-- Modal ดูประวัติราคาและร้านที่ถูกที่สุดในหน้าสต๊อก -->
+	<div class="modal fade" id="supplierStockModal" tabindex="-1" role="dialog" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+	    <div class="modal-content">
+	      <div class="modal-header bg-dark text-white py-2">
+	        <h5 class="modal-title font-weight-bold" style="font-size: 1.1em;">
+	          <i class="fas fa-chart-line text-warning mr-1"></i> ประวัติราคาแต่ละร้าน & ร้านที่ถูกที่สุด
+	        </h5>
+	        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	        <div class="mb-3">
+	          <div id="modal-stock-supplier-prod-name" class="font-weight-bold text-dark" style="font-size: 1.05em;"></div>
+	        </div>
+	        <div id="modal-stock-supplier-content">
+	          <!-- Dynamic content -->
+	        </div>
+	      </div>
+	      <div class="modal-footer py-2 justify-content-between">
+	        <div id="modal-stock-supplier-footer-action"></div>
+	        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">ปิดหน้าต่าง</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
 	<!-- Edit Modal -->
 	<div class="modal fade" id="EditModal" tabindex='-1'>
 		<div class="modal-dialog modal-lg modal-dialog-centered">
@@ -864,7 +896,213 @@
 				/* options */
 			});
 		});
-    </script>
+    
+
+		function canViewCost() {
+			return localStorage.user_role == "แอดมิน" || localStorage.user_role == "เจ้าของร้าน";
+		}
+
+		window.stock_supplier_cache = window.stock_supplier_cache || {};
+
+		function load_stock_supplier_badge(pid, pname, pcode) {
+			var badgeContainer = $('#supplier-badge-' + pid);
+			if (!badgeContainer.length) return;
+
+			badgeContainer.html('<div class="text-muted text-center py-1" style="font-size: 0.75rem;"><i class="fas fa-spinner fa-spin mr-1"></i> เช็คประวัติร้านค้า...</div>');
+
+			$.ajax({
+				type: "POST",
+				url: "php/get_supplier_prices.php",
+				data: { 'prod_id': pid },
+				dataType: 'json',
+				success: function(data) {
+					if (!data || data.status !== 'success') {
+						badgeContainer.empty();
+						return;
+					}
+					window.stock_supplier_cache[pid] = data;
+					renderStockSupplierBadge(pid, data, pname, pcode);
+				},
+				error: function() {
+					badgeContainer.empty();
+				}
+			});
+		}
+
+		function renderStockSupplierBadge(pid, data, pname, pcode) {
+			var badgeContainer = $('#supplier-badge-' + pid);
+			var history = data.history || [];
+			var currentCost = data.current_cost || 0;
+			var html = '';
+
+			if (history.length > 0) {
+				var best = history[0];
+				var bestCost = parseFloat(best.min_cost);
+				var sortedByDate = history.slice().sort(function(a, b) {
+					return new Date(b.last_date) - new Date(a.last_date);
+				});
+				var latest = sortedByDate[0];
+
+				html += '<div class="p-2 rounded mt-2 text-left" style="background: #f0fdf4; border: 1px solid #bbf7d0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">';
+				html += '  <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap: 4px;">';
+				html += '    <span class="badge badge-success p-1 px-2" style="font-size: 0.88rem; cursor: pointer;" onclick="openSupplierStockModal(\'' + pid + '\')" title="คลิกดูสรุปประวัติราคาทุกร้าน">';
+				html += '      <i class="fas fa-trophy text-warning mr-1"></i> ถูกสุด: <b>' + best.supplier + '</b> (' + bestCost.toLocaleString() + '.-)';
+				html += '    </span>';
+				html += '    <button type="button" class="btn btn-sm btn-outline-success font-weight-bold py-0 px-2" style="font-size: 0.78rem; height: 26px;" onclick="openSupplierStockModal(\'' + pid + '\')">';
+				html += '      <i class="fas fa-chart-line mr-1"></i> เทียบ ' + history.length + ' ร้าน';
+				html += '    </button>';
+				html += '  </div>';
+
+				if (latest.supplier !== best.supplier) {
+					var lastPrice = parseFloat(latest.last_cost || latest.min_cost);
+					html += '  <div class="mt-1 d-flex justify-content-between align-items-center" style="font-size: 0.76rem; color: #475569;">';
+					html += '    <span><i class="fas fa-history text-secondary mr-1"></i> สั่งล่าสุด: <b>' + latest.supplier + '</b> (' + lastPrice.toLocaleString() + '.-)</span>';
+					html += '    <span class="text-muted">' + (latest.last_date ? latest.last_date.split(' ')[0] : '') + '</span>';
+					html += '  </div>';
+				}
+				html += '</div>';
+
+			} else {
+				var costTxt = currentCost > 0 ? (parseFloat(currentCost).toLocaleString() + ' ฿') : 'ยังไม่ระบุ';
+				html += '<div class="p-2 rounded mt-2 text-left" style="background: #f8fafc; border: 1px solid #e2e8f0;">';
+				html += '  <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap: 4px;">';
+				html += '    <span class="badge badge-light border text-dark p-1 px-2" style="font-size: 0.84rem; cursor: pointer;" onclick="openSupplierStockModal(\'' + pid + '\')" title="คลิกดูประวัติการรับเข้า">';
+				html += '      <i class="fas fa-tag text-info mr-1"></i> ทุนปัจจุบัน: <b>' + costTxt + '</b>';
+				html += '    </span>';
+				html += '    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.78rem; height: 26px;" onclick="openSupplierStockModal(\'' + pid + '\')">';
+				html += '      <i class="fas fa-history mr-1"></i> ประวัติรับเข้า';
+				html += '    </button>';
+				html += '  </div>';
+				html += '  <div class="mt-1 text-muted" style="font-size: 0.76rem;">';
+				html += '    <i class="fas fa-info-circle text-warning mr-1"></i> ยังไม่มีตัวย่อร้าน (ระบุที่ช่อง <b>จาก</b> ในหน้านำเข้าเพื่อเริ่มเก็บสถิติ)';
+				html += '  </div>';
+				html += '</div>';
+			}
+
+			badgeContainer.html(html);
+		}
+
+		function openSupplierStockModal(pid) {
+			var d = window.stock_supplier_cache ? window.stock_supplier_cache[pid] : null;
+			if (!d) {
+				$.ajax({
+					type: "POST",
+					url: "php/get_supplier_prices.php",
+					data: { 'prod_id': pid },
+					dataType: 'json',
+					success: function(res) {
+						window.stock_supplier_cache = window.stock_supplier_cache || {};
+						window.stock_supplier_cache[pid] = res;
+						showStockSupplierModalContent(pid, res);
+					}
+				});
+				return;
+			}
+			showStockSupplierModalContent(pid, d);
+		}
+
+		function showStockSupplierModalContent(pid, d) {
+			var pname = d.prod_name || 'สินค้า';
+			var pcode = d.prod_code || '-';
+			var currentCost = d.current_cost || 0;
+
+			$('#modal-stock-supplier-prod-name').html('<i class="fas fa-box text-primary mr-1"></i> <b>' + pname + '</b> <span class="badge badge-secondary ml-2">รหัส: ' + pcode + '</span> <span class="badge badge-info ml-1">ทุนในระบบ: ' + (currentCost > 0 ? parseFloat(currentCost).toLocaleString() + ' ฿' : '-') + '</span>');
+
+			var contentHtml = '';
+
+			if (d.history && d.history.length > 0) {
+				var bestCost = parseFloat(d.history[0].min_cost);
+
+				contentHtml += '<div class="alert alert-success d-flex justify-content-between align-items-center py-2 px-3 mb-3">';
+				contentHtml += '  <div><i class="fas fa-trophy text-warning mr-1"></i> <b>ร้านที่ราคาถูกที่สุด: ' + d.history[0].supplier + '</b> ที่ราคาทุน <b>' + bestCost.toLocaleString() + ' บาท</b></div>';
+				contentHtml += '  <span class="badge badge-success p-2 font-weight-bold"><i class="fas fa-phone mr-1"></i> โทรเช็คร้านนี้ก่อน</span>';
+				contentHtml += '</div>';
+
+				contentHtml += '<div class="table-responsive">';
+				contentHtml += '  <table class="table table-bordered table-hover table-sm text-center mb-0">';
+				contentHtml += '    <thead class="thead-light">';
+				contentHtml += '      <tr>';
+				contentHtml += '        <th style="width: 12%;">อันดับ</th>';
+				contentHtml += '        <th style="width: 25%;">ร้านค้า / ตัวย่อ (From)</th>';
+				contentHtml += '        <th style="width: 20%;">ราคาทุนถูกสุด</th>';
+				contentHtml += '        <th style="width: 23%;">วันที่สั่งล่าสุด</th>';
+				contentHtml += '        <th style="width: 20%;">ส่วนต่าง</th>';
+				contentHtml += '      </tr>';
+				contentHtml += '    </thead>';
+				contentHtml += '    <tbody>';
+
+				$.each(d.history, function(i, item) {
+					var itemCost = parseFloat(item.min_cost);
+					var diff = itemCost - bestCost;
+					var isBest = (i === 0);
+					var badgeHtml = isBest 
+						? '<span class="badge badge-success p-1"><i class="fas fa-star"></i> ถูกที่สุด</span>'
+						: '<span class="badge badge-warning text-dark p-1">+' + diff.toLocaleString() + ' บาท</span>';
+					var rankMedal = i === 0 ? '🥇 1' : (i === 1 ? '🥈 2' : (i === 2 ? '🥉 3' : (i + 1)));
+
+					contentHtml += '<tr class="' + (isBest ? 'table-success font-weight-bold' : '') + '">';
+					contentHtml += '  <td class="align-middle">' + rankMedal + '</td>';
+					contentHtml += '  <td class="align-middle text-primary font-weight-bold" style="font-size: 1.05em;">' + item.supplier + '</td>';
+					contentHtml += '  <td class="align-middle text-success font-weight-bold">' + itemCost.toLocaleString() + ' ฿</td>';
+					contentHtml += '  <td class="align-middle text-muted">' + (item.last_date ? item.last_date.split(' ')[0] : '-') + '</td>';
+					contentHtml += '  <td class="align-middle">' + badgeHtml + '</td>';
+					contentHtml += '</tr>';
+				});
+
+				contentHtml += '    </tbody>';
+				contentHtml += '  </table>';
+				contentHtml += '</div>';
+
+			} else {
+				contentHtml += '<div class="alert alert-warning border-warning mb-3">';
+				contentHtml += '  <h6 class="font-weight-bold text-dark mb-1"><i class="fas fa-info-circle text-warning mr-1"></i> ยังไม่มีการบันทึกตัวย่อร้านค้าสำหรับสินค้านี้</h6>';
+				contentHtml += '  <p class="mb-2" style="font-size: 0.9em; color: #555;">สินค้านี้ยังไม่เคยบันทึกว่าสั่งมาจากร้านไหน (ราคาทุนปัจจุบันในระบบ: <b>' + (currentCost > 0 ? parseFloat(currentCost).toLocaleString() + ' บาท' : 'ยังไม่ระบุ') + '</b>)</p>';
+				contentHtml += '  <div class="p-2 bg-white rounded border" style="font-size: 0.88em;">';
+				contentHtml += '    <b class="text-primary">💡 วิธีเริ่มใช้งานระบบจำราคาแต่ละร้าน:</b><br>';
+				contentHtml += '    เมื่อสั่งซื้อของเข้ามา ให้ไปที่ <b>หน้านำเข้าสินค้า</b> แล้วพิมพ์ตัวย่อร้าน เช่น <code>A</code>, <code>B</code>, <code>BKK</code> ลงในช่อง <b>[จาก (From)]</b><br>';
+				contentHtml += '    ระบบจะจำราคาและร้านนี้ไว้ และจัดอันดับร้านที่ถูกที่สุดให้ดูทั้งในหน้านำเข้าและหน้าเช็คสต๊อกอัตโนมัติ!';
+				contentHtml += '  </div>';
+				contentHtml += '</div>';
+			}
+
+			if (d.recent_orders && d.recent_orders.length > 0) {
+				contentHtml += '<h6 class="font-weight-bold text-secondary mt-3 mb-2"><i class="fas fa-history mr-1"></i> ประวัติการรับเข้าสินค้าล่าสุด (' + d.recent_orders.length + ' ครั้งล่าสุดในระบบ)</h6>';
+				contentHtml += '<div class="table-responsive">';
+				contentHtml += '  <table class="table table-bordered table-sm text-center mb-0">';
+				contentHtml += '    <thead class="thead-light">';
+				contentHtml += '      <tr>';
+				contentHtml += '        <th>วันที่รับเข้า</th>';
+				contentHtml += '        <th>จำนวน</th>';
+				contentHtml += '        <th>ราคาทุนที่รับเข้า</th>';
+				contentHtml += '        <th>ร้าน (จาก)</th>';
+				contentHtml += '      </tr>';
+				contentHtml += '    </thead>';
+				contentHtml += '    <tbody>';
+
+				$.each(d.recent_orders, function(idx, ro) {
+					var roCost = parseFloat(ro.stock_cost || 0);
+					var roSup = ro.source_from ? ('<span class="badge badge-primary">' + ro.source_from + '</span>') : '<span class="text-muted">(ไม่ได้ระบุร้าน)</span>';
+					contentHtml += '<tr>';
+					contentHtml += '  <td class="align-middle text-muted">' + (ro.date_time || '-') + '</td>';
+					contentHtml += '  <td class="align-middle">' + (ro.amount || '1') + '</td>';
+					contentHtml += '  <td class="align-middle font-weight-bold text-success">' + (roCost > 0 ? roCost.toLocaleString() + ' ฿' : '-') + '</td>';
+					contentHtml += '  <td class="align-middle">' + roSup + '</td>';
+					contentHtml += '</tr>';
+				});
+
+				contentHtml += '    </tbody>';
+				contentHtml += '  </table>';
+				contentHtml += '</div>';
+			}
+
+			var actionBtn = '<a href="web_import.html" class="btn btn-sm btn-outline-success font-weight-bold"><i class="fas fa-arrow-down mr-1"></i> ไปหน้านำเข้าสินค้า</a>';
+			$('#modal-stock-supplier-footer-action').html(actionBtn);
+
+			$('#modal-stock-supplier-content').html(contentHtml);
+			$('#supplierStockModal').modal('show');
+		}
+
+</script>
     <!-- Central Navbar Script -->
     <script src="js/navbar.js"></script>
 </body>
