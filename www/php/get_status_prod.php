@@ -106,7 +106,7 @@
                     'prod_code' => $row['prod_code'] ? $row['prod_code'] : '-',
                     'prod_name' => $row['prod_name'],
                     'prod_cost' => floatval($row['prod_cost']),
-                    'img' => 'img/no-image.png',
+                    'img' => '',
                     'status' => $row['status'],
                     'min_amount' => intval($row['min_amount']),
                     'is_ordered' => 0,

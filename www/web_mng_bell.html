@@ -17,10 +17,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
 
-  <!-- Loading -->
-  <link rel="stylesheet" href="css/easy-loading.css">
-  <script src="js/easy-loading.js"></script>
-
   <!-- Google Font Prompt -->
   <link href="https://fonts.googleapis.com/css?family=Prompt:300,400,500,600,700&display=swap" rel="stylesheet">
   <!-- DD CAR Base Styles -->
@@ -49,14 +45,13 @@
       border-radius: 12px;
       padding: 12px 14px;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       position: relative;
       overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
     .kpi-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       border-color: #cbd5e1;
     }
     .kpi-card.active {
@@ -97,10 +92,10 @@
       padding: 16px;
       margin-bottom: 14px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-      transition: all 0.18s ease;
+      transition: border-color 0.18s, box-shadow 0.18s;
     }
     .reorder-card:hover {
-      box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
       border-color: #cbd5e1;
     }
     .reorder-card.status-danger {
@@ -117,15 +112,20 @@
       border-left: 5px solid #8b5cf6;
     }
 
-    /* Product Image */
+    /* Product Image - Fixed Exact Dimensions To Prevent Layout Jitter */
     .prod-thumb {
       width: 72px;
       height: 72px;
+      min-width: 72px;
+      min-height: 72px;
+      max-width: 72px;
+      max-height: 72px;
       object-fit: cover;
       border-radius: 8px;
       border: 1px solid #e2e8f0;
-      background: #f8fafc;
+      background: #f1f5f9;
       cursor: pointer;
+      display: block;
     }
     .prod-code-badge {
       display: inline-block;
@@ -225,7 +225,7 @@
       border-radius: 8px;
       border: 1px solid #cbd5e1;
       background: #ffffff;
-      transition: all 0.2s ease;
+      transition: background-color 0.2s, border-color 0.2s;
     }
     .ordered-toggle-wrap.checked {
       background: #ecfdf5;
@@ -245,7 +245,7 @@
       border-radius: 8px;
       font-size: 0.82rem;
       font-weight: 600;
-      transition: all 0.2s;
+      transition: background-color 0.2s, border-color 0.2s;
     }
     .btn-preorder-toggle.active {
       background-color: #7c3aed;
@@ -277,12 +277,16 @@
   </style>
 
   <script>
+    // Fail-safe inline SVG Placeholder (Cannot fail, zero network calls, no 404, no flicker loop)
+    var DEFAULT_IMG = "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2272%22%20height%3D%2272%22%20viewBox%3D%220%200%2072%2072%22%3E%3Crect%20width%3D%2272%22%20height%3D%2272%22%20fill%3D%22%23f1f5f9%22%2F%3E%3Cpath%20d%3D%22M20%2050l12-16%208%2010%208-12%2012%2018H20z%22%20fill%3D%22%23cbd5e1%22%2F%3E%3Ccircle%20cx%3D%2228%22%20cy%3D%2226%22%20r%3D%224%22%20fill%3D%22%23cbd5e1%22%2F%3E%3C%2Fsvg%3E";
+
     var currentFilter = 'all';
     var currentSearch = '';
     var start = 0;
     var limit = 40;
     var isLoading = false;
     var hasMore = true;
+    window.productsMap = {};
 
     $(document).ready(function(){
       if(!localStorage.user_id){
@@ -309,13 +313,20 @@
         loadData(true);
       });
 
-      // Infinite scroll
+      // Infinite scroll with throttle
+      var scrollThrottle = null;
       $(window).scroll(function() {
-        if ($(window).scrollTop() + $(window).innerHeight() >= $(document).height() - 150) {
+        if (scrollThrottle) return;
+        scrollThrottle = setTimeout(function() {
+          scrollThrottle = null;
           if (!isLoading && hasMore) {
-            loadData(false);
+            var scrollPosition = $(window).scrollTop() + $(window).innerHeight();
+            var docHeight = $(document).height();
+            if (scrollPosition >= docHeight - 250) {
+              loadData(false);
+            }
           }
-        }
+        }, 200);
       });
     });
 
@@ -331,17 +342,18 @@
       if (isReset) {
         start = 0;
         hasMore = true;
-        $('#listContainer').empty();
+        window.productsMap = {};
+        $('#listContainer').html('<div class="text-center py-5" id="pageLoading"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><div class="mt-2 text-muted font-weight-bold">กำลังโหลดข้อมูลสินค้า...</div></div>');
         $('#emptyState').prop('hidden', true);
+        $('#btnLoadMoreWrap').prop('hidden', true);
       }
 
       if (isLoading) return;
       isLoading = true;
 
-      if (start === 0) {
-        EasyLoading.show({ text: "กำลังโหลดข้อมูลสินค้า..." });
-      } else {
+      if (start > 0) {
         $('#loadMoreSpinner').prop('hidden', false);
+        $('#btnLoadMoreWrap').prop('hidden', true);
       }
 
       $.ajax({
@@ -356,7 +368,9 @@
         },
         dataType: "json",
         success: function(res) {
-          EasyLoading.hide();
+          if (isReset) {
+            $('#listContainer').empty();
+          }
           $('#loadMoreSpinner').prop('hidden', true);
           isLoading = false;
 
@@ -367,11 +381,15 @@
             if (isReset && items.length === 0) {
               $('#emptyState').prop('hidden', false);
               hasMore = false;
+              $('#btnLoadMoreWrap').prop('hidden', true);
               return;
             }
 
             if (items.length < limit) {
               hasMore = false;
+              $('#btnLoadMoreWrap').prop('hidden', true);
+            } else {
+              $('#btnLoadMoreWrap').prop('hidden', false);
             }
 
             $.each(items, function(i, item) {
@@ -384,7 +402,9 @@
           }
         },
         error: function(err) {
-          EasyLoading.hide();
+          if (isReset) {
+            $('#listContainer').html('<div class="text-center py-5 text-danger"><i class="fas fa-exclamation-triangle fa-3x mb-2"></i><div>เกิดข้อผิดพลาดในการโหลดข้อมูล</div></div>');
+          }
           $('#loadMoreSpinner').prop('hidden', true);
           isLoading = false;
           console.error("AJAX Error:", err);
@@ -403,6 +423,9 @@
     }
 
     function renderCard(item) {
+      // Store in memory map to avoid injecting huge base64 strings into DOM
+      window.productsMap[item.prod_id] = item;
+
       var statusClass = 'status-' + item.status;
       if (item.is_preorder) {
         statusClass += ' is-preorder-card';
@@ -447,13 +470,16 @@
         '</div>';
       }
 
+      // Safe image URL with zero recursion onerror
+      var safeImgSrc = (item.img && item.img.trim() !== '' && item.img !== 'img/no-image.png' && item.img !== 'img/no_img.png') ? item.img : DEFAULT_IMG;
+
       var cardHtml = 
       '<div class="reorder-card ' + statusClass + '" id="card-prod-' + item.prod_id + '">' +
         '<div class="row align-items-center">' +
 
           // Col 1: รูปภาพสินค้า
           '<div class="col-auto pr-0 text-center">' +
-            '<img src="' + item.img + '" class="prod-thumb" alt="Product" onerror="this.src=\'img/no-image.png\'" onclick="showLargeImage(\'' + item.img + '\', \'' + escapeHtml(item.prod_name) + '\')">' +
+            '<img src="' + safeImgSrc + '" class="prod-thumb" alt="Product" onerror="this.onerror=null; this.src=DEFAULT_IMG;" onclick="showLargeImageById(' + item.prod_id + ')">' +
           '</div>' +
 
           // Col 2: ข้อมูลสินค้าและสถานะ
@@ -534,12 +560,9 @@
         success: function(res) {
           if (res && res.status === 'success') {
             showToast('✓ บันทึกขั้นต่ำเป็น ' + minVal + ' ชิ้น เรียบร้อย');
-            // รีเฟรชสถานะของการ์ด
             var $card = $('#card-prod-' + prod_id);
             $card.removeClass('status-danger status-warning status-normal');
             $card.addClass('status-' + res.new_status);
-            
-            // อัปเดต Stats เร็วๆ
             refreshStats();
           } else {
             showToast('⚠️ ไม่สามารถบันทึกได้: ' + (res.message || ''));
@@ -641,7 +664,7 @@
       });
     }
 
-    // ไปหน้านำเข้าสินค้าโดยกรอกสินค้าตัวนี้ให้อัตโนมัติ
+    // ไปหน้านำเข้าสินค้าโดยกรอกสินค้านี้ให้อัตโนมัติ
     function goToImport(prod_id) {
       localStorage.arr_prod_i = JSON.stringify([{ prod_id: prod_id }]);
       window.location = 'web_import.html';
@@ -721,9 +744,12 @@
       });
     }
 
-    // Modal ดูรูปใหญ่
-    function showLargeImage(src, name) {
-      $('#imageModalTitle').text(name);
+    // Modal ดูรูปใหญ่ โดยดึงจาก memory map
+    function showLargeImageById(prod_id) {
+      var item = window.productsMap[prod_id];
+      if (!item) return;
+      var src = (item.img && item.img.trim() !== '' && item.img !== 'img/no-image.png' && item.img !== 'img/no_img.png') ? item.img : DEFAULT_IMG;
+      $('#imageModalTitle').text(item.prod_name || '');
       $('#imageModalImg').attr('src', src);
       $('#imageModal').modal('show');
     }
@@ -878,6 +904,13 @@
     <div id="loadMoreSpinner" class="text-center py-3" hidden>
       <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
       <div class="text-muted small mt-1">กำลังโหลดรายการเพิ่มเติม...</div>
+    </div>
+
+    <!-- Manual Load More Button -->
+    <div class="text-center py-3" id="btnLoadMoreWrap" hidden>
+      <button class="btn btn-outline-primary px-4 font-weight-bold" onclick="loadData(false)">
+        <i class="fas fa-chevron-down mr-1"></i> โหลดรายการถัดไป
+      </button>
     </div>
   </div>
 
