@@ -165,7 +165,8 @@
                     echo "fail";
                     exit;
                 }            
-            }       
+            }
+            @mysqli_query($conn, "UPDATE product_status_ext SET is_ordered = 0 WHERE prod_id = '$prod_id'");
         }
         mysqli_commit($conn); 
         echo "success"; 
@@ -325,7 +326,8 @@
                     echo "fail";
                     exit;
                 }  
-            }  
+            }
+            @mysqli_query($conn, "UPDATE product_status_ext SET is_ordered = 0 WHERE prod_id = '$prod_id'");
         }
         mysqli_commit($conn); 
         echo "success"; 

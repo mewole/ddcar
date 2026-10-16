@@ -1,184 +1,974 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-	<meta charset="utf-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="">
-  <meta name="author" content="">
+  <meta name="description" content="ระบบแจ้งเตือนและบริหารสินค้าใกล้หมดสต๊อก DD CAR">
+  <title>เช็คสถานะสินค้า & สั่งของ - DD MOTOR SPORT</title>
 
-  <title>เช็คสถานะสินค้า - DD MOTOR SPORT</title>
-
-  <!-- Bootstrap Import -->
+  <!-- Bootstrap 4 & Dependencies -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css">
 
-  <!-- Super cool dialog-->
+  <!-- jQuery Confirm Dialog -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
-	
-	<!-- Loading -->
-	<link rel="stylesheet" href="css/easy-loading.css">
-	<script src="js/easy-loading.js"></script>	
 
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet"> 
-  <!-- Main -->
-  <link href="css/untitled.css" rel="stylesheet">  
+  <!-- Loading -->
+  <link rel="stylesheet" href="css/easy-loading.css">
+  <script src="js/easy-loading.js"></script>
+
+  <!-- Google Font Prompt -->
+  <link href="https://fonts.googleapis.com/css?family=Prompt:300,400,500,600,700&display=swap" rel="stylesheet">
+  <!-- DD CAR Base Styles -->
+  <link href="css/untitled.css" rel="stylesheet">
+
   <style>
-    body{color: var(--text-primary);}
-    .cus-odd, .cus-even{
-      padding-top: 14px; padding-bottom: 14px; color: var(--text-primary); margin-bottom: 8px; cursor: pointer;
-      background-color: #ffffff !important; border: 1px solid var(--border-light); border-radius: var(--radius-sm);
-      box-shadow: var(--shadow-sm); transition: all 0.15s ease;
+    body {
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f4f6f9;
+      color: #2c3e50;
+      padding-bottom: 60px;
     }
-    .cus-odd:hover, .cus-even:hover{
-      border-color: var(--color-dark) !important; background-color: #f8fafc !important; box-shadow: var(--shadow-md); transform: translateY(-1px);
+
+    /* KPI Summary Cards / Filter Pills */
+    .kpi-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
     }
-    .cus-odd h5, .cus-even h5{
-      color: var(--color-black) !important; font-weight: 600; font-size: 1rem;
+    .kpi-card {
+      flex: 1 1 calc(16.66% - 12px);
+      min-width: 140px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      position: relative;
+      overflow: hidden;
     }
-    h5{
-      letter-spacing: 2px;
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+      border-color: #cbd5e1;
     }
-    ul {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
-    }   
-    .yellow{
-        color: #ffbb33;
+    .kpi-card.active {
+      border-color: #2563eb !important;
+      background: #eff6ff !important;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15) !important;
     }
-    .red{
-      color: #d63232;
+    .kpi-card.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #2563eb;
     }
-    .green{
-      color: #3dd12a;
-    } 
+    .kpi-title {
+      font-size: 0.82rem;
+      color: #64748b;
+      font-weight: 500;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kpi-value {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.2;
+    }
+
+    /* Item Card */
+    .reorder-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+      transition: all 0.18s ease;
+    }
+    .reorder-card:hover {
+      box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+      border-color: #cbd5e1;
+    }
+    .reorder-card.status-danger {
+      border-left: 5px solid #ef4444;
+    }
+    .reorder-card.status-warning {
+      border-left: 5px solid #f59e0b;
+    }
+    .reorder-card.status-normal {
+      border-left: 5px solid #10b981;
+    }
+    .reorder-card.is-preorder-card {
+      background: #fdfefe;
+      border-left: 5px solid #8b5cf6;
+    }
+
+    /* Product Image */
+    .prod-thumb {
+      width: 72px;
+      height: 72px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+    .prod-code-badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-family: monospace;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+    .prod-place-badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      background: #fef3c7;
+      color: #92400e;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    /* Status Badges */
+    .badge-status {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 6px;
+    }
+    .badge-danger-soft {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    .badge-warning-soft {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+    .badge-success-soft {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    .badge-preorder {
+      background-color: #ede9fe;
+      color: #5b21b6;
+      border: 1px solid #ddd6fe;
+    }
+
+    /* Stock count pill */
+    .stock-badge {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ef4444;
+    }
+    .stock-sub {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    /* Inline Edit Min Amount */
+    .min-input-group {
+      max-width: 140px;
+    }
+    .min-input-group input {
+      font-weight: 600;
+      text-align: center;
+      border-radius: 6px 0 0 6px !important;
+      border-color: #cbd5e1;
+    }
+    .min-input-group button {
+      border-radius: 0 6px 6px 0 !important;
+    }
+
+    /* Supplier Recommendation Box */
+    .supplier-box {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.82rem;
+    }
+    .supplier-best-name {
+      color: #15803d;
+      font-weight: 700;
+    }
+    .supplier-best-cost {
+      color: #1e293b;
+      font-weight: 700;
+    }
+
+    /* Ordered Checkbox Custom Styling */
+    .ordered-toggle-wrap {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      transition: all 0.2s ease;
+    }
+    .ordered-toggle-wrap.checked {
+      background: #ecfdf5;
+      border-color: #10b981;
+      color: #047857;
+      font-weight: 600;
+    }
+    .ordered-toggle-wrap input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+
+    /* Preorder Button Toggle */
+    .btn-preorder-toggle {
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-preorder-toggle.active {
+      background-color: #7c3aed;
+      color: #ffffff;
+      border-color: #7c3aed;
+      box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
+    }
+
+    /* Custom Toast */
+    .toast-feedback {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #1e293b;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+      z-index: 9999;
+      font-size: 0.95rem;
+      font-weight: 500;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
+
   <script>
+    var currentFilter = 'all';
+    var currentSearch = '';
     var start = 0;
-    var bool = false;
-    var color;   
+    var limit = 40;
+    var isLoading = false;
+    var hasMore = true;
+
     $(document).ready(function(){
       if(!localStorage.user_id){
-				window.location = 'web_login.html';
+        window.location = 'web_login.html';
+        return;
       }
-      get_bell();
 
-      window.addEventListener('scroll', () => { 
-        // Calculate the scroll position 
-        const scrollPosition = window.scrollY + window.innerHeight; 
-        const documentHeight = document.documentElement.scrollHeight; 
-    
-        // Check if the user has scrolled to the bottom 
-        if (scrollPosition >= documentHeight) { 
-          if(!$("#myUL").prop('hidden')){              
-              if(bool){
-                return 0;
-              }
-              get_bell();           
-            }
-        } 
+      loadData(true);
+
+      // Search input keyup debounce
+      var searchTimeout = null;
+      $('#searchInput').on('input', function(){
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function(){
+          currentSearch = $('#searchInput').val().trim();
+          loadData(true);
+        }, 350);
       });
-    });
 
-    $(document).keydown(function(objEvent) {
-      if (objEvent.keyCode == 13) {  //enter pressed
-        objEvent.preventDefault();           
-        search();        
-      }         
-    })
+      // Clear search
+      $('#btnClearSearch').on('click', function(){
+        $('#searchInput').val('');
+        currentSearch = '';
+        loadData(true);
+      });
 
-    function get_bell(){
-      $.ajax({
-        type: "POST",
-        url:"php/get_status_prod.php",
-        data: {'start' : start},
-        beforeSend: function(){
-          EasyLoading.show({
-						text: "กำลังโหลด"
-					});
-        },
-        success: function(data){
-          EasyLoading.hide();
-          var obj = jQuery.parseJSON(data);
-          if(obj){
-            $.each(obj, function(i, field){
-              var prod_id = field.prod_id;
-              var prod_name = field.prod_name;
-              var status = field.status;            
-              switch(status) {
-                case "normal":
-                  color = "green";
-                  break;
-                case "warning":
-                  color = "yellow";
-                  break;
-                case "danger":
-                  color = "red";
-                  break;
-              }
-              if(i % 2 == 0){
-                $('#myUL').append('<li> <div class="row justify-content-center cus-odd">'+
-                  '<div class="col-1"><i class="fas fa-circle '+color+'"></i></div>'+
-                  '<div class="col-8 text-center"><h5>'+prod_name+'</h5></div>'+
-                '</div></li>');
-              }else{
-                $('#myUL').append('<li> <div class="row justify-content-center cus-even">'+
-                  '<div class="col-1"><i class="fas fa-circle '+color+'"></i></div>'+
-                  '<div class="col-8 text-center"><h5>'+prod_name+'</h5></div>'+
-                '</div></li>');
-              }
-            });
+      // Infinite scroll
+      $(window).scroll(function() {
+        if ($(window).scrollTop() + $(window).innerHeight() >= $(document).height() - 150) {
+          if (!isLoading && hasMore) {
+            loadData(false);
           }
         }
       });
-      start += 20;
+    });
+
+    function setFilter(filterType) {
+      if (currentFilter === filterType) return;
+      currentFilter = filterType;
+      $('.kpi-card').removeClass('active');
+      $('#kpi-' + filterType).addClass('active');
+      loadData(true);
+    }
+
+    function loadData(isReset) {
+      if (isReset) {
+        start = 0;
+        hasMore = true;
+        $('#listContainer').empty();
+        $('#emptyState').prop('hidden', true);
+      }
+
+      if (isLoading) return;
+      isLoading = true;
+
+      if (start === 0) {
+        EasyLoading.show({ text: "กำลังโหลดข้อมูลสินค้า..." });
+      } else {
+        $('#loadMoreSpinner').prop('hidden', false);
+      }
+
+      $.ajax({
+        type: "POST",
+        url: "php/get_status_prod.php",
+        data: {
+          rich: 1,
+          filter: currentFilter,
+          search: currentSearch,
+          start: start,
+          limit: limit
+        },
+        dataType: "json",
+        success: function(res) {
+          EasyLoading.hide();
+          $('#loadMoreSpinner').prop('hidden', true);
+          isLoading = false;
+
+          if (res && res.status === 'success') {
+            updateKpiStats(res.stats);
+
+            var items = res.items || [];
+            if (isReset && items.length === 0) {
+              $('#emptyState').prop('hidden', false);
+              hasMore = false;
+              return;
+            }
+
+            if (items.length < limit) {
+              hasMore = false;
+            }
+
+            $.each(items, function(i, item) {
+              renderCard(item);
+            });
+
+            start += items.length;
+          } else {
+            console.error('API Error:', res);
+          }
+        },
+        error: function(err) {
+          EasyLoading.hide();
+          $('#loadMoreSpinner').prop('hidden', true);
+          isLoading = false;
+          console.error("AJAX Error:", err);
+        }
+      });
+    }
+
+    function updateKpiStats(st) {
+      if (!st) return;
+      $('#val-all').text(st.total_low || 0);
+      $('#val-danger').text(st.danger_count || 0);
+      $('#val-warning').text(st.warning_count || 0);
+      $('#val-not_ordered').text(st.not_ordered_count || 0);
+      $('#val-ordered').text(st.ordered_count || 0);
+      $('#val-preorder').text(st.preorder_count || 0);
+    }
+
+    function renderCard(item) {
+      var statusClass = 'status-' + item.status;
+      if (item.is_preorder) {
+        statusClass += ' is-preorder-card';
+      }
+
+      var statusBadge = '';
+      if (item.status === 'danger') {
+        statusBadge = '<span class="badge badge-status badge-danger-soft"><i class="fas fa-exclamation-circle mr-1"></i> วิกฤต (<=10)</span>';
+      } else if (item.status === 'warning') {
+        statusBadge = '<span class="badge badge-status badge-warning-soft"><i class="fas fa-exclamation-triangle mr-1"></i> ใกล้หมด (<=ขั้นต่ำ)</span>';
+      } else {
+        statusBadge = '<span class="badge badge-status badge-success-soft"><i class="fas fa-check-circle mr-1"></i> ปกติ</span>';
+      }
+
+      var preorderBadge = item.is_preorder ? 
+        '<span class="badge badge-status badge-preorder ml-1"><i class="fas fa-box-open mr-1"></i> พรีออเดอร์ (ไม่สั่งเก็บ)</span>' : '';
+
+      var placeHtml = (item.place && item.place !== '-') ? 
+        '<span class="prod-place-badge ml-1"><i class="fas fa-map-marker-alt mr-1"></i>' + item.place + '</span>' : '';
+
+      // Supplier Info
+      var supplierHtml = '';
+      if (item.best_supplier) {
+        supplierHtml = '<div class="supplier-box">' +
+          '<div class="d-flex align-items-center justify-content-between">' +
+            '<div>' +
+              '<i class="fas fa-crown text-warning mr-1"></i>' +
+              'ร้านถูกสุด: <span class="supplier-best-name">' + item.best_supplier + '</span>' +
+              '<span class="ml-2 font-weight-bold">(' + item.best_cost.toLocaleString() + ' ฿)</span>' +
+            '</div>' +
+            '<button type="button" class="btn btn-xs btn-outline-info py-0 px-2" onclick="openSupplierModal(' + item.prod_id + ', \'' + escapeHtml(item.prod_name) + '\')">' +
+              '<i class="fas fa-search-dollar mr-1"></i> เทียบร้าน' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      } else {
+        supplierHtml = '<div class="supplier-box text-muted small d-flex justify-content-between align-items-center">' +
+          '<span><i class="fas fa-info-circle mr-1"></i> ยังไม่มีประวัติการซื้อจากร้าน</span>' +
+          '<button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" onclick="openSupplierModal(' + item.prod_id + ', \'' + escapeHtml(item.prod_name) + '\')">' +
+            '<i class="fas fa-search mr-1"></i> ประวัติ' +
+          '</button>' +
+        '</div>';
+      }
+
+      var cardHtml = 
+      '<div class="reorder-card ' + statusClass + '" id="card-prod-' + item.prod_id + '">' +
+        '<div class="row align-items-center">' +
+
+          // Col 1: รูปภาพสินค้า
+          '<div class="col-auto pr-0 text-center">' +
+            '<img src="' + item.img + '" class="prod-thumb" alt="Product" onerror="this.src=\'img/no-image.png\'" onclick="showLargeImage(\'' + item.img + '\', \'' + escapeHtml(item.prod_name) + '\')">' +
+          '</div>' +
+
+          // Col 2: ข้อมูลสินค้าและสถานะ
+          '<div class="col-12 col-md-4 my-2 my-md-0">' +
+            '<div class="d-flex flex-wrap align-items-center mb-1">' +
+              (item.prod_code && item.prod_code !== '-' ? '<span class="prod-code-badge mr-2"><i class="fas fa-barcode mr-1"></i>' + item.prod_code + '</span>' : '') +
+              statusBadge +
+              preorderBadge +
+              placeHtml +
+            '</div>' +
+            '<h6 class="font-weight-bold mb-1 text-dark" style="font-size: 1.02rem;">' + item.prod_name + '</h6>' +
+            supplierHtml +
+          '</div>' +
+
+          // Col 3: จำนวนคงเหลือ
+          '<div class="col-6 col-md-2 text-center border-left border-right py-2">' +
+            '<div class="small text-muted font-weight-bold">คงเหลือทั้งหมด</div>' +
+            '<div class="stock-badge" id="stock-val-' + item.prod_id + '">' + item.total_amount + ' <small class="text-secondary font-weight-normal">ชิ้น</small></div>' +
+            '<div class="stock-sub">โกดัง: ' + item.warehouse_amount + ' | หน้าร้าน: ' + item.shop_amount + '</div>' +
+          '</div>' +
+
+          // Col 4: แก้ไขขั้นต่ำ (Inline Min Edit)
+          '<div class="col-6 col-md-2 text-center py-2">' +
+            '<div class="small text-muted font-weight-bold mb-1"><i class="fas fa-sliders-h mr-1 text-primary"></i> ขั้นต่ำ (Min)</div>' +
+            '<div class="input-group input-group-sm min-input-group mx-auto">' +
+              '<input type="number" min="0" class="form-control" id="min-input-' + item.prod_id + '" value="' + item.min_amount + '" onkeydown="if(event.keyCode==13) saveMinAmount(' + item.prod_id + ')">' +
+              '<div class="input-group-append">' +
+                '<button class="btn btn-primary" type="button" onclick="saveMinAmount(' + item.prod_id + ')" title="บันทึกจำนวนขั้นต่ำ">' +
+                  '<i class="fas fa-save"></i>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+          // Col 5: ปุ่มสั่งของแล้ว & พรีออเดอร์
+          '<div class="col-12 col-md-3 text-right pt-2 pt-md-0">' +
+            '<div class="d-flex flex-column align-items-end">' +
+              // Checkbox สั่งของแล้ว
+              '<div class="ordered-toggle-wrap ' + (item.is_ordered ? 'checked' : '') + ' mb-2" id="ord-wrap-' + item.prod_id + '" onclick="toggleOrderedClick(' + item.prod_id + ')">' +
+                '<input type="checkbox" id="chk-ord-' + item.prod_id + '" ' + (item.is_ordered ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleOrdered(' + item.prod_id + ', this.checked);">' +
+                '<label class="m-0 font-weight-bold" for="chk-ord-' + item.prod_id + '" id="lbl-ord-' + item.prod_id + '">' +
+                  (item.is_ordered ? '<i class="fas fa-check-circle mr-1 text-success"></i> สั่งของแล้ว' : '<i class="far fa-circle mr-1 text-muted"></i> ยังไม่สั่ง') +
+                '</label>' +
+              '</div>' +
+
+              // ปุ่ม Action: พรีออเดอร์ & ไปหน้านำเข้า
+              '<div class="btn-group btn-group-sm w-100">' +
+                '<button type="button" class="btn btn-sm btn-preorder-toggle ' + (item.is_preorder ? 'active' : 'btn-outline-secondary') + '" id="btn-pre-' + item.prod_id + '" onclick="togglePreorder(' + item.prod_id + ', ' + (item.is_preorder ? 0 : 1) + ')" title="สินค้าที่ไม่ต้องสั่งเก็บสต๊อก จะสั่งต่อเมื่อมีออเดอร์">' +
+                  '<i class="fas fa-box-open mr-1"></i> ' + (item.is_preorder ? 'พรีออเดอร์' : 'ตั้งเป็นพรีออเดอร์') +
+                '</button>' +
+                '<button type="button" class="btn btn-sm btn-success font-weight-bold px-3" onclick="goToImport(' + item.prod_id + ')" title="เปิดหน้านำเข้าสินค้าโดยกรอกสินค้านี้ให้อัตโนมัติ">' +
+                  '<i class="fas fa-plus mr-1"></i> นำเข้า' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+        '</div>' +
+      '</div>';
+
+      $('#listContainer').append(cardHtml);
+    }
+
+    // ฟังก์ชันบันทึกขั้นต่ำโดยตรง
+    function saveMinAmount(prod_id) {
+      var minVal = parseInt($('#min-input-' + prod_id).val()) || 0;
+      if (minVal < 0) minVal = 0;
+
+      $.ajax({
+        type: "POST",
+        url: "php/update_bell_status.php",
+        data: {
+          action: 'update_min',
+          prod_id: prod_id,
+          min_amount: minVal
+        },
+        dataType: "json",
+        success: function(res) {
+          if (res && res.status === 'success') {
+            showToast('✓ บันทึกขั้นต่ำเป็น ' + minVal + ' ชิ้น เรียบร้อย');
+            // รีเฟรชสถานะของการ์ด
+            var $card = $('#card-prod-' + prod_id);
+            $card.removeClass('status-danger status-warning status-normal');
+            $card.addClass('status-' + res.new_status);
+            
+            // อัปเดต Stats เร็วๆ
+            refreshStats();
+          } else {
+            showToast('⚠️ ไม่สามารถบันทึกได้: ' + (res.message || ''));
+          }
+        },
+        error: function() {
+          showToast('⚠️ เกิดข้อผิดพลาดในการเชื่อมต่อ');
+        }
+      });
+    }
+
+    // ฟังก์ชันคลิกที่กรอบ Checkbox สั่งของแล้ว
+    function toggleOrderedClick(prod_id) {
+      var $chk = $('#chk-ord-' + prod_id);
+      var newChecked = !$chk.prop('checked');
+      $chk.prop('checked', newChecked);
+      toggleOrdered(prod_id, newChecked);
+    }
+
+    // ฟังก์ชันสลับสถานะสั่งของแล้ว (AJAX)
+    function toggleOrdered(prod_id, isChecked) {
+      var val = isChecked ? 1 : 0;
+      var $wrap = $('#ord-wrap-' + prod_id);
+      var $lbl = $('#lbl-ord-' + prod_id);
+
+      if (isChecked) {
+        $wrap.addClass('checked');
+        $lbl.html('<i class="fas fa-check-circle mr-1 text-success"></i> สั่งของแล้ว');
+      } else {
+        $wrap.removeClass('checked');
+        $lbl.html('<i class="far fa-circle mr-1 text-muted"></i> ยังไม่สั่ง');
+      }
+
+      $.ajax({
+        type: "POST",
+        url: "php/update_bell_status.php",
+        data: {
+          action: 'toggle_ordered',
+          prod_id: prod_id,
+          is_ordered: val
+        },
+        dataType: "json",
+        success: function(res) {
+          if (res && res.status === 'success') {
+            showToast(isChecked ? '✓ ทำเครื่องหมาย: สั่งของแล้ว' : '○ ยกเลิกสถานะสั่งของ');
+            refreshStats();
+          } else {
+            showToast('⚠️ ไม่สามารถอัปเดตสถานะได้');
+          }
+        }
+      });
+    }
+
+    // ฟังก์ชันสลับสถานะพรีออเดอร์ (AJAX)
+    function togglePreorder(prod_id, newPreorderVal) {
+      $.ajax({
+        type: "POST",
+        url: "php/update_bell_status.php",
+        data: {
+          action: 'toggle_preorder',
+          prod_id: prod_id,
+          is_preorder: newPreorderVal
+        },
+        dataType: "json",
+        success: function(res) {
+          if (res && res.status === 'success') {
+            var $card = $('#card-prod-' + prod_id);
+            var $btn = $('#btn-pre-' + prod_id);
+
+            if (newPreorderVal === 1) {
+              $card.addClass('is-preorder-card');
+              $btn.addClass('active').removeClass('btn-outline-secondary').html('<i class="fas fa-box-open mr-1"></i> พรีออเดอร์');
+              $btn.attr('onclick', 'togglePreorder(' + prod_id + ', 0)');
+              showToast('📦 กำหนดเป็น "พรีออเดอร์" (ไม่สั่งเก็บสต๊อก)');
+            } else {
+              $card.removeClass('is-preorder-card');
+              $btn.removeClass('active').addClass('btn-outline-secondary').html('<i class="fas fa-box-open mr-1"></i> ตั้งเป็นพรีออเดอร์');
+              $btn.attr('onclick', 'togglePreorder(' + prod_id + ', 1)');
+              showToast('○ ยกเลิกสถานะพรีออเดอร์');
+            }
+            refreshStats();
+          }
+        }
+      });
+    }
+
+    // อัปเดต KPI ตัวเลขอย่างรวดเร็ว
+    function refreshStats() {
+      $.ajax({
+        type: "POST",
+        url: "php/get_status_prod.php",
+        data: { rich: 1, filter: 'all', limit: 1 },
+        dataType: "json",
+        success: function(res) {
+          if (res && res.stats) {
+            updateKpiStats(res.stats);
+          }
+        }
+      });
+    }
+
+    // ไปหน้านำเข้าสินค้าโดยกรอกสินค้าตัวนี้ให้อัตโนมัติ
+    function goToImport(prod_id) {
+      localStorage.arr_prod_i = JSON.stringify([{ prod_id: prod_id }]);
+      window.location = 'web_import.html';
+    }
+
+    // เปิด Modal ประวัติราคาและเปรียบเทียบร้านค้า
+    function openSupplierModal(prod_id, prod_name) {
+      $('#modalProdName').text(prod_name);
+      $('#modalImportBtn').attr('onclick', 'goToImport(' + prod_id + ')');
+      $('#supplierModalBody').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><div class="mt-2 text-muted">กำลังค้นหาประวัติราคาทุกร้าน...</div></div>');
+      $('#supplierModal').modal('show');
+
+      $.ajax({
+        type: "POST",
+        url: "php/get_supplier_prices.php",
+        data: { prod_id: prod_id },
+        dataType: "json",
+        success: function(d) {
+          var html = '';
+          if (d && d.best_supplier && d.best_cost > 0) {
+            html += '<div class="alert alert-success d-flex align-items-center mb-3 py-2 px-3">' +
+              '<i class="fas fa-trophy fa-2x text-warning mr-3"></i>' +
+              '<div>' +
+                '<div class="font-weight-bold" style="font-size: 1.05rem;">ร้านที่ถูกที่สุด: ' + d.best_supplier + '</div>' +
+                '<div>ราคาทุนต่ำสุด: <span class="badge badge-success font-weight-bold" style="font-size: 1rem;">' + parseFloat(d.best_cost).toLocaleString() + ' บาท</span></div>' +
+              '</div>' +
+            '</div>';
+          }
+
+          if (d && d.suppliers && d.suppliers.length > 0) {
+            html += '<h6 class="font-weight-bold text-dark mt-2 mb-2"><i class="fas fa-store mr-1 text-primary"></i> ราคาเปรียบเทียบแยกตามร้านค้า</h6>';
+            html += '<div class="table-responsive"><table class="table table-bordered table-sm text-center mb-3">';
+            html += '<thead class="thead-light"><tr><th>ร้านค้า (จาก)</th><th>ราคาต่ำสุด</th><th>ราคาสูงสุด</th><th>ราคาล่าสุด</th><th>จำนวนครั้ง</th></tr></thead><tbody>';
+
+            $.each(d.suppliers, function(idx, s) {
+              var isBest = (s.supplier === d.best_supplier);
+              var minC = parseFloat(s.min_cost || 0);
+              var maxC = parseFloat(s.max_cost || 0);
+              var lastC = parseFloat(s.last_cost || 0);
+
+              html += '<tr ' + (isBest ? 'class="table-success font-weight-bold"' : '') + '>';
+              html += '<td class="align-middle text-left">' + (isBest ? '🏆 ' : '') + s.supplier + '</td>';
+              html += '<td class="align-middle text-success font-weight-bold">' + (minC > 0 ? minC.toLocaleString() + ' ฿' : '-') + '</td>';
+              html += '<td class="align-middle text-muted">' + (maxC > 0 ? maxC.toLocaleString() + ' ฿' : '-') + '</td>';
+              html += '<td class="align-middle font-weight-bold text-primary">' + (lastC > 0 ? lastC.toLocaleString() + ' ฿' : '-') + '</td>';
+              html += '<td class="align-middle"><span class="badge badge-secondary">' + s.times_bought + ' ครั้ง</span></td>';
+              html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+          } else {
+            html += '<div class="text-center text-muted py-3 bg-light rounded mb-3"><i class="fas fa-info-circle mr-1"></i> ยังไม่มีประวัติการซื้อแยกตามร้านสำหรับสินค้านี้</div>';
+          }
+
+          if (d && d.recent_orders && d.recent_orders.length > 0) {
+            html += '<h6 class="font-weight-bold text-secondary mt-3 mb-2"><i class="fas fa-history mr-1"></i> ประวัติการรับเข้าล่าสุด</h6>';
+            html += '<div class="table-responsive"><table class="table table-bordered table-sm text-center mb-0">';
+            html += '<thead class="thead-light"><tr><th>วันที่รับเข้า</th><th>จำนวน</th><th>ราคาทุน</th><th>ร้าน (จาก)</th></tr></thead><tbody>';
+
+            $.each(d.recent_orders, function(idx, ro) {
+              var roCost = parseFloat(ro.stock_cost || 0);
+              var roSup = ro.source_from ? ('<span class="badge badge-primary font-weight-bold">' + ro.source_from + '</span>') : '<span class="text-muted">(ไม่ได้ระบุ)</span>';
+              html += '<tr>';
+              html += '<td class="text-muted">' + (ro.date_time || '-') + '</td>';
+              html += '<td>' + (ro.amount || '1') + '</td>';
+              html += '<td class="font-weight-bold text-success">' + (roCost > 0 ? roCost.toLocaleString() + ' ฿' : '-') + '</td>';
+              html += '<td>' + roSup + '</td>';
+              html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+          }
+
+          $('#supplierModalBody').html(html);
+        },
+        error: function() {
+          $('#supplierModalBody').html('<div class="text-center text-danger py-4"><i class="fas fa-times-circle fa-2x"></i><div class="mt-2">เกิดข้อผิดพลาดในการโหลดข้อมูล</div></div>');
+        }
+      });
+    }
+
+    // Modal ดูรูปใหญ่
+    function showLargeImage(src, name) {
+      $('#imageModalTitle').text(name);
+      $('#imageModalImg').attr('src', src);
+      $('#imageModal').modal('show');
+    }
+
+    // แสดง Toast Feedback
+    function showToast(msg) {
+      var $t = $('#toastFeedback');
+      $t.text(msg).stop(true, true).fadeIn(200).delay(2200).fadeOut(300);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
     }
 
     function logout(){
-			localStorage.clear();
-		}    
+      localStorage.clear();
+      window.location = 'web_login.html';
+    }
   </script>
 </head>
+
 <body>
-	<div class="container-fullwidth justify-content-center">
-		<nav class="navbar navbar-expand-lg navbar-dark navbar-ddcar">
-            <a class="navbar-brand d-flex align-items-center" href="web_select.html">
-                <i class="fa fa-bell mr-2 text-warning"></i>
-                <span id="nav-title">สถานะของรายการสินค้า</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarDDCar"
-                aria-controls="navbarDDCar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarDDCar">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item"><a class="nav-link" href="web_sale.html"><i class="fa fa-shopping-cart mr-1"></i> ขายสินค้า</a></li>
-                    <li class="nav-item"><a class="nav-link" href="web_import.html"><i class="fa fa-arrow-down mr-1"></i> นำสินค้าเข้า</a></li>
-                    <li class="nav-item"><a class="nav-link" href="web_stock.html"><i class="fa fa-boxes mr-1"></i> เช็คสต๊อก</a></li>
-                    <li class="nav-item"><a class="nav-link" href="web_export.html"><i class="fa fa-arrow-up mr-1"></i> สินค้าออกโกดัง</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="web_mng_bell.html"><i class="fa fa-bell mr-1"></i> เช็คสถานะสินค้า</a></li>
-                    <li class="nav-item"><a class="nav-link" href="web_select.html"><i class="fa fa-history mr-1"></i> รายการย้อนหลัง</a></li>
-                    <li class="nav-item"><a class="nav-link" href="web_customer.html"><i class="fa fa-users mr-1"></i> ลูกค้า</a></li>
-                    <li class="nav-item"><a class="nav-link" href="web_qrprint.html"><i class="fa fa-qrcode mr-1"></i> พิมพ์คิวอาร์</a></li>
-                    <li class="nav-item"><a class="nav-link text-danger font-weight-bold" href="" onclick="logout()"><i class="fa fa-sign-out-alt mr-1"></i> ออกจากระบบ</a></li>
-                </ul>
-            </div>
-        </nav>
-        <div style="height: 10px;"></div>   
-    <div class="container-fullwidth">
-      <div class="row justify-content-center">
-        <div class="col-8 text-center"><h4>ชื่อสินค้า</h4></div>       
+  <!-- Navbar DD CAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-ddcar shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="web_select.html">
+        <i class="fa fa-bell mr-2 text-warning"></i>
+        <span>ระบบแจ้งเตือนและสั่งสินค้า (Smart Reorder)</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarDDCar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarDDCar">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item"><a class="nav-link" href="web_sale.html"><i class="fa fa-shopping-cart mr-1"></i> ขายสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="web_import.html"><i class="fa fa-arrow-down mr-1"></i> นำสินค้าเข้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="web_stock.html"><i class="fa fa-boxes mr-1"></i> เช็คสต๊อก</a></li>
+          <li class="nav-item"><a class="nav-link" href="web_export.html"><i class="fa fa-arrow-up mr-1"></i> สินค้าออกโกดัง</a></li>
+          <li class="nav-item"><a class="nav-link active font-weight-bold" href="web_mng_bell.html"><i class="fa fa-bell mr-1"></i> เช็คสถานะสินค้า</a></li>
+          <li class="nav-item"><a class="nav-link" href="web_select.html"><i class="fa fa-history mr-1"></i> รายการย้อนหลัง</a></li>
+          <li class="nav-item"><a class="nav-link" href="web_customer.html"><i class="fa fa-users mr-1"></i> ลูกค้า</a></li>
+          <li class="nav-item"><a class="nav-link text-danger font-weight-bold" href="javascript:void(0)" onclick="logout()"><i class="fa fa-sign-out-alt mr-1"></i> ออกจากระบบ</a></li>
+        </ul>
       </div>
-    </div><hr style="width: 75%; margin-top: 0;"> <br>
-    <div id="ctn-append" class="container-fullwidth">
-      <ul id="myUL"> </ul>              
-    </div>    
+    </div>
+  </nav>
+
+  <div class="container-fluid mt-3 px-md-4">
+    <!-- Header Controls & Search -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+      <div>
+        <h4 class="font-weight-bold mb-1 text-dark">
+          <i class="fas fa-boxes mr-2 text-primary"></i> บริหารสินค้าใกล้หมด & รายการสั่งของ
+        </h4>
+        <div class="text-muted small">
+          ตรวจสอบสต๊อกคงเหลือจริง, ปรับเปลี่ยนจำนวนขั้นต่ำได้ทันที, ติ๊กรายการที่สั่งของแล้ว และเลือกสินค้าที่เป็นพรีออเดอร์
+        </div>
+      </div>
+      <div class="mt-2 mt-md-0 d-flex align-items-center">
+        <button class="btn btn-outline-secondary btn-sm mr-2" onclick="loadData(true)" title="โหลดข้อมูลใหม่">
+          <i class="fas fa-sync-alt mr-1"></i> รีเฟรช
+        </button>
+        <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#helpModal">
+          <i class="fas fa-question-circle mr-1"></i> คำอธิบายสถานะ
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Summary Cards (Filter Pills) -->
+    <div class="kpi-wrapper">
+      <div class="kpi-card active" id="kpi-all" onclick="setFilter('all')">
+        <div class="kpi-title">
+          <span>ต้องสั่งทั้งหมด</span>
+          <i class="fas fa-layer-group text-primary"></i>
+        </div>
+        <div class="kpi-value text-primary" id="val-all">0</div>
+      </div>
+
+      <div class="kpi-card" id="kpi-danger" onclick="setFilter('danger')">
+        <div class="kpi-title">
+          <span>🔴 วิกฤต (<=10)</span>
+          <i class="fas fa-exclamation-circle text-danger"></i>
+        </div>
+        <div class="kpi-value text-danger" id="val-danger">0</div>
+      </div>
+
+      <div class="kpi-card" id="kpi-warning" onclick="setFilter('warning')">
+        <div class="kpi-title">
+          <span>🟡 ใกล้หมด (<=ขั้นต่ำ)</span>
+          <i class="fas fa-exclamation-triangle text-warning"></i>
+        </div>
+        <div class="kpi-value text-warning" id="val-warning">0</div>
+      </div>
+
+      <div class="kpi-card" id="kpi-not_ordered" onclick="setFilter('not_ordered')">
+        <div class="kpi-title">
+          <span>⏳ รอสั่งของ</span>
+          <i class="fas fa-clock text-secondary"></i>
+        </div>
+        <div class="kpi-value text-secondary" id="val-not_ordered">0</div>
+      </div>
+
+      <div class="kpi-card" id="kpi-ordered" onclick="setFilter('ordered')">
+        <div class="kpi-title">
+          <span>✅ สั่งของแล้ว</span>
+          <i class="fas fa-check-circle text-success"></i>
+        </div>
+        <div class="kpi-value text-success" id="val-ordered">0</div>
+      </div>
+
+      <div class="kpi-card" id="kpi-preorder" onclick="setFilter('preorder')">
+        <div class="kpi-title">
+          <span>📦 พรีออเดอร์</span>
+          <i class="fas fa-box-open text-purple" style="color: #8b5cf6;"></i>
+        </div>
+        <div class="kpi-value" style="color: #7c3aed;" id="val-preorder">0</div>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card mb-3 border-0 shadow-sm">
+      <div class="card-body p-2">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text bg-white border-right-0"><i class="fas fa-search text-muted"></i></span>
+          </div>
+          <input type="text" class="form-control border-left-0" id="searchInput" placeholder="ค้นหาจากชื่อสินค้า, รหัสบาร์โค้ด หรือตำแหน่งวาง...">
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" id="btnClearSearch"><i class="fas fa-times"></i> ล้าง</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products List Container -->
+    <div id="listContainer"></div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-5 bg-white rounded border" hidden>
+      <i class="fas fa-clipboard-check fa-4x text-success mb-3"></i>
+      <h5 class="font-weight-bold text-dark">ไม่พบสินค้าในหมวดหมู่นี้</h5>
+      <p class="text-muted small">สินค้าทุกรายการอยู่ในระดับปกติ หรือไม่ตรงกับเงื่อนไขการค้นหา</p>
+    </div>
+
+    <!-- Infinite Scroll Loading Spinner -->
+    <div id="loadMoreSpinner" class="text-center py-3" hidden>
+      <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+      <div class="text-muted small mt-1">กำลังโหลดรายการเพิ่มเติม...</div>
+    </div>
   </div>
+
+  <!-- Modal เปรียบเทียบร้านค้า (Supplier Modal) -->
+  <div class="modal fade" id="supplierModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title font-weight-bold">
+            <i class="fas fa-balance-scale mr-2 text-warning"></i> เปรียบเทียบราคาทุกร้าน: <span id="modalProdName" class="text-warning"></span>
+          </h5>
+          <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body p-4" id="supplierModalBody">
+          <!-- Dynamic Content Loaded by AJAX -->
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">ปิด</button>
+          <button type="button" class="btn btn-success font-weight-bold" id="modalImportBtn">
+            <i class="fas fa-arrow-down mr-1"></i> ไปหน้านำเข้าสินค้านี้
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal ดูรูปภาพขนาดใหญ่ -->
+  <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header py-2">
+          <h6 class="modal-title font-weight-bold" id="imageModalTitle"></h6>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body text-center p-2">
+          <img src="" id="imageModalImg" class="img-fluid rounded" style="max-height: 80vh;" alt="Product Image">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal คำอธิบายสถานะ -->
+  <div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title font-weight-bold"><i class="fas fa-info-circle mr-1"></i> คำอธิบายการใช้งานสถานะสินค้า</h5>
+          <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body p-3">
+          <ul class="list-unstyled mb-0">
+            <li class="mb-3 d-flex align-items-start">
+              <span class="badge badge-status badge-danger-soft mr-2 mt-1">🔴 วิกฤต</span>
+              <div>
+                <strong>สินค้าวิกฤต (คงเหลือ &le; 10 ชิ้น)</strong>
+                <div class="text-muted small">สินค้าเหลือน้อยมาก ต้องรีบดำเนินการเปิดบิลสั่งซื้อทันที</div>
+              </div>
+            </li>
+            <li class="mb-3 d-flex align-items-start">
+              <span class="badge badge-status badge-warning-soft mr-2 mt-1">🟡 ใกล้หมด</span>
+              <div>
+                <strong>สินค้าใกล้หมด (คงเหลือ &le; ขั้นต่ำ)</strong>
+                <div class="text-muted small">สินค้าเหลือน้อยกว่าจำนวนขั้นต่ำ (Min) ที่ร้านกำหนดไว้ ควรเตรียมสั่งเพิ่ม</div>
+              </div>
+            </li>
+            <li class="mb-3 d-flex align-items-start">
+              <span class="badge badge-status badge-preorder mr-2 mt-1">📦 พรีออเดอร์</span>
+              <div>
+                <strong>สินค้าพรีออเดอร์ (ไม่สั่งเก็บ)</strong>
+                <div class="text-muted small">สินค้านี้จะไม่สั่งมาเก็บสต๊อกไว้ จะสั่งต่อเมื่อมีลูกค้าสั่งซื้อเท่านั้น พนักงานจะไม่สับสนในการสั่งของ</div>
+              </div>
+            </li>
+            <li class="d-flex align-items-start">
+              <span class="badge badge-success mr-2 mt-1">✓ สั่งของแล้ว</span>
+              <div>
+                <strong>ติ๊กสั่งของแล้ว</strong>
+                <div class="text-muted small">เมื่อโทรสั่งร้านหรือสั่ง Supplier แล้ว ให้ติ๊กช่องนี้เพื่อแจ้งทีมงานว่าสั่งแล้ว รอของมาส่งเข้าสต๊อก เมื่อนำเข้าของมาจริง ระบบจะปลดเครื่องหมายให้อัตโนมัติ</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">เข้าใจแล้ว</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-feedback" id="toastFeedback">✓ บันทึกข้อมูลสำเร็จ</div>
+
   <!-- Central Navbar Script -->
   <script src="js/navbar.js"></script>
 </body>
