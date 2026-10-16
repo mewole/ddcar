@@ -70,6 +70,10 @@
 	.autocomplete-suggestions strong { font-weight: normal; color:rgb(51, 82, 255); }
 	.autocomplete-group { padding: 2px 5px; }
 	.autocomplete-group strong { display: block; border-bottom: 1px solid #000; }
+  	.border-danger {
+		border-color: #dc3545 !important;
+		background-color: #fff5f5 !important;
+	}
   </style>
 
   <script>	
@@ -534,7 +538,7 @@
 									txt += field.place + " "; 
 									arr_place.push(field.place.toLowerCase());                                                         
 							});    
-							$('#at').attr("placeholder",txt);                       
+							var cleanTxt = txt.trim(); $('#at').attr("placeholder", cleanTxt != "" ? cleanTxt : "* ที่วาง/ชั้น"); if($('#at').val() == "" && cleanTxt != "") { $('#at').val(cleanTxt); }                       
 					}else{
 							$('#at').attr("placeholder",""); 
 					}                                                      
@@ -602,123 +606,256 @@
 			}           
 		}  
 		
+		function highlightError(selector) {
+			$('.form-control, #btn-b').removeClass('border-danger is-invalid');
+			$(selector).addClass('border-danger is-invalid').css({
+				'border-color': '#dc3545',
+				'box-shadow': '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'
+			});
+			setTimeout(function() {
+				$(selector).css({ 'box-shadow': '' });
+			}, 2500);
+		}
+
+		$(document).on('input change', '#at, #from_shop, #name, #amount, #fund, #whole, #retail', function() {
+			$(this).removeClass('border-danger is-invalid').css('border-color', '');
+		});
+
 		function add(){
-			if($('#btn-b').text() == "เลือกโกดัง/หน้าร้าน"){
+			// 1. ตรวจสอบโกดัง / หน้าร้าน
+			if($('#btn-b').text() == "เลือกโกดัง/หน้าร้าน" || !localStorage.ware_id_im){
+				highlightError('#btn-b');
 				$.confirm({
-					title: 'พบข้อผิดพลาด',
-					content: 'กรุณาเลือกโกดัง/หน้าร้านก่อนทำรายการ',
+					title: 'ยังไม่ได้เลือกสถานที่รับเข้า',
+					content: 'กรุณาคลิกเลือก <b>"โกดัง"</b> หรือ <b>"หน้าร้าน"</b> ด้านบนก่อนทำรายการ',
 					backgroundDismiss: true,
 					buttons: {
 						formSubmit: {
 							text: 'ตกลง',
-							btnClass: 'btn-regis',
+							btnClass: 'btn-danger',
 							action: function () {
+								$('#btn-b').focus();
 							}
 						}
 					}
-				});  
+				});
 				return 0;
-			}			
-			var code = $('#barcode').val();
-			var cost = $('#fund').val();
-			var price_s = $('#whole').val();
-			var price_w = $('#retail').val();			
-			var name = $('#name').val();			
-			var amt = $('#amount').val(); 
-			if(!$('#at').prop('placeholder') && $('#at').val() == ""){ 
-				$('#name').focus(); 
-					$.confirm({
-						title: 'พบข้อผิดพลาด',
-						content: 'กรุณากรอกข้อมูลให้ครบ',
-						backgroundDismiss: true,
-						buttons: {
-							formSubmit: {
-								text: 'ตกลง',
-								btnClass: 'btn-regis',
-								action: function () {
-								}
+			}
+
+			// 2. ตรวจสอบสินค้า (ต้องเลือกสินค้าก่อน)
+			var name = $('#name').val().trim();
+			var code = $('#barcode').val().trim();
+			if(name == "" || code == "" || !prod_id || prod_id == 0){
+				highlightError('#name');
+				$.confirm({
+					title: 'ยังไม่ได้ระบุสินค้า',
+					content: 'กรุณาเลือกหรือสแกนบาร์โค้ดสินค้าที่ต้องการนำเข้าก่อน',
+					backgroundDismiss: true,
+					buttons: {
+						formSubmit: {
+							text: 'ตกลง',
+							btnClass: 'btn-danger',
+							action: function () {
+								$('#name').focus();
 							}
 						}
-					});   					            
-					return 0;
-			}            
-			if(name != "" && amt != "" && code != "" && cost != "" && price_s != "" && price_w != "" && jQuery.inArray($('#at').val().toLowerCase(),arr_place) == -1 && prod_id != 0){      
-					if(flag == 0){                 
-							$.ajax({
-									type: "POST",
-									url:"php/update_prod.php",           
-									data: {prod:prod_id , cost:cost , price_s:price_s , price_w:price_w},									          
-									success: function(data){
-											if(data == "success"){
-													show();
-											}else{
-											$.confirm({
-													title: 'พบข้อผิดพลาด',
-													content: 'ลองอีกครั้ง',
-													backgroundDismiss: true,
-													buttons: {
-															formSubmit: {
-															text: 'ตกลง',
-															btnClass: 'btn-regis',
-															action: function () {
-															}
-															}
-													}
-											});
-											}
-									}               
-							});                   
-					}else if(flag == 1 && check == 1){
-						var cost_avg = Math.round(avg);
-							$.ajax({
-									type: "POST",
-									url:"php/update_prod.php",           
-									data: {prod:prod_id , cost:cost_avg , price_s:price_s , price_w:price_w},					            
-									success: function(data){ 
-											if(data == "success"){
-													flag = 0;
-													check = 0;
-													show();
-											}else{
-											$.confirm({
-													title: 'พบข้อผิดพลาด',
-													content: 'ลองอีกครั้ง',
-													backgroundDismiss: true,
-													buttons: {
-															formSubmit: {
-															text: 'ตกลง',
-															btnClass: 'btn-regis',
-															action: function () {
-															}
-															}
-													}
-											});
-											}
-									}               
-							});                                      
-					}else{
-							flag = 0;
-							show();
-					}               
-			}else{
+					}
+				});
+				return 0;
+			}
+
+			// 3. ตรวจสอบที่วางของ/ชั้นวาง (#at)
+			var at_val = $('#at').val().trim();
+			var at_holder = ($('#at').attr('placeholder') || '').trim();
+			if (at_val == "" && at_holder != "" && at_holder != "ที่วาง/ชั้น" && at_holder != "* ที่วาง/ชั้น" && at_holder != "* ระบุที่วาง") {
+				at_val = at_holder;
+				$('#at').val(at_val);
+			}
+
+			if(at_val == ""){
+				highlightError('#at');
+				$.confirm({
+					title: 'ยังไม่ได้ระบุที่วางสินค้า',
+					content: 'กรุณากรอก <b>"ที่วางของ/ชั้นวาง"</b> ของสินค้านี้<br><small class="text-muted">(เพื่อกันไม่ให้ลืมลงรายละเอียด และจะได้รู้ว่าสินค้าเก็บไว้ตรงไหน)</small>',
+					backgroundDismiss: true,
+					buttons: {
+						formSubmit: {
+							text: 'ตกลง',
+							btnClass: 'btn-danger',
+							action: function () {
+								$('#at').focus();
+							}
+						}
+					}
+				});
+				return 0;
+			}
+
+			// 4. ตรวจสอบร้านค้า (จาก / #from_shop)
+			var from_val = $('#from_shop').val().trim();
+			if(from_val == ""){
+				highlightError('#from_shop');
+				$.confirm({
+					title: 'ยังไม่ได้ระบุร้านค้า (จาก)',
+					content: 'กรุณากรอก <b>"จาก (ร้านค้า)"</b> ที่สั่งสินค้านี้มา (เช่น BKK, TJM หรือชื่อร้าน)<br><small class="text-muted">(เพื่อกันไม่ให้ลืมลงรายละเอียด และจะได้รู้ว่าสินค้าสั่งมาจากร้านไหน)</small>',
+					backgroundDismiss: true,
+					buttons: {
+						formSubmit: {
+							text: 'ตกลง',
+							btnClass: 'btn-danger',
+							action: function () {
+								$('#from_shop').focus();
+							}
+						}
+					}
+				});
+				return 0;
+			}
+
+			// 5. ตรวจสอบจำนวน (#amount)
+			var amt_val = parseInt($('#amount').val());
+			if(isNaN(amt_val) || amt_val <= 0){
+				highlightError('#amount');
+				$.confirm({
+					title: 'จำนวนไม่ถูกต้อง',
+					content: 'กรุณากรอก <b>"จำนวนสินค้า"</b> ที่ถูกต้อง (ต้องมากกว่า 0)',
+					backgroundDismiss: true,
+					buttons: {
+						formSubmit: {
+							text: 'ตกลง',
+							btnClass: 'btn-danger',
+							action: function () {
+								$('#amount').focus();
+							}
+						}
+					}
+				});
+				return 0;
+			}
+
+			// 6. ตรวจสอบราคาทุน (#fund) (หากไม่ใช่ระดับพนักงาน)
+			var cost_val = $('#fund').val().trim();
+			if(localStorage.user_role != "พนักงาน"){
+				if(cost_val == "" || isNaN(parseFloat(cost_val)) || parseFloat(cost_val) < 0){
+					highlightError('#fund');
 					$.confirm({
-						title: 'พบข้อผิดพลาด',
-						content: 'กรุณากรอกข้อมูลให้ครบ',
+						title: 'ยังไม่ได้ระบุราคาทุน',
+						content: 'กรุณากรอก <b>"ราคาทุน"</b> ของสินค้าให้ครบถ้วน',
 						backgroundDismiss: true,
 						buttons: {
 							formSubmit: {
 								text: 'ตกลง',
-								btnClass: 'btn-regis',
+								btnClass: 'btn-danger',
 								action: function () {
+									$('#fund').focus();
 								}
 							}
 						}
 					});
+					return 0;
+				}
 			}
-			//$('#name').focus();			          
-		}     
-		
-		
+
+			// 7. ตรวจสอบราคาส่ง (#whole)
+			var price_s = $('#whole').val().trim();
+			if(price_s == "" || isNaN(parseFloat(price_s)) || parseFloat(price_s) < 0){
+				highlightError('#whole');
+				$.confirm({
+					title: 'ยังไม่ได้ระบุราคาส่ง',
+					content: 'กรุณากรอก <b>"ราคาส่ง"</b> ของสินค้าให้ครบถ้วน',
+					backgroundDismiss: true,
+					buttons: {
+						formSubmit: {
+							text: 'ตกลง',
+							btnClass: 'btn-danger',
+							action: function () {
+								$('#whole').focus();
+							}
+						}
+					}
+				});
+				return 0;
+			}
+
+			// 8. ตรวจสอบราคาขายปลีก (#retail)
+			var price_w = $('#retail').val().trim();
+			if(price_w == "" || isNaN(parseFloat(price_w)) || parseFloat(price_w) < 0){
+				highlightError('#retail');
+				$.confirm({
+					title: 'ยังไม่ได้ระบุราคาปลีก',
+					content: 'กรุณากรอก <b>"ราคาขายปลีก"</b> ของสินค้าให้ครบถ้วน',
+					backgroundDismiss: true,
+					buttons: {
+						formSubmit: {
+							text: 'ตกลง',
+							btnClass: 'btn-danger',
+							action: function () {
+								$('#retail').focus();
+							}
+						}
+					}
+				});
+				return 0;
+			}
+
+			var cost = cost_val;
+			if(flag == 0){
+				$.ajax({
+					type: "POST",
+					url:"php/update_prod.php",
+					data: {prod:prod_id , cost:cost , price_s:price_s , price_w:price_w},
+					success: function(data){
+						if(data == "success"){
+							show();
+						}else{
+							$.confirm({
+								title: 'พบข้อผิดพลาด',
+								content: 'ลองอีกครั้ง',
+								backgroundDismiss: true,
+								buttons: {
+									formSubmit: {
+										text: 'ตกลง',
+										btnClass: 'btn-regis',
+										action: function () {}
+									}
+								}
+							});
+						}
+					}
+				});
+			}else if(flag == 1 && check == 1){
+				var cost_avg = Math.round(avg);
+				$.ajax({
+					type: "POST",
+					url:"php/update_prod.php",
+					data: {prod:prod_id , cost:cost_avg , price_s:price_s , price_w:price_w},
+					success: function(data){
+						if(data == "success"){
+							flag = 0;
+							check = 0;
+							show();
+						}else{
+							$.confirm({
+								title: 'พบข้อผิดพลาด',
+								content: 'ลองอีกครั้ง',
+								backgroundDismiss: true,
+								buttons: {
+									formSubmit: {
+										text: 'ตกลง',
+										btnClass: 'btn-regis',
+										action: function () {}
+									}
+								}
+							});
+						}
+					}
+				});
+			}else{
+				flag = 0;
+				show();
+			}
+		}
+
   		function show(arg){
 		if(arg != 'dup'){
 			var bottom = $(window).height() - $("#cnt-add").offset().top - $("#cnt-add").height();
@@ -931,20 +1068,57 @@
 				//total_old = $("#net-" + arg).val();  		
   	}
 
-  		function save(arg){
-			arr_data[arg].amt = $("#amount-"+arg).val();
-			arr_data[arg].addr = $("#at-"+arg).val();    
-			arr_data[arg].from = $("#from-"+arg).val();    
-			localStorage.setItem('arr_prod', JSON.stringify(arr_data));	   
+		function save(arg){
+			var newAmt = $("#amount-"+arg).val().trim();
+			var newAddr = $("#at-"+arg).val().trim();
+			var newFrom = $("#from-"+arg).val().trim();
 
-			$("#amount-" + arg).prop('readonly', true);
-			$("#at-" + arg).prop('readonly', true);  
-			$("#from-" + arg).prop('readonly', true);  
+			if(newAmt === "" || isNaN(parseInt(newAmt)) || parseInt(newAmt) <= 0){
+				highlightError("#amount-"+arg);
+				$.confirm({
+					title: 'จำนวนไม่ถูกต้อง',
+					content: 'กรุณากรอกจำนวนสินค้าให้ถูกต้อง (ต้องมากกว่า 0)',
+					backgroundDismiss: true,
+					buttons: { formSubmit: { text: 'ตกลง', btnClass: 'btn-danger' } }
+				});
+				return 0;
+			}
+
+			if(newAddr === ""){
+				highlightError("#at-"+arg);
+				$.confirm({
+					title: 'ยังไม่ได้ระบุที่วางสินค้า',
+					content: 'กรุณากรอกที่วางของ/ชั้นวางให้ครบถ้วน',
+					backgroundDismiss: true,
+					buttons: { formSubmit: { text: 'ตกลง', btnClass: 'btn-danger' } }
+				});
+				return 0;
+			}
+
+			if(newFrom === ""){
+				highlightError("#from-"+arg);
+				$.confirm({
+					title: 'ยังไม่ได้ระบุร้านค้า (จาก)',
+					content: 'กรุณากรอกร้านค้า (จาก) ให้ครบถ้วน',
+					backgroundDismiss: true,
+					buttons: { formSubmit: { text: 'ตกลง', btnClass: 'btn-danger' } }
+				});
+				return 0;
+			}
+
+			arr_data[arg].amt = newAmt;
+			arr_data[arg].addr = newAddr;
+			arr_data[arg].from = newFrom;
+			localStorage.setItem('arr_prod', JSON.stringify(arr_data));
+
+			$("#amount-" + arg).prop('readonly', true).removeClass('border-danger is-invalid');
+			$("#at-" + arg).prop('readonly', true).removeClass('border-danger is-invalid');
+			$("#from-" + arg).prop('readonly', true).removeClass('border-danger is-invalid');
 
 			$("#btn-edit-"+arg).prop('hidden', false);
 			$("#btn-trash-"+arg).prop('hidden', false);
 			$("#btn-save-"+arg).prop('hidden', true);
-  	}
+		}
 
 		function remove(arg) {
 			$.confirm({
@@ -989,8 +1163,48 @@
 		
 		function save2db(){
 			if(arr_data.length == 0){
-					return 0;
+				$.confirm({
+					title: 'ไม่มีรายการสินค้า',
+					content: 'ยังไม่มีสินค้าในรายการ กรุณาเพิ่มสินค้าก่อนทำรายการบันทึก',
+					backgroundDismiss: true,
+					buttons: { formSubmit: { text: 'ตกลง', btnClass: 'btn-regis' } }
+				});
+				return 0;
 			}
+
+			// ตรวจสอบความครบถ้วนของทุกรายการในบิลก่อนบันทึกจริง
+			for(var k = 0; k < arr_data.length; k++){
+				var itm = arr_data[k];
+				var num = k + 1;
+				if(!itm.from || itm.from.trim() === ""){
+					$.confirm({
+						title: 'พบข้อมูลไม่ครบถ้วน',
+						content: 'รายการที่ <b>#' + num + ' (' + itm.name + ')</b> ยังไม่ได้ระบุ <b>"ร้านค้า (จาก)"</b><br><span class="text-danger font-weight-bold">กรุณากดปุ่มแก้ไข (รูปดินสอ) เพื่อใส่ชื่อร้านค้าให้ครบถ้วน</span>',
+						backgroundDismiss: true,
+						buttons: { formSubmit: { text: 'ตกลง', btnClass: 'btn-danger' } }
+					});
+					return 0;
+				}
+				if(!itm.addr || itm.addr.trim() === ""){
+					$.confirm({
+						title: 'พบข้อมูลไม่ครบถ้วน',
+						content: 'รายการที่ <b>#' + num + ' (' + itm.name + ')</b> ยังไม่ได้ระบุ <b>"ที่วางของ/ชั้นวาง"</b><br><span class="text-danger font-weight-bold">กรุณากดปุ่มแก้ไข (รูปดินสอ) เพื่อระบุที่วางให้ครบถ้วน</span>',
+						backgroundDismiss: true,
+						buttons: { formSubmit: { text: 'ตกลง', btnClass: 'btn-danger' } }
+					});
+					return 0;
+				}
+				if(!itm.amt || parseInt(itm.amt) <= 0){
+					$.confirm({
+						title: 'พบข้อมูลไม่ครบถ้วน',
+						content: 'รายการที่ <b>#' + num + ' (' + itm.name + ')</b> จำนวนสินค้าไม่ถูกต้อง<br><span class="text-danger font-weight-bold">กรุณากดปุ่มแก้ไขเพื่อใส่จำนวนสินค้าให้ถูกต้อง</span>',
+						backgroundDismiss: true,
+						buttons: { formSubmit: { text: 'ตกลง', btnClass: 'btn-danger' } }
+					});
+					return 0;
+				}
+			}
+
 			var sum = 0;
 			var index_qr = 1;
 			$.each(arr_data, function(i, field){				
@@ -1185,13 +1399,13 @@
       	<div class="container-fullwidth nopd">
       		<div id="head" class="row mgb-5">
        		  <div class="col-2 text-center nopd">บาร์โค้ด</div>
-       		  <div class="col-1 text-center nopd-8">ที่วางของ</div>
-       		  <div class="col-1 text-center nopd-8">จาก (From)</div>
+       		  <div class="col-1 text-center nopd-8 font-weight-bold">ที่วาง <span class="text-danger">*</span></div>
+       		  <div class="col-1 text-center nopd-8 font-weight-bold">จาก (ร้าน) <span class="text-danger">*</span></div>
        		  <div class="col-3 text-center nopd">ชื่อสินค้า</div>
-       		  <div class="col-1 text-center nopd-8">จำนวน</div>
-       		  <div class="col-1 text-center nopd-8">ทุน</div>
-       		  <div class="col-1 text-center nopd-8">ราคาส่ง</div>
-       		  <div class="col-1 text-center nopd-8">ราคาปลีก</div>
+       		  <div class="col-1 text-center nopd-8 font-weight-bold">จำนวน <span class="text-danger">*</span></div>
+       		  <div class="col-1 text-center nopd-8 font-weight-bold">ทุน <span class="text-danger">*</span></div>
+       		  <div class="col-1 text-center nopd-8 font-weight-bold">ราคาส่ง <span class="text-danger">*</span></div>
+       		  <div class="col-1 text-center nopd-8 font-weight-bold">ราคาปลีก <span class="text-danger">*</span></div>
        		  <div class="col-1 text-center nopd">จัดการ</div>
        		</div>
        	</div>
@@ -1210,10 +1424,10 @@
 			    </div>
 			  </div>
 			  <div class='col-1 nopd-8'>
-			    <input id='at' type='text' class='form-control text-center' placeholder="ที่วาง/ชั้น" data-index="6">
+			    <input id='at' type='text' class='form-control text-center' placeholder="* ที่วาง/ชั้น" data-index="6">
 			  </div>
 			  <div class='col-1 nopd-8'>
-			    <input id='from_shop' type='text' class='form-control text-center font-weight-bold text-primary' placeholder="ตัวย่อร้าน" list="supplier-datalist" data-index="7">
+			    <input id='from_shop' type='text' class='form-control text-center font-weight-bold text-primary' placeholder="* ตัวย่อร้าน (จำเป็น)" list="supplier-datalist" data-index="7">
 			    <datalist id="supplier-datalist"></datalist>
 			  </div>
 			  <div class='col-3 nopd-8'>
