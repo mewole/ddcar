@@ -33,6 +33,9 @@ $files = @(
     "php\check_amt_prod.php",
     "php\get_sales_summary.php",
     "php\get_shift_bill_web.php",
+    "php\delete_place.php",
+    "php\get_supplier_prices.php",
+    "php\stock_in.php",
     "img\logo.jpg"
 )
 

@@ -231,6 +231,28 @@
 				}	
 				localStorage.arr_prod_st = "";			
 			}
+
+			// รีเซ็ตค่าใน EditModal ทุกครั้งที่ปิด modal
+			$('#EditModal').on('hidden.bs.modal', function () {
+				$("#name-prod").val("");
+				$("#code-prod").val("");
+				$("#fileSelect").val("");
+				$('#fileSelect[rel=popover]').popover('dispose');
+			});
+
+			// Delegated click handler สำหรับปุ่มแก้ไขและลบสินค้า (รองรับชื่อสินค้าที่มีเครื่องหมายคำพูด " หรือ ' ได้ 100%)
+			$(document).off('click', '.btn-edit-prod').on('click', '.btn-edit-prod', function(e) {
+				var pid = $(this).data('prod-id');
+				var pname = $(this).data('prod-name');
+				var pcode = $(this).data('prod-code');
+				edit_prod(pid, pname, pcode);
+			});
+
+			$(document).off('click', '.btn-delete-prod').on('click', '.btn-delete-prod', function(e) {
+				var pid = $(this).data('prod-id');
+				var pname = $(this).data('prod-name');
+				delete_prod(pid, pname);
+			});
 		});
 
 		$(document).keydown(function(objEvent) {
@@ -355,6 +377,9 @@
 						folder_path = obj[0].folder_path;
 						folder_chain = obj[0].folder_chain;
 					}
+					if(!code && obj && obj.length > 0 && obj[0].prod_code){
+						code = obj[0].prod_code;
+					}
 
 					var msg_price = "";					
 					if(obj != "" && obj.length > 0){                
@@ -419,53 +444,69 @@
 
 					var folder_html = render_folder_badge(folder_path, folder_chain);
 					var code_html = code 
-						? '<span class="prod-code-badge"><i class="fas fa-barcode mr-1"></i>' + code + '</span>'
-						: '<span></span>';
+						? '<span class="prod-code-badge"><i class="fas fa-barcode mr-1"></i><span class="code-text">' + code + '</span></span>'
+						: '';
 					var img_html = (img == "") 
 						? '<div class="prod-img-wrap"><img id="img-'+prod_id+'" src="img/no_img.png" alt="pic"></div>'
 						: '<div class="prod-img-wrap"><img id="img-'+prod_id+'" class="thumbnails" src="'+img+'" alt="pic"></div>';
 
-					var card_html = 
+					var $card = $(
 						'<div id="div-'+prod_id+'" class="jumbotron text-center jumbo-center position-relative">' +
 							'<div class="d-flex justify-content-between align-items-center mb-2">' +
-								code_html +
+								'<div class="prod-code-container">' + code_html + '</div>' +
 								'<div>' +
-									'<i id="i-'+prod_id+'" class="fas fa-pen text-primary" data-toggle="modal" data-target="#EditModal" onclick="edit_prod('+prod_id+',\''+namedq+'\',\''+code+'\')" style="cursor: pointer; margin-right: 15px;" title="แก้ไขสินค้า"></i>' +
-									'<i class="fas fa-trash text-danger" onclick="delete_prod('+prod_id+',\''+namedq+'\')" style="cursor: pointer;" title="ลบสินค้า"></i>' +
+									'<i id="i-'+prod_id+'" class="fas fa-pen text-primary btn-edit-prod" data-toggle="modal" data-target="#EditModal" style="cursor: pointer; margin-right: 15px;" title="แก้ไขสินค้า"></i>' +
+									'<i id="trash-'+prod_id+'" class="fas fa-trash text-danger btn-delete-prod" style="cursor: pointer;" title="ลบสินค้า"></i>' +
 								'</div>' +
 							'</div>' +
 							'<div class="folder-path-container">' + folder_html + '</div>' +
-							'<p id="p-'+prod_id+'" class="display prod-title-name">' + name + '</p>' +
+							'<p id="p-'+prod_id+'" class="display prod-title-name"></p>' +
 							msg_price +
 							' <hr class="jumbohr">' +
 							img_html +
 							msg +
-						'</div>';
+						'</div>'
+					);
 
-					$('#append-ctn').append(card_html);
+					// กำหนดชื่อสินค้าแบบ safe text ป้องกัน quote หลุดและ XSS
+					$card.find('#p-' + prod_id).text(name);
+
+					// แนบข้อมูลลงใน jQuery .data() เพื่อรองรับชื่อสินค้าที่มีเครื่องหมายคำพูด (") เช่น 4" หรือ (') ได้ 100%
+					$card.find('#i-' + prod_id)
+						.data('prod-id', prod_id)
+						.data('prod-name', name)
+						.data('prod-code', code);
+
+					$card.find('#trash-' + prod_id)
+						.data('prod-id', prod_id)
+						.data('prod-name', name);
+
+					$('#append-ctn').append($card);
 				}               
 			});
-			set_fullImage()
+			set_fullImage();
    		}
 		
 		function set_fullImage(){
 			$('img.thumbnails').fullscreenimage({
 				scale: 2 // magnify by 2 times when mouse moves over full screen image (set to 1 to disable)
-			})
+			});
 		}		
 
-		function edit_prod(prod_id,name,code){
+		function edit_prod(prod_id, name, code){
 			$("#fileSelect").val("");
-			$('#fileSelect[rel=popover]').popover('dispose')
-			$("#name-prod").val(name)
-			$("#code-prod").val(code)
-			$("#save-edit").attr('onclick', "save_edit("+prod_id+")");
+			$('#fileSelect[rel=popover]').popover('dispose');
+			$("#name-prod").val(name || "");
+			$("#code-prod").val(code || "");
+			$("#save-edit").off('click').on('click', function() {
+				save_edit(prod_id);
+			});
 		}
 
-		function delete_prod(prod_id,name){
+		function delete_prod(prod_id, name){
 			$.confirm({
-			icon: 'fa fa-warning',
-				title: 'คุณต้องการลบ ' + name,
+				icon: 'fa fa-warning',
+				title: 'คุณต้องการลบ ' + (name || 'สินค้านี้'),
 				content: 'ต้องการลบรายการสินค้านี้หรือไม่!',
 				buttons: {
 					danger: {
@@ -484,21 +525,20 @@
 								success: function(data){  
 									EasyLoading.hide();                          
 									if(data == "success"){
-										$('#div-'+prod_id).remove()
+										$('#div-'+prod_id).remove();
 									}else{
-									$.confirm({
-										title: 'พบข้อผิดพลาด',
-										content: 'ลองอีกครั้ง',
-										backgroundDismiss: true,
-										buttons: {
-										formSubmit: {
-											text: 'ตกลง',
-											btnClass: 'btn-regis',
-											action: function () {
+										$.confirm({
+											title: 'พบข้อผิดพลาด',
+											content: 'ลองอีกครั้ง',
+											backgroundDismiss: true,
+											buttons: {
+												formSubmit: {
+													text: 'ตกลง',
+													btnClass: 'btn-regis',
+													action: function () {}
+												}
 											}
-										}
-										}
-									});
+										});
 									}           
 								}               
 							});									
@@ -510,8 +550,8 @@
 		}
 
 		function save_edit(prod_id){
-			name = $("#name-prod").val()
-			code = $("#code-prod").val()			
+			var name = $("#name-prod").val();
+			var code = $("#code-prod").val();			
 			// from an input element
 			var input = document.getElementById("fileSelect");
         	var file = input.files[0];	
@@ -527,15 +567,15 @@
 					var height = tempImg.height;
 
 					if (width > height) {
-					if (width > MAX_WIDTH) {
-						height *= MAX_WIDTH / width;
-						width = MAX_WIDTH;
-					}
+						if (width > MAX_WIDTH) {
+							height *= MAX_WIDTH / width;
+							width = MAX_WIDTH;
+						}
 					} else {
-					if (height > MAX_HEIGHT) {
-						width *= MAX_HEIGHT / height;
-						height = MAX_HEIGHT;
-					}
+						if (height > MAX_HEIGHT) {
+							width *= MAX_HEIGHT / height;
+							height = MAX_HEIGHT;
+						}
 					}			
 
 					// Create canvas of required size.
@@ -544,12 +584,10 @@
 					canvas.height = height;
 
 					var ctx = canvas.getContext("2d");
-					// Take image from top left corner to bottom right corner and draw the image
-					// on canvas to completely fill into.
 					ctx.drawImage(this, 0, 0, tempImg.width, tempImg.height, 0, 0, width, height);
 
 					b64 = canvas.toDataURL("image/jpeg");				
-					console.log(b64)
+					console.log(b64);
 				};			
 			}
 			setTimeout(function() {
@@ -568,24 +606,40 @@
 					success: function(data){
 						EasyLoading.hide();					                          
 						if(data == "success"){
-							$("#i-"+prod_id).attr('onclick', "edit_prod("+prod_id+","+name+","+code+")");							
-							$("#p-"+prod_id).text(name);							
+							// อัปเดต .data() บนปุ่มแก้ไขและลบให้มีค่าใหม่เสมอ
+							var $i = $("#i-" + prod_id);
+							$i.data('prod-name', name);
+							$i.data('prod-code', code);
+							$("#trash-" + prod_id).data('prod-name', name);
+							$("#p-" + prod_id).text(name);
+
+							// อัปเดตรหัสสินค้าบนการ์ด
+							var $codeBadge = $("#div-" + prod_id).find('.prod-code-badge');
+							if (code) {
+								if ($codeBadge.length) {
+									$codeBadge.find('.code-text').text(code);
+								} else {
+									$("#div-" + prod_id).find('.prod-code-container').html('<span class="prod-code-badge"><i class="fas fa-barcode mr-1"></i><span class="code-text">' + code + '</span></span>');
+								}
+							} else {
+								$codeBadge.remove();
+							}
+
 							if(b64){
-								$('#img-'+prod_id).attr('src', b64);
+								$('#img-' + prod_id).attr('src', b64);
 							}			
 						}else{
 							$.confirm({
-							title: 'พบข้อผิดพลาด',
-							content: 'ลองอีกครั้ง',
-							backgroundDismiss: true,
-							buttons: {
-								formSubmit: {
-								text: 'ตกลง',
-								btnClass: 'btn-regis',
-								action: function () {
+								title: 'พบข้อผิดพลาด',
+								content: 'ลองอีกครั้ง',
+								backgroundDismiss: true,
+								buttons: {
+									formSubmit: {
+										text: 'ตกลง',
+										btnClass: 'btn-regis',
+										action: function () {}
+									}
 								}
-								}
-							}
 							});
 						}
 					}               
