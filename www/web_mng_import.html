@@ -127,12 +127,17 @@
                   tempdate = date
                   no = 1
               }
+              var sourceTxt = field.source_from && field.source_from.trim() !== ''
+                ? '<span class="badge badge-primary font-weight-bold px-2 py-1" style="font-size: 0.88rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>'
+                : '<span class="text-muted" style="font-size: 0.88rem;">-</span>';
+
               $('#myUL').append('<li id="ipt-'+field.tran_id+'">' +
-              '<div class="row justify-content-center ipt-even" data-toggle="collapse" href="#detail-'+field.tran_id+'" role="button" aria-expanded="false" aria-controls="detail-'+field.tran_id+'" onclick="appendCollapse('+field.tran_id+');">'+
-                  '<div class="col-2 text-center"><h5>'+no+'</h5></div>' +  
-                  '<div class="col-4 text-center"><h5>'+field.tran_number+'</h5></div>' +
+              '<div class="row justify-content-center ipt-even align-items-center" data-toggle="collapse" href="#detail-'+field.tran_id+'" role="button" aria-expanded="false" aria-controls="detail-'+field.tran_id+'" onclick="appendCollapse('+field.tran_id+');">'+
+                  '<div class="col-1 text-center"><h5>'+no+'</h5></div>' +  
+                  '<div class="col-3 text-center"><h5>'+field.tran_number+'</h5></div>' +
                   '<div class="col-3 text-center"><h5>'+date+'</h5></div>' +
                   '<div class="col-3 text-center"><h5>'+field.shop_name+'</h5></div>' +
+                  '<div class="col-2 text-center"><h5>'+sourceTxt+'</h5></div>' +
               '</div>' +
             '</li>');
             no++   
@@ -184,12 +189,17 @@
                   tempdate = date
                   no = 1
               }
+              var sourceTxt = field.source_from && field.source_from.trim() !== ''
+                ? '<span class="badge badge-primary font-weight-bold px-2 py-1" style="font-size: 0.88rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>'
+                : '<span class="text-muted" style="font-size: 0.88rem;">-</span>';
+
               $('#myS').append('<li id="ipts-'+field.tran_id+'">' +
-              '<div class="row justify-content-center ipt-even" data-toggle="collapse" href="#details-'+field.tran_id+'" role="button" aria-expanded="false" aria-controls="details-'+field.tran_id+'" onclick="appendCollapses('+field.tran_id+');">'+
-                '<div class="col-2 text-center"><h5>'+no+'</h5></div>' +  
-                '<div class="col-4 text-center"><h5>'+field.tran_number+'</h5></div>' +
-                  '<div class="col-3 text-center"><h5>'+date+'</h5></div>' +
-                  '<div class="col-3 text-center"><h5>'+field.shop_name+'</h5></div>' +
+              '<div class="row justify-content-center ipt-even align-items-center" data-toggle="collapse" href="#details-'+field.tran_id+'" role="button" aria-expanded="false" aria-controls="details-'+field.tran_id+'" onclick="appendCollapses('+field.tran_id+');">'+
+                '<div class="col-1 text-center"><h5>'+no+'</h5></div>' +  
+                '<div class="col-3 text-center"><h5>'+field.tran_number+'</h5></div>' +
+                '<div class="col-3 text-center"><h5>'+date+'</h5></div>' +
+                '<div class="col-3 text-center"><h5>'+field.shop_name+'</h5></div>' +
+                '<div class="col-2 text-center"><h5>'+sourceTxt+'</h5></div>' +
               '</div>' +
             '</li>');
             no++
@@ -280,7 +290,7 @@
                 text = text + '<div id="item-'+field.item_id+'" class="row justify-content-center">'+
                   '<div class="col-1 text-center items">'+(i+1)+'</div>'+
                   '<div class="col-1 text-center items">'+field.amount+'</div>'+
-                  '<div class="col-6 text-center items">'+field.prod_name+'</div>'+
+                  '<div class="col-6 text-center items">'+field.prod_name+(field.source_from && field.source_from.trim() !== '' ? ' <span class="badge badge-info ml-1 font-weight-bold" style="font-size: 0.78rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>' : '')+'</div>'+
                   '<div class="col-2 text-center items">'+cost+'</div>'+
                   '<div class="col-2 text-center items">'+field.amount*field.tran_cost+'</div>'+
                 '</div>'
@@ -353,7 +363,7 @@
                 text = text + '<div id="item-'+field.item_id+'"" class="row justify-content-center">'+
                   '<div class="col-1 text-center items">'+(i+1)+'</div>'+
                   '<div class="col-1 text-center items">'+field.amount+'</div>'+
-                  '<div class="col-6 text-center items">'+field.prod_name+'</div>'+
+                  '<div class="col-6 text-center items">'+field.prod_name+(field.source_from && field.source_from.trim() !== '' ? ' <span class="badge badge-info ml-1 font-weight-bold" style="font-size: 0.78rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>' : '')+'</div>'+
                   '<div class="col-2 text-center items">'+cost+'</div>'+
                   '<div class="col-2 text-center items">'+field.amount*field.tran_cost+'</div>'+
                 '</div>'
@@ -483,11 +493,11 @@
             </div>
         </div>
         <div class="container-fullwidth">
-            <div class="row justify-content-center">
-                <div class="col-2 text-center">
+            <div class="row justify-content-center font-weight-bold">
+                <div class="col-1 text-center">
                   <h4>ลำดับ</h4>
                 </div>
-                <div class="col-4 text-center">
+                <div class="col-3 text-center">
                     <h4>เลขที่นำเข้า</h4>
                 </div>
                 <div class="col-3 text-center">
@@ -495,6 +505,9 @@
                 </div>
                 <div class="col-3 text-center">
                     <h4>หน้าร้าน</h4>
+                </div>
+                <div class="col-2 text-center">
+                    <h4>จาก (ร้าน)</h4>
                 </div>
             </div>
         </div>
