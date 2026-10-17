@@ -25,6 +25,8 @@ $files = @(
     "web_login.html",
     "web_folder.html",
     "select_folder.html",
+    "add_prod.html",
+    "edit_prod.html",
     "web_catalog.html",
     "stock.html",
     "js\navbar.js",
