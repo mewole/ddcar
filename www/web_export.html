@@ -2,11 +2,15 @@
 <html>
 <head>
 	<meta charset="utf-8">
+  <script>
+    // หน้าสินค้านี้ถูกแทนที่ด้วยหน้า "โอนย้ายสินค้า" (web_transfer_in.html)
+    window.location.replace('web_transfer_in.html');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>นำสินค้าออกโกดัง</title>
+  <title>โอนย้ายสินค้า (ระบบใหม่)</title>
 
   <!-- Bootstrap Import -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
@@ -76,13 +80,9 @@
 		var prod_id,img,min;		
 		arr_data = [];		
 		$(document).ready(function () {		
-			if(!localStorage.user_id){
-				window.location = 'web_login.html';
-            }   	
-			if(localStorage.user_role == "พนักงาน"){
-				$("#fund").prop('hidden', true);
-				$("#head-fund").prop('hidden', true);
-            }
+			// ยกระดับระบบโอนย้ายสินค้าไปยังหน้า web_transfer_in.html เรียบร้อยแล้ว
+			window.location.replace('web_transfer_in.html');
+			return;
 			get_header();		
 			setTimeout(function() {$("#name").focus();}, 100);	
 
@@ -1037,7 +1037,7 @@
                     <li class="nav-item"><a class="nav-link" href="web_sale.html"><i class="fa fa-shopping-cart mr-1"></i> ขายสินค้า</a></li>
                     <li class="nav-item"><a class="nav-link" href="web_import.html"><i class="fa fa-arrow-down mr-1"></i> นำสินค้าเข้า</a></li>
                     <li class="nav-item"><a class="nav-link" href="web_stock.html"><i class="fa fa-boxes mr-1"></i> เช็คสต๊อก</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="web_export.html"><i class="fa fa-arrow-up mr-1"></i> สินค้าออกโกดัง</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="web_transfer_in.html"><i class="fa fa-exchange-alt mr-1"></i> โอนย้ายสินค้า</a></li>
                     <li class="nav-item"><a class="nav-link" href="web_mng_bell.html"><i class="fa fa-bell mr-1"></i> เช็คสถานะสินค้า</a></li>
                     <li class="nav-item"><a class="nav-link" href="web_select.html"><i class="fa fa-history mr-1"></i> รายการย้อนหลัง</a></li>
                     <li class="nav-item"><a class="nav-link" href="web_customer.html"><i class="fa fa-users mr-1"></i> ลูกค้า</a></li>
@@ -1142,6 +1142,6 @@
 		});      
 	</script>
 	<!-- Central Navbar Script -->
-	<script src="js/navbar.js"></script>
+	<script src="js/navbar.js?v=2.2"></script>
 </body>
 </html>

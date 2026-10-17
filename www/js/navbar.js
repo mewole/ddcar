@@ -16,7 +16,6 @@
         { id: 'nav-sale', label: 'ขายสินค้า', icon: 'fa fa-shopping-cart', href: 'web_sale.html', roles: ['all'] },
         { id: 'nav-import', label: 'นำสินค้าเข้า', icon: 'fa fa-arrow-down', href: 'web_import.html', roles: ['all'] },
         { id: 'nav-stock', label: 'เช็คสต๊อก', icon: 'fa fa-boxes', href: 'web_stock.html', roles: ['all'] },
-        { id: 'nav-export', label: 'สินค้าออกโกดัง', icon: 'fa fa-arrow-up', href: 'web_export.html', roles: ['all'] },
         { id: 'nav-transfer', label: 'โอนย้ายสินค้า', icon: 'fa fa-exchange-alt', href: 'web_transfer_in.html', roles: ['all'] },
         { id: 'nav-bell', label: 'เช็คสถานะสินค้า', icon: 'fa fa-bell', href: 'web_mng_bell.html', roles: ['all'] },
         {
@@ -30,7 +29,7 @@
                 { label: 'รายงานสินค้าเข้าหน้าร้าน', icon: 'fa fa-store', href: 'web_mng_import.html' },
                 { label: 'รายงานการโอนย้ายสินค้า', icon: 'fa fa-exchange-alt', href: 'web_mng_transfer.html' },
                 { label: 'รายงานสินค้าเข้าโกดัง', icon: 'fa fa-warehouse', href: 'web_mng_import_warehouse.html' },
-                { label: 'รายงานสินค้าออกโกดัง', icon: 'fa fa-dolly-flatbed', href: 'web_mng_export.html' },
+                { label: 'รายงานสินค้าออกโกดัง (เดิม)', icon: 'fa fa-dolly-flatbed', href: 'web_mng_export.html' },
                 { label: 'รายงานสรุปยอดขาย', icon: 'fa fa-chart-line', href: 'web_mng_sale.html', ownerOnly: true },
                 { label: 'รายงานเครดิตลูกค้า', icon: 'fa fa-credit-card', href: 'web_credit.html' }
             ]
@@ -55,7 +54,7 @@
             case 'web_sale.html': return 'ขายสินค้า (POS)';
             case 'web_import.html': return 'นำสินค้าเข้าโกดัง/หน้าร้าน';
             case 'web_stock.html': return 'เช็คสต๊อกสินค้า';
-            case 'web_export.html': return 'สินค้าออกโกดัง';
+            case 'web_export.html': return 'โอนย้ายสินค้า';
             case 'web_transfer_in.html': return 'โอนย้ายสินค้า (หน้าร้าน ⇄ โกดัง)';
             case 'web_mng_bell.html': return 'เช็คสถานะสินค้า';
             case 'web_select.html': return 'รายการย้อนหลังและข้อมูลระบบ';

@@ -23,6 +23,7 @@
   <script src="js/imageviewer.js"></script>
 
   <link href="css/imageviewer.css"  rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="css/untitled.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
   <link rel="stylesheet" href="css/loading.css">
@@ -67,7 +68,102 @@
         var image = document.getElementById('img');
         image.src =  localStorage.img;  
       }   
+
+      // บังคับภาษาอังกฤษตัวพิมพ์ใหญ่ และตัดช่องว่างทั้งหมดทันที
+      $(document).on('input paste keyup', '#barcode', function() {
+        var input = this;
+        var upperVal = (input.value || '').toUpperCase().replace(/\s+/g, '');
+        if (input.value !== upperVal) {
+          var start = input.selectionStart;
+          var end = input.selectionEnd;
+          input.value = upperVal;
+          if (start !== null) input.setSelectionRange(start, end);
+        }
+        var $this = $(this);
+        if (upperVal.length > 0 && !/^[A-Z0-9\-]+$/.test(upperVal)) {
+          $this.addClass('sku-error');
+        } else {
+          $this.removeClass('sku-error');
+        }
+      });
     });
+
+    /**
+     * ตรวจสอบความถูกต้องของรหัส SKU:
+     * - บังคับภาษาอังกฤษตัวพิมพ์ใหญ่ (A-Z)
+     * - ตัวเลข (0-9)
+     * - เครื่องหมายขีด (-) เท่านั้น
+     * - ห้ามมีสระ ภาษาไทย ช่องว่าง หรือสัญลักษณ์พิเศษอื่น
+     */
+    function validateSkuField($input, showAlert) {
+      if (!$input || $input.length === 0) return true;
+      var rawVal = $input.val() || '';
+      var code = rawVal.toUpperCase().replace(/\s+/g, '');
+      $input.val(code);
+
+      if (!code) {
+        $input.addClass('sku-error');
+        if (showAlert) {
+          $input.focus();
+          $.confirm({
+            title: '<span class="text-danger"><i class="fa fa-exclamation-triangle mr-2"></i>กรุณาระบุรหัส SKU</span>',
+            content: 'ช่องรหัส SKU ต้องไม่เว้นว่าง กรุณากรอกรหัสสินค้าเป็นภาษาอังกฤษตัวพิมพ์ใหญ่และตัวเลข',
+            backgroundDismiss: true,
+            buttons: {
+              ok: {
+                text: 'ตกลง',
+                btnClass: 'btn-danger',
+                action: function() {
+                  setTimeout(function() { $input.focus(); }, 150);
+                }
+              }
+            }
+          });
+        }
+        return false;
+      }
+
+      var hasThai = /[\u0E00-\u0E7F]/.test(rawVal);
+      var hasSpace = /\s/.test(rawVal);
+      var isValid = /^[A-Z0-9\-]+$/.test(code);
+
+      if (!isValid || hasThai || hasSpace) {
+        $input.addClass('sku-error');
+        if (showAlert) {
+          $input.focus();
+          var errorMsg = 'รหัส SKU มีอักขระที่ไม่อนุญาต';
+          if (hasThai) {
+            errorMsg = '<strong>ตรวจพบภาษาไทยหรือสระในช่อง SKU!</strong>';
+          } else if (hasSpace) {
+            errorMsg = '<strong>ตรวจพบช่องว่างในช่อง SKU!</strong>';
+          }
+          $.confirm({
+            title: '<span class="text-danger"><i class="fa fa-ban mr-2"></i>รหัส SKU ไม่ถูกต้อง</span>',
+            content: errorMsg + '<br><div class="mt-2 text-dark font-weight-bold">ข้อกำหนดรหัส SKU:</div>' +
+              '<ul class="text-left mt-1 mb-0" style="padding-left: 20px;">' +
+              '<li>อนุญาตเฉพาะภาษาอังกฤษตัวพิมพ์ใหญ่ (A-Z)</li>' +
+              '<li>ตัวเลข (0-9)</li>' +
+              '<li>เครื่องหมายขีด (-) เท่านั้น</li>' +
+              '<li class="text-danger font-weight-bold">ห้ามมีสระ ภาษาไทย ช่องว่าง หรือสัญลักษณ์พิเศษ</li>' +
+              '</ul>',
+            backgroundDismiss: true,
+            buttons: {
+              ok: {
+                text: 'แก้ไขรหัส SKU',
+                btnClass: 'btn-danger',
+                action: function() {
+                  setTimeout(function() { $input.focus(); }, 150);
+                }
+              }
+            }
+          });
+        }
+        return false;
+      }
+
+      $input.removeClass('sku-error');
+      return true;
+    }
 
     $(document).keydown(function(objEvent) {
       if (objEvent.keyCode == 13) {  //enter pressed
@@ -149,123 +245,91 @@
     }
    
     function add_prod(){
-      var name = $('#name').val();
-      var code = $('#barcode').val();
-      var min = $('#min').val();
+      var $barcode = $('#barcode');
+      if (!validateSkuField($barcode, true)) {
+        return 0;
+      }
+      var code = $barcode.val();
+      var name = $('#name').val() || '';
+      var min = $('#min').val() || '';
               
-      if(name == "" || code == "" || min == ""){
+      if(name.trim() === ""){
+        $('#name').focus();
         $.confirm({
-          title: 'พบข้อผิดพลาด',
-          content: 'กรุณากรอกข้อมูลให้ครบ',
+          title: 'ข้อมูลไม่ครบถ้วน',
+          content: 'กรุณากรอกชื่อสินค้า',
           backgroundDismiss: true,
-          buttons: {
-            formSubmit: {
-              text: 'ตกลง',
-              btnClass: 'btn-regis',
-              action: function () {
-              }
-            }
-          }
+          buttons: { ok: { text: 'ตกลง', btnClass: 'btn-dark' } }
         });
         return 0; 
-      } 
-      $('#img').each(function () {
-        if(this.src.length > 0){  
-          var imgb64 = $('#img').attr('src');              
-          $.ajax({
-            type: "POST",
-            url:localStorage.pathServer + "php/add_prod.php",           
-            data: {'name_prod' : name,
-                  'code' : code,
-                  'parent' : folder,
-                  'img' : imgb64,                 
-                  'min' : min},               
-              beforeSend: function(){
-                $(".overlay").prop('hidden', false);
-              },             
-              success: function(data){
-              $(".overlay").prop('hidden', true);                               
-              if(data != "fail"){
-                $.confirm({
-                    title: 'เสร็จสิ้น',
-                    content: 'เพิ่มสินค้า ' +name+ ' ในหมวดหมู่ ' +folder+ ' เสร็จสิ้น',
-                    backgroundDismiss: true,
-                    buttons: {
-                      formSubmit: {
-                        text: 'ตกลง',
-                        btnClass: 'btn-regis',
-                        action: function () {
-                            out();
-                          }
-                      }
+      }
+      if(min === ""){
+        $('#min').focus();
+        $.confirm({
+          title: 'ข้อมูลไม่ครบถ้วน',
+          content: 'กรุณากรอกจำนวนขั้นต่ำ',
+          backgroundDismiss: true,
+          buttons: { ok: { text: 'ตกลง', btnClass: 'btn-dark' } }
+        });
+        return 0; 
+      }
+
+      var handleSuccess = function(data) {
+        $(".overlay").prop('hidden', true);                               
+        if(data != "fail" && data != "invalid_sku"){
+          $.confirm({
+              title: 'เสร็จสิ้น',
+              content: 'เพิ่มสินค้า ' +name+ ' ในหมวดหมู่ ' +folder+ ' เสร็จสิ้น',
+              backgroundDismiss: true,
+              buttons: {
+                formSubmit: {
+                  text: 'ตกลง',
+                  btnClass: 'btn-regis',
+                  action: function () {
+                      out();
                     }
-                });
-                out(); 
-              }else{
-                $.confirm({
-                  title: 'พบข้อผิดพลาด',
-                  content: 'ลองอีกครั้ง',
-                  backgroundDismiss: true,
-                  buttons: {
-                    formSubmit: {
-                      text: 'ตกลง',
-                      btnClass: 'btn-regis',
-                      action: function () {
-                      }
-                    }
-                  }
-                });
+                }
               }
-            }               
-          }); 
+          });
+          out(); 
+        }else if(data == "invalid_sku"){
+          validateSkuField($barcode, true);
         }else{
-          $.ajax({
-            type: "POST",
-            url:localStorage.pathServer + "php/add_prod.php",           
-            data: {'name_prod' : name,
-                  'code' : code,
-                  'parent' : folder,                  
-                  'min' : min},               
-              beforeSend: function(){
-                $(".overlay").prop('hidden', false);
-              },             
-              success: function(data){
-              $(".overlay").prop('hidden', true);                               
-              if(data != "fail"){
-                $.confirm({
-                    title: 'เสร็จสิ้น',
-                    content: 'เพิ่มสินค้า ' +name+ ' ในหมวดหมู่ ' +folder+ ' เสร็จสิ้น',
-                    backgroundDismiss: true,
-                    buttons: {
-                      formSubmit: {
-                        text: 'ตกลง',
-                        btnClass: 'btn-regis',
-                        action: function () {
-                            out();
-                          }
-                      }
-                    }
-                });
-                out(); 
-              }else{
-                $.confirm({
-                  title: 'พบข้อผิดพลาด',
-                  content: 'ลองอีกครั้ง',
-                  backgroundDismiss: true,
-                  buttons: {
-                    formSubmit: {
-                      text: 'ตกลง',
-                      btnClass: 'btn-regis',
-                      action: function () {
-                      }
-                    }
-                  }
-                });
+          $.confirm({
+            title: 'พบข้อผิดพลาด',
+            content: 'ไม่สามารถเพิ่มสินค้าได้ กรุณาลองใหม่อีกครั้ง',
+            backgroundDismiss: true,
+            buttons: {
+              formSubmit: {
+                text: 'ตกลง',
+                btnClass: 'btn-regis',
+                action: function () {}
               }
-            }               
-          });  
+            }
+          });
         }
-      });        
+      };
+
+      var imgb64 = '';
+      if($('#img').attr('src') && $('#img').attr('src').length > 0){
+        imgb64 = $('#img').attr('src');
+      }
+
+      $.ajax({
+        type: "POST",
+        url: localStorage.pathServer + "php/add_prod.php",           
+        data: {
+          'name_prod': name,
+          'code': code,
+          'parent': folder,
+          'img': imgb64,                 
+          'min': min
+        },               
+        beforeSend: function(){
+          $(".overlay").prop('hidden', false);
+        },             
+        success: handleSuccess
+      });
     }    
 
     function out(){
@@ -324,8 +388,8 @@
       </div>
       <div class="row justify-content-center mgem2">
         <div class="col-6 text-center">
-          <label for="barcode">รหัส</label>
-          <input id="barcode" type="text" class="w3-input"  data-index="2">
+          <label for="barcode">รหัส SKU (A-Z, 0-9, -)</label>
+          <input id="barcode" type="text" class="w3-input" placeholder="ตัวพิมพ์ใหญ่ ตัวเลข และขีด -" data-index="2" autocomplete="off">
         </div>
         <div class="col-5 text-center">
           <label for="min">ขั้นต่ำ</label>

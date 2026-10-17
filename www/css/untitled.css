@@ -552,3 +552,24 @@ textarea:focus {
     font-size: 1.15rem !important;
   }
 }
+
+/* =========================================================
+   SKU Input Validation & Error Highlighting
+   ========================================================= */
+.sku-error,
+.sku-error:focus,
+input.sku-error {
+  border: 2px solid #dc3545 !important;
+  background-color: #fff5f5 !important;
+  color: #721c24 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+  outline: none !important;
+}
+
+.sku-feedback-hint {
+  font-size: 0.82rem;
+  color: #dc3545;
+  margin-top: 3px;
+  font-weight: 500;
+  display: block;
+}

@@ -5,12 +5,18 @@
 
     include "db.php";   
     $prod_id   = $_POST['prod_id'] ?? null;
-    $name_prod = $_POST['name_prod'] ?? '';
-    $code      = $_POST['code'] ?? '';
+    $name_prod = trim($_POST['name_prod'] ?? '');
+    $raw_code  = trim($_POST['code'] ?? '');
+    $code      = strtoupper(str_replace(' ', '', $raw_code));
     $img       = $_POST['img'] ?? null;
 
-    if (!$prod_id) {
+    if (!$prod_id || empty($code)) {
         echo "fail";
+        exit;
+    }
+
+    if (!preg_match('/^[A-Z0-9\-]+$/', $code)) {
+        echo "invalid_sku";
         exit;
     }
 

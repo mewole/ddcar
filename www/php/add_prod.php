@@ -2,15 +2,24 @@
     include "db.php";   
     
     // 1. รับค่า + ตัดเว้นวรรค + กรองข้อมูลเพื่อความปลอดภัยจาก SQL Injection
-    $name    = isset($_POST['name_prod']) ? trim(mysqli_real_escape_string($conn, $_POST['name_prod'])) : '';    
-    $code    = isset($_POST['code']) ? trim(mysqli_real_escape_string($conn, $_POST['code'])) : '';   
-    $parent  = isset($_POST['parent']) ? trim(mysqli_real_escape_string($conn, $_POST['parent'])) : 'car';
-    $min     = isset($_POST['min']) ? trim(mysqli_real_escape_string($conn, $_POST['min'])) : '0';
+    $name     = isset($_POST['name_prod']) ? trim(mysqli_real_escape_string($conn, $_POST['name_prod'])) : '';    
+    $raw_code = isset($_POST['code']) ? trim($_POST['code']) : '';   
+    // บังคับตัวพิมพ์ใหญ่ และตัดช่องว่างทั้งหมด
+    $code     = strtoupper(str_replace(' ', '', $raw_code));
+    $parent   = isset($_POST['parent']) ? trim(mysqli_real_escape_string($conn, $_POST['parent'])) : 'car';
+    $min      = isset($_POST['min']) ? trim(mysqli_real_escape_string($conn, $_POST['min'])) : '0';
     
     if(empty($name) || empty($code)){
         echo "fail";
         exit;
     }
+
+    // ตรวจสอบ SKU: ต้องมีเฉพาะภาษาอังกฤษตัวพิมพ์ใหญ่ ตัวเลข และเครื่องหมายขีด (-) เท่านั้น
+    if(!preg_match('/^[A-Z0-9\-]+$/', $code)){
+        echo "invalid_sku";
+        exit;
+    }
+    $code = mysqli_real_escape_string($conn, $code);
 
     mysqli_begin_transaction($conn);
 
