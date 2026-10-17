@@ -1,3 +1,7 @@
+param(
+    [string]$NasHost = ""
+)
+
 $files = @(
     "web_warehouse.html",
     "web_customer.html",
