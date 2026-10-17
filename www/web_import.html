@@ -1231,19 +1231,19 @@
 							'<div class="price-l">ราคา '+arr_data[i].price+' บาท</div>' +
 						'</div>');
 					}											
-					qrcode = new QRCode("qrcode"+index_qr,{width: 57, height: 57});
-					qrcode.makeCode(arr_data[i].qr);
+					try {
+						qrcode = new QRCode("qrcode"+index_qr,{width: 57, height: 57});
+						qrcode.makeCode(arr_data[i].qr || "-");
+					} catch(e) {
+						console.error("QR Code Error:", e);
+					}
 					index_qr++;
 				}
 				sum += parseFloat(arr_data[i].cost)*parseInt(arr_data[i].amt);
-				                                                           
 			});
 			var d = new Date($.now());         
 			var datetime = d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate() + " " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds(); 
-			json_string = JSON.stringify(arr_data);
-			var dataString =  "JSON=" + json_string + "&ware_id=" + localStorage.ware_id_im + "&date=" + datetime
-			+ "&sum=" + sum + "&user_id=" + localStorage.user_id + "&type=" + localStorage.type_im;
-			//alert(dataString);
+			
 			var msg_alert = "";
 			for(var i = 0 ; i < arr_data.length;i++){
 				msg_alert += arr_data[i].name + " คงเหลือ " + (parseInt(arr_data[i].min)+parseInt(arr_data[i].amt)) + '<br>';
@@ -1253,7 +1253,14 @@
 			$.ajax({
 				type: "POST",
 				url:"php/stock_in.php",           
-				data: dataString,               
+				data: {
+					JSON: JSON.stringify(arr_data),
+					ware_id: localStorage.ware_id_im,
+					date: datetime,
+					sum: sum,
+					user_id: localStorage.user_id,
+					type: localStorage.type_im
+				},               
 				beforeSend: function(){
 					EasyLoading.show({                           
 						text: "กำลังโหลด"                            
@@ -1262,7 +1269,7 @@
 				success: function(data){  
 					EasyLoading.hide();
 					console.log(data);    
-					if(data == "success"){ 
+					if(data && data.trim() == "success"){ 
 						var ele =  document.getElementById('show_qr').innerHTML;			
 						WinPrint.document.write("<html><head><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'></head><body>");
 						WinPrint.document.write("<style>@media print {body {-webkit-print-color-adjust: exact;}} @page {size: auto; margin: 0mm;} .name{line-height: 1.2; font-size: 0.9em; word-wrap:break-word; height: 3.5em; margin-top: 0%;}.ctn{width: 10.1cm; height: 3.79cm; margin-top: -2.1mm; margin-left: 0mm;} .left{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .right{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .qr-r{width: 15mm; height: 15mm; margin-right: 2%; float: right; background-color: black; color: white;} .code-r{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-r{margin-top: 8%;font-size: 1em;} .qr-l{width: 15mm; height: 15mm; margin-right: 2%; float: left; background-color: black; color: white;} .code-l{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-l{margin-top: 8%;font-size: 1em;} </style>" +
@@ -1288,11 +1295,11 @@
 								}
 							}); 		
 						}, 250);			                     
-						         
 					}else{
+						if (WinPrint) WinPrint.close();
 						$.confirm({
 							title: 'พบข้อผิดพลาด',
-							content: 'ลองอีกครั้ง',
+							content: 'ไม่สามารถบันทึกได้: ' + (data || 'ไม่ทราบสาเหตุ'),
 							backgroundDismiss: true,
 							buttons: {
 								formSubmit: {
@@ -1304,6 +1311,22 @@
 							}
 						});
 					}
+				},
+				error: function(xhr){
+					EasyLoading.hide();
+					if (WinPrint) WinPrint.close();
+					$.confirm({
+						title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
+						content: 'สถานะ: ' + xhr.status + ' (' + (xhr.statusText || 'Error') + ')',
+						backgroundDismiss: true,
+						buttons: {
+							formSubmit: {
+								text: 'ตกลง',
+								btnClass: 'btn-regis',
+								action: function () {}
+							}
+						}
+					});
 				}               
 			});
 		}	
