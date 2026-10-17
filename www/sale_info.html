@@ -17,6 +17,7 @@
     <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
     <script src="cordova.js"></script>
     <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
     <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/jquery-confirm.css">
@@ -643,7 +644,7 @@
                                     "<div class='col-12 text-center'>พนักงานขาย : "+localStorage.user_name+"</div>"+
                                     "</div>" +                                   
                                 '</body></html>';      
-                            cordova.plugins.printer.print(contentP, { duplex: 'none' }, function (res) {
+                            DDBridge.printHtml(contentP, { duplex: 'none' }, function (res) {
                                 // response cancle res = false
                             });                       
                         }else if(print == "ใบรายงานการขาย (A4)"){
@@ -659,15 +660,15 @@
                             //var contentP = "<html><head><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'>"+
                             //"<style>@media print {body {-webkit-print-color-adjust: exact;}} @page {size: auto; margin: 0;}.fl-spc{float: left; width: 5%;}.fl-9{float: left; width: 9%;}.fl-12{float: left; width: 12.752%;}.fl-13{float: left; width: 13.05%;}.fl-14{float: left; width: 13.88%;}.fl-15{float: left; width: 15%;}.fl-20{float: left; width: 20%; text-align: center;}.fl-25{float: left; width: 25%; text-align: center;}.fl-35{float: left; width: 35%; text-align: center;}.fl-45{float: left; width: 45%; text-align: center;}.fl-80{float: left; width: 80%; text-align: center;}.ctn{position: relative; width: 297mm; height: 10%; padding: 10mm 15mm 0mm 10mm; font-family: 'Maitree';}.tb-st{border: 1px solid black; text-align: center; padding: 3px;}.tb{border: 1px solid black; text-align: center; padding: 3px; border-left: none;}.no-bdt{border-top: none;}.no-bdbtm{border-bottom: none;}.bold{font-weight: bold;}.ccc{background-color: #ccc;}.pd-15{padding-top: 15px;}.pd-16{padding-top: 16px;}.mg-5{margin-top: 5px;}</style></head><body>";
                             
-                            if(device.platform == "iOS"){
+                            var currentPlat = (typeof DDBridge !== 'undefined' && DDBridge.getPlatform) ? DDBridge.getPlatform() : ((typeof device !== 'undefined' && device.platform) ? device.platform.toLowerCase() : 'android');
+                            if(currentPlat == "ios"){
                                 // IOS
                                 var contentP = "<html><head><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'>"+
                                 "<style>@media print {html, body {-webkit-print-color-adjust: exact; transform: scale(.70); margin-top: -57mm; margin-left: -26mm; letter-spacing: -1px;} #break{page-break-before: always;} #ctn2{margin-top: 50mm;}} #date{margin-left: 3px;} @page {size: A4;} .fl-spc{float: left; width: 5%;}.fl-9{float: left; width: 9%;}.fl-12{float: left; width: 12.752%;}.fl-13{float: left; width: 13.05%;}.fl-14{float: left; width: 13.88%;}.fl-15{float: left; width: 15%;}.fl-20{float: left; width: 20%; text-align: center;}.fl-25{float: left; width: 25%; text-align: center;}.fl-35{float: left; width: 35%; text-align: center;}.fl-45{float: left; width: 45%; text-align: center;}.fl-80{float: left; width: 80%; text-align: center;}.ctn{position: relative; width: 297mm; height: auto; font-family: 'Maitree'; padding: 5mm 0mm 5mm 0mm;}.tb-st{border: 1px solid black; text-align: center; padding: 3px;}.tb{border: 1px solid black; text-align: center; padding: 3px; border-left: none;}.no-bdt{border-top: none;}.no-bdbtm{border-bottom: none;}.bold{font-weight: bold;}.ccc{background-color: #ccc;}.pd-15{padding-top: 15px;}.pd-16{padding-top: 16px;}.mg-5{margin-top: 5px;}</style></head><body>";
-                            }else if(device.platform == "Android"){
-                                // New Android
+                            }else{
+                                // New Android / Web fallback
                                 var contentP = "<html><head><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'>" +
                                 "<style>@media print {body {-webkit-print-color-adjust: exact; transform: scale(.96); margin-top: -7mm; letter-spacing: -1px;} #break{} #ctn2{margin-top: 155mm;}} #date{margin-left: 10px;} @page {size: A4; margin: 0;} .fl-spc{float: left; width: 5%;}.fl-9{float: left; width: 9%;}.fl-12{float: left; width: 12.752%;}.fl-13{float: left; width: 13.05%;}.fl-14{float: left; width: 13.88%;}.fl-15{float: left; width: 15%;}.fl-20{float: left; width: 20%; text-align: center;}.fl-25{float: left; width: 25%; text-align: center;}.fl-35{float: left; width: 35%; text-align: center;}.fl-45{float: left; width: 45%; text-align: center;}.fl-80{float: left; width: 80%; text-align: center;}.ctn{position: relative; width: 297mm; height: auto; font-family: 'Maitree';}.tb-st{border: 1px solid black; text-align: center; padding: 3px;}.tb{border: 1px solid black; text-align: center; padding: 3px; border-left: none;}.no-bdt{border-top: none;}.no-bdbtm{border-bottom: none;}.bold{font-weight: bold;}.ccc{background-color: #ccc;}.pd-15{padding-top: 15px;}.pd-16{padding-top: 16px;}.mg-5{margin-top: 5px;}</style></head><body>";
-
                             } 
 
                             for(var m = 0;m < arr_a4.length;m++){
@@ -766,7 +767,7 @@
                                 '</div>';
                             }				
                             contentP = contentP + '</body></html>';
-                            cordova.plugins.printer.print(contentP, { duplex: 'none', border: false}, function (res) {
+                            DDBridge.printHtml(contentP, { duplex: 'none', border: false}, function (res) {
                                 // response cancle res = false
                             });
                             $.confirm({

@@ -17,6 +17,7 @@
     <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
     <script src="cordova.js"></script>
     <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
     <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/jquery-confirm.css">
@@ -33,15 +34,11 @@
     </style>
 
     <script>
-        document.addEventListener("deviceready", onDeviceReady, false);
-
-        function onDeviceReady(){            
-            document.addEventListener("backbutton", onBackKeyDown, false);
-        }        
-
-        function onBackKeyDown() {
-            navigator.app.exitApp();
-        }
+        DDBridge.ready(function() {
+            DDBridge.setupBackButton(function() {
+                DDBridge.exitApp();
+            });
+        });
        
        $(document).keydown(function(objEvent) {
             if (objEvent.keyCode == 13) {  //enter pressed

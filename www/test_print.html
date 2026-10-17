@@ -14,6 +14,7 @@
    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
    <script src="cordova.js"></script>
+   <script type="text/javascript" src="js/capacitor-bridge.js"></script>
    <!-- Super cool dialog-->
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
@@ -116,7 +117,7 @@
       '</div>'+
       '</body></html>';
       
-      cordova.plugins.printer.print(text, { duplex: 'none' }, function (res) {
+      DDBridge.printHtml(text, { duplex: 'none' }, function (res) {
         alert(res);
       });        
 }
@@ -151,7 +152,7 @@
               "<div class='txt-ct'>พนักงานขาย : </div>"+
           "</div>"+
           '</body></html>';      
-      cordova.plugins.printer.print('<div>hell</div>', { duplex: 'none' }, function (res) {
+      DDBridge.printHtml('<div>hell</div>', { duplex: 'none' }, function (res) {
           // response cancle res = false
       });                  
     }

@@ -16,6 +16,7 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
   <script src="cordova.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
@@ -969,7 +970,7 @@
             contentP = contentP + '</body></html>'            
         }               
         }); 
-        cordova.plugins.printer.print(contentP, { duplex: 'none', border: false}, function (res) {        
+        DDBridge.printHtml(contentP, { duplex: 'none', border: false}, function (res) {        
         });
     }
 
@@ -1050,7 +1051,7 @@
                     "</div></body></html>"                    
         }               
         });
-        cordova.plugins.printer.print(contentP, { duplex: 'none', border: false}, function (res) {        
+        DDBridge.printHtml(contentP, { duplex: 'none', border: false}, function (res) {        
         });       
     }
 

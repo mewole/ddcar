@@ -19,6 +19,7 @@
   <script type="text/javascript" src="js/jquery.touchSwipe.min.js"></script>
   <script src="cordova.js"></script>
   <script type="text/javascript" src="js/scanqr.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/pic.css">
@@ -37,7 +38,7 @@
     });
 
   	function back(){
-  		screen.orientation.lock('portrait');
+  		DDBridge.lockOrientation('portrait');
 			if(from == "a"){
 				
 				window.location = "add_prod.html?folder="+folder;
@@ -54,10 +55,10 @@
     if($("#img").hasClass('horizontal')){
       if($("#img").hasClass('landscape')){
         $("#img").removeClass('landscape');
-        screen.orientation.lock('portrait');
+        DDBridge.lockOrientation('portrait');
       }else{
         $("#img").addClass('landscape');
-        screen.orientation.lock('landscape');
+        DDBridge.lockOrientation('landscape');
       }
     }
    }
@@ -85,23 +86,27 @@
 		    	h = (percent / 100) * image.height;
 		    	$("#img").height(h);
 		    	$("#img").addClass('horizontal');
-		    	screen.orientation.unlock();
+		    	DDBridge.unlockOrientation();
 		    }else{
           $(".fa-sync-alt").prop("hidden", true);
         }
 		};
 
-		screen.orientation.onchange = function(){
-			oren = screen.orientation.type;
-			oren = oren.split("-");
-			if($("#img").hasClass('horizontal')){
-				if(oren[0] == "landscape"){
-				  $("#img").height("100%");
-				}else if(oren[0] == "portrait"){
-					$("#img").height(h);
+		if (window.screen && window.screen.orientation) {
+			screen.orientation.onchange = function(){
+				var oren = screen.orientation.type;
+				if (oren) {
+					var orenParts = oren.split("-");
+					if($("#img").hasClass('horizontal')){
+						if(orenParts[0] == "landscape"){
+						  $("#img").height("100%");
+						}else if(orenParts[0] == "portrait"){
+							$("#img").height(h);
+						}
+					}
 				}
-			}
-		};
+			};
+		}
 	</script>
 </body>
 
