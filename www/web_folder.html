@@ -66,6 +66,7 @@
 				'import': { name: 'นำสินค้าเข้า', url: 'web_import.html', icon: 'fa-arrow-down' },
 				'export': { name: 'โอนย้ายสินค้า', url: 'web_transfer_in.html', icon: 'fa-exchange-alt' },
 				'transfer': { name: 'โอนย้ายสินค้า', url: 'web_transfer_in.html', icon: 'fa-exchange-alt' },
+				'transfer_in': { name: 'โอนย้ายสินค้า', url: 'web_transfer_in.html', icon: 'fa-exchange-alt' },
 				'qr': { name: 'พิมพ์คิวอาร์โค้ด', url: 'web_qrprint.html', icon: 'fa-qrcode' }
 			};
 			var meta = fromMeta[from] || { name: from, url: 'javascript:history.back()', icon: 'fa-folder' };
@@ -192,23 +193,19 @@
       if(from == "import"){
           localStorage.setItem('arr_prod_i', JSON.stringify(json)); 
           window.location = "web_import.html";
-        }else if(from == "export" || from == "transfer"){
+      }else if(from == "export" || from == "transfer" || from == "transfer_in"){
           localStorage.setItem('arr_prod_tr', JSON.stringify(json)); 
           window.location = "web_transfer_in.html";
-        }
-        }else if(from == "sale"){
+      }else if(from == "sale"){
           localStorage.setItem('arr_prod_s', JSON.stringify(json)); 
           window.location = "web_sale.html";
-        }else if(from == "stock"){
+      }else if(from == "stock"){
           localStorage.setItem('arr_prod_st', JSON.stringify(json)); 
           window.location = "web_stock.html";
-        }else if(from == "qr"){
+      }else if(from == "qr"){
           localStorage.setItem('arr_prod_qr', JSON.stringify(json)); 
           window.location = "web_qrprint.html";
-        }else if(from == "transfer"){
-          localStorage.setItem('arr_prod_tr', JSON.stringify(json)); 
-          window.location = "web_transfer_in.html";
-        }          
+      }          
 	}
 
 	var parent;
