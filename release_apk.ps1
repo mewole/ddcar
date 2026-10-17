@@ -16,10 +16,10 @@ $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
 
 Write-Host "`n========================================================" -ForegroundColor Cyan
-Write-Host "   🚀 DDCAR MOBILE APP - 1-CLICK RELEASE SYSTEM        " -ForegroundColor Cyan
+Write-Host "   DDCAR MOBILE APP - 1-CLICK RELEASE SYSTEM           " -ForegroundColor Cyan
 Write-Host "========================================================`n" -ForegroundColor Cyan
 
-# 1. Determine Version & Update build.gradle
+# 1. Determine Version and Update build.gradle
 $gradlePath = Join-Path $root "android\app\build.gradle"
 $gradleContent = Get-Content $gradlePath -Raw
 
@@ -35,7 +35,11 @@ if ($gradleContent -match 'versionName\s+"([^"]+)"') {
 if ([string]::IsNullOrWhiteSpace($Version)) {
     Write-Host "Current App Version in build.gradle: " -NoNewline
     Write-Host "$currentVer (Code: $currentCode)" -ForegroundColor Yellow
-    $promptVer = Read-Host "Enter release version [Press Enter to keep $currentVer]"
+    try {
+        $promptVer = Read-Host "Enter release version [Press Enter to keep $currentVer]"
+    } catch {
+        $promptVer = ""
+    }
     if ([string]::IsNullOrWhiteSpace($promptVer)) {
         $Version = $currentVer
     } else {
@@ -44,13 +48,21 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
 }
 
 $newCode = $currentCode + 1
-Write-Host "`n[1/5] 📦 Updating version info to v$Version (buildCode: $newCode)..." -ForegroundColor Green
-$updatedGradle = $gradleContent -replace 'versionCode\s+\d+', "versionCode $newCode"
-$updatedGradle = $updatedGradle -replace 'versionName\s+"[^"]+"', "versionName `"$Version`""
-Set-Content -Path $gradlePath -Value $updatedGradle -Encoding utf8
+Write-Host "`n[1/5] Updating version info to v$Version (buildCode: $newCode)..." -ForegroundColor Green
+
+$targetCode = "versionCode $currentCode"
+$replacementCode = "versionCode $newCode"
+$updatedGradle = $gradleContent.Replace($targetCode, $replacementCode)
+
+$targetVer = 'versionName "' + $currentVer + '"'
+$replacementVer = 'versionName "' + $Version + '"'
+$updatedGradle = $updatedGradle.Replace($targetVer, $replacementVer)
+
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($gradlePath, $updatedGradle, $utf8NoBom)
 
 # 2. Capacitor Sync
-Write-Host "`n[2/5] 🔄 Syncing web assets to Android platform (npx cap sync android)..." -ForegroundColor Green
+Write-Host "`n[2/5] Syncing web assets to Android platform (npx cap sync android)..." -ForegroundColor Green
 Set-Location $root
 & npx.cmd cap sync android
 if ($LASTEXITCODE -ne 0) {
@@ -58,7 +70,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # 3. Build APK with Gradle
-Write-Host "`n[3/5] ⚙️ Building Android APK (assembleDebug)..." -ForegroundColor Green
+Write-Host "`n[3/5] Building Android APK (assembleDebug)..." -ForegroundColor Green
 Set-Location (Join-Path $root "android")
 & .\gradlew.bat assembleDebug
 if ($LASTEXITCODE -ne 0) {
@@ -73,10 +85,10 @@ if (-not (Test-Path $apkSource)) {
 }
 $apkItem = Get-Item $apkSource
 $apkSizeMB = [math]::Round($apkItem.Length / 1MB, 2)
-Write-Host "✅ APK Build successful! Size: $apkSizeMB MB" -ForegroundColor Green
+Write-Host "[SUCCESS] APK Build successful! Size: $apkSizeMB MB" -ForegroundColor Green
 
 # 4. Copy to NAS / Web Server
-Write-Host "`n[4/5] 🌐 Deploying APK & API to Web Server/NAS..." -ForegroundColor Green
+Write-Host "`n[4/5] Deploying APK and API to Web Server/NAS..." -ForegroundColor Green
 $nasAvailable = Test-Path $NasPath
 if ($nasAvailable) {
     # Ensure php directory exists on NAS
@@ -97,33 +109,33 @@ if ($nasAvailable) {
     Copy-Item -Path $apkSource -Destination $destLatest -Force
     Write-Host "   -> Deployed: $destLatest" -ForegroundColor Cyan
 
-    # Copy versioned backup (e.g. ddcar-v$Version.apk)
+    # Copy versioned backup (e.g. ddcar-v2.0.2.apk)
     $destVersioned = Join-Path $NasPath "ddcar-v$Version.apk"
     Copy-Item -Path $apkSource -Destination $destVersioned -Force
     Write-Host "   -> Backup:   $destVersioned" -ForegroundColor Gray
 } else {
-    Write-Host "⚠️ Warning: NAS path $NasPath not accessible. Skipping SMB copy." -ForegroundColor Yellow
+    Write-Host "[WARN] NAS path $NasPath not accessible. Skipping SMB copy." -ForegroundColor Yellow
 }
 
 # 5. Update Database Version via set_lastV.php
-Write-Host "`n[5/5] 📡 Updating app version in database..." -ForegroundColor Green
+Write-Host "`n[5/5] Updating app version in database..." -ForegroundColor Green
 try {
-    $apiUrlWithParams = "$ApiUrl?version=$Version&url=$([System.Uri]::EscapeDataString($PublicDownloadUrl))"
+    $apiUrlWithParams = "$ApiUrl`?version=$Version&url=$([System.Uri]::EscapeDataString($PublicDownloadUrl))"
     $response = Invoke-RestMethod -Uri $apiUrlWithParams -Method Get -TimeoutSec 10
     if ($response.status -eq "success") {
-        Write-Host "✅ Database version updated successfully to v$Version!" -ForegroundColor Green
+        Write-Host "[SUCCESS] Database version updated successfully to v$Version!" -ForegroundColor Green
     } else {
-        Write-Host "⚠️ API response: $($response | ConvertTo-Json -Compress)" -ForegroundColor Yellow
+        Write-Host "[WARN] API response: $($response | ConvertTo-Json -Compress)" -ForegroundColor Yellow
     }
 } catch {
-    Write-Host "⚠️ Could not contact API at $ApiUrl: $($_.Exception.Message)" -ForegroundColor Yellow
-    Write-Host "   (Note: You can run $ApiUrl?version=$Version manually)" -ForegroundColor Gray
+    Write-Host "[WARN] Could not contact API at ${ApiUrl}: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host "   (Note: You can run ${ApiUrl}?version=$Version manually)" -ForegroundColor Gray
 }
 
 Write-Host "`n========================================================" -ForegroundColor Cyan
-Write-Host "   🎉 RELEASE v$Version COMPLETED SUCCESSFULLY!        " -ForegroundColor Green
+Write-Host "   RELEASE v$Version COMPLETED SUCCESSFULLY!           " -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Cyan
-Write-Host "📁 APK Local:    $apkSource"
-Write-Host "🌐 Download URL: $PublicDownloadUrl"
-Write-Host "📱 App Check:    In-app update & www/update.html will now serve v$Version" -ForegroundColor Yellow
+Write-Host "APK Local:    $apkSource"
+Write-Host "Download URL: $PublicDownloadUrl"
+Write-Host "App Check:    In-app update and update.html will now serve v$Version" -ForegroundColor Yellow
 Write-Host "========================================================`n" -ForegroundColor Cyan
