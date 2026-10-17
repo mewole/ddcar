@@ -1,749 +1,1149 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-	<meta charset="utf-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="">
-  <meta name="author" content="">
-
-  <title>นำสินค้าเข้าโกดัง</title>
+  <title>โอนย้ายสินค้า (หน้าร้าน ⇄ โกดัง) - DD MOTOR SPORT</title>
 
   <!-- Bootstrap Import -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.2.27/jquery.autocomplete.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" crossorigin="anonymous">
 
-  <!-- Super cool dialog-->
+  <!-- Super cool dialog -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
 
-	<!-- Easy-autocomplete -->
-	<script src="js/jquery.easy-autocomplete.js"></script>
-	<link rel="stylesheet" href="css/easy-autocomplete.min.css">
-	<link rel="stylesheet" href="css/easy-autocomplete.themes.min.css">
-	
-	<!-- Loading -->
-	<link rel="stylesheet" href="css/easy-loading.css">
-	<script src="js/easy-loading.js"></script>
-	
-	<!-- QRcode -->
-	<script type="text/javascript" src="js/qrcode.min.js"></script>
-	<script type="text/javascript" src="js/jQuery.print.js"></script>
+  <!-- Scanner detection -->
+  <script src="js/jquery.scannerdetection.js"></script>
 
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet"> 
-  <!-- Main -->
+  <!-- Easy-autocomplete -->
+  <script src="js/jquery.easy-autocomplete.js"></script>
+  <link rel="stylesheet" href="css/easy-autocomplete.min.css">
+  <link rel="stylesheet" href="css/easy-autocomplete.themes.min.css">
+
+  <!-- Loading -->
+  <link rel="stylesheet" href="css/easy-loading.css">
+  <script src="js/easy-loading.js"></script>
+
+  <!-- QRcode & Print -->
+  <script type="text/javascript" src="js/qrcode.min.js"></script>
+  <script type="text/javascript" src="js/jQuery.print.js"></script>
+
+  <!-- Fonts & Main Styles -->
+  <link href="https://fonts.googleapis.com/css?family=Prompt:300,400,500,600,700" rel="stylesheet">
   <link href="css/untitled.css" rel="stylesheet">
-  <link rel="stylesheet" href="css/popup.css">
+  <script type="text/javascript" src="js/config.js"></script>
 
   <style>
-  	img{
-  		height: 200px;
-  		width: 200px;
-  	}	
-  	label{
-  		color: #666;
-  		margin-right: 15px; margin-top: 5px;
-  	}
-  	#from{
-  		width: 50%; background-color: #666; border-color: #666; color: white;
-  	}
-  	#from:focus{
-  		outline: 0;
-  	}
-  	a{
-  		color: #999;
-  	}
-  	a:hover{
-  		color: #666;
-  	}
-	.active{
-		color: #666;
-	}	
-  </style>
-
-  <script>	
-		var prod_id,img;		
-		arr_data = [];		
-		$(document).ready(function () {
-			if(!localStorage.user_id){
-				window.location = 'web_login.html';
-			}
-			get_header();		
-			setTimeout(function() {$("#name").focus();}, 100);
-
-			if(localStorage.shop_id_tr){
-                $('#btn-b').text(localStorage.shop_name_tr);
-            }
-
-			if(localStorage.arr_trans){     
-				var retrievedObject = localStorage.getItem('arr_trans');
-				arr_data = JSON.parse(retrievedObject);          
-				count = arr_data[arr_data.length-1].count + 1;             
-				add_previous();
-            }      
-
-			if(localStorage.arr_prod_tr){
-				$("#btn-folder").attr('disabled',true);
-				$("#btn-def").attr('disabled',true);
-				$("#name").attr('readonly',true);
-                var retrievedObject = localStorage.getItem('arr_prod_tr');
-                var arr_data2 = JSON.parse(retrievedObject); 
-                prod_id = arr_data2[0].prod_id;            
-				get_prod(prod_id);
-				setTimeout(function() {$("#amount").focus();}, 100);
-            }    
-
-			var options = {
-				url: function(phrase) {
-					return "php/search_prod.php";
-				},
-				getValue: function(element) {
-					//console.log(element);
-					return element.prod_name;
-				},
-				ajaxSettings: {
-					method: "POST",
-					data: {}
-				},
-				preparePostData: function(data) {     
-					prod_id = 0;     
-					data.phrase = $("#name").val();
-					return data;
-				},
-				minCharNumber: 3,
-				list: {
-						maxNumberOfElements: 1000,
-
-						showAnimation: {
-								type: "slide",
-								time: 100
-						},
-						hideAnimation: {
-								type: "slide",
-								time: 100
-						},
-
-						onChooseEvent: function() {
-							for(var b = 0; b < count; b++){
-								if($("#name").val() == $("#name-"+b).val()){
-									$.alert({
-										icon: 'fa fa-warning',
-										title: 'เตือน',
-										content: "มีการเพิ่มสินค้า " + $("#name").val() + "กรุณาแก้ไขที่จำนวนของสินค้าที่ได้เพิ่มแล้ว",
-									});
-									set_default();
-									return 0;                
-								}
-							}							
-							var barcode = $("#name").getSelectedItemData().prod_code;					
-							prod_id = $("#name").getSelectedItemData().prod_id;
-                            img = $("#name").getSelectedItemData().img;
-                            					
-							$('#barcode').val(barcode);							
-							$('#amount').val("1");						
-							get_place();                
-						}
-				},
-				requestDelay: 300,
-				theme: "blue-light",
-				};
-			$("#name").easyAutocomplete(options);	
-		});	
-		
-		function get_prod(id){
-            prod_id = id;
-            var bool = true;
-            if(arr_data.length > 0){                 
-                for(var b = 0; b < arr_data.length; b++){
-                    if(prod_id == arr_data[b].prod_id){
-                        $.confirm({
-                            title: 'เตือน',
-                            content: 'มีการเพิ่มสินค้า ' + arr_data[b].name + ' กรุณาแก้ไขที่จำนวนของสินค้าที่ได้เพิ่มแล้ว',
-                            backgroundDismiss: true,
-                            buttons: {
-                                formSubmit: {
-                                text: 'ตกลง',
-                                btnClass: 'btn-regis',
-                                action: function () {
-                                }
-                                }
-                            }
-                        });  
-                        bool = false;                               
-                        break;           
-                    }
-                }                 
-            }
-            if(bool){
-                $.ajax({
-                    type: "POST",
-                    url:"php/get_prod.php",    
-                    data:{'prod_id' : id},
-                    //async: false,                       
-                    beforeSend: function(){
-						EasyLoading.show({                           
-							text: "กำลังโหลด"                            
-						});
-                    },             
-                    success: function(data){  
-                        EasyLoading.hide();
-                        var obj = jQuery.parseJSON(data);                                         
-                        $.each(obj, function(i, field){
-                            $('#name').val(obj[i].prod_name);
-							$('#barcode').val(obj[i].prod_code); 
-							$('#amount').val("1");                                              
-                            img = obj[i].img;                        
-						});  
-						get_place();                                                           
-                    }               
-                });                    
-            }else{
-            	show('dup');
-            }               
-        }
-
-		$(document).keydown(function(objEvent) {
-			if (objEvent.keyCode == 9) {  //tab pressed
-              objEvent.preventDefault(); // stops its action         
-          	}
-			if (objEvent.keyCode == 13) {  //enter pressed
-				objEvent.preventDefault();
-				var $this = $(objEvent.target);
-				var i_enter = parseFloat($this.attr('data-index'));                      
-				if(i_enter == 3){
-					add();
-				}else{          
-					var temp = $('[data-index="' + (i_enter+1).toString() + '"]').val();
-                    $('[data-index="' + (i_enter+1).toString() + '"]').focus().val("").val(temp);
-				}                       
-			}  
-			if (objEvent.keyCode == 113) {  //f2 pressed
-              	add();
-			}
-			if (objEvent.keyCode == 115) {  //f4 pressed
-				set_default();
-			}
-			if (objEvent.keyCode == 118) {  //f7 pressed
-				selectfolder();          
-            }  
-            if (objEvent.keyCode == 119) {  //f8 pressed
-				save2db();          
-            } 
-            if (objEvent.keyCode == 120) {  //f9 pressed
-				cancel();          
-            }      
-		})
-
-		function get_header(){
-			var d = new Date($.now());			
-      		var date = d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear();
-			$('#date').text(date);
-
-			$('#user').text(localStorage.user_name);
-
-			$.ajax({
-				type: "GET",
-				url:"php/get_shop.php",                            
-				beforeSend: function(){
-					EasyLoading.show({                           
-						text: "กำลังโหลด"                            
-					});
-				},             
-				success: function(data){  
-					EasyLoading.hide();
-					var obj = jQuery.parseJSON(data); 
-					if(obj){
-						$.each(obj, function(i, field){									
-							$('#b').append('<a class="dropdown-item text-center" href="#" onclick="setshop('+field.shop_id+',\''+field.shop_name+'\')">'+field.shop_name+'</a>');
-						}); 
-					}
-				}               
-			}); 		
-		}
-
-		arr_place = [];
-		function get_place(){
-			$.ajax({
-				type: "POST",
-				url:"php/get_place.php",    
-				data:{'prod_id' : prod_id,"shop_id":localStorage.shop_id_tr},  			                                 
-				success: function(data){				
-					var obj = jQuery.parseJSON(data);                    
-					if(obj){                        
-							var txt = "";                                         
-							$.each(obj, function(i, field){
-									txt += field.place + " "; 
-									arr_place.push(field.place.toLowerCase());                                                         
-							});    
-							$('#at').attr("placeholder",txt);                       
-					}else{
-							$('#at').attr("placeholder",""); 
-					}                                                      
-				}               
-			});  
-		}
-
-		function setshop(arg,arg2){
-			localStorage.shop_id_tr = arg;		
-			localStorage.shop_name_tr = arg2;
-			$('#btn-b').text(arg2);
-			get_place();
-		}
-				
-		function add(){
-			if($('#btn-b').text() == "เลือกหน้าร้าน"){
-				$.confirm({
-					title: 'พบข้อผิดพลาด',
-					content: 'กรุณาเลือกหน้าร้านก่อนทำรายการ',
-					backgroundDismiss: true,
-					buttons: {
-						formSubmit: {
-							text: 'ตกลง',
-							btnClass: 'btn-regis',
-							action: function () {
-							}
-						}
-					}
-				});  
-				return 0;
-			}			
-			var code = $('#barcode').val();		
-			var name = $('#name').val(); 
-			var amt = $('#amount').val(); 
-			if(!$('#at').prop('placeholder') && $('#at').val() == ""){ 
-				$('#name').focus(); 
-					$.confirm({
-						title: 'พบข้อผิดพลาด',
-						content: 'กรุณากรอกข้อมูลให้ครบ',
-						backgroundDismiss: true,
-						buttons: {
-							formSubmit: {
-								text: 'ตกลง',
-								btnClass: 'btn-regis',
-								action: function () {
-								}
-							}
-						}
-					});   					            
-					return 0;
-			}            
-			if(name != "" && amt != "" && code != "" && jQuery.inArray($('#at').val().toLowerCase(),arr_place) == -1 && prod_id != 0){      
-                show();
-			}else{
-					$.confirm({
-						title: 'พบข้อผิดพลาด',
-						content: 'กรุณากรอกข้อมูลให้ครบ',
-						backgroundDismiss: true,
-						buttons: {
-							formSubmit: {
-								text: 'ตกลง',
-								btnClass: 'btn-regis',
-								action: function () {
-								}
-							}
-						}
-					});
-			}
-			$('#name').focus();			          
-		}     
-		
-		var count = 0;
-  		function show(arg){
-		if(arg != 'dup'){
-			var bottom = $(window).height() - $("#cnt-add").offset().top - $("#cnt-add").height();
-			// Always scroll to the bottom
-			if(bottom < 200){
-				$("#cnt-add").css('max-height', $("#cnt-add").height());
-				$("#cnt-add").animate({scrollTop: $('#cnt-add').prop('scrollHeight')});
-			}   
-
-			$("#cnt-add").append('<div id="add-'+count+'" class="row mgb-5">'+
-					'<div class="col-1"></div>'+
-          '<div class="col-3">'+
-            '<div class="input-group-prepend">'+
-              '<span id="span-no-'+count+'" class="input-group-text">'+(count+1)+'</span>'+
-              '<input id="barcodee" type="text" value="'+$('#barcode').val()+'" class="form-control text-center" readonly>'+
-            '</div>'+
-          '</div>'+        
-          '<div class="col-4 nopd-8">'+
-            '<input id="name-'+count+'" value="'+$('#name').val()+'" class="form-control text-center" rel="popover" data-img="'+img+'" readonly>'+
-          '</div>'+
-          '<div class="col-1 nopd-8">'+
-            '<input id="amount-'+count+'" value="'+$('#amount').val()+'" type="number" class="form-control text-center no-spin" min="1" readonly>'+
-          '</div>'+
-          '<div class="col-2 nopd-8">'+
-            '<input id="at-'+count+'" type="text" value="'+$('#at').val()+'" placeholder="'+$('#at').attr('placeholder')+'" class="form-control text-center" readonly>'+
-          '</div>'+          
-          '<div class="col-1 nopd text-center">'+
-          '<button id="btn-edit-'+count+'" class="btn btn-sm btn-primary mgr-5" onclick="edit('+count+');"> <i class="fas fa-pencil-alt"></i></button>'+
-          '<button id="btn-save-'+count+'" class="btn btn-sm btn-success mgr-5" onclick="save('+count+');" hidden> <i class="fa fa-check"></i></button>'+
-          '<button id="btn-trash-'+count+'" class="btn btn-sm btn-danger" onclick="remove('+count+');"> <i class="fa fa-trash"></i></button>'+
-					'</div>'+
-					"<script>" +
-						"$('#name-"+count+"[rel=popover]').popover({" +
-						"html: true," +
-						"trigger: 'hover'," +
-						"placement: 'left'," +
-						"content: function(){" +
-						"return '<img src='+$(this).data('img')+'>';}" +
-						"});" +
-					"</" + "script>" +
-				'</div>');
-				
-			item = {}           
-			item ["count"] =  count; 
-			item ["qr"] =  $('#barcode').val();
-			item ["prod_id"] =  prod_id;
-			item ["name"] =  $('#name').val();		    
-			item ["amt"] =  $('#amount').val();			
-			item ["addr"] = $('#at').val();  			
-			item ["img"] = img;   
-			item ["plholder"] = $('#at').attr('placeholder');  
-
-			arr_data.push(item);	
-			localStorage.setItem('arr_trans', JSON.stringify(arr_data));	
-			$("#btn-b").attr('disabled',true);
-			count++;			
-		}
-			$('#at').attr("placeholder","");
-			$('#barcode').val("");
-			$('#name').val("");			
-			$('#amount').val("1");
-			$('#at').val("");			
-			if(localStorage.arr_prod_tr){
-                var retrievedObject = localStorage.getItem('arr_prod_tr');
-                var arr_data2 = JSON.parse(retrievedObject);
-                arr_data2.splice(0,1); 
-                localStorage.setItem('arr_prod_tr', JSON.stringify(arr_data2));  
-                if(arr_data2.length == 0){
-                    localStorage.arr_prod_tr = "";  
-                }                                 
-            }  
-            if(localStorage.arr_prod_tr){                    
-                var retrievedObject = localStorage.getItem('arr_prod_tr');
-                var arr_data2 = JSON.parse(retrievedObject);                                   
-                prod_id = arr_data2[0].prod_id;            
-                get_prod(prod_id);            
-            }else{                   
-				$("#btn-folder").removeAttr('disabled');
-				$("#btn-def").removeAttr('disabled');
-				$("#name").removeAttr('readonly');
-            }    	
-		}
-		
-		function add_previous(){
-			for(var i = 0;i < arr_data.length; i++){
-				var bottom = $(window).height() - $("#cnt-add").offset().top - $("#cnt-add").height();
-				// Always scroll to the bottom
-				if(bottom < 200){
-					$("#cnt-add").css('max-height', $("#cnt-add").height());
-					$("#cnt-add").animate({scrollTop: $('#cnt-add').prop('scrollHeight')});
-				}   
-
-				$("#cnt-add").append('<div id="add-'+arr_data[i].count+'" class="row mgb-5">'+
-						'<div class="col-1"></div>'+
-				'<div class="col-3">'+
-					'<div class="input-group-prepend">'+
-					'<span id="span-no-'+arr_data[i].count+'" class="input-group-text">'+(arr_data[i].count+1)+'</span>'+
-					'<input id="barcodee" type="text" value="'+arr_data[i].qr+'" class="form-control text-center" readonly>'+
-					'</div>'+
-				'</div>'+			
-				'<div class="col-4 nopd-8">'+
-					'<input id="name-'+arr_data[i].count+'" value="'+arr_data[i].name+'" class="form-control text-center" rel="popover" data-img="'+arr_data[i].img+'" readonly>'+
-				'</div>'+
-				'<div class="col-1 nopd-8">'+
-					'<input id="amount-'+arr_data[i].count+'" value="'+arr_data[i].amt+'" type="number" class="form-control text-center no-spin" min="1" readonly>'+
-				'</div>'+
-                '<div class="col-2 nopd-8">'+
-					'<input id="at-'+arr_data[i].count+'" type="text" value="'+arr_data[i].addr+'" placeholder="'+arr_data[i].plholder+'" class="form-control text-center" readonly>'+
-				'</div>'+
-				'<div class="col-1 nopd text-center">'+
-				'<button id="btn-edit-'+arr_data[i].count+'" class="btn btn-sm btn-primary mgr-5" onclick="edit('+arr_data[i].count+');"> <i class="fas fa-pencil-alt"></i></button>'+
-				'<button id="btn-save-'+arr_data[i].count+'" class="btn btn-sm btn-success mgr-5" onclick="save('+arr_data[i].count+');" hidden> <i class="fa fa-check"></i></button>'+
-				'<button id="btn-trash-'+arr_data[i].count+'" class="btn btn-sm btn-danger" onclick="remove('+arr_data[i].count+');"> <i class="fa fa-trash"></i></button>'+
-						'</div>'+
-						"<script>" +
-							"$('#name-"+arr_data[i].count+"[rel=popover]').popover({" +
-							"html: true," +
-							"trigger: 'hover'," +
-							"placement: 'left'," +
-							"content: function(){" +
-							"return '<img src='+$(this).data('img')+'>';}" +
-							"});" +
-						"</" + "script>" +
-					'</div>');
-
-				// count++;			
-				$("#btn-b").attr('disabled',true);	
-			}
-		
-		}
-
-		function set_default(){
-			$('#at').attr("placeholder","");
-			$('#barcode').val("");
-			$('#name').val("");			
-			$('#amount').val("1");
-			$('#at').val("");
-			$('#name').focus();		
-		}
-
-  		function edit(arg){
-			stop = false;
-			for(i = 0; i < count; i++){
-				if($("#btn-save-" + i).is(":visible")){
-					stop = true;
-				}
-			}
-			if(stop){
-				return 0;
-			}			   
-				$("#amount-" + arg).prop('readonly', false);
-				$("#at-" + arg).prop('readonly', false);         
-
-				//change btn-edit to save
-				$("#btn-edit-"+arg).prop('hidden', true);
-				$("#btn-trash-"+arg).prop('hidden', true);
-				$("#btn-save-"+arg).prop('hidden', false);
-
-				//$("#btn-edit-" + arg).attr('onclick', "save_edit(" + arg + ")");
-				//total_old = $("#net-" + arg).val();  		
-  	}
-
-  		function save(arg){
-			arr_data[arg].amt = $("#amount-"+arg).val();
-			arr_data[arg].addr = $("#at-"+arg).val();    
-			localStorage.setItem('arr_trans', JSON.stringify(arr_data));	   
-
-			$("#amount-" + arg).prop('readonly', true);
-			$("#at-" + arg).prop('readonly', true);  
-
-			$("#btn-edit-"+arg).prop('hidden', false);
-			$("#btn-trash-"+arg).prop('hidden', false);
-			$("#btn-save-"+arg).prop('hidden', true);
-  	}
-
-		function remove(arg) {
-			$.confirm({
-				icon: 'fa fa-warning',
-				title: 'แน่ใจหรือว่าต้องการลบ!',
-				content: 'ต้องการลบรายการสินค้าออกจากรายการ!',
-				buttons: {
-					danger: {
-						btnClass: 'btn-danger',
-						text: 'ลบ',
-						action: function () {							
-							$("#add-" + arg).remove();
-							for (i = arg+1; i <= count-1; i++) {
-								$("#span-no-" + (i)).text(i);								
-								$("#span-no-"+ i).prop('id', 'span-no-'+ (i-1));						
-								$("#amount-" + i).prop('id', 'amount-' + (i - 1));
-								$("#name-" + i).prop('id', 'name-' + (i - 1));
-								$("#at-" + i).prop('id', 'at-' + (i - 1));							
-								$("#add-" + i).prop('id', 'add-' + (i - 1));                 
-								$("#btn-trash-" + i).attr('onclick', "remove(" + (i - 1) + ")");
-								$("#btn-trash-" + i).prop('id', 'btn-trash-' + (i - 1));
-								$("#btn-edit-" + i).attr('onclick', "edit(" + (i - 1) + ")");
-								$("#btn-edit-" + i).prop('id', 'btn-edit-' + (i - 1));
-								$("#btn-save-" + i).attr('onclick', "save(" + (i - 1) + ")");
-								$("#btn-save-" + i).prop('id', 'btn-save-' + (i - 1));
-								arr_data[i].count--;						
-							}
-							arr_data.splice(arg, 1);
-							localStorage.setItem('arr_trans', JSON.stringify(arr_data));	
-							count--;
-							if(arr_data.length == 0){
-								$("#btn-b").attr('disabled',false);
-								localStorage.arr_trans = "";
-							}
-						}
-					},
-					ยกเลิก: function () { },
-				}
-			});
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      padding-bottom: 90px;
     }
-
-    	function save2db(){
-			if(arr_data.length == 0){
-					return 0;
-			}		
-			var d = new Date($.now());         
-			var datetime = d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate() + " " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds(); 
-			json_string = JSON.stringify(arr_data);
-			var dataString =  "JSON=" + json_string + "&shop_id=" + localStorage.shop_id_tr + "&date=" + datetime
-		    + "&user_id=" + localStorage.user_id;
-			//alert(dataString);
-			
-			$.ajax({
-				type: "POST",
-				url:"php/transfer_in.php",           
-				data: dataString,               
-				beforeSend: function(){
-					EasyLoading.show({                           
-						text: "กำลังโหลด"                            
-					});
-				},             
-				success: function(data){  
-					EasyLoading.hide();    
-					if(data == "success"){ 							                     
-                        cancel();
-					}else{
-						$.confirm({
-							title: 'พบข้อผิดพลาด',
-							content: 'ลองอีกครั้ง',
-							backgroundDismiss: true,
-							buttons: {
-								formSubmit: {
-								text: 'ตกลง',
-								btnClass: 'btn-regis',
-								action: function () {
-								}
-								}
-							}
-						});
-					}
-				}               
-			});
-		}	
-
-		function logout(){
-			localStorage.clear();
-		}
-
-		function cancel(){
-			localStorage.arr_trans = "";
-			localStorage.arr_prod_tr = "";
-			localStorage.shop_name_tr = "";
-			localStorage.shop_id_tr = "";
-			location.reload();
-		}
-
-		function selectfolder() {
-            window.location = "web_folder.html?from=transfer";            
-        } 
-
-  </script>
+    .card-modern {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+    }
+    .card-header-modern {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-light);
+      padding: 16px 20px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      border-top-left-radius: var(--radius-md);
+      border-top-right-radius: var(--radius-md);
+    }
+    .nav-tabs-transfer {
+      border-bottom: 2px solid var(--border-light);
+      margin-bottom: 20px;
+    }
+    .nav-tabs-transfer .nav-link {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #64748b;
+      border: none;
+      padding: 12px 24px;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .nav-tabs-transfer .nav-link.active {
+      color: var(--color-black);
+      border-bottom: 3px solid var(--color-black);
+      background: transparent;
+    }
+    .direction-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      background: #e2e8f0;
+      color: #334155;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .direction-badge.active {
+      background: var(--color-dark);
+      color: #ffffff;
+      border-color: var(--color-black);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .stock-badge {
+      font-size: 0.85rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .item-row {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      align-items: center;
+      transition: all 0.15s ease;
+    }
+    .item-row:hover {
+      box-shadow: var(--shadow-sm);
+      border-color: #cbd5e1;
+    }
+    .pending-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #f59e0b;
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin-bottom: 14px;
+      transition: all 0.2s ease;
+    }
+    .pending-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .status-badge-pending {
+      background: #fef3c7;
+      color: #b45309;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .status-badge-received {
+      background: #dcfce7;
+      color: #15803d;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; z-index: 9999; }
+    .autocomplete-suggestion { padding: 4px 8px; white-space: nowrap; overflow: hidden; cursor: pointer; }
+    .autocomplete-selected { background: #F0F0F0; }
+    .autocomplete-suggestions strong { font-weight: bold; color: #2563eb; }
+    .thumb-img {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+  </style>
 </head>
 <body>
-	<div class="container-fullwidth justify-content-center">
-		<nav class="navbar navbar-expand-md navbar-dark">
-        	<div class="collapse navbar-collapse justify-content-md-center" id="navbarCollapse">
-          	<h3 id="nav-title">นำสินค้าเข้าหน้าร้าน</h3>
-        	</div>
-      	</nav>
-      	<div class="container">
-      		<div class="row" style="margin-top: 2px;">
-      			<div class="col-12 text-center">
-					<a href="web_sale.html" class="mgr-20">ขายสินค้า</a>
-					<a href="web_import.html" class="mgr-20">นำสินค้าเข้าโกดัง</a>
-					<a href="web_stock.html" class="mgr-20">เช็คสต๊อก</a>
-                    <a href="web_export.html" class="mgr-20">สินค้าออกโกดัง</a>
-                    <a href="web_transfer_in.html" class="mgr-20 active">นำสินค้าเข้าหน้าร้าน</a>
-					<a href="web_select.html" class="mgr-20">รายการย้อนหลัง</a>
-					<a href="web_qrprint.html" class="mgr-20">พิมพ์คิวอาร์</a>
-					<a href="" class="mgr-20" onclick="logout()">ออกจากระบบ</a>
-      			</div>
-      		</div>
-      	</div><br><br>
 
-      	<div class="container-fullwidth">
-      		<div id="head" class="row mgb-5" style="padding-left: 5%; padding-right: 5%;">
-      		  <div class="col-3"></div>
-      		  <div class="col-2 text-center" style="color: #666;">เลือกหน้าร้าน</div>
-      		  <div class="col-2 text-center" style="color: #666;">วันที่</div>
-      		  <div class="col-2 text-center" style="color: #666;">ผู้ทำรายการ</div>
-      		  <div class="col-3"></div>
-      		</div>
-      	</div>
+  <!-- Central Dynamic Navbar -->
+  <div id="navbarCollapse"></div>
 
-      	<div class="container-fullwidth">
-      		<div class="row" style="padding-left: 5%; padding-right: 5%;">
-      			<div class="col-3"></div>
-      			<div class="col-2 text-center">
-      				<div id="select-ware" class="dropdown">
-						<button id="btn-b" class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #666; width: 111px;">เลือกหน้าร้าน</button>
-      				  <div id="b" class="dropdown-menu" aria-labelledby="dropdownMenuButton">      				    
-						
-      				  </div>
-      				</div>
-      			</div>
-      			<div id="date" class="col-2 text-center" style="margin-top: 5px; color: #666;">12/5/2018</div>
-      			<div id="user" class="col-2 text-center nopd" style="margin-top: 5px; color: #666;">ชายเมืองสิงค์</div>
-      			<!--<div class="col-3"><button id="btn-folder" onclick="selectfolder()" class="select_folder">เลือกสินค้า</button></div>-->
-      		</div>
-      	</div><hr style="width: 85%;">
-      	
-      	<div class="container-fullwidth nopd">
-      		<div id="head" class="row mgb-5">
-      		  <div class="col-1"></div>
-      		  <div class="col-3 text-center nopd">บาร์โค้ด</div>      		 
-      		  <div class="col-4 text-center nopd">ชื่อสินค้า</div>
-                <div class="col-1 text-center nopd-8">จำนวน</div>
-                <div class="col-2 text-center nopd-8">ที่อยู่สินค้า</div>      	
-      		</div>
-      	</div>
-	
-		<div id="cnt-add" class="container-fullwidth nopd" style="overflow-y: auto; overflow-x: hidden;">
-			<!-- Append Here!! -->
-		</div>
+  <div class="container-fluid px-3 px-md-4 mt-3">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs nav-tabs-transfer justify-content-center">
+      <li class="nav-item">
+        <a class="nav-link active" id="tab-send-btn" onclick="switchTab('send')">
+          <i class="fa fa-paper-plane mr-2 text-primary"></i> 1. สร้างรายการโอน (ส่งสินค้า)
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="tab-receive-btn" onclick="switchTab('receive')">
+          <i class="fa fa-boxes mr-2 text-warning"></i> 2. รอตรวจรับสินค้าเข้าสต๊อก
+          <span id="badge-pending" class="badge badge-danger ml-1" style="display: none;">0</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="web_mng_transfer.html">
+          <i class="fa fa-history mr-2 text-secondary"></i> 3. ประวัติการโอนย้ายทั้งหมด
+        </a>
+      </li>
+    </ul>
 
-		<div class="container-fullwidth nopd">
-			<!-- Input -->
-			<div class="row" >
-			  <div class="col-1"></div>
-			  <div class="col-3">
-			    <div class='input-group-prepend'>
-			      <span id="span-no" class='input-group-text'>#</span>
-			      <input id='barcode' type='text' class='form-control text-center' readonly>
-			    </div>
+    <!-- ========================================== -->
+    <!-- TAB 1: ส่งสินค้า (สร้างใบโอน) -->
+    <!-- ========================================== -->
+    <div id="tab-send" class="tab-content-area">
+      <!-- Section 1: Direction & Destination Selection -->
+      <div class="card-modern p-3 mb-3">
+        <div class="row align-items-center">
+          <div class="col-12 col-md-4 mb-2 mb-md-0 text-center text-md-left">
+            <span class="font-weight-bold mr-2"><i class="fa fa-exchange-alt mr-1"></i> ทิศทางการโอน:</span>
+            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+              <label class="direction-badge active mr-2" id="lbl-dir-shop-to-ware" onclick="setDirection('shop_to_ware')">
+                <input type="radio" name="transfer_direction" value="shop_to_ware" checked> 🏪 หน้าร้าน ➜ 📦 โกดัง
+              </label>
+              <label class="direction-badge" id="lbl-dir-ware-to-shop" onclick="setDirection('ware_to_shop')">
+                <input type="radio" name="transfer_direction" value="ware_to_shop"> 📦 โกดัง ➜ 🏪 หน้าร้าน
+              </label>
+            </div>
+          </div>
+
+          <div class="col-6 col-md-3">
+            <label class="font-weight-bold mb-1"><i class="fa fa-sign-out-alt text-danger mr-1"></i> ต้นทาง (ตัดออก):</label>
+            <select id="sel-source" class="form-control" onchange="onSourceChange()">
+              <!-- Generated dynamically -->
+            </select>
+          </div>
+
+          <div class="col-6 col-md-3">
+            <label class="font-weight-bold mb-1"><i class="fa fa-sign-in-alt text-success mr-1"></i> ปลายทาง (รับเข้า):</label>
+            <select id="sel-dest" class="form-control">
+              <!-- Generated dynamically -->
+            </select>
+          </div>
+
+          <div class="col-12 col-md-2 mt-2 mt-md-0 text-center text-md-right text-muted" style="font-size: 0.9rem;">
+            <div><i class="fa fa-calendar-alt mr-1"></i> <span id="current-date">-</span></div>
+            <div><i class="fa fa-user mr-1"></i> <span id="current-user">-</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Input Barcode / Search Product -->
+      <div class="card-modern p-3 mb-3">
+        <div class="row align-items-end">
+          <div class="col-12 col-md-3 mb-2 mb-md-0">
+            <label class="font-weight-bold mb-1">บาร์โค้ดสินค้า (ยิงสแกนเนอร์ได้):</label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fa fa-barcode"></i></span>
               </div>
-              <div class='col-4 nopd-8'>
-			    <input id="name" class="form-control text-center" rel="popover" data-img="" data-index="1" autofocus>
-			  </div>			  		 
-			  <div class='col-1 nopd-8'>
-			    <input id='amount' type='number' class='form-control text-center no-spin' min='1' value="1" data-index="2">
-              </div>	
-              <div class='col-2 nopd-8'>
-			    <input id='at' type='text' class='form-control text-center' data-index="3">
-			  </div>			 
-			  <div class="col-1 nopd text-center">
-			  	<button class="btn btn-sm btn-primary" disabled> <i class="fas fa-pencil-alt"></i></button>
-			  	<button class="btn btn-sm btn-danger" disabled> <i class="fa fa-trash"></i></button>
-			  	<button class="btn btn-sm btn-success" hidden disabled> <i class="fa fa-check"></i></button>
-			  </div>
-			</div><br>
-			<div class="row">
-				<div class="col-11 text-right" style="margin-left: 5%;">
-					<button class="btn btn-md btn-success" style="margin-right: 5px;" onclick="add();">เพิ่มสินค้า (F2)</button>
-					<button id="btn-folder" class="select_folder btn btn-md btn-primary" style="margin-right: 5px;" onclick="selectfolder();">เลือกสินค้า (F7)</button>
-					<button id="btn-def" class="btn btn-md btn-danger" onclick="set_default()">ค่าเริ่มต้น (F4)</button>
-				</div>
-			</div>
-		</div>
+              <input id="barcode" type="text" class="form-control text-center" placeholder="ยิงบาร์โค้ด หรือพิมพ์รหัส" autofocus>
+            </div>
+          </div>
 
-		<div id="ctn-bttm" class="container-fullwidth fixed-bottom" style="margin-bottom: 15px; z-index: 0;">
-		  <div class="row">
-		    <div class="col-12 text-center">
-				<button id="btn_checkbill" class="btn btn-success" onclick="save2db()">บันทึก (F8)</button>
-				<button class="btn btn-danger" onclick="cancel()">ยกเลิก (F9)</button>
-		    </div>
-			</div>
-			<div id="show_qr" hidden>
+          <div class="col-12 col-md-4 mb-2 mb-md-0">
+            <label class="font-weight-bold mb-1">ชื่อสินค้า (ค้นหาอัตโนมัติ):</label>
+            <input id="name" type="text" class="form-control" placeholder="พิมพ์ชื่อสินค้าอย่างน้อย 2 ตัวอักษร...">
+          </div>
 
-			</div>			
-		</div>
-	<script>		
-		$('#name').on('input', function() {
-			var name = $('#name').val();           
-			if(name == ""){
-				set_default();
-			}            
-		});      
-	</script>
-	<!-- Central Navbar Script -->
-	<script src="js/navbar.js"></script>
+          <div class="col-6 col-md-2 mb-2 mb-md-0">
+            <label class="font-weight-bold mb-1">จำนวนที่ต้องการโอน:</label>
+            <input id="amount" type="number" class="form-control text-center font-weight-bold" min="1" value="1">
+          </div>
+
+          <div class="col-6 col-md-3 text-right">
+            <button class="btn btn-success font-weight-bold mr-1" onclick="addItem()"><i class="fa fa-plus mr-1"></i> เพิ่ม (F2)</button>
+            <button class="btn btn-primary font-weight-bold mr-1" onclick="selectfolder()"><i class="fa fa-folder-open mr-1"></i> สินค้า (F7)</button>
+            <button class="btn btn-outline-secondary" onclick="setDefault()"><i class="fa fa-redo mr-1"></i> (F4)</button>
+          </div>
+        </div>
+
+        <div id="selected-prod-info" class="mt-2 text-muted" style="display: none; font-size: 0.9rem;">
+          <img id="preview-img" src="" class="thumb-img mr-2">
+          <span id="preview-name" class="font-weight-bold text-dark mr-3"></span>
+          <span id="preview-stock" class="stock-badge font-weight-bold">คงเหลือต้นทาง: 0 ชิ้น</span>
+        </div>
+      </div>
+
+      <!-- Section 3: Transfer Items Table -->
+      <div class="card-modern p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="mb-0 font-weight-bold"><i class="fa fa-list mr-1"></i> รายการสินค้าที่จะโอนย้าย (<span id="total-items-count">0</span> รายการ)</h5>
+          <div class="font-weight-bold text-primary" style="font-size: 1.1rem;">
+            รวมจำนวนสินค้าทั้งหมด: <span id="total-qty-sum">0</span> ชิ้น
+          </div>
+        </div>
+
+        <div id="items-container" style="max-height: 400px; overflow-y: auto;">
+          <div id="empty-state" class="text-center py-5 text-muted">
+            <i class="fa fa-box-open fa-3x mb-2 text-secondary"></i>
+            <p>ยังไม่มีรายการสินค้าในใบโอนย้ายนี้<br>กรุณายิงบาร์โค้ด หรือพิมพ์ค้นหาชื่อสินค้าด้านบน</p>
+          </div>
+          <!-- Item rows inserted here -->
+        </div>
+
+        <!-- Section 4: Print Options & Notes -->
+        <hr class="my-3">
+        <div class="row align-items-center">
+          <div class="col-12 col-md-6 mb-2 mb-md-0">
+            <span class="font-weight-bold mr-2"><i class="fa fa-print mr-1"></i> การพิมพ์ใบโอน:</span>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="print_type" id="print-bill" value="bill" checked>
+              <label class="form-check-label" for="print-bill">🧾 สลิปความร้อน (Bill 80mm)</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="print_type" id="print-a4" value="a4">
+              <label class="form-check-label" for="print-a4">📄 กระดาษ A4</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="print_type" id="print-none" value="none">
+              <label class="form-check-label" for="print-none">❌ ไม่พิมพ์</label>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fa fa-comment-dots"></i></span>
+              </div>
+              <input id="transfer-comment" type="text" class="form-control" placeholder="หมายเหตุช่วยจำ (ถ้ามี เช่น ย้ายของเคลียร์พื้นที่)">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Floating Actions -->
+      <div class="fixed-bottom bg-white border-top py-2 px-4 shadow-lg text-center" style="z-index: 1020;">
+        <button id="btn-save-transfer" class="btn btn-success btn-lg font-weight-bold px-5 mr-3" onclick="submitTransfer()">
+          <i class="fa fa-check-circle mr-2"></i> บันทึกและส่งของ (F8)
+        </button>
+        <button class="btn btn-outline-danger btn-lg px-4" onclick="cancelAll()">
+          <i class="fa fa-times mr-1"></i> ล้างรายการ (F9)
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: รายการรอตรวจรับสินค้าเข้าสต๊อก -->
+    <!-- ========================================== -->
+    <div id="tab-receive" class="tab-content-area" style="display: none;">
+      <div class="card-modern p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0 font-weight-bold">
+            <i class="fa fa-inbox text-warning mr-2"></i> รายการสินค้าที่กำลังนำส่ง (รอสาขาปลายทางตรวจรับ)
+          </h5>
+          <button class="btn btn-sm btn-outline-secondary" onclick="loadPendingTransfers()">
+            <i class="fa fa-sync-alt mr-1"></i> รีเฟรชรายการ
+          </button>
+        </div>
+
+        <div id="pending-transfers-list">
+          <!-- Pending transfer cards inserted dynamically -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal ตรวจนับและรับสินค้า -->
+  <div class="modal fade" id="modal-verify-receive" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title font-weight-bold">
+            <i class="fa fa-clipboard-check mr-2 text-warning"></i> ตรวจนับสินค้าใบโอน: <span id="m-tf-number"></span>
+          </h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="alert alert-info py-2 mb-3">
+            <div class="row">
+              <div class="col-6"><strong>ต้นทาง:</strong> <span id="m-source"></span> ➜ <strong>ปลายทาง:</strong> <span id="m-dest"></span></div>
+              <div class="col-6 text-right"><strong>ผู้ส่งของ:</strong> <span id="m-sender"></span> | <strong>เวลาส่ง:</strong> <span id="m-time"></span></div>
+            </div>
+          </div>
+
+          <h6 class="font-weight-bold mb-2">รายการสินค้าที่ต้องตรวจนับ:</h6>
+          <div id="m-items-table" style="max-height: 280px; overflow-y: auto;">
+            <!-- Items list inserted dynamically -->
+          </div>
+
+          <hr class="my-3">
+          <div class="form-group mb-0">
+            <label class="font-weight-bold text-dark"><i class="fa fa-user-check text-primary mr-1"></i> ชื่อผู้ตรวจรับสินค้าจริง (ผู้รับของ):</label>
+            <input type="text" id="m-receiver-name" class="form-control form-control-lg font-weight-bold text-primary" placeholder="พิมพ์ชื่อผู้ที่ตรวจนับสินค้าจริง เช่น นายสมชาย">
+            <small class="form-text text-muted">ระบบจะบันทึกชื่อนี้ไว้ในประวัติเพื่อใช้ตรวจสอบความถูกต้องว่าของเข้าหน้าร้าน/โกดังจริง</small>
+          </div>
+        </div>
+        <div class="modal-footer bg-light justify-content-between">
+          <button type="button" class="btn btn-outline-danger font-weight-bold" onclick="rejectCurrentTransfer()">
+            <i class="fa fa-ban mr-1"></i> ปฏิเสธรับ / ส่งคืนต้นทาง
+          </button>
+          <div>
+            <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">ปิดหน้าต่าง</button>
+            <button type="button" class="btn btn-success btn-lg font-weight-bold px-4" onclick="confirmCurrentTransfer()">
+              <i class="fa fa-check-circle mr-1"></i> ยืนยันรับเข้าสต๊อก (ของครบถูกต้อง)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var currentDirection = 'shop_to_ware';
+    var allLocations = [];
+    var transferItems = [];
+    var currentSelectedProd = null;
+    var activeModalTfId = null;
+
+    $(document).ready(function() {
+      // Guard
+      if (!localStorage.user_id) {
+        window.location = 'web_login.html';
+        return;
+      }
+
+      // Display info
+      var now = new Date();
+      var dateStr = now.getDate() + '/' + (now.getMonth() + 1) + '/' + now.getFullYear();
+      $('#current-date').text(dateStr);
+      $('#current-user').text(localStorage.user_name || 'ผู้ใช้');
+
+      // Load Warehouses & Shops
+      loadLocations();
+
+      // Setup Autocomplete
+      setupAutocomplete();
+
+      // Barcode listener on Enter
+      $('#barcode').on('keypress', function(e) {
+        if (e.which === 13) {
+          e.preventDefault();
+          findProductByBarcode($(this).val().trim());
+        }
+      });
+
+      // Amount Enter to Add
+      $('#amount').on('keypress', function(e) {
+        if (e.which === 13) {
+          e.preventDefault();
+          addItem();
+        }
+      });
+
+      // Global hotkeys (F2, F4, F7, F8, F9)
+      $(document).keydown(function(e) {
+        if (e.which === 113) { e.preventDefault(); addItem(); } // F2
+        if (e.which === 115) { e.preventDefault(); setDefault(); } // F4
+        if (e.which === 118) { e.preventDefault(); selectfolder(); } // F7
+        if (e.which === 119) { e.preventDefault(); submitTransfer(); } // F8
+        if (e.which === 120) { e.preventDefault(); cancelAll(); } // F9
+      });
+
+      // Restore drafts if any
+      if (localStorage.arr_trans_new) {
+        try {
+          transferItems = JSON.parse(localStorage.arr_trans_new);
+          renderItems();
+        } catch(e) { transferItems = []; }
+      }
+
+      // Check folder select returning item
+      if (localStorage.arr_prod_tr) {
+        try {
+          var arr = JSON.parse(localStorage.arr_prod_tr);
+          if (arr && arr.length > 0) {
+            var pId = arr[0].prod_id;
+            loadProductById(pId);
+            localStorage.arr_prod_tr = "";
+          }
+        } catch(e) {}
+      }
+
+      // Check pending transfers count on load
+      loadPendingTransfers();
+    });
+
+    function switchTab(tab) {
+      if (tab === 'send') {
+        $('#tab-send').show();
+        $('#tab-receive').hide();
+        $('#tab-send-btn').addClass('active');
+        $('#tab-receive-btn').removeClass('active');
+      } else {
+        $('#tab-send').hide();
+        $('#tab-receive').show();
+        $('#tab-send-btn').removeClass('active');
+        $('#tab-receive-btn').addClass('active');
+        loadPendingTransfers();
+      }
+    }
+
+    function loadLocations() {
+      $.ajax({
+        url: 'php/get_ware_shop.php',
+        type: 'POST',
+        dataType: 'json',
+        success: function(data) {
+          allLocations = data || [];
+          updateLocationDropdowns();
+        }
+      });
+    }
+
+    function setDirection(dir) {
+      currentDirection = dir;
+      if (dir === 'shop_to_ware') {
+        $('#lbl-dir-shop-to-ware').addClass('active');
+        $('#lbl-dir-ware-to-shop').removeClass('active');
+      } else {
+        $('#lbl-dir-ware-to-shop').addClass('active');
+        $('#lbl-dir-shop-to-ware').removeClass('active');
+      }
+      updateLocationDropdowns();
+      if (currentSelectedProd) {
+        checkCurrentStock(currentSelectedProd.prod_id);
+      }
+    }
+
+    function updateLocationDropdowns() {
+      var $selSource = $('#sel-source').empty();
+      var $selDest = $('#sel-dest').empty();
+
+      if (currentDirection === 'shop_to_ware') {
+        // Source: หน้าร้าน (shop_id: 6)
+        allLocations.forEach(function(loc) {
+          if (loc.shop_id) {
+            $selSource.append('<option value="' + loc.shop_id + '" data-type="shop">' + (loc.shop_name || 'หน้าร้าน') + '</option>');
+          }
+        });
+        // Dest: โกดังต่างๆ
+        allLocations.forEach(function(loc) {
+          if (loc.ware_id) {
+            $selDest.append('<option value="' + loc.ware_id + '" data-type="ware">' + (loc.ware_name || 'โกดัง') + '</option>');
+          }
+        });
+      } else {
+        // Source: โกดังต่างๆ
+        allLocations.forEach(function(loc) {
+          if (loc.ware_id) {
+            $selSource.append('<option value="' + loc.ware_id + '" data-type="ware">' + (loc.ware_name || 'โกดัง') + '</option>');
+          }
+        });
+        // Dest: หน้าร้าน
+        allLocations.forEach(function(loc) {
+          if (loc.shop_id) {
+            $selDest.append('<option value="' + loc.shop_id + '" data-type="shop">' + (loc.shop_name || 'หน้าร้าน') + '</option>');
+          }
+        });
+      }
+    }
+
+    function onSourceChange() {
+      if (currentSelectedProd) {
+        checkCurrentStock(currentSelectedProd.prod_id);
+      }
+    }
+
+    function setupAutocomplete() {
+      $.ajax({
+        url: 'php/get_autoprod.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          var items = (data || []).map(function(d) {
+            return {
+              value: d.prod_name,
+              id: d.prod_id,
+              code: d.prod_code,
+              price: d.prod_price
+            };
+          });
+
+          $('#name').autocomplete({
+            lookup: items,
+            minChars: 2,
+            onSelect: function(suggestion) {
+              loadProductById(suggestion.id);
+            }
+          });
+        }
+      });
+    }
+
+    function findProductByBarcode(code) {
+      if (!code) return;
+      EasyLoading.show({ text: "กำลังค้นหา..." });
+      $.ajax({
+        url: 'php/search_prod.php',
+        type: 'POST',
+        data: { phrase: code },
+        dataType: 'json',
+        success: function(data) {
+          EasyLoading.hide();
+          if (data && data.length > 0) {
+            loadProductById(data[0].prod_id);
+          } else {
+            $.alert({ title: 'ไม่พบสินค้า', content: 'ไม่พบรหัสบาร์โค้ด: ' + code });
+          }
+        },
+        error: function() {
+          EasyLoading.hide();
+        }
+      });
+    }
+
+    function loadProductById(id) {
+      var sourceId = $('#sel-source').val();
+      var sourceType = (currentDirection === 'shop_to_ware') ? 'หน้าร้าน' : 'โกดัง';
+
+      EasyLoading.show({ text: "กำลังโหลดข้อมูลสินค้า..." });
+      $.ajax({
+        url: 'php/get_sale.php',
+        type: 'POST',
+        data: { prod_id: id, ware_id: sourceId, type: sourceType, cus_id: -1 },
+        dataType: 'json',
+        success: function(data) {
+          EasyLoading.hide();
+          if (data && data.length > 0) {
+            var p = data[0];
+            currentSelectedProd = {
+              prod_id: p.prod_id,
+              prod_code: p.prod_code,
+              prod_name: p.prod_name,
+              price: p.prod_price || 0,
+              cost: p.prod_cost || 0,
+              img: p.img || 'img/logo.jpg',
+              stock: parseInt(p.min_amount || 0)
+            };
+
+            $('#barcode').val(currentSelectedProd.prod_code);
+            $('#name').val(currentSelectedProd.prod_name);
+            $('#preview-img').attr('src', currentSelectedProd.img);
+            $('#preview-name').text(currentSelectedProd.prod_name);
+            $('#preview-stock').text('คงเหลือต้นทาง: ' + currentSelectedProd.stock + ' ชิ้น');
+            $('#selected-prod-info').show();
+            $('#amount').val(1).focus().select();
+          }
+        },
+        error: function() {
+          EasyLoading.hide();
+        }
+      });
+    }
+
+    function checkCurrentStock(prodId) {
+      var sourceId = $('#sel-source').val();
+      var sourceType = (currentDirection === 'shop_to_ware') ? 'หน้าร้าน' : 'โกดัง';
+      $.ajax({
+        url: 'php/get_sale.php',
+        type: 'POST',
+        data: { prod_id: prodId, ware_id: sourceId, type: sourceType, cus_id: -1 },
+        dataType: 'json',
+        success: function(data) {
+          if (data && data.length > 0) {
+            var st = parseInt(data[0].min_amount || 0);
+            if (currentSelectedProd) {
+              currentSelectedProd.stock = st;
+              $('#preview-stock').text('คงเหลือต้นทาง: ' + st + ' ชิ้น');
+            }
+          }
+        }
+      });
+    }
+
+    function addItem() {
+      if (!currentSelectedProd) {
+        $.alert({ title: 'เตือน', content: 'กรุณาเลือกสินค้าก่อนเพิ่มรายการ' });
+        return;
+      }
+      var qty = parseInt($('#amount').val());
+      if (isNaN(qty) || qty <= 0) {
+        $.alert({ title: 'เตือน', content: 'จำนวนต้องมากกว่า 0' });
+        return;
+      }
+
+      // Check available stock
+      if (qty > currentSelectedProd.stock) {
+        $.alert({
+          title: 'สต๊อกต้นทางไม่เพียงพอ',
+          content: 'สินค้า <strong>' + currentSelectedProd.prod_name + '</strong> มีในสต๊อกต้นทางเพียง ' + currentSelectedProd.stock + ' ชิ้น แต่ต้องการโอน ' + qty + ' ชิ้น'
+        });
+        return;
+      }
+
+      // Check duplicate
+      var existing = transferItems.find(function(it) { return it.prod_id == currentSelectedProd.prod_id; });
+      if (existing) {
+        if (existing.amt + qty > currentSelectedProd.stock) {
+          $.alert({
+            title: 'สต๊อกต้นทางไม่เพียงพอ',
+            content: 'รายการนี้มีอยู่แล้ว ' + existing.amt + ' ชิ้น รวมกับที่เพิ่มใหม่จะเกินสต๊อกที่มี (' + currentSelectedProd.stock + ' ชิ้น)'
+          });
+          return;
+        }
+        existing.amt += qty;
+      } else {
+        transferItems.push({
+          prod_id: currentSelectedProd.prod_id,
+          prod_code: currentSelectedProd.prod_code,
+          prod_name: currentSelectedProd.prod_name,
+          amt: qty,
+          price: currentSelectedProd.price,
+          img: currentSelectedProd.img,
+          stock: currentSelectedProd.stock
+        });
+      }
+
+      localStorage.setItem('arr_trans_new', JSON.stringify(transferItems));
+      renderItems();
+      setDefault();
+    }
+
+    function renderItems() {
+      var $cnt = $('#items-container').empty();
+      if (transferItems.length === 0) {
+        $cnt.html('<div id="empty-state" class="text-center py-5 text-muted"><i class="fa fa-box-open fa-3x mb-2 text-secondary"></i><p>ยังไม่มีรายการสินค้าในใบโอนย้ายนี้<br>กรุณายิงบาร์โค้ด หรือพิมพ์ค้นหาชื่อสินค้าด้านบน</p></div>');
+        $('#total-items-count').text(0);
+        $('#total-qty-sum').text(0);
+        return;
+      }
+
+      var totalQty = 0;
+      transferItems.forEach(function(item, idx) {
+        totalQty += item.amt;
+        var row = '<div class="item-row row mx-0">' +
+          '<div class="col-1 text-center font-weight-bold text-muted">' + (idx + 1) + '</div>' +
+          '<div class="col-2 font-weight-bold text-center">' + item.prod_code + '</div>' +
+          '<div class="col-4 d-flex align-items-center">' +
+            '<img src="' + item.img + '" class="thumb-img mr-2">' +
+            '<div><div class="font-weight-bold text-dark">' + item.prod_name + '</div><small class="text-muted">คงเหลือต้นทาง: ' + item.stock + '</small></div>' +
+          '</div>' +
+          '<div class="col-2 text-center">' +
+            '<input type="number" class="form-control text-center font-weight-bold d-inline-block" style="width: 80px;" value="' + item.amt + '" min="1" onchange="updateItemQty(' + idx + ', this.value)">' +
+          '</div>' +
+          '<div class="col-2 text-center text-muted font-weight-bold">' + (item.amt) + ' ชิ้น</div>' +
+          '<div class="col-1 text-right">' +
+            '<button class="btn btn-sm btn-danger" onclick="removeItem(' + idx + ')"><i class="fa fa-trash"></i></button>' +
+          '</div>' +
+        '</div>';
+        $cnt.append(row);
+      });
+
+      $('#total-items-count').text(transferItems.length);
+      $('#total-qty-sum').text(totalQty);
+    }
+
+    function updateItemQty(idx, val) {
+      var n = parseInt(val);
+      if (isNaN(n) || n <= 0) {
+        renderItems();
+        return;
+      }
+      if (n > transferItems[idx].stock) {
+        $.alert({ title: 'เกินจำนวนคงเหลือ', content: 'สต๊อกต้นทางมีเพียง ' + transferItems[idx].stock + ' ชิ้น' });
+        renderItems();
+        return;
+      }
+      transferItems[idx].amt = n;
+      localStorage.setItem('arr_trans_new', JSON.stringify(transferItems));
+      renderItems();
+    }
+
+    function removeItem(idx) {
+      transferItems.splice(idx, 1);
+      localStorage.setItem('arr_trans_new', JSON.stringify(transferItems));
+      renderItems();
+    }
+
+    function setDefault() {
+      currentSelectedProd = null;
+      $('#barcode').val("");
+      $('#name').val("");
+      $('#amount').val(1);
+      $('#selected-prod-info').hide();
+      $('#barcode').focus();
+    }
+
+    function cancelAll() {
+      $.confirm({
+        title: 'ยืนยันล้างข้อมูล',
+        content: 'ต้องการยกเลิกและล้างรายการสินค้าทั้งหมดหรือไม่?',
+        buttons: {
+          confirm: {
+            text: 'ล้างรายการ',
+            btnClass: 'btn-danger',
+            action: function() {
+              transferItems = [];
+              localStorage.removeItem('arr_trans_new');
+              renderItems();
+              setDefault();
+            }
+          },
+          cancel: { text: 'ยกเลิก' }
+        }
+      });
+    }
+
+    function selectfolder() {
+      window.location = "web_folder.html?from=transfer_in";
+    }
+
+    // Submit Transfer Order
+    function submitTransfer() {
+      if (transferItems.length === 0) {
+        $.alert({ title: 'เตือน', content: 'กรุณาเพิ่มสินค้าลงในรายการก่อนบันทึก' });
+        return;
+      }
+
+      var sourceName = $('#sel-source option:selected').text();
+      var destName = $('#sel-dest option:selected').text();
+      var fromId = $('#sel-source').val();
+      var toId = $('#sel-dest').val();
+      var comment = $('#transfer-comment').val();
+      var printType = $('input[name="print_type"]:checked').val();
+
+      $.confirm({
+        title: 'ยืนยันการโอนย้ายสินค้า',
+        content: 'ต้องการตัดสต๊อกต้นทางและสร้างใบโอนจาก <strong>' + sourceName + '</strong> ไปยัง <strong>' + destName + '</strong> หรือไม่?<br><small class="text-muted">*ระบบจะตัดสต๊อกต้นทางทันที และของจะเข้าสต๊อกปลายทางเมื่อกดยืนยันรับของ</small>',
+        buttons: {
+          confirm: {
+            text: 'บันทึกและส่งของ',
+            btnClass: 'btn-success',
+            action: function() {
+              EasyLoading.show({ text: "กำลังบันทึกและตัดสต๊อก..." });
+              var postData = {
+                JSON: JSON.stringify(transferItems),
+                direction: currentDirection,
+                from_id: fromId,
+                to_id: toId,
+                date: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                user_id: localStorage.user_id,
+                comment: comment
+              };
+
+              $.ajax({
+                url: 'php/create_transfer.php',
+                type: 'POST',
+                data: postData,
+                dataType: 'json',
+                success: function(res) {
+                  EasyLoading.hide();
+                  if (res && res.status === 'success') {
+                    var tfNumber = res.tf_number;
+                    var tfId = res.tf_id;
+
+                    // Print if chosen
+                    if (printType !== 'none') {
+                      printTransferSlip(printType, {
+                        tf_number: tfNumber,
+                        date_time: postData.date,
+                        source_name: sourceName,
+                        dest_name: destName,
+                        sender_name: localStorage.user_name || 'พนักงาน',
+                        items: transferItems,
+                        total_qty: res.total_qty,
+                        remark: comment
+                      });
+                    }
+
+                    $.alert({
+                      title: 'สำเร็จ! 📦',
+                      content: 'สร้างใบโอนเลขที่ <strong>' + tfNumber + '</strong> เรียบร้อยแล้ว!<br>สถานะ: <strong>รอสาขาปลายทางตรวจรับ</strong>',
+                      buttons: {
+                        ok: {
+                          text: 'ตกลง',
+                          btnClass: 'btn-primary',
+                          action: function() {
+                            transferItems = [];
+                            localStorage.removeItem('arr_trans_new');
+                            renderItems();
+                            setDefault();
+                            loadPendingTransfers();
+                          }
+                        }
+                      }
+                    });
+                  } else {
+                    $.alert({ title: 'พบข้อผิดพลาด', content: res.message || 'ไม่สามารถบันทึกได้' });
+                  }
+                },
+                error: function(xhr) {
+                  EasyLoading.hide();
+                  $.alert({ title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ', content: xhr.responseText || 'Error' });
+                }
+              });
+            }
+          },
+          cancel: { text: 'ยกเลิก' }
+        }
+      });
+    }
+
+    // Print Transfer Slip (Thermal 80mm or A4)
+    function printTransferSlip(type, data) {
+      var w = window.open('', '_blank');
+      var html = '<html><head><meta charset="utf-8"><title>ใบโอนย้ายสินค้า - ' + data.tf_number + '</title>';
+      html += '<link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">';
+      
+      if (type === 'bill') {
+        html += '<style>@page { size: 80mm auto; margin: 3mm; } body { font-family: "Prompt", sans-serif; font-size: 12px; width: 74mm; margin: 0 auto; color: #000; line-height: 1.4; } .text-center { text-align: center; } .text-right { text-align: right; } .font-bold { font-weight: bold; } table { width: 100%; border-collapse: collapse; margin-top: 6px; } th, td { padding: 3px 0; font-size: 11px; } th { border-bottom: 1px dashed #000; border-top: 1px dashed #000; } .line-dashed { border-bottom: 1px dashed #000; margin: 6px 0; } .sig-box { margin-top: 14px; text-align: center; font-size: 11px; }</style></head><body>';
+        html += '<div class="text-center font-bold" style="font-size: 15px;">DD MOTOR SPORT</div>';
+        html += '<div class="text-center font-bold" style="font-size: 13px;">ใบโอนย้ายสินค้า (TRANSFER SLIP)</div>';
+        html += '<div class="line-dashed"></div>';
+        html += '<div><strong>เลขที่:</strong> ' + data.tf_number + '</div>';
+        html += '<div><strong>วันที่:</strong> ' + data.date_time + '</div>';
+        html += '<div><strong>ต้นทาง:</strong> ' + data.source_name + ' ➜ <strong>ปลายทาง:</strong> ' + data.dest_name + '</div>';
+        html += '<div><strong>ผู้จัดส่ง:</strong> ' + data.sender_name + '</div>';
+        if (data.remark) html += '<div><strong>หมายเหตุ:</strong> ' + data.remark + '</div>';
+        html += '<table><thead><tr><th style="width: 10%;">#</th><th style="width: 65%;">สินค้า</th><th class="text-right" style="width: 25%;">จำนวน</th></tr></thead><tbody>';
+        data.items.forEach(function(it, i) {
+          html += '<tr><td>' + (i + 1) + '</td><td>' + it.prod_name + '</td><td class="text-right font-bold">' + it.amt + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        html += '<div class="line-dashed"></div>';
+        html += '<div class="text-right font-bold" style="font-size: 13px;">รวมทั้งหมด: ' + data.total_qty + ' ชิ้น</div>';
+        html += '<div class="sig-box" style="margin-top: 20px;">';
+        html += '<div style="margin-bottom: 16px;">ผู้จัด/ผู้ส่ง: ........................................ ( ' + data.sender_name + ' )</div>';
+        html += '<div>ผู้ตรวจรับสินค้า: ........................................ ( ................................ )</div>';
+        html += '</div>';
+      } else { // A4
+        html += '<style>@page { size: A4; margin: 15mm; } body { font-family: "Prompt", sans-serif; font-size: 14px; color: #1e293b; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #cbd5e1; padding: 8px 12px; } th { background: #f1f5f9; font-weight: bold; } .text-center { text-align: center; } .text-right { text-align: right; } .sig-row { display: flex; justify-content: space-between; margin-top: 40px; }</style></head><body>';
+        html += '<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px;">';
+        html += '<div><h2 style="margin: 0; font-weight: bold;">DD MOTOR SPORT</h2><p style="margin: 2px 0 0 0; color: #64748b;">ใบส่งโอนย้ายสินค้าภายใน (Internal Stock Transfer)</p></div>';
+        html += '<div class="text-right"><h3 style="margin: 0; color: #0284c7;">' + data.tf_number + '</h3><small>' + data.date_time + '</small></div></div>';
+        html += '<div style="margin-top: 15px; background: #f8fafc; padding: 12px 16px; border-radius: 6px; border: 1px solid #e2e8f0;">';
+        html += '<div><strong>ต้นทาง (ตัดสต๊อก):</strong> ' + data.source_name + ' &emsp; ➜ &emsp; <strong>ปลายทาง (รับเข้า):</strong> ' + data.dest_name + '</div>';
+        html += '<div style="margin-top: 4px;"><strong>ผู้จัดทำรายการ:</strong> ' + data.sender_name + (data.remark ? (' &emsp;|&emsp; <strong>หมายเหตุ:</strong> ' + data.remark) : '') + '</div></div>';
+        html += '<table><thead><tr><th class="text-center" style="width: 8%;">ลำดับ</th><th class="text-center" style="width: 22%;">รหัสบาร์โค้ด</th><th>ชื่อรายการสินค้า</th><th class="text-center" style="width: 15%;">จำนวนที่โอน (ชิ้น)</th></tr></thead><tbody>';
+        data.items.forEach(function(it, i) {
+          html += '<tr><td class="text-center">' + (i + 1) + '</td><td class="text-center font-bold">' + it.prod_code + '</td><td>' + it.prod_name + '</td><td class="text-center font-bold" style="font-size: 15px;">' + it.amt + '</td></tr>';
+        });
+        html += '</tbody><tfoot><tr><th colspan="3" class="text-right">รวมจำนวนสินค้าทั้งหมด:</th><th class="text-center font-bold" style="font-size: 16px;">' + data.total_qty + ' ชิ้น</th></tr></tfoot></table>';
+        html += '<div class="sig-row" style="margin-top: 60px;">';
+        html += '<div style="text-align: center; width: 45%;">........................................................<br><strong>( ' + data.sender_name + ' )</strong><br>ผู้จัดส่งสินค้า / วันที่ .....................</div>';
+        html += '<div style="text-align: center; width: 45%;">........................................................<br><strong>( ........................................................ )</strong><br>ผู้ตรวจรับสินค้าปลายทาง / วันที่ .....................</div>';
+        html += '</div>';
+      }
+
+      html += '<script>window.onload = function() { window.print(); window.close(); };<\/script></body></html>';
+      w.document.write(html);
+      w.document.close();
+    }
+
+    // Load Pending Transfers for Tab 2
+    function loadPendingTransfers() {
+      $.ajax({
+        url: 'php/get_pending_transfers.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(list) {
+          var count = (list || []).length;
+          if (count > 0) {
+            $('#badge-pending').text(count).show();
+          } else {
+            $('#badge-pending').hide();
+          }
+
+          var $container = $('#pending-transfers-list').empty();
+          if (count === 0) {
+            $container.html('<div class="text-center py-5 text-muted"><i class="fa fa-check-circle fa-3x text-success mb-2"></i><p>ไม่มีรายการที่รอตรวจรับในขณะนี้<br>สินค้าทั้งหมดได้รับการยืนยันเข้าสต๊อกเรียบร้อยแล้ว</p></div>');
+            return;
+          }
+
+          list.forEach(function(tf) {
+            var card = '<div class="pending-card">' +
+              '<div class="d-flex justify-content-between align-items-start mb-2">' +
+                '<div>' +
+                  '<span class="font-weight-bold text-dark" style="font-size: 1.15rem;">' + (tf.tf_number || ('TR-' + tf.tf_id)) + '</span>' +
+                  '<span class="status-badge-pending ml-2"><i class="fa fa-clock mr-1"></i> รอตรวจรับ (กำลังนำส่ง)</span>' +
+                '</div>' +
+                '<span class="text-muted font-weight-bold" style="font-size: 0.9rem;"><i class="fa fa-calendar-alt mr-1"></i> ' + tf.date_time + '</span>' +
+              '</div>' +
+              '<div class="row align-items-center">' +
+                '<div class="col-12 col-md-8">' +
+                  '<div class="font-weight-bold text-primary mb-1" style="font-size: 1.05rem;">' +
+                    '<i class="fa fa-route mr-1"></i> ' + tf.source_name + ' ➜ ' + tf.dest_name +
+                  '</div>' +
+                  '<div class="text-muted" style="font-size: 0.9rem;">' +
+                    '<span><i class="fa fa-user mr-1"></i> ผู้ส่ง: ' + (tf.sender_name || 'พนักงาน') + '</span> &emsp;|&emsp; ' +
+                    '<span><i class="fa fa-boxes mr-1"></i> สินค้า: ' + tf.item_count + ' รายการ (รวม ' + tf.total + ' ชิ้น)</span>' +
+                    (tf.remark ? (' &emsp;|&emsp; <span><i class="fa fa-comment mr-1"></i> ' + tf.remark + '</span>') : '') +
+                  '</div>' +
+                '</div>' +
+                '<div class="col-12 col-md-4 text-md-right mt-2 mt-md-0">' +
+                  '<button class="btn btn-warning font-weight-bold px-4 text-dark" onclick="openVerifyModal(' + tf.tf_id + ')">' +
+                    '<i class="fa fa-clipboard-check mr-1"></i> ตรวจนับและรับเข้า' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+            $container.append(card);
+          });
+        }
+      });
+    }
+
+    // Open Modal to Verify & Confirm
+    function openVerifyModal(tfId) {
+      activeModalTfId = tfId;
+      EasyLoading.show({ text: "กำลังโหลดรายการใบโอน..." });
+      $.ajax({
+        url: 'php/get_transfer_to_info.php',
+        type: 'POST',
+        data: { imp_id: tfId },
+        dataType: 'json',
+        success: function(items) {
+          EasyLoading.hide();
+          if (!items || items.length === 0) {
+            $.alert({ title: 'ผิดพลาด', content: 'ไม่พบรายละเอียดใบโอน' });
+            return;
+          }
+
+          var first = items[0];
+          $('#m-tf-number').text(first.tf_number || ('TR-' + tfId));
+          $('#m-source').text(first.source_name || 'ต้นทาง');
+          $('#m-dest').text(first.dest_name || 'ปลายทาง');
+          $('#m-sender').text(first.sender_name || 'พนักงาน');
+          $('#m-time').text(first.date_time);
+          $('#m-receiver-name').val(localStorage.user_name || '');
+
+          var $table = $('#m-items-table').empty();
+          var tblHtml = '<table class="table table-bordered table-sm mb-0"><thead class="thead-light"><tr><th class="text-center" style="width: 10%;">#</th><th>สินค้า</th><th class="text-center" style="width: 25%;">จำนวนตามใบโอน</th></tr></thead><tbody>';
+          items.forEach(function(it, idx) {
+            tblHtml += '<tr><td class="text-center">' + (idx + 1) + '</td><td><strong>' + it.prod_name + '</strong><br><small class="text-muted">' + it.prod_code + '</small></td><td class="text-center font-weight-bold text-primary" style="font-size: 1.1rem;">' + it.prod_amount + ' ชิ้น</td></tr>';
+          });
+          tblHtml += '</tbody></table>';
+          $table.html(tblHtml);
+
+          $('#modal-verify-receive').modal('show');
+        },
+        error: function() {
+          EasyLoading.hide();
+        }
+      });
+    }
+
+    // Confirm Receive
+    function confirmCurrentTransfer() {
+      if (!activeModalTfId) return;
+      var rName = $('#m-receiver-name').val().trim();
+      if (!rName) {
+        $.alert({ title: 'เตือน', content: 'กรุณากรอกชื่อผู้ตรวจรับสินค้าจริง' });
+        $('#m-receiver-name').focus();
+        return;
+      }
+
+      $.confirm({
+        title: 'ยืนยันการรับสินค้าเข้าสต๊อก',
+        content: 'ตรวจนับสินค้าครบถ้วนถูกต้องแล้วใช่หรือไม่?<br>ผู้ตรวจรับ: <strong>' + rName + '</strong><br><small class="text-muted">*ระบบจะเพิ่มสต๊อกเข้าสาขาปลายทางทันที</small>',
+        buttons: {
+          confirm: {
+            text: 'ยืนยันรับเข้า',
+            btnClass: 'btn-success',
+            action: function() {
+              EasyLoading.show({ text: "กำลังยืนยันและเพิ่มสต๊อก..." });
+              $.ajax({
+                url: 'php/confirm_transfer.php',
+                type: 'POST',
+                data: {
+                  tf_id: activeModalTfId,
+                  receiver_name: rName,
+                  user_id: localStorage.user_id
+                },
+                dataType: 'json',
+                success: function(res) {
+                  EasyLoading.hide();
+                  if (res && res.status === 'success') {
+                    $('#modal-verify-receive').modal('hide');
+                    $.alert({
+                      title: 'สำเร็จ! ✅',
+                      content: 'ยืนยันการรับสินค้าเข้าสต๊อกเรียบร้อยแล้ว!',
+                      buttons: {
+                        ok: {
+                          text: 'ตกลง',
+                          action: function() {
+                            loadPendingTransfers();
+                          }
+                        }
+                      }
+                    });
+                  } else {
+                    $.alert({ title: 'ผิดพลาด', content: res.message || 'ไม่สามารถยืนยันได้' });
+                  }
+                },
+                error: function(xhr) {
+                  EasyLoading.hide();
+                  $.alert({ title: 'Error', content: xhr.responseText });
+                }
+              });
+            }
+          },
+          cancel: { text: 'ยกเลิก' }
+        }
+      });
+    }
+
+    // Reject / Return Transfer
+    function rejectCurrentTransfer() {
+      if (!activeModalTfId) return;
+
+      $.confirm({
+        title: 'ปฏิเสธการรับสินค้า / ส่งคืนต้นทาง',
+        content: '<p>ระบุสาเหตุที่ปฏิเสธการรับ (เช่น สินค้าไม่ครบ หรือ ชำรุด):</p>' +
+                 '<input type="text" id="reject-reason-input" class="form-control" placeholder="สาเหตุที่ส่งคืน เช่น ขาด 2 ชิ้น">',
+        buttons: {
+          confirm: {
+            text: 'ส่งคืนต้นทาง',
+            btnClass: 'btn-danger',
+            action: function() {
+              var reason = this.$content.find('#reject-reason-input').val().trim() || 'ยอดสินค้าไม่ตรงตามใบโอน';
+              EasyLoading.show({ text: "กำลังส่งคืนสต๊อกต้นทาง..." });
+              $.ajax({
+                url: 'php/reject_transfer.php',
+                type: 'POST',
+                data: {
+                  tf_id: activeModalTfId,
+                  reason: reason,
+                  user_id: localStorage.user_id
+                },
+                dataType: 'json',
+                success: function(res) {
+                  EasyLoading.hide();
+                  if (res && res.status === 'success') {
+                    $('#modal-verify-receive').modal('hide');
+                    $.alert({
+                      title: 'ส่งคืนเรียบร้อย! ↩️',
+                      content: 'ระบบทำการตีคืนสต๊อกกลับเข้าสาขาต้นทางเรียบร้อยแล้ว',
+                      buttons: {
+                        ok: {
+                          text: 'ตกลง',
+                          action: function() {
+                            loadPendingTransfers();
+                          }
+                        }
+                      }
+                    });
+                  } else {
+                    $.alert({ title: 'ผิดพลาด', content: res.message || 'Error' });
+                  }
+                },
+                error: function(xhr) {
+                  EasyLoading.hide();
+                  $.alert({ title: 'Error', content: xhr.responseText });
+                }
+              });
+            }
+          },
+          cancel: { text: 'ยกเลิก' }
+        }
+      });
+    }
+  </script>
+
+  <!-- Central Dynamic Navbar Script -->
+  <script src="js/navbar.js"></script>
 </body>
 </html>

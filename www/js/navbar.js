@@ -17,6 +17,7 @@
         { id: 'nav-import', label: 'นำสินค้าเข้า', icon: 'fa fa-arrow-down', href: 'web_import.html', roles: ['all'] },
         { id: 'nav-stock', label: 'เช็คสต๊อก', icon: 'fa fa-boxes', href: 'web_stock.html', roles: ['all'] },
         { id: 'nav-export', label: 'สินค้าออกโกดัง', icon: 'fa fa-arrow-up', href: 'web_export.html', roles: ['all'] },
+        { id: 'nav-transfer', label: 'โอนย้ายสินค้า', icon: 'fa fa-exchange-alt', href: 'web_transfer_in.html', roles: ['all'] },
         { id: 'nav-bell', label: 'เช็คสถานะสินค้า', icon: 'fa fa-bell', href: 'web_mng_bell.html', roles: ['all'] },
         {
             id: 'nav-select',
@@ -27,7 +28,7 @@
             subItems: [
                 { label: 'รายงานบิล', icon: 'fa fa-file-invoice-dollar', href: 'web_mng_bill.html' },
                 { label: 'รายงานสินค้าเข้าหน้าร้าน', icon: 'fa fa-store', href: 'web_mng_import.html' },
-                { label: 'รายงานสินค้าโอนเข้าโกดัง', icon: 'fa fa-exchange-alt', href: 'web_mng_transfer.html' },
+                { label: 'รายงานการโอนย้ายสินค้า', icon: 'fa fa-exchange-alt', href: 'web_mng_transfer.html' },
                 { label: 'รายงานสินค้าเข้าโกดัง', icon: 'fa fa-warehouse', href: 'web_mng_import_warehouse.html' },
                 { label: 'รายงานสินค้าออกโกดัง', icon: 'fa fa-dolly-flatbed', href: 'web_mng_export.html' },
                 { label: 'รายงานสรุปยอดขาย', icon: 'fa fa-chart-line', href: 'web_mng_sale.html', ownerOnly: true },
@@ -55,6 +56,7 @@
             case 'web_import.html': return 'นำสินค้าเข้าโกดัง/หน้าร้าน';
             case 'web_stock.html': return 'เช็คสต๊อกสินค้า';
             case 'web_export.html': return 'สินค้าออกโกดัง';
+            case 'web_transfer_in.html': return 'โอนย้ายสินค้า (หน้าร้าน ⇄ โกดัง)';
             case 'web_mng_bell.html': return 'เช็คสถานะสินค้า';
             case 'web_select.html': return 'รายการย้อนหลังและข้อมูลระบบ';
             case 'web_customer.html': return 'จัดการข้อมูลลูกค้า';
@@ -66,7 +68,7 @@
             case 'web_mng_sale.html': return 'รายงานสรุปยอดขาย';
             case 'web_mng_import.html': return 'รายงานสินค้าเข้าหน้าร้าน';
             case 'web_mng_import_warehouse.html': return 'รายงานสินค้าเข้าโกดัง';
-            case 'web_mng_transfer.html': return 'รายงานสินค้าโอนเข้าโกดัง';
+            case 'web_mng_transfer.html': return 'รายงานการโอนย้ายสินค้า';
             case 'web_mng_export.html': return 'รายงานสินค้าออกโกดัง';
             case 'web_folder.html': return 'หมวดหมู่สินค้า';
             default: return 'DD Accessories';

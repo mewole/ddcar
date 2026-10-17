@@ -43,10 +43,17 @@ $files = @(
     "php\delete_place.php",
     "php\get_supplier_prices.php",
     "php\stock_in.php",
+    "php\create_transfer.php",
+    "php\get_pending_transfers.php",
+    "php\confirm_transfer.php",
+    "php\reject_transfer.php",
+    "php\get_transfer_to.php",
+    "php\get_transfer_to_info.php",
+    "php\get_sale.php",
     "img\logo.jpg"
 )
 
-$srcDir = "d:\MewP\ddcar\www"
+$srcDir = if (Test-Path "$PSScriptRoot\www") { "$PSScriptRoot\www" } elseif (Test-Path "c:\ddcar\www") { "c:\ddcar\www" } else { "d:\MewP\ddcar\www" }
 
 # Check target destinations (LAN IP or Tailscale IP)
 $candidateDirs = @(
@@ -119,3 +126,15 @@ foreach ($f in $files) {
 }
 
 Write-Host "`nResult: $successCount succeeded, $failCount failed."
+
+# Reset PHP OPcache on server if accessible
+try {
+    $resetPhp = '<?php if (function_exists("opcache_reset")) { opcache_reset(); echo "OK"; } ?>'
+    $tmpReset = Join-Path $dstDir "php\_tmp_opcache_reset.php"
+    [System.IO.File]::WriteAllText($tmpReset, $resetPhp, [System.Text.Encoding]::UTF8)
+    $null = Invoke-RestMethod -Uri "http://100.77.57.16:8083/dd-shop/php/_tmp_opcache_reset.php" -TimeoutSec 3 -ErrorAction SilentlyContinue
+    Remove-Item $tmpReset -Force -ErrorAction SilentlyContinue
+    Write-Host "PHP OPcache successfully reset on server."
+} catch {
+    # Ignore if offline
+}

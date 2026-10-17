@@ -74,16 +74,6 @@
                 $('#btn-b').text(localStorage.ware_name_s);
 				b_id = localStorage.ware_id_s;
 				type = localStorage.type;
-				if(localStorage.ware_name_s != "หน้าร้าน"){
-					$('#btn-c').prop('disabled', true);
-				}else{
-					$('#btn-c').prop('disabled', false);
-				}
-            }
-
-			if(localStorage.ware_id_c){
-                $('#btn-c').text(localStorage.ware_name_c);
-				b_id_to = localStorage.ware_id_c;				
             }			
 
 			if(localStorage.pay){
@@ -668,19 +658,7 @@
 			});			
 		}		
 
-		function setwareto(arg,arg2){			
-			b_id_to = arg;
-			$('#btn-c').text(arg2);
-			localStorage.ware_id_c = arg;
-			localStorage.ware_name_c = arg2;			
-		}
-
 		function setware(arg,arg2,arg3){
-			if(arg2 != "หน้าร้าน"){
-				$('#btn-c').prop('disabled', true);
-			}else{
-				$('#btn-c').prop('disabled', false);
-			}
 			b_id = arg;
 			type = arg3;
 			localStorage.ware_id_s = arg;			
@@ -1112,7 +1090,7 @@
 
 		
 		function save2db(){
-			if(arr_data.length == 0 || cus_id == null && b_id_to == null){
+			if(arr_data.length == 0 || cus_id == null){
 					return 0;
 			}
 			if($("#change-money").val() == "" || $("#get-money").val() == ""){
@@ -1289,12 +1267,12 @@
 				var dataString =  "JSON=" + json_string + "&JSOND=" + json_detail + "&ware_id=" + b_id + "&date=" + datetime + "&type=" + type
 			+ "&cus_id=" + cus_id + "&pay=" + $("#btn-p").text() + "&net=0" + "&dis=0" +
 			"&total=0"  + "&get_price=0"  + "&chng=0"  + "&user_id=" + localStorage.user_id
-			+ "&comment=" + $('#comment').val() + "&ware_id_to=" + b_id_to;
+			+ "&comment=" + $('#comment').val() + "&ware_id_to=0";
 			}else{
 				var dataString =  "JSON=" + json_string + "&JSOND=" + json_detail + "&ware_id=" + b_id + "&date=" + datetime + "&type=" + type
 			+ "&cus_id=" + cus_id + "&pay=" + $("#btn-p").text() + "&net=" + $('#net-price').val() + "&dis=" + dis
 			+ "&total=" + $('#final-price').val() + "&get_price=" + $('#get-money').val() + "&chng=" + $('#change-money').val() + "&user_id=" + localStorage.user_id
-			+ "&comment=" + $('#comment').val() + "&ware_id_to=" + b_id_to;
+			+ "&comment=" + $('#comment').val() + "&ware_id_to=0";
 			}          
 			
 			//alert(dataString);
@@ -1624,8 +1602,6 @@
 			localStorage.cus_tel = "";
 			localStorage.ware_id_s = "";
 			localStorage.ware_name_s = "";
-			localStorage.ware_id_c = "";
-			localStorage.ware_name_c = "";
 			localStorage.type = "";
 			localStorage.pay = "";
 			location.reload();
@@ -1667,9 +1643,6 @@
   		margin-right: 15px; margin-top: 5px;
   	}
   	#btn-b{
-  		width: 50%; background-color: #666; border-color: #666; color: white;
-  	}
-	#btn-c{
   		width: 50%; background-color: #666; border-color: #666; color: white;
   	}
   	#btn-b:focus{
@@ -1721,40 +1694,29 @@
       	<div class="container-fullwidth">
       		<div id="head" class="row mgb-5" style="padding-left: 2%; padding-right: 2%;">
       		  <div class="col-2 text-center" style="color: #666;">วันที่</div>
-      		  <div class="col-2 text-center" style="color: #666;">ลูกค้า</div>
+      		  <div class="col-3 text-center" style="color: #666;">ลูกค้า</div>
 			  <div class="col-2 text-center" style="color: #666;">ขายจาก</div>
-			  <div class="col-2 text-center" style="color: #666;">โอนไป(ถ้ามี)</div>		
       		  <div class="col-3 text-center" style="color: #666;">รูปแบบการชำระเงิน</div>
-      		  <div class="col-1 text-center" style="color: #666;">ผู้ทำรายการ</div>
+      		  <div class="col-2 text-center" style="color: #666;">ผู้ทำรายการ</div>
       		</div>
       	</div>
 
       	<div class="container-fullwidth">
       		<div class="row" style="padding-left: 2%; padding-right: 2%;">
       			<div id="date" class="col-2 text-center" style="margin-top: 5px; color: #666;">12/5/2018</div>
-      			<div class="col-2 text-center nopd">
-					
+      			<div class="col-3 text-center nopd">
 					<input id='cus' type='text' class='form-control text-center' autofocus data-index="1">
-								
-      				
       			</div>
       			
       			<div class="col-2 text-center nopd">
-      				<button id="btn-b" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #666;">เลือกโกดัง/หน้าร้าน</button>
+      				<button id="btn-b" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #666; width: 100%;">เลือกโกดัง/หน้าร้าน</button>
 
       				<div id="b" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 
       				</div>
 				</div>
-				<div class="col-2 text-center nopd">
-					<button id="btn-c" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #666;">เลือกโกดัง</button>
-
-					<div id="c" class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-
-					</div>
-			  </div>
       			<div class="col-3 text-center">
-      				<button id="btn-p" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #666;">เงินสด</button>
+      				<button id="btn-p" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #666; width: 100%;">เงินสด</button>
 
       				<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 						<a class="dropdown-item text-center" href="#" onclick="setpay('ตัดไม่คิดเงิน')">ตัดไม่คิดเงิน</a>
@@ -1764,7 +1726,7 @@
 						<a class="dropdown-item text-center" href="#" onclick="setpay('เครดิต (90)')">เครดิต (90)</a>						
       				</div>
       			</div>
-      			<div id="user" class="col-1 text-center nopd" style="margin-top: 5px; color: #666;">
+      			<div id="user" class="col-2 text-center nopd" style="margin-top: 5px; color: #666;">
       				ชายเมืองสิงค์
       			</div>
       		</div>
