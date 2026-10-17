@@ -703,12 +703,13 @@
       }
 
       filtered.forEach(function(u, idx) {
-        var roleBadge = getRoleBadgeHtml(u.user_role);
-        var phoneText = u.phone ? u.phone : '<span class="text-muted font-italic">- ไม่ได้ระบุ -</span>';
+        var hasPhone = (u.phone && u.phone.trim() !== '');
+        var phoneDisplay = hasPhone
+          ? '<i class="fa fa-phone text-muted mr-1" style="font-size: 0.85rem;"></i> ' + $('<div>').text(u.phone.trim()).html()
+          : '<span class="text-muted font-weight-light">-</span>';
         var firstLetter = (u.user_name && u.user_name.length > 0) ? u.user_name.charAt(0).toUpperCase() : '?';
 
         var safeName = $('<div>').text(u.user_name || '').html();
-        var safePhone = $('<div>').text(u.phone || '').html();
 
         var rowHtml = '<tr>' +
           '<td class="text-center font-weight-bold text-muted">' + (idx + 1) + '</td>' +
@@ -722,7 +723,7 @@
             '</div>' +
           '</td>' +
           '<td>' + roleBadge + '</td>' +
-          '<td><i class="fa fa-phone text-muted mr-1" style="font-size: 0.85rem;"></i> ' + phoneText + '</td>' +
+          '<td>' + phoneDisplay + '</td>' +
           '<td><span class="text-muted"><i class="fa fa-lock mr-1 text-muted"></i>••••••••</span></td>' +
           '<td class="text-right">' +
             '<button type="button" class="btn btn-action-edit" onclick="openEditModal(' + u.user_id + ')">' +
