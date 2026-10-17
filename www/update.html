@@ -19,6 +19,7 @@
   <script type="text/javascript" src="js/jquery.touchSwipe.min.js"></script>
   <script src="cordova.js"></script>
   <script type="text/javascript" src="js/scanqr.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
@@ -27,108 +28,137 @@
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
   <style>
-      h4{
-        color: #da4646; letter-spacing: 1px;
+      .version-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        margin: 20px auto;
+        max-width: 360px;
       }
-      .mg-top8{
-        margin-top: 8px
+      .badge-latest {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: bold;
+        display: inline-block;
+      }
+      .badge-update {
+        background: #fff3e0;
+        color: #e65100;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: bold;
+        display: inline-block;
+      }
+      .btn-download-apk {
+        background: linear-gradient(135deg, #da4646 0%, #b71c1c 100%);
+        color: white !important;
+        font-weight: bold;
+        border-radius: 12px;
+        padding: 12px 24px;
+        display: block;
+        margin: 15px auto 0;
+        text-decoration: none !important;
+        box-shadow: 0 4px 12px rgba(218, 70, 70, 0.35);
+        transition: transform 0.15s ease;
+      }
+      .btn-download-apk:active {
+        transform: scale(0.97);
       }
   </style>
   <script>
-    // get update
-    // 3taPCR
-    // $("#a-android").attr('href', result from ajax);
-    // $("#a-ios").attr('href', result from ajax);
-    function onLoad(){
+    async function onLoad(){
       if(localStorage.bell){
           $('.dot').prop('hidden',false);
-      }  
+      }
+
+      var currentVer = '2.0.2';
+      if (window.DDBridge && typeof DDBridge.getAppInfo === 'function') {
+        var info = await DDBridge.getAppInfo();
+        if (info && info.version) currentVer = info.version;
+      }
+      $('#version').text('เวอร์ชันที่ติดตั้ง: v' + currentVer);
+
+      var serverUrl = localStorage.pathServer || 'http://ddaccessory.trueddns.com:24330/dd-shop/';
 
       $.ajax({ 
         type: "GET",
-        url:localStorage.pathServer + "php/get_lastV.php",
+        url: serverUrl + "php/get_lastV.php",
         beforeSend: function(){
             $(".overlay").prop('hidden', false);
         },                       
         success: function(data){ 
           $(".overlay").prop('hidden', true);
-          var obj = jQuery.parseJSON(data);
-          if(obj){
-            $("#version").html("เวอชั่นของแอพ. 2.0.1")
-            $("#new-version").html("เวอชั่นล่าสุด. " + obj[0].version)
-            $("#a-android").attr('href', obj[0].url);
-          }else{
-            $.confirm({
-              title: 'พบข้อผิดพลาด',
-              content: 'กรุณาลองอีกครั้ง',
-              backgroundDismiss: true,
-              buttons: {
-                formSubmit: {
-                  text: 'ตกลง',
-                  btnClass: 'btn-regis',
-                  action: function () {
-                  }
-                }
+          try {
+            var obj = (typeof data === 'object') ? data : JSON.parse(data);
+            if(obj && obj[0]){
+              var serverVer = obj[0].version;
+              var downloadUrl = obj[0].url || (serverUrl + 'ddcar-latest.apk');
+              if (!downloadUrl.startsWith('http')) {
+                downloadUrl = serverUrl + 'ddcar-latest.apk';
               }
-            });
-          }                    
+
+              $('#new-version').text('เวอร์ชันล่าสุดบนระบบ: v' + serverVer);
+
+              if (serverVer === currentVer) {
+                $('#status-badge').html('<span class="badge-latest"><i class="fas fa-check-circle"></i> คุณใช้เวอร์ชันล่าสุดแล้ว</span>');
+                $('#download-box').prop('hidden', true);
+              } else {
+                $('#status-badge').html('<span class="badge-update"><i class="fas fa-exclamation-circle"></i> มีเวอร์ชันใหม่พร้อมให้อัปเดต</span>');
+                $('#btn-apk').attr('href', downloadUrl);
+                $('#download-box').prop('hidden', false);
+              }
+            }
+          } catch(e) {
+            console.error('Error parsing version:', e);
+          }
+        },
+        error: function(){
+          $(".overlay").prop('hidden', true);
+          $('#new-version').text('ไม่สามารถตรวจสอบเวอร์ชันล่าสุดได้');
         }               
       });     
     }  
-
   </script>
 </head>
 
-<body onload="onLoad();" style="overflow: hidden;">
+<body onload="onLoad();" style="overflow-x: hidden; background: #f8f9fa;">
    <!-- Loading -->
    <div class="overlay" hidden><div class="loading"></div></div>
   
   <!-- Nav menu top -->
-    <div class="row fixed-top navs justify-content-center align-items-center">
-        <div class="col-1 text-center" onclick="window.history.back();">
-            <i id="i-back" class="fas fa-angle-left"></i>
-        </div>
-        <div class="col-10 text-center">
-            <h5 id="h5-title">เวอร์ชั่น</h5>
-        </div>
-    </div>
-    <br>
-
-  <!-- big container -->
-  <div id="big-ctn" class="container-fullwidth justify-content-center">
-    <!-- Nav menu top -->
-    <div class="row navs align-items-center mgem1o5 fixed-top">
+  <div class="row fixed-top navs justify-content-center align-items-center">
       <div class="col-2 text-center" onclick="window.history.back();">
-        <i id="i-back" class="fas fa-angle-left"></i>
+          <i id="i-back" class="fas fa-angle-left"></i>
       </div>
       <div class="col-8 text-center">
-        <h5 id="h5-title">เวอร์ชั่น</h5>
+          <h5 id="h5-title">ตรวจสอบเวอร์ชัน</h5>
+      </div>
+      <div class="col-2 text-center"></div>
+  </div>
+  <br><br>
+
+  <!-- Content -->
+  <div id="big-ctn" class="container text-center" style="margin-top: 50px;">
+    <div class="version-card">
+      <img src="img/logo.jpg" alt="Logo" style="width: 120px; height: auto; border-radius: 12px; margin-bottom: 15px;">
+      
+      <h5 id="version" style="font-weight: bold; color: #333; margin-top: 10px;">กำลังตรวจสอบ...</h5>
+      <p id="new-version" style="color: #666; font-size: 14px; margin-bottom: 12px;">กำลังดึงข้อมูล...</p>
+      
+      <div id="status-badge" style="margin-bottom: 15px;"></div>
+
+      <div id="download-box" hidden>
+        <a id="btn-apk" href="#" class="btn-download-apk">
+          <i class="fas fa-cloud-download-alt"></i> ดาวน์โหลดและติดตั้งอัปเดต
+        </a>
+        <small style="color: #888; display: block; margin-top: 8px;">ดาวน์โหลดตรงไฟล์ APK จาก Server ร้าน</small>
       </div>
     </div>
-
-    <div id="in-ctn" class="container">
-      <div class="row text-center">
-        <div class="col-12 text-center" style="background-color: white;">
-          <img src="img/logo.jpg" alt="" style="width: 40%; height: auto">
-        </div>
-      </div>
-      <div class="row mg-top8">
-        <div class="col-12 text-center">
-          <h5 id="version"></h5>
-        </div>
-      </div>
-      <div class="row mg-top8">
-        <div class="col-12 text-center">
-          <h5 id="new-version"></h5>
-        </div>
-      </div>
-      <div class="row mg-top8">
-        <div class="col-12 text-center">
-          <a href="" style="color: blue; text-decoration: underline;" id="a-android">คลิกเพื่อดาวน์โหลดเวอชั่นล่าสุด</a>
-        </div>
-      </div>     
-    </div> 
- 
   </div>
   <!-- End big container -->
 

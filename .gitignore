@@ -1,2 +1,8 @@
 
 .DS_Store
+node_modules
+.vscode/
+*.bak
+android/.gradle/
+android/app/build/
+android/build/

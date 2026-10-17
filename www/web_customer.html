@@ -789,19 +789,28 @@
 
       filtered.forEach(function (c, idx) {
         var safeName = $('<div>').text(c.cus_name || '').html();
-        var safeTel = (c.cus_tel && c.cus_tel.trim() !== '') ? $('<div>').text(c.cus_tel).html() : '<span class="text-muted font-italic">- ไม่ระบุ -</span>';
-        var safeAddr = (c.cus_addr && c.cus_addr.trim() !== '') ? $('<div>').text(c.cus_addr).html() : '<span class="text-muted font-italic">- ไม่ระบุ -</span>';
+        var hasTel = (c.cus_tel && c.cus_tel.trim() !== '');
+        var hasAddr = (c.cus_addr && c.cus_addr.trim() !== '');
+
+        var safeTel = hasTel ? $('<div>').text(c.cus_tel.trim()).html() : '<span class="text-muted font-weight-light">-</span>';
+        var safeAddr = hasAddr ? $('<div>').text(c.cus_addr.trim()).html() : '<span class="text-muted font-weight-light">-</span>';
+        var rawAddr = hasAddr ? c.cus_addr.trim().replace(/"/g, '&quot;') : '';
+
         var badgeHtml = getCustomerBadgeHtml(c.cus_type);
         var firstLetter = (c.cus_name && c.cus_name.length > 0) ? c.cus_name.charAt(0).toUpperCase() : '?';
 
         // Click-to-call link if phone exists
         var phoneDisplay = safeTel;
-        if (c.cus_tel && c.cus_tel.trim() !== '') {
+        if (hasTel) {
           var cleanTel = c.cus_tel.replace(/[^0-9+]/g, '');
           if (cleanTel.length >= 8) {
             phoneDisplay = '<a href="tel:' + cleanTel + '" class="text-dark font-weight-bold" title="คลิกเพื่อโทรออก"><i class="fa fa-phone text-muted mr-1"></i>' + safeTel + '</a>';
           }
         }
+
+        var addrDisplay = hasAddr
+          ? '<span class="text-truncate d-inline-block text-dark" style="max-width: 260px;" title="' + rawAddr + '">' + safeAddr + '</span>'
+          : '<span class="text-muted font-weight-light">-</span>';
 
         var jsSafeName = (c.cus_name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
@@ -816,7 +825,7 @@
             '</div>' +
           '</td>' +
           '<td>' + phoneDisplay + '</td>' +
-          '<td><span class="text-truncate d-inline-block" style="max-width: 250px;" title="' + safeAddr + '">' + safeAddr + '</span></td>' +
+          '<td>' + addrDisplay + '</td>' +
           '<td class="text-center">' + badgeHtml + '</td>' +
           '<td class="text-right">' +
             '<button type="button" class="btn btn-action-view" onclick="viewCustomer(' + c.cus_id + ')" title="ดูรายละเอียดและราคาพิเศษ">' +

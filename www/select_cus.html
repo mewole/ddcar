@@ -15,6 +15,7 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
   <script src="cordova.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/loading.css">
@@ -107,11 +108,9 @@
         });          
     } 
 
-    document.addEventListener("deviceready", onDeviceReady, false);
-
-    function onDeviceReady(){
-        AndroidFullScreen.immersiveMode();
-    } 
+    DDBridge.ready(function(){
+        DDBridge.setFullscreen();
+    }); 
   </script>
 </head>
 

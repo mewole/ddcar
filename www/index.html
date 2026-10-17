@@ -24,6 +24,7 @@
   <script src="cordova.js"></script>
   <script type="text/javascript" src="js/scanqr.js"></script>
   <script type="text/javascript" src="js/config.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
@@ -187,18 +188,12 @@
       }*/
     }
 
-    document.addEventListener("deviceready", onDeviceReady, false);
-
-    function onDeviceReady(){
-      if(device.platform == "Android")
-        AndroidFullScreen.immersiveMode();
-        document.addEventListener("backbutton", onBackKeyDown, false);
-        
-    }
-
-    function onBackKeyDown() {
-      navigator.app.exitApp();
-    }
+    DDBridge.ready(function() {
+      DDBridge.setFullscreen();
+      DDBridge.setupBackButton(function() {
+        DDBridge.exitApp();
+      });
+    });
 
     function scan_import(){
       $("style").append('.jconfirm .jconfirm-box{max-height: 420px;}');

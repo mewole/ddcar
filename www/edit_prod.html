@@ -16,6 +16,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
     <script src="cordova.js"></script>    
+    <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
     <link rel="stylesheet" href="css/index.css">   
     <link rel="stylesheet" href="css/jquery-confirm.css">
@@ -132,64 +133,43 @@
         }
 
         function take_photo(){
-            navigator.camera.getPicture(onSuccess, onFail, { quality: 75,
-                destinationType: Camera.DestinationType.DATA_URL,
-                targetWidth:960,
-                targetHeight:960,
-                correctOrientation: true
-            });
-
-            function onSuccess(imageData) {                       
+            DDBridge.takePhoto(function(base64Data) {
                 var image = document.getElementById('img');
-                image.src =  "data:image/jpeg;base64," + imageData;                        
-            }
-
-            function onFail(message) {
+                image.src = "data:image/jpeg;base64," + base64Data;
+            }, function(errMsg) {
                 $.confirm({
-                title: 'พบข้อผิดพลาด',
-                content: message,
-                backgroundDismiss: true,
-                buttons: {
-                    formSubmit: {
-                    text: 'ตกลง',
-                    btnClass: 'btn-regis',
-                    action: function () {
+                    title: 'พบข้อผิดพลาด',
+                    content: errMsg || 'ไม่สามารถถ่ายรูปได้',
+                    backgroundDismiss: true,
+                    buttons: {
+                        formSubmit: {
+                            text: 'ตกลง',
+                            btnClass: 'btn-regis',
+                            action: function () {}
+                        }
                     }
-                    }
-                }
                 });
-            }
+            });
         }
 
         function upload_photo(){
-            navigator.camera.getPicture(onSuccess, onFail, { quality: 75,
-                destinationType: Camera.DestinationType.DATA_URL,
-                sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
-                targetWidth:960,
-                targetHeight:960,
-                correctOrientation: true
-            });
-
-            function onSuccess(imageData) {                
+            DDBridge.uploadPhoto(function(base64Data) {
                 var image = document.getElementById('img');
-                image.src =  "data:image/jpeg;base64," + imageData;                        
-            }
-
-            function onFail(message) {
+                image.src = "data:image/jpeg;base64," + base64Data;
+            }, function(errMsg) {
                 $.confirm({
-                title: 'พบข้อผิดพลาด',
-                content: message,
-                backgroundDismiss: true,
-                buttons: {
-                    formSubmit: {
-                    text: 'ตกลง',
-                    btnClass: 'btn-regis',
-                    action: function () {
+                    title: 'พบข้อผิดพลาด',
+                    content: errMsg || 'ไม่สามารถเลือกรูปภาพได้',
+                    backgroundDismiss: true,
+                    buttons: {
+                        formSubmit: {
+                            text: 'ตกลง',
+                            btnClass: 'btn-regis',
+                            action: function () {}
+                        }
                     }
-                    }
-                }
                 });
-            }
+            });
         }
 
         function save(){
