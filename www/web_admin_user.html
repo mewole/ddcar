@@ -73,7 +73,17 @@
     $(document).ready(function(){
       if(!localStorage.user_id){
 			window.location = 'web_login.html';
+            return;
 		}
+
+      // Role permission guard: Admin & Owner only
+      var userRole = localStorage.user_role || '';
+      if (userRole !== 'แอดมิน' && userRole !== 'เจ้าของร้าน') {
+        alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้ (เฉพาะแอดมินและเจ้าของร้านเท่านั้น)');
+        window.location = 'web_select.html';
+        return;
+      }
+
       get_user();
     });
 

@@ -161,24 +161,10 @@
       </div>
     </div>
 
-    <!-- Group 1: ข้อมูลลูกค้าและบิลขาย -->
-    <div class="section-title"><i class="fa fa-file-invoice text-dark"></i> งานขายและข้อมูลลูกค้า</div>
+    <!-- Group 1: งานขายและประวัติบิล -->
+    <div class="section-title"><i class="fa fa-file-invoice text-dark"></i> งานขายและประวัติบิล</div>
     <div class="row">
-      <div class="col-12 col-sm-6 col-lg-3">
-        <div class="menu-card dark-highlight" onclick="window.location = 'web_customer.html'">
-          <div>
-            <div class="menu-icon-box"><i class="fa fa-users"></i></div>
-            <div class="menu-card-title">จัดการข้อมูลลูกค้า</div>
-            <div class="menu-card-desc">ค้นหา เพิ่ม แก้ไข และตรวจสอบประวัติข้อมูลลูกค้าทั้งหมดในระบบ</div>
-          </div>
-          <div class="menu-card-footer">
-            <span>เข้าสู่เมนู</span>
-            <i class="fa fa-arrow-right"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12 col-sm-6 col-lg-3">
+      <div class="col-12 col-sm-6 col-lg-4">
         <div class="menu-card" onclick="window.location = 'web_mng_bill.html'">
           <div>
             <div class="menu-icon-box"><i class="fa fa-file-invoice-dollar"></i></div>
@@ -192,7 +178,7 @@
         </div>
       </div>
 
-      <div class="col-12 col-sm-6 col-lg-3">
+      <div class="col-12 col-sm-6 col-lg-4">
         <div class="menu-card" onclick="window.location = 'web_credit.html'">
           <div>
             <div class="menu-icon-box"><i class="fa fa-credit-card"></i></div>
@@ -206,7 +192,7 @@
         </div>
       </div>
 
-      <div class="col-12 col-sm-6 col-lg-3" id="card-mng-sale">
+      <div class="col-12 col-sm-6 col-lg-4" id="card-mng-sale">
         <div class="menu-card" onclick="window.location = 'web_mng_sale.html'">
           <div>
             <div class="menu-icon-box"><i class="fa fa-chart-line"></i></div>
@@ -281,10 +267,58 @@
       </div>
     </div>
 
-    <!-- Group 3: เครื่องมือและระบบ -->
-    <div class="section-title mt-3"><i class="fa fa-tools text-dark"></i> เครื่องมือเพิ่มเติมและการตั้งค่า</div>
+    <!-- Group 3: จัดการระบบ (เฉพาะแอดมิน + เจ้าของร้าน) -->
+    <div id="section-admin-group">
+      <div class="section-title mt-3"><i class="fa fa-user-shield text-dark"></i> จัดการระบบ (เฉพาะแอดมินและเจ้าของร้าน)</div>
+      <div class="row">
+        <div class="col-12 col-sm-6 col-lg-4" id="card-admin-user">
+          <div class="menu-card dark-highlight" onclick="window.location = 'web_admin_user.html'">
+            <div>
+              <div class="menu-icon-box"><i class="fa fa-user-shield"></i></div>
+              <div class="menu-card-title">จัดการผู้ใช้งานและสิทธิ์</div>
+              <div class="menu-card-desc">เพิ่ม แก้ไขรหัสผ่าน และกำหนดสิทธิ์พนักงาน เจ้าของร้าน และแอดมิน</div>
+            </div>
+            <div class="menu-card-footer">
+              <span>จัดการผู้ใช้งาน</span>
+              <i class="fa fa-arrow-right"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-4" id="card-admin-customer">
+          <div class="menu-card" onclick="window.location = 'web_customer.html'">
+            <div>
+              <div class="menu-icon-box"><i class="fa fa-users"></i></div>
+              <div class="menu-card-title">จัดการข้อมูลลูกค้า</div>
+              <div class="menu-card-desc">ค้นหา เพิ่ม แก้ไข และตรวจสอบประวัติข้อมูลลูกค้าทั้งหมดในระบบ</div>
+            </div>
+            <div class="menu-card-footer">
+              <span>จัดการลูกค้า</span>
+              <i class="fa fa-arrow-right"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-4" id="card-admin-ware">
+          <div class="menu-card" onclick="window.location = 'web_warehouse.html'">
+            <div>
+              <div class="menu-icon-box"><i class="fa fa-store-alt"></i></div>
+              <div class="menu-card-title">จัดการหน้าร้าน / โกดัง</div>
+              <div class="menu-card-desc">เพิ่ม แก้ไขชื่อ และจัดการรายชื่อสาขาหน้าร้านและโกดังจัดเก็บสินค้า</div>
+            </div>
+            <div class="menu-card-footer">
+              <span>จัดการสถานที่</span>
+              <i class="fa fa-arrow-right"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group 4: เครื่องมือเพิ่มเติม -->
+    <div class="section-title mt-3"><i class="fa fa-tools text-dark"></i> เครื่องมือเพิ่มเติม</div>
     <div class="row">
-      <div class="col-12 col-sm-6 col-lg-3">
+      <div class="col-12 col-sm-6 col-lg-6">
         <div class="menu-card" onclick="window.location = 'web_qrprint.html'">
           <div>
             <div class="menu-icon-box"><i class="fa fa-qrcode"></i></div>
@@ -298,7 +332,7 @@
         </div>
       </div>
 
-      <div class="col-12 col-sm-6 col-lg-3">
+      <div class="col-12 col-sm-6 col-lg-6">
         <div class="menu-card" onclick="window.location = 'web_mng_bell.html'">
           <div>
             <div class="menu-icon-box"><i class="fa fa-bell"></i></div>
@@ -307,34 +341,6 @@
           </div>
           <div class="menu-card-footer">
             <span>ดูการแจ้งเตือน</span>
-            <i class="fa fa-arrow-right"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12 col-sm-6 col-lg-3" id="card-admin-ware">
-        <div class="menu-card" onclick="window.location = 'web_warehouse.html'">
-          <div>
-            <div class="menu-icon-box"><i class="fa fa-store-alt"></i></div>
-            <div class="menu-card-title">จัดการหน้าร้าน / โกดัง</div>
-            <div class="menu-card-desc">เพิ่ม แก้ไขชื่อ และจัดการรายชื่อสาขาหน้าร้านและโกดังจัดเก็บสินค้า</div>
-          </div>
-          <div class="menu-card-footer">
-            <span>จัดการสถานที่</span>
-            <i class="fa fa-arrow-right"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12 col-sm-6 col-lg-3" id="card-admin-user">
-        <div class="menu-card" onclick="window.location = 'web_admin_user.html'">
-          <div>
-            <div class="menu-icon-box"><i class="fa fa-user-shield"></i></div>
-            <div class="menu-card-title">จัดการผู้ใช้งานและสิทธิ์</div>
-            <div class="menu-card-desc">เพิ่ม แก้ไขรหัสผ่าน และกำหนดสิทธิ์พนักงานและเจ้าของร้าน</div>
-          </div>
-          <div class="menu-card-footer">
-            <span>จัดการผู้ใช้งาน</span>
             <i class="fa fa-arrow-right"></i>
           </div>
         </div>
@@ -355,11 +361,11 @@
       var nameText = localStorage.user_name || 'ผู้ใช้งาน';
       $('#user-display').text(nameText + ' (' + roleText + ')');
 
-      if(localStorage.user_role == "พนักงาน"){
+      var isOwnerOrAdmin = (roleText === "แอดมิน" || roleText === "เจ้าของร้าน");
+      if (!isOwnerOrAdmin) {
+        $("#section-admin-group").prop('hidden', true);
         $("#card-mng-sale").prop('hidden', true);
-        $("#card-admin-user").prop('hidden', true);
-        $("#card-admin-ware").prop('hidden', true);
-      } 
+      }
     });
   </script>
 </body>

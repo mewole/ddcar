@@ -83,12 +83,14 @@
             if(data == "last node"){
               // case no node 
               if(from == "add"){ 
-                $("#add-ctn").prop('hidden', false);
-                $("#big-ctn").prop('hidden', true);
-                //$("#navs-bttm").prop("hidden", false);
-                if(parent == "car"){
-                  $("#add-prod").prop('hidden', true);
-                }                  
+                var isOwnerOrAdmin = (localStorage.user_role == "แอดมิน" || localStorage.user_role == "เจ้าของร้าน");
+                if (isOwnerOrAdmin) {
+                  $("#add-ctn").prop('hidden', false);
+                  $("#big-ctn").prop('hidden', true);
+                  if(parent == "car"){
+                    $("#add-prod").prop('hidden', true);
+                  }
+                }
               }           
             }else{           
               var obj;
@@ -103,11 +105,14 @@
                 return;
               }
               var isLastNode = (obj[obj.length-1] === "last node");
+              var isOwnerOrAdmin = (localStorage.user_role == "แอดมิน" || localStorage.user_role == "เจ้าของร้าน");
               if(isLastNode){
                 obj.pop();
                 // case last node have product                    
                   if(from == "add"){
-                    $("#navs-bttm").prop("hidden", false);
+                    if(isOwnerOrAdmin){
+                      $("#navs-bttm").prop("hidden", false);
+                    }
                   }else{                
                     $("#show-box").prop('hidden',false); 
                     if(from == "stock" || from == "thre"){
@@ -135,7 +140,7 @@
                   last_node = 1;                                                 
               }else{
                 // case have folder 
-                if(from == "add"){
+                if(from == "add" && isOwnerOrAdmin){
                   $("#navs-bttm").prop("hidden", false);
                 }
                 obj.sort(function(a, b) {
@@ -287,6 +292,20 @@
     }
 
     function menu(arg) {
+      if (arg == "add" || arg == "edit" || arg == "del") {
+        var isOwnerOrAdmin = (localStorage.user_role == "แอดมิน" || localStorage.user_role == "เจ้าของร้าน");
+        if (!isOwnerOrAdmin) {
+          $.confirm({
+            title: 'แจ้งเตือน',
+            content: 'เฉพาะแอดมินและเจ้าของร้านเท่านั้นที่สามารถเพิ่ม แก้ไข หรือลบรายการได้',
+            backgroundDismiss: true,
+            buttons: {
+              ตกลง: function() {}
+            }
+          });
+          return;
+        }
+      }
       // Animate
       disactive(arg);
       if($("#i-"+arg).hasClass('active')){

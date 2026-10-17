@@ -25,18 +25,27 @@
             href: 'web_select.html',
             roles: ['all'],
             subItems: [
-                { label: 'จัดการข้อมูลลูกค้า', icon: 'fa fa-user-edit', href: 'web_customer.html' },
                 { label: 'รายงานบิล', icon: 'fa fa-file-invoice-dollar', href: 'web_mng_bill.html' },
                 { label: 'รายงานสินค้าเข้าหน้าร้าน', icon: 'fa fa-store', href: 'web_mng_import.html' },
                 { label: 'รายงานสินค้าโอนเข้าโกดัง', icon: 'fa fa-exchange-alt', href: 'web_mng_transfer.html' },
                 { label: 'รายงานสินค้าเข้าโกดัง', icon: 'fa fa-warehouse', href: 'web_mng_import_warehouse.html' },
                 { label: 'รายงานสินค้าออกโกดัง', icon: 'fa fa-dolly-flatbed', href: 'web_mng_export.html' },
                 { label: 'รายงานสรุปยอดขาย', icon: 'fa fa-chart-line', href: 'web_mng_sale.html', ownerOnly: true },
-                { label: 'รายงานเครดิตลูกค้า', icon: 'fa fa-credit-card', href: 'web_credit.html' },
+                { label: 'รายงานเครดิตลูกค้า', icon: 'fa fa-credit-card', href: 'web_credit.html' }
+            ]
+        },
+        {
+            id: 'nav-admin',
+            label: 'จัดการระบบ',
+            icon: 'fa fa-user-shield',
+            href: '#',
+            adminOwnerOnly: true,
+            subItems: [
+                { label: 'จัดการผู้ใช้', icon: 'fa fa-user-cog', href: 'web_admin_user.html' },
+                { label: 'จัดการลูกค้า', icon: 'fa fa-user-edit', href: 'web_customer.html' },
                 { label: 'จัดการหน้าร้าน/โกดัง', icon: 'fa fa-store-alt', href: 'web_warehouse.html' }
             ]
         },
-        { id: 'nav-customer', label: 'ลูกค้า', icon: 'fa fa-users', href: 'web_customer.html', roles: ['all'] },
         { id: 'nav-qrprint', label: 'พิมพ์คิวอาร์', icon: 'fa fa-qrcode', href: 'web_qrprint.html', roles: ['all'] }
     ];
 
@@ -50,6 +59,7 @@
             case 'web_select.html': return 'รายการย้อนหลังและข้อมูลระบบ';
             case 'web_customer.html': return 'จัดการข้อมูลลูกค้า';
             case 'web_warehouse.html': return 'จัดการหน้าร้านและโกดัง';
+            case 'web_admin_user.html': return 'จัดการผู้ใช้งานและสิทธิ์';
             case 'web_qrprint.html': return 'พิมพ์คิวอาร์โค้ดสินค้า';
             case 'web_mng_bill.html': return 'รายงานบิล';
             case 'web_credit.html': return 'รายงานเครดิตลูกค้า';
@@ -58,7 +68,6 @@
             case 'web_mng_import_warehouse.html': return 'รายงานสินค้าเข้าโกดัง';
             case 'web_mng_transfer.html': return 'รายงานสินค้าโอนเข้าโกดัง';
             case 'web_mng_export.html': return 'รายงานสินค้าออกโกดัง';
-            case 'web_admin_user.html': return 'จัดการผู้ใช้งาน';
             case 'web_folder.html': return 'หมวดหมู่สินค้า';
             default: return 'DD Accessories';
         }
@@ -67,6 +76,7 @@
     function renderNavbar() {
         var userRole = localStorage.user_role || 'พนักงาน';
         var userName = localStorage.user_name || 'ผู้ใช้งาน';
+        var isOwnerOrAdmin = (userRole === 'แอดมิน' || userRole === 'เจ้าของร้าน');
         var pageTitle = getPageTitle(currentPath);
 
         // Build navigation items HTML
@@ -74,6 +84,11 @@
         menuItems.forEach(function (item) {
             // Permission check: hide if role is warehouse view and item is sale
             if (userRole === 'ดูคลังสินค้า' && (item.id === 'nav-sale' || item.id === 'nav-import' || item.id === 'nav-export')) {
+                return;
+            }
+
+            // Admin & Owner only menu check
+            if (item.adminOwnerOnly && !isOwnerOrAdmin) {
                 return;
             }
 
@@ -88,10 +103,13 @@
                 // Dropdown item
                 var subListHtml = '';
                 item.subItems.forEach(function (sub) {
-                    if (sub.ownerOnly && userRole === 'พนักงาน') return;
+                    if (sub.ownerOnly && !isOwnerOrAdmin) return;
+                    if (sub.adminOwnerOnly && !isOwnerOrAdmin) return;
                     var subActive = (currentPath === sub.href) ? 'active-sub' : '';
                     subListHtml += '<li><a class="dropdown-item ' + subActive + '" href="' + sub.href + '"><i class="' + sub.icon + ' mr-2 text-muted"></i>' + sub.label + '</a></li>';
                 });
+
+                if (subListHtml.trim() === '') return;
 
                 navListHtml += '<li class="nav-item dropdown ' + activeClass + '">' +
                     '<a class="nav-link dropdown-toggle" href="#" id="dropdown-' + item.id + '" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
