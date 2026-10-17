@@ -38,6 +38,11 @@
             DDBridge.setupBackButton(function() {
                 DDBridge.exitApp();
             });
+            setTimeout(function() {
+                if (window.DDBridge && typeof DDBridge.checkUpdate === 'function') {
+                    DDBridge.checkUpdate();
+                }
+            }, 1000);
         });
        
        $(document).keydown(function(objEvent) {

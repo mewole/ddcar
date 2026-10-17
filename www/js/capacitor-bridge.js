@@ -316,6 +316,83 @@
         }
     };
 
+    // 8. APP INFO & VERSION
+    DDBridge.getAppInfo = async function (callback) {
+        var AppPlugin = window.Capacitor?.Plugins?.App;
+        var info = {
+            name: 'ddcar',
+            id: 'com.gitmew.ddcar',
+            build: '1',
+            version: '2.0.2'
+        };
+
+        if (AppPlugin && typeof AppPlugin.getInfo === 'function') {
+            try {
+                var nativeInfo = await AppPlugin.getInfo();
+                if (nativeInfo && nativeInfo.version) {
+                    info = nativeInfo;
+                }
+            } catch (e) {
+                console.warn('[DDBridge] getAppInfo error:', e);
+            }
+        }
+
+        if (typeof callback === 'function') {
+            callback(info);
+        }
+        return info;
+    };
+
+    // 9. IN-APP UPDATE CHECKER
+    DDBridge.checkUpdate = async function (options) {
+        options = options || {};
+        var serverUrl = localStorage.pathServer || '';
+        if (!serverUrl) return;
+
+        var info = await DDBridge.getAppInfo();
+        var currentVersion = info.version || '1.0';
+
+        var checkApi = serverUrl + 'php/get_lastV.php';
+        fetch(checkApi)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (!data || !data[0]) return;
+                var serverVersion = data[0].version;
+                var downloadUrl = data[0].url || (serverUrl + 'ddcar-latest.apk');
+
+                if (!downloadUrl || !downloadUrl.startsWith('http')) {
+                    downloadUrl = serverUrl + 'ddcar-latest.apk';
+                }
+
+                if (serverVersion && serverVersion !== currentVersion) {
+                    if (typeof $ !== 'undefined' && typeof $.confirm === 'function') {
+                        $.confirm({
+                            title: '📢 มีการอัปเดตเวอร์ชันใหม่',
+                            content: 'พบเวอร์ชันใหม่ (v' + serverVersion + ')<br>เวอร์ชันในเครื่อง: (v' + currentVersion + ')<br><br>ต้องการดาวน์โหลดไฟล์ติดตั้งเพื่ออัปเดตตอนนี้เลยหรือไม่?',
+                            backgroundDismiss: false,
+                            buttons: {
+                                download: {
+                                    text: 'ดาวน์โหลดเลย',
+                                    btnClass: 'btn-success',
+                                    action: function () {
+                                        window.open(downloadUrl, '_system');
+                                    }
+                                },
+                                cancel: {
+                                    text: 'ไว้ทีหลัง',
+                                    btnClass: 'btn-secondary',
+                                    action: function () {}
+                                }
+                            }
+                        });
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.warn('[DDBridge] checkUpdate error:', err);
+            });
+    };
+
     // Expose to window
     window.DDBridge = DDBridge;
 
