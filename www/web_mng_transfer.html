@@ -114,7 +114,7 @@
         },                       
         success: function(data){ 
           EasyLoading.hide();
-          var obj = jQuery.parseJSON(data);
+          var obj = (typeof data === 'string') ? JSON.parse(data) : data;
           if(obj[0] == "last"){
             bool = true
           }                        
@@ -151,7 +151,10 @@
             '</li>');
             no++;
             }                                               
-          });                                          
+          });
+        },
+        error: function(){
+          EasyLoading.hide();
         }               
       });
       start += 30;
@@ -185,7 +188,7 @@
         },                       
         success: function(data){ 
           EasyLoading.hide();
-          var obj = jQuery.parseJSON(data);
+          var obj = (typeof data === 'string') ? JSON.parse(data) : data;
           if(obj[0] == "last"){
             bool_s = true
           }                        
@@ -223,6 +226,9 @@
             no++;
             }                                                
           });                                         
+        },
+        error: function(){
+          EasyLoading.hide();
         }               
       });
       start_s += 30;
@@ -295,7 +301,7 @@
             },             
             success: function(data){  
               EasyLoading.hide();
-              var obj = jQuery.parseJSON(data); 
+              var obj = (typeof data === 'string') ? JSON.parse(data) : data; 
               text = text + '<div class="collapse" id="detail-'+index+'">'+
                 '<div class="card card-body">'+
                   '<div class="row justify-content-center">'+
@@ -404,7 +410,7 @@
             },             
             success: function(data){  
               EasyLoading.hide();
-              var obj = jQuery.parseJSON(data); 
+              var obj = (typeof data === 'string') ? JSON.parse(data) : data; 
               text = text + '<div class="collapse" id="details-'+index+'">'+
                 '<div class="card card-body">'+
                   '<div class="row justify-content-center">'+
@@ -675,21 +681,7 @@
                 <h3 id="nav-title">รายงานการโอนย้ายสินค้า (หน้าร้าน ⇄ โกดัง)</h3>
             </div>
         </nav>
-        <div class="container">
-            <div class="row" style="margin-top: 2px;">
-                <div class="col-12 text-center">
-                    <a href="web_sale.html" class="mgr-20">ขายสินค้า</a>
-                    <a href="web_import.html" class="mgr-20">นำสินค้าเข้า</a>
-                    <a href="web_stock.html" class="mgr-20">เช็คสต๊อก</a>
-                    <a href="web_transfer_in.html" class="mgr-20">โอนย้ายสินค้า</a>
-                    <a href="web_mng_bell.html" class="mgr-20">เช็คสถานะสินค้า</a>
-                    <a href="web_select.html" class="mgr-20 active">รายการย้อนหลัง</a>
-                    <a href="web_qrprint.html" class="mgr-20">พิมพ์คิวอาร์</a>
-                    <a href="" class="mgr-20" onclick="logout()">ออกจากระบบ</a>
-                </div>
-            </div>
-        </div><br><br>
-        <div class="container-fullwidth">
+        <div class="container-fullwidth" style="margin-top: 30px;">
             <div class="input-group row justify-content-center" style="margin-bottom: 4%; margin-left: 0.5%">
                 <input id="input-search" type="text" class="form-control-lg text-center"
                     placeholder="ค้นหา เลขที่ใบโอน / ชื่อสินค้า / โกดัง / ผู้ตรวจรับ" style="width: 60%;">

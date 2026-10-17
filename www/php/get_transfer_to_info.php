@@ -1,8 +1,6 @@
 <?php
 include "db.php";
 
-header('Content-Type: application/json; charset=utf-8');
-
 $imp_id = isset($_POST['imp_id']) ? intval($_POST['imp_id']) : 0;
 $output = array();
 

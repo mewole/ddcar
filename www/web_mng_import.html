@@ -67,30 +67,31 @@
   <script>
     var start = start_s = 0;
     var bool = bool_s = false;
+    var tempdate, no = 1;
+
     $(document).ready(function(){
       if(!localStorage.user_id){
-				window.location = 'web_login.html';
-			}
+        window.location = 'web_login.html';
+        return;
+      }
       get_import();
       
       window.addEventListener('scroll', () => { 
-        // Calculate the scroll position 
         const scrollPosition = window.scrollY + window.innerHeight; 
         const documentHeight = document.documentElement.scrollHeight; 
     
-        // Check if the user has scrolled to the bottom 
         if (scrollPosition >= documentHeight - 1) { 
           if(!$("#myUL").prop('hidden')){
-              if(bool){
-                return 0;
-              }
-              get_import();           
-            }else if(!$("#myS").prop('hidden')){
-              if(bool_s){
-                return 0;
-              }
-              get_import_s();
+            if(bool){
+              return 0;
             }
+            get_import();           
+          }else if(!$("#myS").prop('hidden')){
+            if(bool_s){
+              return 0;
+            }
+            get_import_s();
+          }
         } 
       });
     });
@@ -100,23 +101,21 @@
         objEvent.preventDefault();           
         search();        
       }         
-    })
-    var tempdate,no = 1
+    });
+
     function get_import(){
       $.ajax({
         type: "POST",
         url:"php/get_transfer.php",
         data: {'start': start},       
         beforeSend: function(){
-          EasyLoading.show({                           
-						text: "กำลังโหลด"
-					});
+          EasyLoading.show({ text: "กำลังโหลด" });
         },                       
         success: function(data){ 
           EasyLoading.hide();
-          var obj = jQuery.parseJSON(data);
+          var obj = (typeof data === 'string') ? JSON.parse(data) : data;
           if(obj[0] == "last"){
-            bool = true
+            bool = true;
           }                        
           $.each(obj, function(i, field){
             if(i > 0){
@@ -124,8 +123,8 @@
               var txt2 = txt[0].split("-");
               var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2);
               if(tempdate != date){
-                  tempdate = date
-                  no = 1
+                  tempdate = date;
+                  no = 1;
               }
               var sourceTxt = field.source_from && field.source_from.trim() !== ''
                 ? '<span class="badge badge-primary font-weight-bold px-2 py-1" style="font-size: 0.88rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>'
@@ -140,10 +139,13 @@
                   '<div class="col-2 text-center"><h5>'+sourceTxt+'</h5></div>' +
               '</div>' +
             '</li>');
-            no++   
+            no++;
             }                                               
           });                                          
-        }               
+        },
+        error: function(){
+          EasyLoading.hide();
+        }
       });
       start += 30;
     }   
@@ -153,14 +155,14 @@
       if($('#input-search').val() == ""){
         return 0;
       }     
-      val = $('#input-search').val()
+      val = $('#input-search').val();
       start_s = 0;
       bool_s = false;
       $("#myS").prop('hidden', false);
       $("#myUL").prop('hidden', true);     
       $("#myS").empty();
-      tempdate = ""
-      no = 1
+      tempdate = "";
+      no = 1;
       get_import_s();
     }
 
@@ -170,15 +172,13 @@
         url:"php/get_transfer.php",
         data: {'start': start_s, 'value' : val},
         beforeSend: function(){
-          EasyLoading.show({                           
-						text: "กำลังโหลด"
-					});
+          EasyLoading.show({ text: "กำลังโหลด" });
         },                       
         success: function(data){ 
           EasyLoading.hide();
-          var obj = jQuery.parseJSON(data);
+          var obj = (typeof data === 'string') ? JSON.parse(data) : data;
           if(obj[0] == "last"){
-            bool_s = true
+            bool_s = true;
           }                        
           $.each(obj, function(i, field){
             if(i > 0){
@@ -186,8 +186,8 @@
               var txt2 = txt[0].split("-");
               var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2);
               if(tempdate != date){
-                  tempdate = date
-                  no = 1
+                  tempdate = date;
+                  no = 1;
               }
               var sourceTxt = field.source_from && field.source_from.trim() !== ''
                 ? '<span class="badge badge-primary font-weight-bold px-2 py-1" style="font-size: 0.88rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>'
@@ -202,10 +202,13 @@
                 '<div class="col-2 text-center"><h5>'+sourceTxt+'</h5></div>' +
               '</div>' +
             '</li>');
-            no++
+            no++;
             }                                                
           });                                         
-        }               
+        },
+        error: function(){
+          EasyLoading.hide();
+        }
       });
       start_s += 30;
     }
@@ -276,7 +279,7 @@
             },             
             success: function(data){  
               EasyLoading.hide();
-              var obj = jQuery.parseJSON(data); 
+              var obj = (typeof data === 'string') ? JSON.parse(data) : data; 
               text = text + '<div class="collapse" id="detail-'+index+'">'+
                 '<div class="card card-body">'+
                   '<div class="row justify-content-center">'+
@@ -349,7 +352,7 @@
             },             
             success: function(data){  
               EasyLoading.hide();
-              var obj = jQuery.parseJSON(data); 
+              var obj = (typeof data === 'string') ? JSON.parse(data) : data; 
               text = text + '<div class="collapse" id="details-'+index+'">'+
                 '<div class="card card-body">'+
                   '<div class="row justify-content-center">'+
@@ -469,35 +472,11 @@
                 <h3 id="nav-title">รายงานสินค้าเข้าหน้าร้าน</h3>
             </div>
         </nav>
-        <div class="container">
-            <div class="row" style="margin-top: 2px;">
-                <div class="col-12 text-center">
-                    <a href="web_sale.html" class="mgr-20">ขายสินค้า</a>
-                    <a href="web_import.html" class="mgr-20">นำสินค้าเข้า</a>
-                    <a href="web_stock.html" class="mgr-20">เช็คสต๊อก</a>
-                    <a href="web_transfer_in.html" class="mgr-20">โอนย้ายสินค้า</a>
-                    <a href="web_mng_bell.html" class="mgr-20">เช็คสถานะสินค้า</a>
-                    <a href="web_select.html" class="mgr-20 active">รายการย้อนหลัง</a>
-                    <a href="web_qrprint.html" class="mgr-20">พิมพ์คิวอาร์</a>
-                    <a href="" class="mgr-20" onclick="logout()">ออกจากระบบ</a>
-                </div>
-            </div>
-        </div><br><br>
-        <div class="row justify-content-center mb-3">
-          <div class="btn-group shadow-sm">
-            <a href="web_mng_import.html" class="btn btn-primary font-weight-bold px-3 py-2">
-              <i class="fas fa-boxes mr-1"></i> 1. สินค้ารับเข้าจากร้านค้า/ผู้ผลิต (ปัจจุบัน)
-            </a>
-            <a href="web_mng_transfer.html" class="btn btn-outline-primary font-weight-bold px-3 py-2" title="คลิกเพื่อดูประวัติโอนย้ายระหว่างโกดังและหน้าร้าน">
-              <i class="fas fa-exchange-alt mr-1"></i> 2. ประวัติโอนย้ายจากโกดังเข้าหน้าร้าน ➔
-            </a>
-          </div>
-        </div>
-        <div class="container-fullwidth">
-            <div class="input-group row justify-content-center" style="margin-bottom: 4%; margin-left: 0.5%">
+        <div class="container-fullwidth" style="margin-top: 30px;">
+            <div class="input-group row justify-content-center" style="margin-bottom: 3%; margin-left: 0.5%">
                 <input id="input-search" type="text" class="form-control-lg text-center"
                     placeholder="ค้นหา เลขที่นำเข้า / ชื่อสินค้า / ร้านค้า" style="width: 60%;">
-                <button  class="btn btn-outline-secondary" type="button" style="margin-left: 10px;" hidden>
+                <button class="btn btn-outline-secondary" type="button" style="margin-left: 10px;" hidden>
                     <i class="fa fa-calendar-alt"></i>
                 </button>
             </div>

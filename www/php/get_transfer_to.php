@@ -1,8 +1,6 @@
 <?php
 include "db.php";
 
-header('Content-Type: application/json; charset=utf-8');
-
 $start = isset($_POST['start']) ? intval($_POST['start']) : 0;
 $output = array();
 $txt = "(cancel)";
