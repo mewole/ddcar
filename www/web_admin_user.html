@@ -703,6 +703,7 @@
       }
 
       filtered.forEach(function(u, idx) {
+        var roleBadge = getRoleBadgeHtml(u.user_role);
         var hasPhone = (u.phone && u.phone.trim() !== '');
         var phoneDisplay = hasPhone
           ? '<i class="fa fa-phone text-muted mr-1" style="font-size: 0.85rem;"></i> ' + $('<div>').text(u.phone.trim()).html()
