@@ -30,13 +30,15 @@ $baseSelect = "SELECT
                LEFT JOIN user u ON t.user = u.user_id ";
 
 if(isset($_POST['date'])){
-    $date = mysqli_real_escape_string($conn, $_POST['date']);
-    $date_to = mysqli_real_escape_string($conn, $_POST['date_to']);
+    $date = mysqli_real_escape_string($conn, trim($_POST['date']));
+    $date_to = mysqli_real_escape_string($conn, trim($_POST['date_to']));
+    if (strlen($date) <= 10) $date .= ' 00:00:00';
+    if (strlen($date_to) <= 10) $date_to .= ' 23:59:59';
     $query = $baseSelect . " WHERE t.date_time BETWEEN '$date' AND '$date_to' 
              AND (t.remark IS NULL OR t.remark NOT LIKE '%$txt%') 
              ORDER BY t.tf_id DESC LIMIT $start, 30";
 } else if(isset($_POST['value'])){
-    $val = mysqli_real_escape_string($conn, $_POST['value']);     
+    $val = mysqli_real_escape_string($conn, trim($_POST['value']));     
     $query = "SELECT DISTINCT 
                 t.tf_id,
                 t.tf_number,
@@ -60,7 +62,7 @@ if(isset($_POST['date'])){
               LEFT JOIN user u ON t.user = u.user_id 
               LEFT JOIN transfer_record_item i ON t.tf_id = i.tf_id 
               LEFT JOIN product p ON i.prod_id = p.prod_id 
-              WHERE (w.ware_name LIKE '%$val%' OR s.shop_name LIKE '%$val%' OR p.prod_name LIKE '%$val%' OR t.tf_number LIKE '%$val%' OR t.receiver_name LIKE '%$val%') 
+              WHERE (w.ware_name LIKE '%$val%' OR s.shop_name LIKE '%$val%' OR p.prod_name LIKE '%$val%' OR p.prod_code LIKE '%$val%' OR t.tf_number LIKE '%$val%' OR t.receiver_name LIKE '%$val%' OR u.user_name LIKE '%$val%' OR t.remark LIKE '%$val%') 
                 AND (t.remark IS NULL OR t.remark NOT LIKE '%$txt%') 
               ORDER BY t.tf_id DESC LIMIT $start, 30";
 } else {

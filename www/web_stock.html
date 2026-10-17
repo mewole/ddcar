@@ -1066,7 +1066,7 @@
 			}
 
 			if (d.recent_orders && d.recent_orders.length > 0) {
-				contentHtml += '<h6 class="font-weight-bold text-secondary mt-3 mb-2"><i class="fas fa-history mr-1"></i> ประวัติการรับเข้าสินค้าล่าสุด (' + d.recent_orders.length + ' ครั้งล่าสุดในระบบ)</h6>';
+				contentHtml += '<h6 class="font-weight-bold text-secondary mt-3 mb-2"><i class="fas fa-history mr-1"></i> ประวัติการรับเข้าสินค้าจากร้านค้าล่าสุด (' + d.recent_orders.length + ' ครั้งล่าสุดในระบบ)</h6>';
 				contentHtml += '<div class="table-responsive">';
 				contentHtml += '  <table class="table table-bordered table-sm text-center mb-0">';
 				contentHtml += '    <thead class="thead-light">';
@@ -1095,7 +1095,43 @@
 				contentHtml += '</div>';
 			}
 
-			var actionBtn = '<a href="web_import.html" class="btn btn-sm btn-outline-success font-weight-bold"><i class="fas fa-arrow-down mr-1"></i> ไปหน้านำเข้าสินค้า</a>';
+			if (d.recent_transfers && d.recent_transfers.length > 0) {
+				contentHtml += '<h6 class="font-weight-bold text-primary mt-4 mb-2"><i class="fas fa-exchange-alt mr-1"></i> ประวัติการโอนย้ายสต๊อกสินค้า (หน้าร้าน ⇄ โกดัง)</h6>';
+				contentHtml += '<div class="table-responsive">';
+				contentHtml += '  <table class="table table-bordered table-sm text-center mb-0">';
+				contentHtml += '    <thead class="thead-light">';
+				contentHtml += '      <tr>';
+				contentHtml += '        <th>เลขที่ใบโอน</th>';
+				contentHtml += '        <th>เส้นทางการโอน</th>';
+				contentHtml += '        <th>จำนวน</th>';
+				contentHtml += '        <th>วันที่รับเข้าสต๊อก</th>';
+				contentHtml += '        <th>ผู้ตรวจรับ</th>';
+				contentHtml += '      </tr>';
+				contentHtml += '    </thead>';
+				contentHtml += '    <tbody>';
+
+				$.each(d.recent_transfers, function(idx, rt) {
+					var rTime = rt.receive_time || rt.date_time || '-';
+					var rUser = rt.receiver_name ? ('<span class="text-success font-weight-bold"><i class="fa fa-user-check mr-1"></i>' + rt.receiver_name + '</span>') : '<span class="text-muted">-</span>';
+					var routeStr = (rt.source_name || 'โกดัง') + ' ➜ ' + (rt.dest_name || 'หน้าร้าน');
+					var tfNum = rt.tf_number || ('TR-' + rt.tf_id);
+
+					contentHtml += '<tr style="background-color: #f0fdf4;">';
+					contentHtml += '  <td class="align-middle font-weight-bold text-dark">' + tfNum + '</td>';
+					contentHtml += '  <td class="align-middle text-primary font-weight-bold">' + routeStr + '</td>';
+					contentHtml += '  <td class="align-middle font-weight-bold text-success" style="font-size: 1.05em;">' + (rt.prod_amount || '1') + ' ชิ้น</td>';
+					contentHtml += '  <td class="align-middle text-muted">' + rTime + '</td>';
+					contentHtml += '  <td class="align-middle">' + rUser + '</td>';
+					contentHtml += '</tr>';
+				});
+
+				contentHtml += '    </tbody>';
+				contentHtml += '  </table>';
+				contentHtml += '</div>';
+			}
+
+			var actionBtn = '<a href="web_transfer_in.html" class="btn btn-sm btn-outline-primary font-weight-bold mr-2"><i class="fas fa-exchange-alt mr-1"></i> ไปหน้าโอนย้ายสินค้า</a>' +
+			                '<a href="web_import.html" class="btn btn-sm btn-outline-success font-weight-bold"><i class="fas fa-arrow-down mr-1"></i> ไปหน้านำเข้าสินค้า</a>';
 			$('#modal-stock-supplier-footer-action').html(actionBtn);
 
 			$('#modal-stock-supplier-content').html(contentHtml);

@@ -60,13 +60,18 @@
         }
     }
 
-    // 4. ดึงประวัติการรับเข้าย้อนหลังล่าสุด (5 รายการล่าสุดใน stock_in_item)
+    // 4. ดึงประวัติการรับเข้าย้อนหลังล่าสุด (ทั้งโกดังและหน้าร้าน 5 รายการล่าสุด)
     $recent_orders = array();
-    $sql_recent = "SELECT si.stock_cost, s.date_time, si.amount, si.source_from
-                   FROM stock_in_item si
-                   JOIN stock_in s ON si.stock_id = s.stock_id
-                   WHERE si.prod_id = '$prod_id'
-                   ORDER BY s.date_time DESC
+    $sql_recent = "(SELECT si.stock_cost, s.date_time, si.amount, si.source_from, 'โกดัง' AS destination
+                    FROM stock_in_item si
+                    JOIN stock_in s ON si.stock_id = s.stock_id
+                    WHERE si.prod_id = '$prod_id')
+                   UNION ALL
+                   (SELECT ti.tran_cost AS stock_cost, t.date_time, ti.amount, ti.source_from, 'หน้าร้าน' AS destination
+                    FROM transfer_in_item ti
+                    JOIN transfer_in t ON ti.tran_id = t.tran_id
+                    WHERE ti.prod_id = '$prod_id')
+                   ORDER BY date_time DESC
                    LIMIT 5";
     $res_recent = mysqli_query($conn, $sql_recent);
     if ($res_recent && mysqli_num_rows($res_recent) > 0) {
@@ -75,9 +80,39 @@
         }
     }
 
-    // 5. ดึงรายชื่อตัวย่อร้านทั้งหมดที่เคยมีในระบบ (สำหรับทำ Autocomplete)
+    // 5. ดึงประวัติการโอนย้ายสินค้าระหว่างสาขา (หน้าร้าน ⇄ โกดัง) 5 รายการล่าสุด
+    $recent_transfers = array();
+    $sql_tf = "SELECT t.tf_id, t.tf_number, t.direction, t.date_time, t.receiver_name, t.receive_time,
+                      ti.prod_amount, ti.received_amount,
+                      w.ware_name, s.shop_name, u.user_name AS sender_name
+               FROM transfer_record_item ti
+               JOIN transfer_record t ON ti.tf_id = t.tf_id
+               LEFT JOIN warehouse_detail w ON t.branch_id = w.ware_id
+               LEFT JOIN shop_detail s ON t.shop_id = s.shop_id
+               LEFT JOIN user u ON t.user = u.user_id
+               WHERE ti.prod_id = '$prod_id' AND t.status = 'received'
+               ORDER BY t.tf_id DESC
+               LIMIT 5";
+    $res_tf = mysqli_query($conn, $sql_tf);
+    if ($res_tf && mysqli_num_rows($res_tf) > 0) {
+        while ($rt = mysqli_fetch_assoc($res_tf)) {
+            if ($rt['direction'] == 'ware_to_shop') {
+                $rt['source_name'] = !empty($rt['ware_name']) ? $rt['ware_name'] : 'โกดัง';
+                $rt['dest_name'] = !empty($rt['shop_name']) ? $rt['shop_name'] : 'หน้าร้าน';
+            } else {
+                $rt['source_name'] = !empty($rt['shop_name']) ? $rt['shop_name'] : 'หน้าร้าน';
+                $rt['dest_name'] = !empty($rt['ware_name']) ? $rt['ware_name'] : 'โกดัง';
+            }
+            $recent_transfers[] = $rt;
+        }
+    }
+
+    // 6. ดึงรายชื่อตัวย่อร้านทั้งหมดที่เคยมีในระบบ (สำหรับทำ Autocomplete)
     $all_suppliers = array();
-    $res_supp = mysqli_query($conn, "SELECT DISTINCT source_from FROM stock_in_item WHERE source_from IS NOT NULL AND TRIM(source_from) != '' ORDER BY source_from ASC");
+    $res_supp = mysqli_query($conn, "SELECT DISTINCT source_from FROM stock_in_item WHERE source_from IS NOT NULL AND TRIM(source_from) != '' 
+                                     UNION 
+                                     SELECT DISTINCT source_from FROM transfer_in_item WHERE source_from IS NOT NULL AND TRIM(source_from) != '' 
+                                     ORDER BY source_from ASC");
     if ($res_supp) {
         while ($rs = mysqli_fetch_assoc($res_supp)) {
             $all_suppliers[] = $rs['source_from'];
@@ -92,6 +127,7 @@
         'current_cost' => $current_cost,
         'history' => $history,
         'recent_orders' => $recent_orders,
+        'recent_transfers' => $recent_transfers,
         'all_suppliers' => $all_suppliers
     ], JSON_UNESCAPED_UNICODE);
     mysqli_close($conn);

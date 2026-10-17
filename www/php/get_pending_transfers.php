@@ -4,6 +4,17 @@ include "db.php";
 header('Content-Type: application/json; charset=utf-8');
 
 $txtCancel = "(cancel)";
+$type = isset($_GET['type']) ? trim($_GET['type']) : 'pending';
+$limit = isset($_GET['limit']) ? intval($_GET['limit']) : 15;
+
+if ($type === 'recent') {
+    $whereStatus = "t.status IN ('received', 'rejected')";
+    $limitSql = "LIMIT " . max(1, min(50, $limit));
+} else {
+    $whereStatus = "t.status = 'pending'";
+    $limitSql = "";
+}
+
 $query = "SELECT 
             t.tf_id,
             t.tf_number,
@@ -12,6 +23,9 @@ $query = "SELECT
             t.total,
             t.date_time,
             t.remark,
+            t.receiver_name,
+            t.receive_time,
+            t.reject_reason,
             t.shop_id,
             t.branch_id,
             s.shop_name,
@@ -22,9 +36,9 @@ $query = "SELECT
           LEFT JOIN shop_detail s ON t.shop_id = s.shop_id
           LEFT JOIN warehouse_detail w ON t.branch_id = w.ware_id
           LEFT JOIN user u ON t.user = u.user_id
-          WHERE t.status = 'pending' 
+          WHERE $whereStatus 
             AND (t.remark IS NULL OR t.remark NOT LIKE '%$txtCancel%')
-          ORDER BY t.tf_id DESC";
+          ORDER BY t.tf_id DESC $limitSql";
 
 $result = mysqli_query($conn, $query);
 $output = [];

@@ -326,18 +326,35 @@
     <!-- TAB 2: รายการรอตรวจรับสินค้าเข้าสต๊อก -->
     <!-- ========================================== -->
     <div id="tab-receive" class="tab-content-area" style="display: none;">
+      <!-- Section 1: รอตรวจรับ -->
       <div class="card-modern p-3 mb-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 class="mb-0 font-weight-bold">
-            <i class="fa fa-inbox text-warning mr-2"></i> รายการสินค้าที่กำลังนำส่ง (รอสาขาปลายทางตรวจรับ)
+            <i class="fa fa-clock text-warning mr-2"></i> 1. รายการสินค้าที่กำลังนำส่ง (รอสาขาปลายทางตรวจรับ)
           </h5>
-          <button class="btn btn-sm btn-outline-secondary" onclick="loadPendingTransfers()">
+          <button class="btn btn-sm btn-outline-secondary" onclick="loadPendingTransfers(); loadRecentTransfers();">
             <i class="fa fa-sync-alt mr-1"></i> รีเฟรชรายการ
           </button>
         </div>
 
         <div id="pending-transfers-list">
           <!-- Pending transfer cards inserted dynamically -->
+        </div>
+      </div>
+
+      <!-- Section 2: ประวัติที่ตรวจรับเข้าสต๊อกแล้วล่าสุด -->
+      <div class="card-modern p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0 font-weight-bold text-success">
+            <i class="fa fa-check-circle mr-2"></i> 2. ประวัติการตรวจรับเข้าสต๊อกล่าสุด (15 รายการล่าสุด)
+          </h5>
+          <a href="web_mng_transfer.html" class="btn btn-sm btn-outline-primary font-weight-bold">
+            <i class="fa fa-history mr-1"></i> ดูประวัติทั้งหมด ➔
+          </a>
+        </div>
+
+        <div id="recent-transfers-list">
+          <!-- Recent received transfer cards inserted dynamically -->
         </div>
       </div>
     </div>
@@ -914,10 +931,6 @@
               var winPrint = null;
               if (printType !== 'none') {
                 winPrint = window.open('', '_blank');
-                if (winPrint) {
-                  winPrint.document.write('<html><head><meta charset="utf-8"><title>กำลังเตรียมพิมพ์...</title></head><body style="font-family: sans-serif; text-align: center; padding-top: 40px; color: #333;"><h3>กำลังจัดเตรียมเอกสารสำหรับพิมพ์...</h3><p>กรุณารอสักครู่ ระบบกำลังเปิดหน้าต่างพิมพ์</p></body></html>');
-                  winPrint.document.close();
-                }
               }
 
               EasyLoading.show({ text: "กำลังบันทึกและตัดสต๊อก..." });
@@ -1015,58 +1028,63 @@
 
       var html = '<!DOCTYPE html><html><head><meta charset="utf-8">';
       html += '<title>ใบโอนย้ายสินค้า - ' + data.tf_number + '</title>';
-      html += '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">';
-      html += '<link href="https://fonts.googleapis.com/css?family=Prompt:400,600&family=Maitree" rel="stylesheet">';
 
       if (type === 'bill') {
         html += '<style>' +
-          '@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } } ' +
+          '* { box-sizing: border-box; margin: 0; padding: 0; } ' +
           '@page { size: auto; margin: 0mm; } ' +
-          'body { font-family: "Prompt", "Maitree", Tahoma, sans-serif; font-size: 11px; line-height: 1.4; color: #000 !important; background: #fff; margin: 0; padding: 0; } ' +
-          '.bill-wrap { width: 7cm; margin: 0 auto; padding: 2mm 1mm; } ' +
-          '.line-dashed { border-top: 1px dashed #000; margin: 5px 0; } ' +
-          'table { width: 100%; border-collapse: collapse; margin-top: 4px; } ' +
-          'th { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 3px 0; font-size: 11px; } ' +
-          'td { padding: 3px 0; font-size: 11px; vertical-align: top; } ' +
-          '.sig-box { margin-top: 15px; text-align: center; font-size: 10.5px; } ' +
+          '@media print { html, body { width: 100% !important; min-width: 0 !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } } ' +
+          'body { font-family: "Prompt", "Maitree", Tahoma, "Segoe UI", sans-serif; font-size: 13px; line-height: 1.35; color: #000 !important; background: #fff; width: 100%; } ' +
+          '.bill-wrap { width: 72mm; margin: 0 auto; padding: 3mm 2mm; } ' +
+          '.text-center { text-align: center; } .text-left { text-align: left; } .text-right { text-align: right; } ' +
+          '.font-bold { font-weight: bold; } ' +
+          '.line-dashed { border-top: 1px dashed #000; margin: 6px 0; } ' +
+          '.row-info { display: flex; margin-bottom: 3px; font-size: 12px; } ' +
+          '.row-info .lbl { width: 68px; font-weight: bold; text-align: right; padding-right: 6px; flex-shrink: 0; } ' +
+          '.row-info .val { flex-grow: 1; text-align: left; word-break: break-word; } ' +
+          'table.items-table { width: 100%; border-collapse: collapse; margin: 6px 0; } ' +
+          'table.items-table th { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; font-size: 12px; font-weight: bold; } ' +
+          'table.items-table td { padding: 4px 0; font-size: 12px; vertical-align: top; } ' +
+          '.sig-box { margin-top: 18px; text-align: center; font-size: 11px; line-height: 1.8; } ' +
           '</style></head><body>';
         html += '<div class="bill-wrap">';
-        html += '<div class="text-center font-weight-bold" style="font-size: 15px;">DD MOTOR SPORT</div>';
-        html += '<div class="text-center" style="font-size: 10.5px;">B-24, B-28 อาคารศรีวรจักร ถ.หลวงป้อมปราบศัตรูพ่าย</div>';
-        html += '<div class="text-center" style="font-size: 10.5px;">โทร. 02-2265280 , 02-2222437</div>';
-        html += '<div class="text-center font-weight-bold" style="margin-top: 4px; margin-bottom: 4px; font-size: 13px; text-decoration: underline;">ใบรายการโอนย้ายสินค้า</div>';
+        html += '<div class="text-center font-bold" style="font-size: 16px;">DD MOTOR SPORT</div>';
+        html += '<div class="text-center" style="font-size: 11px;">B-24, B-28 อาคารศรีวรจักร ถ.หลวงป้อมปราบศัตรูพ่าย</div>';
+        html += '<div class="text-center" style="font-size: 11px;">โทร. 02-2265280 , 02-2222437</div>';
+        html += '<div class="text-center font-bold" style="margin: 6px 0; font-size: 14px; text-decoration: underline;">ใบรายการโอนย้ายสินค้า</div>';
         html += '<div class="line-dashed"></div>';
 
-        html += '<div class="row no-gutters mb-1"><div class="col-4 text-right pr-1 font-weight-bold">เลขที่ :</div><div class="col-8 text-left font-weight-bold">' + data.tf_number + '</div></div>';
-        html += '<div class="row no-gutters mb-1"><div class="col-4 text-right pr-1 font-weight-bold">วันที่ :</div><div class="col-8 text-left">' + dateDisplay + '</div></div>';
-        html += '<div class="row no-gutters mb-1"><div class="col-4 text-right pr-1 font-weight-bold">ต้นทาง :</div><div class="col-8 text-left font-weight-bold">' + data.source_name + '</div></div>';
-        html += '<div class="row no-gutters mb-1"><div class="col-4 text-right pr-1 font-weight-bold">ปลายทาง :</div><div class="col-8 text-left font-weight-bold">' + data.dest_name + '</div></div>';
-        html += '<div class="row no-gutters mb-1"><div class="col-4 text-right pr-1 font-weight-bold">ผู้จัดส่ง :</div><div class="col-8 text-left">' + data.sender_name + '</div></div>';
+        html += '<div class="row-info"><div class="lbl">เลขที่ :</div><div class="val font-bold">' + data.tf_number + '</div></div>';
+        html += '<div class="row-info"><div class="lbl">วันที่ :</div><div class="val">' + dateDisplay + '</div></div>';
+        html += '<div class="row-info"><div class="lbl">ต้นทาง :</div><div class="val font-bold">' + data.source_name + '</div></div>';
+        html += '<div class="row-info"><div class="lbl">ปลายทาง :</div><div class="val font-bold">' + data.dest_name + '</div></div>';
+        html += '<div class="row-info"><div class="lbl">ผู้ส่ง :</div><div class="val">' + data.sender_name + '</div></div>';
         if (data.remark) {
-          html += '<div class="row no-gutters mb-1"><div class="col-4 text-right pr-1 font-weight-bold">หมายเหตุ :</div><div class="col-8 text-left">' + data.remark + '</div></div>';
+          html += '<div class="row-info"><div class="lbl">หมายเหตุ :</div><div class="val">' + data.remark + '</div></div>';
         }
 
-        html += '<table><thead><tr><th style="width: 10%; text-align: center;">#</th><th style="width: 65%; text-align: left;">รายการ</th><th style="width: 25%; text-align: right;">จำนวน</th></tr></thead><tbody>';
+        html += '<table class="items-table"><thead><tr><th style="width: 12%; text-align: center;">#</th><th style="width: 63%; text-align: left;">รายการ</th><th style="width: 25%; text-align: right;">จำนวน</th></tr></thead><tbody>';
         data.items.forEach(function(it, i) {
           var name = it.prod_name || '';
           var amt = it.amt || it.prod_amount || 1;
-          html += '<tr><td style="text-align: center;">' + (i + 1) + '</td><td style="text-align: left; word-break: break-word;">' + name + '</td><td style="text-align: right; font-weight: bold;">' + amt + '</td></tr>';
+          html += '<tr><td style="text-align: center;">' + (i + 1) + '</td><td style="text-align: left; word-break: break-word;">' + name + '</td><td style="text-align: right; font-weight: bold;">' + amt + ' ชิ้น</td></tr>';
         });
         html += '</tbody></table>';
 
         html += '<div class="line-dashed"></div>';
-        html += '<div class="row no-gutters font-weight-bold" style="font-size: 13px;"><div class="col-6 text-right pr-2">รวมทั้งหมด :</div><div class="col-6 text-right">' + data.total_qty + ' ชิ้น</div></div>';
+        html += '<div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 4px;"><span>รวมทั้งหมด :</span><span>' + data.total_qty + ' ชิ้น</span></div>';
 
         html += '<div class="sig-box">';
-        html += '<div style="margin-bottom: 14px;">ผู้จัด/ผู้ส่ง: ........................................ ( ' + data.sender_name + ' )</div>';
-        html += '<div>ผู้ตรวจรับสินค้า: ........................................ ( ................................ )</div>';
+        html += '<div>ผู้จัด/ผู้ส่ง: ........................................ ( ' + data.sender_name + ' )</div>';
+        html += '<div style="margin-top: 8px;">ผู้ตรวจรับ: ........................................ ( ........................ )</div>';
         html += '</div>';
         html += '</div>';
       } else { // A4
         html += '<style>' +
-          '@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } } ' +
+          '* { box-sizing: border-box; } ' +
           '@page { size: A4; margin: 12mm; } ' +
-          'body { font-family: "Prompt", "Maitree", Tahoma, sans-serif; font-size: 13px; color: #1e293b; background: #fff; } ' +
+          '@media print { body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } } ' +
+          'body { font-family: "Prompt", "Maitree", Tahoma, sans-serif; font-size: 13px; color: #1e293b; background: #fff; margin: 0; padding: 0; } ' +
           'table { width: 100%; border-collapse: collapse; margin-top: 15px; } ' +
           'th, td { border: 1px solid #cbd5e1; padding: 7px 10px; } ' +
           'th { background: #f1f5f9; font-weight: bold; } ' +
@@ -1100,12 +1118,8 @@
       w.document.close();
       w.focus();
 
-      // Give browser time to rasterize fonts & styles before opening print dialog
       setTimeout(function() {
         w.print();
-        w.onafterprint = function() {
-          w.close();
-        };
       }, 500);
     }
 
@@ -1158,6 +1172,183 @@
             '</div>';
             $container.append(card);
           });
+          loadRecentTransfers();
+        }
+      });
+    }
+
+    // Load Recently Received / Completed Transfers for Tab 2
+    function loadRecentTransfers() {
+      $.ajax({
+        url: 'php/get_pending_transfers.php?type=recent&limit=15',
+        type: 'GET',
+        dataType: 'json',
+        success: function(list) {
+          var $container = $('#recent-transfers-list').empty();
+          if (!list || list.length === 0) {
+            $container.html('<div class="text-center py-4 text-muted"><i class="fa fa-info-circle mr-1"></i> ยังไม่มีประวัติการตรวจรับสินค้าล่าสุด</div>');
+            return;
+          }
+
+          list.forEach(function(tf) {
+            var isReceived = (tf.status === 'received');
+            var statusBadge = isReceived 
+              ? '<span class="badge badge-success px-2 py-1"><i class="fa fa-check-circle mr-1"></i> เข้าสต๊อกเรียบร้อยแล้ว</span>'
+              : '<span class="badge badge-danger px-2 py-1"><i class="fa fa-times-circle mr-1"></i> ส่งคืนต้นทาง/ปฏิเสธ</span>';
+
+            var timeDetail = isReceived
+              ? '<span class="text-success font-weight-bold"><i class="fa fa-user-check mr-1"></i> ผู้ตรวจรับ: ' + (tf.receiver_name || '-') + ' (ตรวจรับเข้าสต๊อกเมื่อ: ' + (tf.receive_time || tf.date_time) + ')</span>'
+              : '<span class="text-danger font-weight-bold"><i class="fa fa-ban mr-1"></i> เหตุผลที่ส่งคืน: ' + (tf.reject_reason || '-') + '</span>';
+
+            var routeIcon = tf.direction === 'ware_to_shop' ? '📦 ➜ 🏪' : '🏪 ➜ 📦';
+
+            var card = '<div class="card p-3 mb-2 border shadow-sm" style="background: ' + (isReceived ? '#f0fdf4' : '#fef2f2') + '; border-color: ' + (isReceived ? '#bbf7d0' : '#fecaca') + ' !important; border-radius: 8px;">' +
+              '<div class="d-flex justify-content-between align-items-center flex-wrap mb-1">' +
+                '<div>' +
+                  '<span class="font-weight-bold text-dark mr-2" style="font-size: 1.1rem;">' + (tf.tf_number || ('TR-' + tf.tf_id)) + '</span>' +
+                  statusBadge +
+                '</div>' +
+                '<small class="text-muted"><i class="fa fa-calendar-alt mr-1"></i> วันที่สร้างใบโอน: ' + tf.date_time + '</small>' +
+              '</div>' +
+              '<div class="row align-items-center mt-2">' +
+                '<div class="col-12 col-md-8">' +
+                  '<div class="font-weight-bold text-primary mb-1" style="font-size: 1rem;">' +
+                    '<span class="text-secondary mr-1">' + routeIcon + '</span> ' + tf.source_name + ' ➜ ' + tf.dest_name +
+                  '</div>' +
+                  '<div class="text-muted" style="font-size: 0.88rem;">' +
+                    '<span><i class="fa fa-boxes mr-1"></i> สินค้า: ' + tf.item_count + ' รายการ (รวม ' + tf.total + ' ชิ้น)</span>' +
+                    (tf.sender_name ? (' &emsp;|&emsp; <span><i class="fa fa-user mr-1"></i> ผู้ส่ง: ' + tf.sender_name + '</span>') : '') +
+                    (tf.remark ? (' &emsp;|&emsp; <span><i class="fa fa-comment mr-1"></i> ' + tf.remark + '</span>') : '') +
+                  '</div>' +
+                  '<div class="mt-1" style="font-size: 0.86rem;">' + timeDetail + '</div>' +
+                '</div>' +
+                '<div class="col-12 col-md-4 text-md-right mt-2 mt-md-0">' +
+                  '<button class="btn btn-sm btn-outline-info font-weight-bold px-3 mr-1" onclick="viewTransferDetails(' + tf.tf_id + ')">' +
+                    '<i class="fa fa-search mr-1"></i> ดูรายการ' +
+                  '</button>' +
+                  '<button class="btn btn-sm btn-outline-secondary font-weight-bold px-2" onclick="reprintRecentTransfer(' + tf.tf_id + ', \'bill\')" title="พิมพ์ใบโอนย้อนหลัง">' +
+                    '<i class="fa fa-print mr-1"></i> พิมพ์' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+            $container.append(card);
+          });
+        }
+      });
+    }
+
+    // View details of a transfer modal dialog
+    function viewTransferDetails(tfId) {
+      EasyLoading.show({ text: "กำลังโหลดรายการ..." });
+      $.ajax({
+        url: 'php/get_transfer_to_info.php',
+        type: 'POST',
+        data: { imp_id: tfId },
+        dataType: 'json',
+        success: function(items) {
+          EasyLoading.hide();
+          if (!items || items.length === 0) {
+            $.alert({ title: 'ผิดพลาด', content: 'ไม่พบรายละเอียดใบโอน' });
+            return;
+          }
+          var first = items[0];
+          var tfNum = first.tf_number || ('TR-' + tfId);
+          var route = (first.source_name || 'โกดัง') + ' ➜ ' + (first.dest_name || 'หน้าร้าน');
+          var isRecv = (first.status === 'received');
+          var stBadge = isRecv 
+            ? '<span class="badge badge-success px-2 py-1"><i class="fa fa-check-circle mr-1"></i> เข้าสต๊อกเรียบร้อยแล้ว</span>'
+            : (first.status === 'rejected' ? '<span class="badge badge-danger px-2 py-1">ปฏิเสธรับ/ส่งคืน</span>' : '<span class="badge badge-warning px-2 py-1">รอตรวจรับ</span>');
+
+          var tbl = '<div class="table-responsive my-2"><table class="table table-bordered table-sm text-center mb-0"><thead class="thead-light"><tr><th style="width: 10%;">#</th><th class="text-left">ชื่อสินค้า</th><th style="width: 25%;">จำนวน</th></tr></thead><tbody>';
+          var totalQty = 0;
+          items.forEach(function(it, i) {
+            var q = parseInt(it.prod_amount || 0);
+            totalQty += q;
+            tbl += '<tr><td>' + (i+1) + '</td><td class="text-left"><strong>' + it.prod_name + '</strong><br><small class="text-muted">' + it.prod_code + '</small></td><td class="font-weight-bold text-primary">' + q + ' ชิ้น</td></tr>';
+          });
+          tbl += '</tbody><tfoot><tr class="font-weight-bold"><td colspan="2" class="text-right">รวมสินค้าทั้งหมด:</td><td class="text-primary">' + totalQty + ' ชิ้น</td></tr></tfoot></table></div>';
+
+          var content = '<div class="text-left">' +
+            '<div class="alert alert-info py-2 mb-2">' +
+              '<div><strong>เลขที่:</strong> ' + tfNum + ' &emsp;|&emsp; <strong>สถานะ:</strong> ' + stBadge + '</div>' +
+              '<div><strong>เส้นทาง:</strong> ' + route + '</div>' +
+              '<div><strong>ผู้ส่ง:</strong> ' + (first.sender_name || 'พนักงาน') + ' (ส่งเมื่อ: ' + first.date_time + ')</div>' +
+              (first.receiver_name ? ('<div class="text-success font-weight-bold"><strong>ผู้ตรวจรับ:</strong> ' + first.receiver_name + ' (เมื่อ: ' + (first.receive_time || '-') + ')</div>') : '') +
+              (first.reject_reason ? ('<div class="text-danger font-weight-bold"><strong>เหตุผลที่ส่งคืน:</strong> ' + first.reject_reason + '</div>') : '') +
+            '</div>' +
+            tbl +
+          '</div>';
+
+          $.confirm({
+            title: '<i class="fa fa-file-invoice text-primary mr-2"></i> รายละเอียดใบโอน: ' + tfNum,
+            content: content,
+            columnClass: 'large',
+            buttons: {
+              printPos: {
+                text: '<i class="fa fa-print mr-1"></i> พิมพ์สลิป POS',
+                btnClass: 'btn-warning text-dark font-weight-bold',
+                action: function() {
+                  reprintRecentTransfer(tfId, 'bill');
+                }
+              },
+              printA4: {
+                text: '<i class="fa fa-file-alt mr-1"></i> พิมพ์ A4',
+                btnClass: 'btn-outline-primary',
+                action: function() {
+                  reprintRecentTransfer(tfId, 'a4');
+                }
+              },
+              close: {
+                text: 'ปิด',
+                btnClass: 'btn-secondary'
+              }
+            }
+          });
+        },
+        error: function() {
+          EasyLoading.hide();
+          $.alert({ title: 'ผิดพลาด', content: 'ไม่สามารถโหลดข้อมูลได้' });
+        }
+      });
+    }
+
+    // Reprint recent transfer slip
+    function reprintRecentTransfer(tfId, format) {
+      format = format || 'bill';
+      EasyLoading.show({ text: "กำลังเตรียมพิมพ์ใบโอน..." });
+      $.ajax({
+        url: 'php/get_transfer_to_info.php',
+        type: 'POST',
+        data: { imp_id: tfId },
+        dataType: 'json',
+        success: function(items) {
+          EasyLoading.hide();
+          if (!items || items.length === 0) return;
+          var first = items[0];
+          var totalQty = 0;
+          items.forEach(function(it) { totalQty += parseInt(it.prod_amount || 0); });
+          var slipData = {
+            tf_number: first.tf_number || ('TR-' + tfId),
+            date_time: first.date_time,
+            source_name: first.source_name || 'โกดัง',
+            dest_name: first.dest_name || 'หน้าร้าน',
+            sender_name: first.sender_name || 'พนักงาน',
+            remark: first.remark || '',
+            total_qty: totalQty,
+            items: items.map(function(it) {
+              return {
+                prod_name: it.prod_name,
+                prod_code: it.prod_code,
+                prod_amount: it.prod_amount
+              };
+            })
+          };
+          printTransferSlip(slipData, format);
+        },
+        error: function() {
+          EasyLoading.hide();
+          $.alert({ title: 'ผิดพลาด', content: 'ไม่สามารถเตรียมพิมพ์ได้' });
         }
       });
     }

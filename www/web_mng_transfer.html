@@ -122,29 +122,34 @@
             if(i > 0){
               var txt = field.date_time.split(" ");
               var txt2 = txt[0].split("-");
+              var timeStr = txt[1] ? (' <span class="text-muted" style="font-size: 0.85rem;">' + txt[1].substr(0, 5) + '</span>') : '';
               var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2);
               if(tempdate != date){
-                  tempdate = date
+                  tempdate = date;
+                  no = 1;
+              }
               var statusBadge = '';
               if (field.status === 'pending') {
-                statusBadge = '<span class="badge badge-warning px-2 py-1">รอตรวจรับ</span>';
+                statusBadge = '<span class="badge badge-warning px-2 py-1"><i class="fa fa-clock mr-1"></i>รอตรวจรับ</span>';
               } else if (field.status === 'rejected') {
-                statusBadge = '<span class="badge badge-danger px-2 py-1">ปฏิเสธรับ</span>';
+                statusBadge = '<span class="badge badge-danger px-2 py-1"><i class="fa fa-times-circle mr-1"></i>ส่งคืน/ปฏิเสธ</span>';
               } else {
-                statusBadge = '<span class="badge badge-success px-2 py-1">รับแล้ว</span>';
+                var recvInfo = field.receiver_name ? ('<br><span class="text-success" style="font-size: 0.82rem;"><i class="fa fa-user-check mr-1"></i>' + field.receiver_name + '</span>') : '';
+                statusBadge = '<span class="badge badge-success px-2 py-1"><i class="fa fa-check-circle mr-1"></i>เข้าสต๊อกแล้ว</span>' + recvInfo;
               }
               var tfNo = field.tf_number ? field.tf_number : ('#' + no);
-              var routeStr = (field.source_name || 'หน้าร้าน') + ' ➜ ' + (field.dest_name || field.ware_name);
+              var routeIcon = field.direction === 'ware_to_shop' ? '📦 ➜ 🏪' : '🏪 ➜ 📦';
+              var routeStr = '<span class="text-secondary mr-1">' + routeIcon + '</span> ' + (field.source_name || 'โกดัง') + ' ➜ ' + (field.dest_name || 'หน้าร้าน');
 
               $('#myUL').append('<li id="ipt-'+field.tf_id+'">' +
               '<div class="row justify-content-center ipt-even align-items-center" data-toggle="collapse" href="#detail-'+field.tf_id+'" role="button" aria-expanded="false" aria-controls="detail-'+field.tf_id+'" onclick="appendCollapse('+field.tf_id+');">'+
                   '<div class="col-3 text-center"><h5>'+tfNo+'</h5></div>' +                   
-                  '<div class="col-3 text-center"><h5>'+date+'</h5></div>' +
-                  '<div class="col-3 text-center"><h5 class="text-primary font-weight-bold">'+routeStr+'</h5></div>' +
+                  '<div class="col-3 text-center"><h5>'+date + ' ' + timeStr +'</h5></div>' +
+                  '<div class="col-3 text-center"><h5 class="text-primary font-weight-bold" style="font-size: 0.95rem;">'+routeStr+'</h5></div>' +
                   '<div class="col-3 text-center"><h5>'+statusBadge+'</h5></div>' +
               '</div>' +
             '</li>');
-            no++   
+            no++;
             }                                               
           });                                          
         }               
@@ -188,31 +193,34 @@
             if(i > 0){
               var txt = field.date_time.split(" ");
               var txt2 = txt[0].split("-");
+              var timeStr = txt[1] ? (' <span class="text-muted" style="font-size: 0.85rem;">' + txt[1].substr(0, 5) + '</span>') : '';
               var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2);
               if(tempdate != date){
-                  tempdate = date
-                  no = 1
+                  tempdate = date;
+                  no = 1;
               }
               var statusBadge = '';
               if (field.status === 'pending') {
-                statusBadge = '<span class="badge badge-warning px-2 py-1">รอตรวจรับ</span>';
+                statusBadge = '<span class="badge badge-warning px-2 py-1"><i class="fa fa-clock mr-1"></i>รอตรวจรับ</span>';
               } else if (field.status === 'rejected') {
-                statusBadge = '<span class="badge badge-danger px-2 py-1">ปฏิเสธรับ</span>';
+                statusBadge = '<span class="badge badge-danger px-2 py-1"><i class="fa fa-times-circle mr-1"></i>ส่งคืน/ปฏิเสธ</span>';
               } else {
-                statusBadge = '<span class="badge badge-success px-2 py-1">รับแล้ว</span>';
+                var recvInfo = field.receiver_name ? ('<br><span class="text-success" style="font-size: 0.82rem;"><i class="fa fa-user-check mr-1"></i>' + field.receiver_name + '</span>') : '';
+                statusBadge = '<span class="badge badge-success px-2 py-1"><i class="fa fa-check-circle mr-1"></i>เข้าสต๊อกแล้ว</span>' + recvInfo;
               }
               var tfNo = field.tf_number ? field.tf_number : ('#' + no);
-              var routeStr = (field.source_name || 'หน้าร้าน') + ' ➜ ' + (field.dest_name || field.ware_name);
+              var routeIcon = field.direction === 'ware_to_shop' ? '📦 ➜ 🏪' : '🏪 ➜ 📦';
+              var routeStr = '<span class="text-secondary mr-1">' + routeIcon + '</span> ' + (field.source_name || 'โกดัง') + ' ➜ ' + (field.dest_name || 'หน้าร้าน');
 
               $('#myS').append('<li id="ipts-'+field.tf_id+'">' +
               '<div class="row justify-content-center ipt-even align-items-center" data-toggle="collapse" href="#details-'+field.tf_id+'" role="button" aria-expanded="false" aria-controls="details-'+field.tf_id+'" onclick="appendCollapses('+field.tf_id+');">'+
                   '<div class="col-3 text-center"><h5>'+tfNo+'</h5></div>' +                     
-                  '<div class="col-3 text-center"><h5>'+date+'</h5></div>' +
-                  '<div class="col-3 text-center"><h5 class="text-primary font-weight-bold">'+routeStr+'</h5></div>' +
+                  '<div class="col-3 text-center"><h5>'+date + ' ' + timeStr +'</h5></div>' +
+                  '<div class="col-3 text-center"><h5 class="text-primary font-weight-bold" style="font-size: 0.95rem;">'+routeStr+'</h5></div>' +
                   '<div class="col-3 text-center"><h5>'+statusBadge+'</h5></div>' +
               '</div>' +
             '</li>');
-            no++    
+            no++;
             }                                                
           });                                         
         }               
@@ -318,33 +326,52 @@
                 tfID = field.tf_id
                 arr_data.push(item);
               });
-              text = text + '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
+              text = text + '<hr style="width: 50%; margin: auto; margin-top: 1em;">';
               var receiverTxt = obj[0].receiver_name ? (obj[0].receiver_name + ' (เมื่อ ' + (obj[0].receive_time || '-') + ')') : '<span class="text-muted">-</span>';
-              var stBadge = obj[0].status === 'pending' ? '<span class="badge badge-warning">รอตรวจรับ</span>' : (obj[0].status === 'rejected' ? '<span class="badge badge-danger">ปฏิเสธรับ</span>' : '<span class="badge badge-success">ตรวจรับแล้ว</span>');
-              text = text + '<hr style="width: 70%; margin: auto; margin-top: 1em;">'+
-                  '<div class="row justify-content-center" style="margin-top: 1em;">'+
-                      '<div class="col-4 text-right"><strong>สถานะ:</strong></div>'+
-                      '<div class="col-4 text-left">'+stBadge+'</div>'+
+              var stBadge = obj[0].status === 'pending' ? '<span class="badge badge-warning">รอตรวจรับ</span>' : (obj[0].status === 'rejected' ? '<span class="badge badge-danger">ปฏิเสธรับ/ส่งคืน</span>' : '<span class="badge badge-success">ตรวจรับเข้าสต๊อกแล้ว</span>');
+              
+              var routeStr = (obj[0].source_name || 'โกดัง') + ' ➜ ' + (obj[0].dest_name || 'หน้าร้าน');
+              var successBanner = '';
+              if (obj[0].status === 'received') {
+                successBanner = '<div class="alert alert-success text-center font-weight-bold py-2 my-2"><i class="fa fa-check-circle fa-lg mr-2"></i> สินค้าได้เข้าสต๊อก ' + (obj[0].dest_name || 'ปลายทาง') + ' เรียบร้อยแล้ว (ตรวจรับเมื่อ ' + (obj[0].receive_time || '-') + ')</div>';
+              }
+
+              text = text + '<div class="container" style="max-width: 600px;">' + successBanner +
+                  '<div class="row justify-content-center" style="margin-top: 0.5em;">'+
+                      '<div class="col-5 text-right font-weight-bold">สถานะ:</div>'+
+                      '<div class="col-7 text-left">'+stBadge+'</div>'+
                   '</div>'+
                   '<div class="row justify-content-center">'+
-                      '<div class="col-4 text-right"><strong>รวมจำนวนสินค้า:</strong></div>'+
-                      '<div class="col-4 text-left font-weight-bold">'+obj[0].total+' ชิ้น</div>'+
+                      '<div class="col-5 text-right font-weight-bold">เส้นทางการโอน:</div>'+
+                      '<div class="col-7 text-left font-weight-bold text-primary">'+routeStr+'</div>'+
                   '</div>'+
                   '<div class="row justify-content-center">'+
-                      '<div class="col-4 text-right"><strong>ผู้จัดทำรายการส่ง:</strong></div>'+
-                      '<div class="col-4 text-left">'+(obj[0].sender_name || obj[0].user_name)+'</div>'+
+                      '<div class="col-5 text-right font-weight-bold">รวมจำนวนสินค้า:</div>'+
+                      '<div class="col-7 text-left font-weight-bold">'+obj[0].total+' ชิ้น</div>'+
                   '</div>'+
                   '<div class="row justify-content-center">'+
-                      '<div class="col-4 text-right"><strong>ผู้ตรวจรับสินค้าจริง:</strong></div>'+
-                      '<div class="col-4 text-left">'+receiverTxt+'</div>'+
+                      '<div class="col-5 text-right font-weight-bold">ผู้ส่งสินค้า:</div>'+
+                      '<div class="col-7 text-left">'+(obj[0].sender_name || obj[0].user_name)+'</div>'+
                   '</div>'+
-                  (obj[0].reject_reason ? ('<div class="row justify-content-center text-danger"><div class="col-4 text-right"><strong>เหตุผลที่ส่งคืน:</strong></div><div class="col-4 text-left">'+obj[0].reject_reason+'</div></div>') : '') +
-                  '<div class="row justify-content-center" style="margin-top: 1.5em;">'+
-                  '<div class="col-4 text-right">'+                   
+                  '<div class="row justify-content-center">'+
+                      '<div class="col-5 text-right font-weight-bold">ผู้ตรวจรับเข้าสต๊อก:</div>'+
+                      '<div class="col-7 text-left text-success font-weight-bold">'+receiverTxt+'</div>'+
+                  '</div>'+
+                  (obj[0].reject_reason ? ('<div class="row justify-content-center text-danger"><div class="col-5 text-right font-weight-bold">เหตุผลที่ส่งคืน:</div><div class="col-7 text-left">'+obj[0].reject_reason+'</div></div>') : '') +
+                  '</div>';
+
+              var cancelBtn = '';
+              if (obj[0].status === 'pending') {
+                cancelBtn = '<button class="btn btn-lg btn-danger font-weight-bold" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+','+obj[0].shop_id+')"><i class="fas fa-trash mr-1"></i> ยกเลิกใบโอน</button>';
+              } else if (obj[0].status === 'received') {
+                cancelBtn = '<span class="badge badge-success p-2" style="font-size: 0.9rem;"><i class="fa fa-lock mr-1"></i> เข้าสต๊อกแล้วสมบูรณ์</span>';
+              }
+
+              text = text + '<div class="row justify-content-center align-items-center" style="margin-top: 1.5em;">'+
+                  '<div class="col-5 text-right">'+                   
                     '<button onclick="print.apply(this,arr_data)" class="btn btn-lg btn-warning font-weight-bold" style="color: white;"><i class="fas fa-print mr-1"></i> พิมพ์ใบโอน</button>'+
                   '</div>'+
-                  '<div class="col-4 text-left">'+
-                    '<button class="btn btn-lg btn-danger font-weight-bold" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+','+obj[0].shop_id+')"><i class="fas fa-trash mr-1"></i> ยกเลิกใบโอน</button>'+
+                  '<div class="col-5 text-left">'+ cancelBtn +
                   '</div>'+         
                 '</div>'+                
             '</div>'+
@@ -408,33 +435,52 @@
                 tfID = field.tf_id
                 arr_data.push(item);               
               });
-              text = text + '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
+              text = text + '<hr style="width: 50%; margin: auto; margin-top: 1em;">';
               var receiverTxt = obj[0].receiver_name ? (obj[0].receiver_name + ' (เมื่อ ' + (obj[0].receive_time || '-') + ')') : '<span class="text-muted">-</span>';
-              var stBadge = obj[0].status === 'pending' ? '<span class="badge badge-warning">รอตรวจรับ</span>' : (obj[0].status === 'rejected' ? '<span class="badge badge-danger">ปฏิเสธรับ</span>' : '<span class="badge badge-success">ตรวจรับแล้ว</span>');
-              text = text + '<hr style="width: 70%; margin: auto; margin-top: 1em;">'+
-                  '<div class="row justify-content-center" style="margin-top: 1em;">'+
-                      '<div class="col-4 text-right"><strong>สถานะ:</strong></div>'+
-                      '<div class="col-4 text-left">'+stBadge+'</div>'+
+              var stBadge = obj[0].status === 'pending' ? '<span class="badge badge-warning">รอตรวจรับ</span>' : (obj[0].status === 'rejected' ? '<span class="badge badge-danger">ปฏิเสธรับ/ส่งคืน</span>' : '<span class="badge badge-success">ตรวจรับเข้าสต๊อกแล้ว</span>');
+              
+              var routeStr = (obj[0].source_name || 'โกดัง') + ' ➜ ' + (obj[0].dest_name || 'หน้าร้าน');
+              var successBanner = '';
+              if (obj[0].status === 'received') {
+                successBanner = '<div class="alert alert-success text-center font-weight-bold py-2 my-2"><i class="fa fa-check-circle fa-lg mr-2"></i> สินค้าได้เข้าสต๊อก ' + (obj[0].dest_name || 'ปลายทาง') + ' เรียบร้อยแล้ว (ตรวจรับเมื่อ ' + (obj[0].receive_time || '-') + ')</div>';
+              }
+
+              text = text + '<div class="container" style="max-width: 600px;">' + successBanner +
+                  '<div class="row justify-content-center" style="margin-top: 0.5em;">'+
+                      '<div class="col-5 text-right font-weight-bold">สถานะ:</div>'+
+                      '<div class="col-7 text-left">'+stBadge+'</div>'+
                   '</div>'+
                   '<div class="row justify-content-center">'+
-                      '<div class="col-4 text-right"><strong>รวมจำนวนสินค้า:</strong></div>'+
-                      '<div class="col-4 text-left font-weight-bold">'+obj[0].total+' ชิ้น</div>'+
+                      '<div class="col-5 text-right font-weight-bold">เส้นทางการโอน:</div>'+
+                      '<div class="col-7 text-left font-weight-bold text-primary">'+routeStr+'</div>'+
                   '</div>'+
                   '<div class="row justify-content-center">'+
-                      '<div class="col-4 text-right"><strong>ผู้จัดทำรายการส่ง:</strong></div>'+
-                      '<div class="col-4 text-left">'+(obj[0].sender_name || obj[0].user_name)+'</div>'+
+                      '<div class="col-5 text-right font-weight-bold">รวมจำนวนสินค้า:</div>'+
+                      '<div class="col-7 text-left font-weight-bold">'+obj[0].total+' ชิ้น</div>'+
                   '</div>'+
                   '<div class="row justify-content-center">'+
-                      '<div class="col-4 text-right"><strong>ผู้ตรวจรับสินค้าจริง:</strong></div>'+
-                      '<div class="col-4 text-left">'+receiverTxt+'</div>'+
+                      '<div class="col-5 text-right font-weight-bold">ผู้ส่งสินค้า:</div>'+
+                      '<div class="col-7 text-left">'+(obj[0].sender_name || obj[0].user_name)+'</div>'+
                   '</div>'+
-                  (obj[0].reject_reason ? ('<div class="row justify-content-center text-danger"><div class="col-4 text-right"><strong>เหตุผลที่ส่งคืน:</strong></div><div class="col-4 text-left">'+obj[0].reject_reason+'</div></div>') : '') +
-                  '<div class="row justify-content-center" style="margin-top: 1.5em;">'+
-                  '<div class="col-4 text-right">'+                   
+                  '<div class="row justify-content-center">'+
+                      '<div class="col-5 text-right font-weight-bold">ผู้ตรวจรับเข้าสต๊อก:</div>'+
+                      '<div class="col-7 text-left text-success font-weight-bold">'+receiverTxt+'</div>'+
+                  '</div>'+
+                  (obj[0].reject_reason ? ('<div class="row justify-content-center text-danger"><div class="col-5 text-right font-weight-bold">เหตุผลที่ส่งคืน:</div><div class="col-7 text-left">'+obj[0].reject_reason+'</div></div>') : '') +
+                  '</div>';
+
+              var cancelBtn = '';
+              if (obj[0].status === 'pending') {
+                cancelBtn = '<button class="btn btn-lg btn-danger font-weight-bold" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+','+obj[0].shop_id+')"><i class="fas fa-trash mr-1"></i> ยกเลิกใบโอน</button>';
+              } else if (obj[0].status === 'received') {
+                cancelBtn = '<span class="badge badge-success p-2" style="font-size: 0.9rem;"><i class="fa fa-lock mr-1"></i> เข้าสต๊อกแล้วสมบูรณ์</span>';
+              }
+
+              text = text + '<div class="row justify-content-center align-items-center" style="margin-top: 1.5em;">'+
+                  '<div class="col-5 text-right">'+                   
                     '<button onclick="print.apply(this,arr_data)" class="btn btn-lg btn-warning font-weight-bold" style="color: white;"><i class="fas fa-print mr-1"></i> พิมพ์ใบโอน</button>'+
                   '</div>'+
-                  '<div class="col-4 text-left">'+
-                    '<button class="btn btn-lg btn-danger font-weight-bold" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+','+obj[0].shop_id+')"><i class="fas fa-trash mr-1"></i> ยกเลิกใบโอน</button>'+
+                  '<div class="col-5 text-left">'+ cancelBtn +
                   '</div>'+         
                 '</div>'+                           
                 '</div>'+
@@ -626,7 +672,7 @@
     <div class="container-fullwidth justify-content-center">
         <nav class="navbar navbar-expand-md navbar-dark">
             <div class="collapse navbar-collapse justify-content-md-center" id="navbarCollapse">
-                <h3 id="nav-title">รายงานสินค้าโอนเข้าโกดัง</h3>
+                <h3 id="nav-title">รายงานการโอนย้ายสินค้า (หน้าร้าน ⇄ โกดัง)</h3>
             </div>
         </nav>
         <div class="container">
@@ -646,7 +692,7 @@
         <div class="container-fullwidth">
             <div class="input-group row justify-content-center" style="margin-bottom: 4%; margin-left: 0.5%">
                 <input id="input-search" type="text" class="form-control-lg text-center"
-                    placeholder="ค้นหา เลขที่นำเข้า / สินค้า" style="width: 60%;">
+                    placeholder="ค้นหา เลขที่ใบโอน / ชื่อสินค้า / โกดัง / ผู้ตรวจรับ" style="width: 60%;">
                 <button  class="btn btn-outline-secondary" type="button" style="margin-left: 10px;" hidden>
                     <i class="fa fa-calendar-alt"></i>
                 </button>
