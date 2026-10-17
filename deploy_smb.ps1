@@ -1,4 +1,5 @@
 $files = @(
+    "web_warehouse.html",
     "web_customer.html",
     "web_admin_customer.html",
     "web_select.html",
@@ -40,12 +41,36 @@ $files = @(
 )
 
 $srcDir = "d:\MewP\ddcar\www"
-$dstDir = "\\192.168.1.51\Web\dd-shop"
+
+# Check target destinations (LAN IP or Tailscale IP)
+$candidateDirs = @(
+    "\\192.168.1.51\Web\dd-shop",
+    "\\100.77.57.16\Web\dd-shop"
+)
+
+$dstDir = $null
+foreach ($dir in $candidateDirs) {
+    if (Test-Path $dir) {
+        $dstDir = $dir
+        break
+    }
+}
+
+if (-not $dstDir) {
+    $dstDir = $candidateDirs[0] # Default fallback
+    Write-Warning "Could not automatically reach candidate share paths. Trying $dstDir..."
+} else {
+    Write-Host "Connected destination: $dstDir"
+}
 
 $backupDir = Join-Path $dstDir "_backup_update_customer"
 if (-not (Test-Path $backupDir)) {
-    New-Item -ItemType Directory -Path $backupDir | Out-Null
-    Write-Host "Created backup folder: $backupDir"
+    try {
+        New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
+        Write-Host "Created backup folder: $backupDir"
+    } catch {
+        Write-Warning "Could not create backup directory on destination: $($_.Exception.Message)"
+    }
 }
 
 $successCount = 0

@@ -1,4 +1,5 @@
 $urls = @(
+    "http://ddaccessory.trueddns.com:24330/dd-shop/web_warehouse.html",
     "http://ddaccessory.trueddns.com:24330/dd-shop/web_customer.html",
     "http://ddaccessory.trueddns.com:24330/dd-shop/web_select.html",
     "http://ddaccessory.trueddns.com:24330/dd-shop/web_stock.html",

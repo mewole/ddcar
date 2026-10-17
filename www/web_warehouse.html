@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="ระบบจัดการหน้าร้านและโกดัง DD MOTOR SPORT">
+  <title>จัดการหน้าร้านและโกดัง - DD MOTOR SPORT</title>
+
+  <!-- Bootstrap Import -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css" crossorigin="anonymous">
+
+  <!-- Super cool dialog -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
+
+  <!-- Loading -->
+  <link rel="stylesheet" href="css/easy-loading.css">
+  <script src="js/easy-loading.js"></script>
+
+  <!-- Fonts & Main Styles -->
+  <link href="https://fonts.googleapis.com/css?family=Prompt:300,400,500,600,700" rel="stylesheet">
+  <link href="css/untitled.css?v=2.0" rel="stylesheet">
+  <script type="text/javascript" src="js/config.js"></script>
+
+  <style>
+    body {
+      color: var(--text-primary);
+      background-color: var(--bg-page) !important;
+    }
+
+    .dashboard-header {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dashboard-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--color-black);
+      margin-bottom: 4px;
+    }
+
+    .dashboard-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+    }
+
+    /* Stat Cards */
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      border-color: var(--color-dark);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .stat-label {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-black);
+      line-height: 1;
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .stat-icon.total {
+      background: #f1f5f9;
+      color: var(--color-dark);
+    }
+
+    .stat-icon.shop {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    .stat-icon.warehouse {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    /* Main Container Card */
+    .content-card {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+
+    /* Filter & Search Bar */
+    .search-input-group {
+      position: relative;
+    }
+
+    .search-input-group i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .search-input-group input {
+      padding-left: 38px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-light);
+      height: 42px;
+      font-size: 0.95rem;
+    }
+
+    .search-input-group input:focus {
+      border-color: var(--color-dark);
+      box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.1);
+    }
+
+    .filter-btn-group .btn {
+      font-weight: 500;
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+    }
+
+    .filter-btn-group .btn.active {
+      background: var(--color-dark) !important;
+      color: #ffffff !important;
+      border-color: var(--color-dark) !important;
+    }
+
+    /* Table Styling */
+    .table-custom {
+      margin-bottom: 0;
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+    }
+
+    .table-custom thead th {
+      background: #f8fafc;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.88rem;
+      border-top: none;
+      border-bottom: 1px solid var(--border-light);
+      padding: 12px 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .table-custom tbody tr {
+      transition: background 0.15s ease;
+    }
+
+    .table-custom tbody tr:hover {
+      background-color: #f8fafc;
+    }
+
+    .table-custom tbody td {
+      padding: 14px 16px;
+      vertical-align: middle;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 0.95rem;
+    }
+
+    /* Badges */
+    .badge-type-shop {
+      background-color: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge-type-warehouse {
+      background-color: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Action Buttons */
+    .btn-action-edit {
+      color: #2563eb;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action-edit:hover {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    .btn-action-del {
+      color: #dc2626;
+      background: #fef2f2;
+      border: 1px solid #fee2e2;
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      margin-left: 6px;
+    }
+
+    .btn-action-del:hover {
+      background: #dc2626;
+      color: #ffffff;
+      border-color: #dc2626;
+    }
+
+    /* Empty state */
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      color: #cbd5e1;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border-light);
+      padding: 16px 20px;
+    }
+
+    .modal-title {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--color-black);
+    }
+
+    .type-select-card {
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      background: #ffffff;
+    }
+
+    .type-select-card:hover {
+      border-color: var(--color-dark);
+      background: #f8fafc;
+    }
+
+    .type-select-card.selected {
+      border-color: var(--color-dark);
+      background: #111827;
+      color: #ffffff;
+    }
+
+    .type-select-card.selected i,
+    .type-select-card.selected .type-name {
+      color: #ffffff !important;
+    }
+
+    .type-select-card i {
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .type-select-card .type-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Central Unified Navbar Mount Point -->
+  <div id="ddcar-nav-mount"></div>
+
+  <div class="container pb-5">
+    <!-- Header Dashboard Info -->
+    <div class="dashboard-header d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+      <div>
+        <div class="dashboard-title"><i class="fa fa-store-alt mr-2 text-dark"></i> จัดการหน้าร้านและโกดัง</div>
+        <div class="dashboard-subtitle">ระบบบริหารจัดการสาขาหน้าร้านและโกดังจัดเก็บสินค้า DD MOTOR SPORT</div>
+      </div>
+      <div class="mt-3 mt-md-0 d-flex gap-2">
+        <button type="button" class="btn btn-ddcar-dark mr-2" data-toggle="modal" data-target="#modalAddWare">
+          <i class="fa fa-plus-circle mr-1"></i> เพิ่มหน้าร้าน / โกดัง
+        </button>
+        <button type="button" class="btn btn-ddcar-outline" onclick="loadWareShopList()">
+          <i class="fa fa-sync-alt mr-1"></i> รีเฟรช
+        </button>
+      </div>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="row">
+      <div class="col-12 col-md-4">
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">สถานที่ทั้งหมด</div>
+            <div class="stat-value" id="stat-total">0</div>
+          </div>
+          <div class="stat-icon total">
+            <i class="fa fa-map-marker-alt"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">สาขาหน้าร้าน</div>
+            <div class="stat-value" id="stat-shop">0</div>
+          </div>
+          <div class="stat-icon shop">
+            <i class="fa fa-store"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">โกดังจัดเก็บ</div>
+            <div class="stat-value" id="stat-ware">0</div>
+          </div>
+          <div class="stat-icon warehouse">
+            <i class="fa fa-warehouse"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content-card">
+      <!-- Search & Filter Controls -->
+      <div class="row mb-3 align-items-center">
+        <div class="col-12 col-md-6 mb-2 mb-md-0">
+          <div class="search-input-group">
+            <i class="fa fa-search"></i>
+            <input type="text" id="search-input" class="form-control" placeholder="ค้นหาชื่อหน้าร้าน หรือ โกดัง..." oninput="filterLocations()">
+          </div>
+        </div>
+        <div class="col-12 col-md-6 text-md-right">
+          <div class="btn-group filter-btn-group" role="group">
+            <button type="button" class="btn btn-outline-secondary active" id="filter-all" onclick="setFilter('all')">ทั้งหมด</button>
+            <button type="button" class="btn btn-outline-secondary" id="filter-shop" onclick="setFilter('หน้าร้าน')">หน้าร้าน</button>
+            <button type="button" class="btn btn-outline-secondary" id="filter-warehouse" onclick="setFilter('โกดัง')">โกดัง</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table of Warehouses and Shops -->
+      <div class="table-responsive">
+        <table class="table table-custom">
+          <thead>
+            <tr>
+              <th style="width: 80px;" class="text-center">#</th>
+              <th>ชื่อสถานที่</th>
+              <th style="width: 160px;" class="text-center">ประเภท</th>
+              <th style="width: 200px;" class="text-right">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="location-table-body">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+        <div id="empty-state" class="empty-state" style="display: none;">
+          <i class="fa fa-inbox"></i>
+          <h5>ไม่พบข้อมูลหน้าร้านหรือโกดัง</h5>
+          <p class="text-muted">ลองค้นหาด้วยคำอื่น หรือกดปุ่ม "เพิ่มหน้าร้าน / โกดัง" เพื่อสร้างรายการใหม่</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: เพิ่มหน้าร้าน / โกดัง -->
+  <div class="modal fade" id="modalAddWare" tabindex="-1" role="dialog" aria-labelledby="modalAddWareLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalAddWareLabel"><i class="fa fa-plus-circle mr-2 text-dark"></i> เพิ่มหน้าร้าน / โกดัง</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark mb-2">เลือกประเภทสถานที่ <span class="text-danger">*</span></label>
+            <div class="row">
+              <div class="col-6">
+                <div class="type-select-card selected" id="opt-type-shop" onclick="selectAddType('หน้าร้าน')">
+                  <i class="fa fa-store text-success"></i>
+                  <div class="type-name">หน้าร้าน</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="type-select-card" id="opt-type-ware" onclick="selectAddType('โกดัง')">
+                  <i class="fa fa-warehouse text-primary"></i>
+                  <div class="type-name">โกดัง</div>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="add-ware-type" value="หน้าร้าน">
+          </div>
+
+          <div class="form-group mb-0">
+            <label for="add-ware-name" class="font-weight-bold text-dark mb-1">ชื่อหน้าร้าน / โกดัง <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="add-ware-name" placeholder="เช่น หน้าร้านสาขา 1, โกดัง C" autofocus>
+            <small class="form-text text-muted">ใส่ชื่อที่ต้องการเรียกใช้ในระบบตัดสต๊อกและรายงาน</small>
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-ddcar-dark" onclick="submitAddWare()">
+            <i class="fa fa-save mr-1"></i> บันทึกรายการ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Central Navbar Script -->
+  <script src="js/navbar.js"></script>
+
+  <script>
+    var allLocations = [];
+    var currentFilter = 'all';
+
+    $(document).ready(function () {
+      // Session verification
+      if (!localStorage.user_id) {
+        window.location = 'web_login.html';
+        return;
+      }
+
+      loadWareShopList();
+
+      // Reset modal inputs on open
+      $('#modalAddWare').on('shown.bs.modal', function () {
+        $('#add-ware-name').val('').focus();
+        selectAddType('หน้าร้าน');
+      });
+
+      // Enter key on add input
+      $('#add-ware-name').on('keypress', function (e) {
+        if (e.which === 13) {
+          submitAddWare();
+        }
+      });
+    });
+
+    // Toggle selected type in Add Modal
+    function selectAddType(type) {
+      $('#add-ware-type').val(type);
+      if (type === 'หน้าร้าน') {
+        $('#opt-type-shop').addClass('selected');
+        $('#opt-type-ware').removeClass('selected');
+      } else {
+        $('#opt-type-ware').addClass('selected');
+        $('#opt-type-shop').removeClass('selected');
+      }
+    }
+
+    // Fetch warehouse and shop data from backend
+    function loadWareShopList() {
+      var apiBase = localStorage.pathServer || '';
+      if (apiBase && !apiBase.endsWith('/')) apiBase += '/';
+
+      $.ajax({
+        type: "GET",
+        url: apiBase + "php/get_ware_shop.php",
+        beforeSend: function () {
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.show({ text: "กำลังโหลดข้อมูล..." });
+          }
+        },
+        success: function (data) {
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
+
+          try {
+            var rawList = typeof data === 'string' ? JSON.parse(data) : data;
+            allLocations = [];
+
+            if (rawList && Array.isArray(rawList)) {
+              rawList.forEach(function (item) {
+                var type = item[2] || (item.ware_id ? 'โกดัง' : 'หน้าร้าน');
+                var id = (type === 'โกดัง') ? (item.ware_id || item[0]) : (item.shop_id || item[0]);
+                var name = (type === 'โกดัง') ? (item.ware_name || item[1]) : (item.shop_name || item[1]);
+
+                allLocations.push({
+                  id: id,
+                  name: name,
+                  type: type
+                });
+              });
+            }
+
+            updateStats();
+            renderTable();
+          } catch (e) {
+            console.error("Error parsing warehouse data:", e);
+            $.alert({
+              title: 'ข้อผิดพลาด',
+              content: 'ไม่สามารถประมวลผลข้อมูลหน้าร้าน/โกดังได้',
+              type: 'red'
+            });
+          }
+        },
+        error: function (xhr, status, error) {
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
+          console.error("AJAX Error:", error);
+          $.alert({
+            title: 'เชื่อมต่อล้มเหลว',
+            content: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่อ',
+            type: 'red'
+          });
+        }
+      });
+    }
+
+    // Update summary stat counters
+    function updateStats() {
+      var total = allLocations.length;
+      var shops = allLocations.filter(function (l) { return l.type === 'หน้าร้าน'; }).length;
+      var wares = allLocations.filter(function (l) { return l.type === 'โกดัง'; }).length;
+
+      $('#stat-total').text(total);
+      $('#stat-shop').text(shops);
+      $('#stat-ware').text(wares);
+    }
+
+    // Set active filter tab
+    function setFilter(filter) {
+      currentFilter = filter;
+      $('.filter-btn-group .btn').removeClass('active');
+      if (filter === 'all') $('#filter-all').addClass('active');
+      else if (filter === 'หน้าร้าน') $('#filter-shop').addClass('active');
+      else if (filter === 'โกดัง') $('#filter-warehouse').addClass('active');
+
+      renderTable();
+    }
+
+    // Render table rows based on filter & search query
+    function renderTable() {
+      var query = ($('#search-input').val() || '').toLowerCase().trim();
+      var filtered = allLocations.filter(function (loc) {
+        var matchesType = (currentFilter === 'all') || (loc.type === currentFilter);
+        var matchesQuery = !query || loc.name.toLowerCase().includes(query);
+        return matchesType && matchesQuery;
+      });
+
+      var tbody = $('#location-table-body');
+      tbody.empty();
+
+      if (filtered.length === 0) {
+        $('#empty-state').show();
+        return;
+      }
+
+      $('#empty-state').hide();
+
+      var isReadOnly = (localStorage.user_role === "ดูคลังสินค้า");
+
+      filtered.forEach(function (loc, index) {
+        var badgeHtml = (loc.type === 'โกดัง')
+          ? '<span class="badge-type-warehouse"><i class="fa fa-warehouse"></i> โกดัง</span>'
+          : '<span class="badge-type-shop"><i class="fa fa-store"></i> หน้าร้าน</span>';
+
+        var actionHtml = '';
+        if (!isReadOnly) {
+          actionHtml = '<button type="button" class="btn btn-action-edit" onclick="editWareShop(\'' + loc.id + '\', \'' + loc.type + '\', \'' + escapeHtml(loc.name) + '\')">' +
+            '<i class="fa fa-edit mr-1"></i> แก้ไข' +
+            '</button>' +
+            '<button type="button" class="btn btn-action-del" onclick="deleteWareShop(\'' + loc.id + '\', \'' + loc.type + '\', \'' + escapeHtml(loc.name) + '\')">' +
+            '<i class="fa fa-trash-alt mr-1"></i> ลบ' +
+            '</button>';
+        } else {
+          actionHtml = '<span class="text-muted small"><i class="fa fa-lock mr-1"></i> ดูอย่างเดียว</span>';
+        }
+
+        var rowHtml = '<tr id="row-ware-' + loc.type + '-' + loc.id + '">' +
+          '<td class="text-center font-weight-bold text-muted">' + (index + 1) + '</td>' +
+          '<td class="font-weight-600 text-dark">' + escapeHtml(loc.name) + '</td>' +
+          '<td class="text-center">' + badgeHtml + '</td>' +
+          '<td class="text-right">' + actionHtml + '</td>' +
+          '</tr>';
+
+        tbody.append(rowHtml);
+      });
+    }
+
+    function filterLocations() {
+      renderTable();
+    }
+
+    // Submit Add New Location
+    function submitAddWare() {
+      var name = $('#add-ware-name').val().trim();
+      var type = $('#add-ware-type').val();
+
+      if (!name) {
+        $.alert({
+          title: 'ข้อมูลไม่ครบถ้วน',
+          content: 'กรุณากรอกชื่อหน้าร้านหรือโกดัง',
+          type: 'orange'
+        });
+        $('#add-ware-name').focus();
+        return;
+      }
+
+      var apiBase = localStorage.pathServer || '';
+      if (apiBase && !apiBase.endsWith('/')) apiBase += '/';
+
+      $.ajax({
+        type: "POST",
+        url: apiBase + "php/add_ware_shop.php",
+        data: {
+          name: name,
+          type: type
+        },
+        beforeSend: function () {
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.show({ text: "กำลังบันทึก..." });
+          }
+        },
+        success: function (data) {
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
+
+          if (data && data.trim() === "success") {
+            $('#modalAddWare').modal('hide');
+            $.confirm({
+              title: 'สำเร็จ',
+              content: 'เพิ่ม ' + type + ' "' + name + '" เรียบร้อยแล้ว',
+              type: 'green',
+              autoClose: 'ok|2000',
+              buttons: {
+                ok: {
+                  text: 'ตกลง',
+                  btnClass: 'btn-success',
+                  action: function () {
+                    loadWareShopList();
+                  }
+                }
+              }
+            });
+          } else {
+            $.alert({
+              title: 'เกิดข้อผิดพลาด',
+              content: 'ไม่สามารถเพิ่มข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+              type: 'red'
+            });
+          }
+        },
+        error: function () {
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
+          $.alert({
+            title: 'ข้อผิดพลาด',
+            content: 'เกิดข้อผิดพลาดในการส่งข้อมูลไปยังเซิร์ฟเวอร์',
+            type: 'red'
+          });
+        }
+      });
+    }
+
+    // Edit Location Name
+    function editWareShop(id, type, currentName) {
+      $.confirm({
+        title: '<i class="fa fa-edit text-primary mr-1"></i> แก้ไขชื่อ ' + type,
+        content: '' +
+          '<form action="" class="formName">' +
+          '<div class="form-group">' +
+          '<label class="text-muted small mb-1">ประเภท: ' + type + '</label>' +
+          '<input type="text" id="input-edit-name" value="' + escapeHtml(currentName) + '" class="form-control" placeholder="ใส่ชื่อใหม่" required />' +
+          '</div>' +
+          '</form>',
+        buttons: {
+          formSubmit: {
+            text: '<i class="fa fa-save mr-1"></i> บันทึก',
+            btnClass: 'btn-ddcar-dark',
+            action: function () {
+              var newName = this.$content.find('#input-edit-name').val().trim();
+              if (!newName) {
+                $.alert('กรุณากรอกชื่อ');
+                return false;
+              }
+              if (newName === currentName) {
+                return true; // No change
+              }
+
+              var apiBase = localStorage.pathServer || '';
+              if (apiBase && !apiBase.endsWith('/')) apiBase += '/';
+
+              $.ajax({
+                type: "POST",
+                url: apiBase + "php/rename_ware_shop.php",
+                data: {
+                  id: id,
+                  type: type,
+                  name: newName
+                },
+                beforeSend: function () {
+                  if (typeof EasyLoading !== 'undefined') {
+                    EasyLoading.show({ text: "กำลังอัปเดต..." });
+                  }
+                },
+                success: function (data) {
+                  if (typeof EasyLoading !== 'undefined') {
+                    EasyLoading.hide();
+                  }
+
+                  if (data && data.trim() === "success") {
+                    // Update in local state
+                    var item = allLocations.find(function (l) { return l.id == id && l.type === type; });
+                    if (item) item.name = newName;
+                    renderTable();
+
+                    $.confirm({
+                      title: 'สำเร็จ',
+                      content: 'แก้ไขชื่อ ' + type + ' เป็น "' + newName + '" เรียบร้อยแล้ว',
+                      type: 'green',
+                      autoClose: 'ok|1500',
+                      buttons: {
+                        ok: {
+                          text: 'ตกลง',
+                          btnClass: 'btn-success'
+                        }
+                      }
+                    });
+                  } else {
+                    $.alert({
+                      title: 'พบข้อผิดพลาด',
+                      content: 'ไม่สามารถบันทึกชื่อใหม่ได้ กรุณาลองอีกครั้ง',
+                      type: 'red'
+                    });
+                  }
+                },
+                error: function () {
+                  if (typeof EasyLoading !== 'undefined') {
+                    EasyLoading.hide();
+                  }
+                  $.alert({
+                    title: 'ข้อผิดพลาด',
+                    content: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้',
+                    type: 'red'
+                  });
+                }
+              });
+            }
+          },
+          cancel: {
+            text: 'ยกเลิก'
+          }
+        },
+        onContentReady: function () {
+          var jc = this;
+          this.$content.find('form').on('submit', function (e) {
+            e.preventDefault();
+            jc.$$formSubmit.trigger('click');
+          });
+          var input = this.$content.find('#input-edit-name');
+          input.focus().val("").val(currentName);
+        }
+      });
+    }
+
+    // Delete Location
+    function deleteWareShop(id, type, name) {
+      $.confirm({
+        title: '<i class="fa fa-exclamation-triangle text-danger mr-1"></i> ยืนยันการลบรายการ',
+        content: 'คุณต้องการลบ <strong>' + type + ' "' + escapeHtml(name) + '"</strong> หรือไม่?<br><span class="text-danger small">* การลบอาจส่งผลกระทบต่อประวัติสต๊อกที่อ้างอิงสถานที่นี้</span>',
+        type: 'red',
+        buttons: {
+          confirm: {
+            text: '<i class="fa fa-trash-alt mr-1"></i> ลบข้อมูล',
+            btnClass: 'btn-danger',
+            action: function () {
+              var apiBase = localStorage.pathServer || '';
+              if (apiBase && !apiBase.endsWith('/')) apiBase += '/';
+
+              $.ajax({
+                type: "POST",
+                url: apiBase + "php/delete_ware_shop.php",
+                data: {
+                  id: id,
+                  type: type
+                },
+                beforeSend: function () {
+                  if (typeof EasyLoading !== 'undefined') {
+                    EasyLoading.show({ text: "กำลังลบข้อมูล..." });
+                  }
+                },
+                success: function (data) {
+                  if (typeof EasyLoading !== 'undefined') {
+                    EasyLoading.hide();
+                  }
+
+                  if (data && data.trim() === "success") {
+                    allLocations = allLocations.filter(function (l) {
+                      return !(l.id == id && l.type === type);
+                    });
+                    updateStats();
+                    renderTable();
+
+                    $.confirm({
+                      title: 'สำเร็จ',
+                      content: 'ลบ ' + type + ' "' + name + '" เรียบร้อยแล้ว',
+                      type: 'green',
+                      autoClose: 'ok|1500',
+                      buttons: {
+                        ok: {
+                          text: 'ตกลง',
+                          btnClass: 'btn-success'
+                        }
+                      }
+                    });
+                  } else {
+                    $.alert({
+                      title: 'พบข้อผิดพลาด',
+                      content: 'ไม่สามารถลบรายการได้ กรุณาลองใหม่อีกครั้ง',
+                      type: 'red'
+                    });
+                  }
+                },
+                error: function () {
+                  if (typeof EasyLoading !== 'undefined') {
+                    EasyLoading.hide();
+                  }
+                  $.alert({
+                    title: 'ข้อผิดพลาด',
+                    content: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้',
+                    type: 'red'
+                  });
+                }
+              });
+            }
+          },
+          cancel: {
+            text: 'ยกเลิก'
+          }
+        }
+      });
+    }
+
+    // Helper: Escape HTML string
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+
+</html>
