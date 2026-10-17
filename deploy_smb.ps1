@@ -1,3 +1,7 @@
+param(
+    [string]$NasHost = ""
+)
+
 $files = @(
     "web_customer.html",
     "web_admin_customer.html",
@@ -39,13 +43,48 @@ $files = @(
     "img\logo.jpg"
 )
 
-$srcDir = "d:\MewP\ddcar\www"
-$dstDir = "\\192.168.1.51\Web\dd-shop"
+# Determine Source Directory
+if (Test-Path "$PSScriptRoot\www") {
+    $srcDir = "$PSScriptRoot\www"
+} elseif (Test-Path "c:\ddcar\www") {
+    $srcDir = "c:\ddcar\www"
+} elseif (Test-Path "d:\MewP\ddcar\www") {
+    $srcDir = "d:\MewP\ddcar\www"
+} else {
+    Write-Error "Source directory not found!"
+    exit 1
+}
+
+# Determine Destination Directory (LAN vs Tailscale)
+if ($NasHost) {
+    $nasIp = $NasHost
+} elseif (Test-Path "\\192.168.1.51\Web\dd-shop") {
+    $nasIp = "192.168.1.51"
+} elseif (Test-Path "\\100.77.57.16\Web\dd-shop") {
+    $nasIp = "100.77.57.16"
+} else {
+    # Default to Tailscale IP if outside local LAN
+    $nasIp = "100.77.57.16"
+}
+
+$dstDir = "\\$nasIp\Web\dd-shop"
+Write-Host "Source:      $srcDir"
+Write-Host "Destination: $dstDir"
+
+if (-not (Test-Path $dstDir)) {
+    Write-Warning "Cannot access destination: $dstDir"
+    Write-Host "Tip: If connecting via Tailscale, ensure credentials for $nasIp are added:"
+    Write-Host "     cmdkey /add:$nasIp /user:admin /pass:<PASSWORD>"
+}
 
 $backupDir = Join-Path $dstDir "_backup_update_customer"
 if (-not (Test-Path $backupDir)) {
-    New-Item -ItemType Directory -Path $backupDir | Out-Null
-    Write-Host "Created backup folder: $backupDir"
+    try {
+        New-Item -ItemType Directory -Path $backupDir -Force -ErrorAction Stop | Out-Null
+        Write-Host "Created backup folder: $backupDir"
+    } catch {
+        Write-Warning "Could not create backup folder: $($_.Exception.Message)"
+    }
 }
 
 $successCount = 0
