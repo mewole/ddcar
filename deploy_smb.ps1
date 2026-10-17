@@ -59,8 +59,13 @@ $files = @(
     "php\get_transfer_to_info.php",
     "php\get_sale.php",
     "php\add_prod.php",
+    "php\img_helper.php",
+    "php\migrate_images.php",
     "php\rename_prod_web.php",
     "php\rename_prod.php",
+    "php\get_low_stock.php",
+    "php\get_sales_analytics.php",
+    "php\backup_db.php",
     "img\logo.jpg"
 )
 

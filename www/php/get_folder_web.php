@@ -1,4 +1,5 @@
 <?php
+    ini_set('memory_limit', '512M');
     include "db.php";
     
     // 1. รับค่าและตัดเว้นวรรค
@@ -9,14 +10,14 @@
     $msg = ""; 
     $output = array();  
    
-    // 2. Query ดึงข้อมูลพร้อมนับจำนวนรายการลูกใต้ Node (has_children)
+    // 2. Query ดึงข้อมูลพร้อมตรวจว่ามีลูกใต้ Node หรือไม่ (ใช้ EXISTS แทน COUNT(*) เพื่อความรวดเร็ว)
+    // ⚡ ไม่ดึง p.img ขนาดใหญ่หลายสิบ MB เพื่อป้องกัน Memory Limit (128M) หลุด และลดเวลาโหลดจากหลายสิบวินาทีเหลือเสี้ยววินาที
     $sql = "SELECT 
                 node.title,
                 p.prod_name,
                 p.prod_code,
-                p.img,
                 p.prod_id,
-                (SELECT COUNT(*) FROM tree WHERE parent_title = node.title) AS has_children
+                EXISTS(SELECT 1 FROM tree WHERE parent_title = node.title LIMIT 1) AS has_children
             FROM tree AS node
             LEFT JOIN product AS p ON p.prod_id = node.title 
             WHERE node.parent_title = '$parent'
@@ -40,7 +41,7 @@
                     'title'     => $row['title'],
                     'prod_name' => $row['prod_name'],
                     'prod_code' => $row['prod_code'],
-                    'img'       => $row['img'],
+                    'img'       => '',
                     'prod_id'   => $row['prod_id']
                 ];
             } 

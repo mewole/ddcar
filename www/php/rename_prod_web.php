@@ -4,6 +4,8 @@
     error_reporting(E_ALL);
 
     include "db.php";   
+    include_once "img_helper.php";
+
     $prod_id   = $_POST['prod_id'] ?? null;
     $name_prod = trim($_POST['name_prod'] ?? '');
     $raw_code  = trim($_POST['code'] ?? '');
@@ -21,6 +23,11 @@
     }
 
     if (!empty($img)) {
+        // หากส่งมาเป็น Base64 ให้บันทึกเป็นไฟล์ภาพลง disk แล้วเก็บ path ในฐานข้อมูล
+        $saved_path = save_product_image_from_base64($img, $prod_id);
+        if ($saved_path) {
+            $img = $saved_path;
+        }
         $sql = "UPDATE product SET prod_name = ?, prod_code = ?, img = ? WHERE prod_id = ?";
         $stmt = mysqli_prepare($conn, $sql);
         mysqli_stmt_bind_param($stmt, "sssi", $name_prod, $code, $img, $prod_id);

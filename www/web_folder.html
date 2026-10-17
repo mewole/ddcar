@@ -119,6 +119,54 @@
 			}
 		});
 
+		// Delegated popover for product hover preview with lazy image loading (no heavy script injection)
+		$(document).on('mouseenter', '#append-prod h5[rel="popover"]', function() {
+			var $el = $(this);
+			if ($el.data('popover-inited')) return;
+			$el.data('popover-inited', true);
+
+			var prod_id = $el.find('span[id^="id-"]').text();
+			var initialImg = $el.data('img') || '';
+
+			$el.popover({
+				html: true,
+				trigger: 'hover',
+				placement: 'left',
+				boundary: 'window',
+				container: 'body',
+				content: function() {
+					var cached = $el.data('cached-img') || initialImg;
+					if (cached && cached !== 'img/no_img.png') {
+						return '<div class="p-1 text-center"><img src="' + cached + '" style="max-width:220px; max-height:220px; border-radius:6px; object-fit:contain; display:block; margin:0 auto;"></div>';
+					}
+					var containerId = 'popover-img-' + prod_id;
+					$.ajax({
+						type: 'POST',
+						url: 'php/search_img.php',
+						data: { prod_id: prod_id },
+						dataType: 'json',
+						success: function(res) {
+							var $holder = $('#' + containerId);
+							if (res && res.length > 0 && res[0].img && res[0].img !== 'img/no_img.png') {
+								$el.data('cached-img', res[0].img);
+								if ($holder.length) {
+									$holder.html('<img src="' + res[0].img + '" style="max-width:220px; max-height:220px; border-radius:6px; object-fit:contain; display:block; margin:0 auto;">');
+								}
+							} else {
+								if ($holder.length) {
+									$holder.html('<div class="p-2 text-muted small text-center"><i class="far fa-image mr-1"></i>ไม่มีรูปภาพ</div>');
+								}
+							}
+						},
+						error: function() {
+							$('#' + containerId).html('<div class="p-2 text-muted small text-center"><i class="far fa-image mr-1"></i>ไม่มีรูปภาพ</div>');
+						}
+					});
+					return '<div id="' + containerId + '" class="p-2 text-center" style="min-width:100px; min-height:60px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-spinner fa-spin text-muted mr-1"></i><span class="small text-muted">โหลดรูป...</span></div>';
+				}
+			}).popover('show');
+		});
+
 		$.ajax({
 			type: "POST",
 			url:"php/get_folder.php",
@@ -339,20 +387,24 @@
 							order_code="DESC";
 						}
 						
+						var htmlItems = [];
 						$.each(obj, function(i, field){					
 							var cls = (i % 2 === 0) ? "prod-odd" : "prod-even";
-							text_html = '<h5 id="prod-'+p+'" class="'+cls+'" rel="popover" data-img="'+obj[i].img+'" onclick="choose('+p+')"><span id="id-'+p+'" hidden>'+obj[i].prod_id+'</span><input type="checkbox"><span id="span-code-'+p+'">'+obj[i].prod_code+'</span><span id="span-name-'+p+'">'+obj[i].prod_name+'</span><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i><i class="fas fa-map-marker-alt i-modal" title="ที่อยู่สินค้า (โกดัง/หน้าร้าน)" data-toggle="modal" data-target="#detailModal" onclick="hideclick('+p+');"></i></h5>';
-							$("#append-prod").append(text_html + "<script>" +
-								"$('#prod-"+p+"[rel=popover]').popover({" +
-								"html: true," +
-								"trigger: 'hover'," +
-								"placement: 'left'," +
-								"content: function(){" +
-								"return '<img src='+$(this).data('img')+'>';}" +
-								"});" +
-							"</" + "script>");
+							var safeProdName = $('<div>').text(obj[i].prod_name || '').html();
+							var safeProdCode = $('<div>').text(obj[i].prod_code || '').html();
+							var itemHtml = '<h5 id="prod-'+p+'" class="'+cls+'" rel="popover" data-img="'+(obj[i].img || '')+'" onclick="choose('+p+')">' +
+								'<span id="id-'+p+'" hidden>'+obj[i].prod_id+'</span>' +
+								'<input type="checkbox">' +
+								'<span id="span-code-'+p+'">'+safeProdCode+'</span>' +
+								'<span id="span-name-'+p+'">'+safeProdName+'</span>' +
+								'<i class="fas fa-trash i-trash" hidden></i>' +
+								'<i class="fas fa-pen i-edit" hidden></i>' +
+								'<i class="fas fa-map-marker-alt i-modal" title="ที่อยู่สินค้า (โกดัง/หน้าร้าน)" data-toggle="modal" data-target="#detailModal" onclick="hideclick('+p+');"></i>' +
+							'</h5>';
+							htmlItems.push(itemHtml);
 							p++;
 						});  
+						$("#append-prod").append(htmlItems.join(''));
 						last_node = 1;
 					}else{
 						order_code="ASC";
@@ -364,19 +416,36 @@
 							var res = titleA.localeCompare(titleB, 'en', { numeric: true, sensitivity: 'base' });
 							return (order_by === "DESC") ? -res : res;
 						});
+						var htmlFolders = [];
 						$.each(obj, function(i, field){
 							var escapedTitle = String(obj[i].title || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+							var displayTitle = $('<div>').text(obj[i].title || '').html();
 							var cls = (i % 2 === 0) ? "prod-odd list" : "prod-even list";
-							text_html = '<h5 class="'+cls+'" data-title="'+escapedTitle+'" onclick="showsub(\''+escapedTitle+'\')"><i class="fas fa-folder"></i><span>'+ obj[i].title +'</span><i class="fas fa-chevron-right ml-auto text-muted" style="font-size: 0.8rem;"></i><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i></h5>';
-							$("#append-prod").append(text_html);							
+							var folderHtml = '<h5 class="'+cls+'" data-title="'+escapedTitle+'" onclick="showsub(\''+escapedTitle+'\')"><i class="fas fa-folder"></i><span>'+ displayTitle +'</span><i class="fas fa-chevron-right ml-auto text-muted" style="font-size: 0.8rem;"></i><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i></h5>';
+							htmlFolders.push(folderHtml);
 						});  
+						$("#append-prod").append(htmlFolders.join(''));
 						last_node = 0;             
 					}
 				}else{				
 					last_node = 2;
 				}			          
-								                          
-			}               
+			},
+			error: function(xhr, status, error) {
+				EasyLoading.hide();
+				console.error("showsub error:", status, error);
+				$.confirm({
+					title: 'ไม่สามารถเปิดโฟลเดอร์ได้',
+					content: 'เกิดข้อผิดพลาดในการโหลดข้อมูล (' + (error || status) + ') กรุณาลองใหม่อีกครั้ง',
+					backgroundDismiss: true,
+					buttons: {
+						ok: {
+							text: 'ตกลง',
+							btnClass: 'btn-dark'
+						}
+					}
+				});
+			}
 		});
 	}
 
@@ -384,7 +453,7 @@
 		arg = $('#prod-'+arg2).find('input[type=checkbox]');
 		name = $('#span-name-'+arg2).text();
 		prod_id = $('#id-'+arg2).text();
-		img = $('#prod-'+arg2).data('img');		
+		img = $('#prod-'+arg2).data('cached-img') || $('#prod-'+arg2).data('img') || '';		
 		check = arg.prop('checked');	
 		isenable = !arg.is(":disabled");
 		if(check == false && isenable){			
@@ -473,6 +542,188 @@
 			
 	}   
 	  
+	// =========================================================
+	// Item 2: Global Folder Search & Quick Jump Logic
+	// =========================================================
+	var searchTimer = null;
+	var globalSearchResultsCache = [];
+
+	$(document).on('input', '#global-folder-search', function() {
+		var q = $(this).val().trim();
+		clearTimeout(searchTimer);
+		if (q.length === 0) {
+			clearGlobalSearch();
+			return;
+		}
+		$('#btn-clear-search').show();
+		if (q.length < 2) {
+			return;
+		}
+		searchTimer = setTimeout(function() {
+			performGlobalFolderSearch(q);
+		}, 300);
+	});
+
+	function clearGlobalSearch() {
+		$('#global-folder-search').val('');
+		$('#btn-clear-search').hide();
+		$('#global-search-results').hide();
+		$('#global-search-list').empty();
+		
+		if (last_node === 1 || (parent && parent !== 'car')) {
+			$('.prod-title').show();
+			$('#append-prod').show();
+			$('#prod-empty-state').hide();
+		} else {
+			$('#prod-empty-state').show();
+			$('.prod-title').hide();
+			$('#append-prod').hide();
+		}
+	}
+
+	function performGlobalFolderSearch(phrase) {
+		$('#global-search-results').show();
+		$('#prod-empty-state').hide();
+		$('.prod-title').hide();
+		$('#append-prod').hide();
+
+		$('#global-search-list').html(
+			'<div class="text-center py-5 text-muted">' +
+				'<i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>' +
+				'<div>กำลังค้นหาสินค้าและเส้นทางโฟลเดอร์...</div>' +
+			'</div>'
+		);
+
+		$.ajax({
+			type: "POST",
+			url: "php/search_prod.php",
+			data: { phrase: phrase },
+			dataType: "json",
+			success: function(data) {
+				if (!data || !Array.isArray(data) || data.length === 0) {
+					$('#global-search-count').text(0);
+					$('#global-search-list').html(
+						'<div class="text-center py-5 text-muted">' +
+							'<i class="fas fa-search-minus fa-2x mb-2"></i>' +
+							'<div>ไม่พบสินค้าที่ตรงกับคำค้นหา "' + $('<div>').text(phrase).html() + '"</div>' +
+						'</div>'
+					);
+					return;
+				}
+
+				globalSearchResultsCache = data;
+				$('#global-search-count').text(data.length);
+				var htmlItems = [];
+
+				$.each(data, function(idx, item) {
+					var pid = item.prod_id;
+					var isSel = isGlobalProdSelected(pid);
+					var imgUrl = item.img && item.img !== 'img/no_img.png' ? item.img : 'img/no_img.png';
+					var safeCode = $('<div>').text(item.prod_code || '-').html();
+					var safeName = $('<div>').text(item.prod_name || '-').html();
+					var folderPath = item.folder_path ? item.folder_path : 'ไม่มีหมวดหมู่';
+					
+					var leafFolder = '';
+					if (item.folder_chain && item.folder_chain.length > 0) {
+						leafFolder = item.folder_chain[item.folder_chain.length - 1];
+					}
+
+					var jumpBtnHtml = '';
+					if (leafFolder) {
+						var escapedLeaf = String(leafFolder).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+						jumpBtnHtml = '<button type="button" class="btn btn-open-folder" onclick="jumpToFolder(\'' + escapedLeaf + '\')" title="เปิดดูโฟลเดอร์นี้">' +
+							'<i class="fas fa-folder-open mr-1"></i>เปิดโฟลเดอร์' +
+						'</button>';
+					}
+
+					var selectBtnClass = isSel ? 'btn-select-prod is-selected' : 'btn-select-prod';
+					var selectBtnText = isSel ? '<i class="fas fa-check mr-1"></i>เลือกแล้ว' : '<i class="fas fa-plus mr-1"></i>เลือก';
+					var rowClass = isSel ? 'search-result-row selected' : 'search-result-row';
+
+					var rowHtml = '<div class="' + rowClass + '" id="search-row-' + pid + '">' +
+						'<img src="' + imgUrl + '" class="search-result-img" onerror="this.src=\'img/no_img.png\'" alt="">' +
+						'<div class="search-result-info">' +
+							'<div>' +
+								'<span class="search-result-sku">' + safeCode + '</span>' +
+								'<span class="search-result-name">' + safeName + '</span>' +
+							'</div>' +
+							'<div class="search-result-path">' +
+								'<span class="badge-folder"><i class="fas fa-folder text-warning mr-1"></i>' + folderPath + '</span>' +
+							'</div>' +
+						'</div>' +
+						'<div class="search-result-actions">' +
+							jumpBtnHtml +
+							'<button type="button" class="' + selectBtnClass + '" onclick="toggleGlobalSelect(' + idx + ', this)">' +
+								selectBtnText +
+							'</button>' +
+						'</div>' +
+					'</div>';
+					htmlItems.push(rowHtml);
+				});
+
+				$('#global-search-list').html(htmlItems.join(''));
+			},
+			error: function(xhr, status, error) {
+				$('#global-search-list').html(
+					'<div class="text-center py-4 text-danger">' +
+						'<i class="fas fa-exclamation-triangle fa-2x mb-2"></i>' +
+						'<div>เกิดข้อผิดพลาดในการค้นหา (' + error + ')</div>' +
+					'</div>'
+				);
+			}
+		});
+	}
+
+	function isGlobalProdSelected(pid) {
+		for (var i = 0; i < arr_prod.length; i++) {
+			if (arr_prod[i].prod_id != 0 && String(arr_prod[i].prod_id) === String(pid)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function toggleGlobalSelect(idx, btn) {
+		var item = globalSearchResultsCache[idx];
+		if (!item) return;
+		var pid = item.prod_id;
+		var isSel = isGlobalProdSelected(pid);
+		var $btn = $(btn);
+		var $row = $('#search-row-' + pid);
+
+		if (isSel) {
+			for (var i = 0; i < arr_prod.length; i++) {
+				if (String(arr_prod[i].prod_id) === String(pid)) {
+					arr_prod[i].prod_id = 0;
+					break;
+				}
+			}
+			num_prod--;
+			if (num_prod < 0) num_prod = 0;
+			$btn.removeClass('is-selected').html('<i class="fas fa-plus mr-1"></i>เลือก');
+			$row.removeClass('selected');
+		} else {
+			arr_prod.push({
+				arg: 'search_' + pid,
+				prod_id: pid,
+				name: item.prod_name,
+				img: item.img || ''
+			});
+			num_prod++;
+			$btn.addClass('is-selected').html('<i class="fas fa-check mr-1"></i>เลือกแล้ว');
+			$row.addClass('selected');
+		}
+
+		$('#btn-next').html('<i class="fas fa-check-circle mr-1"></i> ยืนยันเลือกสินค้า (' + num_prod + ')');
+		$('#lbl-count').text(num_prod);
+	}
+
+	function jumpToFolder(folderTitle) {
+		if (!folderTitle) return;
+		clearGlobalSearch();
+		showsub(folderTitle);
+	}
+
 	/* Brand Zone */
   	function addbrandconfirm(){
   		brandname = $(".newbrand").val().toUpperCase();
@@ -924,16 +1175,10 @@
 						if(data != "fail" && data != "invalid_sku"){
 							console.log(data);
 							$("#newprod-"+arg).remove();
-							text_html = '<h5 id="prod-'+p+'" class="prod-odd"  rel="popover" data-img="'+b64+'" onclick="choose('+p+')"><span hidden id="id-'+p+'">'+data+'</span><input type="checkbox"><span id="span-code-'+p+'">'+code+'</span>&nbsp;&nbsp;&nbsp;&nbsp;<span id="span-name-'+p+'">'+name+'</span><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i></h5>';	
-							$("#append-prod").prepend(text_html + "<script>" +
-								"$('#prod-"+p+"[rel=popover]').popover({" +
-								"html: true," +
-								"trigger: 'hover'," +
-								"placement: 'left'," +
-								"content: function(){" +
-								"return '<img src='+$(this).data('img')+'>';}" +
-								"});" +
-							"</" + "script>");
+							var safeCode = $('<div>').text(code).html();
+							var safeName = $('<div>').text(name).html();
+							text_html = '<h5 id="prod-'+p+'" class="prod-odd" rel="popover" data-cached-img="'+b64+'" data-img="'+b64+'" onclick="choose('+p+')"><span hidden id="id-'+p+'">'+data+'</span><input type="checkbox"><span id="span-code-'+p+'">'+safeCode+'</span>&nbsp;&nbsp;&nbsp;&nbsp;<span id="span-name-'+p+'">'+safeName+'</span><i class="fas fa-trash i-trash" hidden></i><i class="fas fa-pen i-edit" hidden></i><i class="fas fa-map-marker-alt i-modal" title="ที่อยู่สินค้า (โกดัง/หน้าร้าน)" data-toggle="modal" data-target="#detailModal" onclick="hideclick('+p+');"></i></h5>';	
+							$("#append-prod").prepend(text_html);
 							p++;		
 							last_node = 1;
 						}else if(data == "invalid_sku"){
@@ -953,6 +1198,16 @@
 							}
 							});
 						}
+					},
+					error: function(xhr, status, error) {
+						EasyLoading.hide();
+						console.error("add_prod error:", status, error);
+						$.confirm({
+							title: 'เกิดข้อผิดพลาด',
+							content: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์เพื่อเพิ่มสินค้าได้ (' + (error || status) + ')',
+							backgroundDismiss: true,
+							buttons: { ok: { text: 'ตกลง', btnClass: 'btn-dark' } }
+						});
 					}               
 				});
 			}, 1000);		
@@ -1665,7 +1920,33 @@
 
 			<!-- Right Column: Subfolders & Products -->
 			<div class="col-12 col-md-8 col-lg-9">
+				<!-- Global Fast Search Bar (Item 2) -->
+				<div class="global-search-card">
+					<div class="input-group global-search-input-group">
+						<div class="input-group-prepend">
+							<span class="input-group-text"><i class="fas fa-search text-muted"></i></span>
+						</div>
+						<input type="text" id="global-folder-search" class="form-control" placeholder="🔍 ค้นหาสินค้าทุกโฟลเดอร์/หมวดหมู่ (พิมพ์รหัส SKU หรือชื่อสินค้า เช่น vigo, สเกิร์ต, 1234)..." autocomplete="off">
+						<div class="input-group-append" id="btn-clear-search" style="display:none;">
+							<button class="btn btn-outline-secondary" type="button" onclick="clearGlobalSearch()" title="ล้างการค้นหา"><i class="fas fa-times"></i></button>
+						</div>
+					</div>
+				</div>
+
 				<div id="col-prod">
+					<!-- Global Search Results Container -->
+					<div id="global-search-results" style="display: none;" class="mb-3">
+						<div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+							<div class="font-weight-bold text-dark" style="font-size: 0.95rem;">
+								<i class="fas fa-list mr-1 text-primary"></i> ผลการค้นหาสินค้า: <span id="global-search-count" class="badge badge-dark">0</span> รายการ
+							</div>
+							<button class="btn btn-sm btn-outline-secondary" onclick="clearGlobalSearch()">
+								<i class="fas fa-arrow-left mr-1"></i> กลับสู่โฟลเดอร์เดิม
+							</button>
+						</div>
+						<div id="global-search-list" class="global-search-list-scroll"></div>
+					</div>
+
 					<!-- Breadcrumb Navigation Bar -->
 					<h5 class="prod-title" style="display: none;">
 						<!-- Breadcrumb trail and action icons injected by showsub -->
@@ -1674,8 +1955,8 @@
 					<!-- Initial Empty State Placeholder -->
 					<div id="prod-empty-state">
 						<i class="fas fa-folder-open"></i>
-						<h5>กรุณาเลือกหมวดหมู่สินค้า</h5>
-						<p>คลิกเลือกยี่ห้อหรือหมวดหมู่จากรายการทางด้านซ้ายมือ เพื่อดูโฟลเดอร์ย่อยและรายการสินค้าภายใน</p>
+						<h5>กรุณาเลือกหมวดหมู่สินค้า หรือค้นหาสินค้าจากช่องค้นหาด้านบน</h5>
+						<p>คุณสามารถคลิกเลือกหมวดหมู่ทางซ้ายมือ หรือพิมพ์ค้นหา SKU/ชื่อสินค้า เพื่อเปิดไปยังโฟลเดอร์นั้นได้ทันที</p>
 					</div>
 
 					<!-- Products / Subfolders List -->

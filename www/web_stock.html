@@ -253,6 +253,13 @@
 				var pname = $(this).data('prod-name');
 				delete_prod(pid, pname);
 			});
+
+			// เช็คจำนวนสินค้าใกล้หมดเพื่อแสดง badge เตือน
+			$.get("php/get_low_stock.php?mode=reorder", function(res) {
+				if (res && res.status === 'success' && res.data && res.data.length > 0) {
+					$('#low-stock-badge').text(res.data.length).show();
+				}
+			}, 'json');
 		});
 
 		$(document).keydown(function(objEvent) {
@@ -483,6 +490,20 @@
 						.data('prod-name', name);
 
 					$('#append-ctn').append($card);
+					if (!img || img == "img/no_img.png") {
+						$.ajax({
+							type: "POST",
+							url: "php/search_img.php",
+							data: { prod_id: prod_id },
+							dataType: "json",
+							success: function(res) {
+								if (res && res.length > 0 && res[0].img && res[0].img !== "img/no_img.png") {
+									$('#img-' + prod_id).attr('src', res[0].img).addClass('thumbnails');
+									set_fullImage();
+								}
+							}
+						});
+					}
 					if (canViewCost()) {
 						load_stock_supplier_badge(prod_id, name, code);
 					}
@@ -741,9 +762,15 @@
     	</div>
     	<hr style="width: 85%;">
     	<div id="row-folder" class="row justify-content-center my-4 px-2">
-            <div class="col-12 col-md-6 col-lg-5 text-center">
-    		    <button class="btn btn-lg btn-outline-secondary btn-block py-3" style="font-size: 1.2rem; border-radius: 8px;" onclick="select_folder()">
-                    <i class="fa fa-folder-open mr-2"></i> เลือกจากหมวดหมู่สินค้า
+            <div class="col-12 col-md-5 col-lg-4 text-center mb-2 mb-md-0">
+    		    <button class="btn btn-lg btn-outline-secondary btn-block py-3" style="font-size: 1.15rem; border-radius: 8px;" onclick="select_folder()">
+                    <i class="fa fa-folder-open mr-2 text-warning"></i> เลือกจากหมวดหมู่สินค้า
+                </button>
+            </div>
+            <div class="col-12 col-md-5 col-lg-4 text-center">
+    		    <button class="btn btn-lg btn-outline-danger btn-block py-3 font-weight-bold" style="font-size: 1.15rem; border-radius: 8px;" onclick="showLowStockModal()">
+                    <i class="fas fa-exclamation-triangle mr-2 text-danger"></i> สินค้าใกล้หมด / Reorder Point
+                    <span id="low-stock-badge" class="badge badge-danger ml-2" style="display:none;">0</span>
                 </button>
             </div>
     	</div>
@@ -848,6 +875,88 @@
 	      </div>
 	    </div>
 	  </div>
+	</div>
+
+	<!-- Modal รายงานสินค้าใกล้หมด / Reorder Point (Item 3) -->
+	<div class="modal fade" id="lowStockModal" tabindex="-1" role="dialog" aria-hidden="true">
+		<div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width: 94%;">
+			<div class="modal-content border-0 shadow-lg">
+				<div class="modal-header bg-dark text-white py-3">
+					<div class="d-flex align-items-center">
+						<i class="fas fa-exclamation-triangle text-warning mr-2" style="font-size: 1.3rem;"></i>
+						<div>
+							<h5 class="modal-title font-weight-bold mb-0">รายงานสินค้าใกล้หมด & จุดสั่งซื้อซ้ำ (Reorder Point)</h5>
+							<small class="text-white-50">ตรวจสอบสินค้าที่สต๊อกรวมต่ำกว่าเกณฑ์ขั้นต่ำ พร้อมพิมพ์ใบรายการและสั่งของได้ทันที</small>
+						</div>
+					</div>
+					<button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body p-3 p-md-4" style="background: #f8fafc;">
+					<!-- Filter Controls -->
+					<div class="card p-3 mb-3 border-0 shadow-sm">
+						<div class="row align-items-center">
+							<div class="col-12 col-md-5 mb-2 mb-md-0">
+								<div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+									<label class="btn btn-outline-dark active" onclick="loadLowStockData('reorder')">
+										<input type="radio" name="low_stock_mode" checked> <i class="fas fa-bell mr-1"></i> ต่ำกว่าเกณฑ์ (Reorder)
+									</label>
+									<label class="btn btn-outline-danger" onclick="loadLowStockData('zero')">
+										<input type="radio" name="low_stock_mode"> <i class="fas fa-times-circle mr-1"></i> สินค้าหมดเกลี้ยง (0 ชิ้น)
+									</label>
+								</div>
+							</div>
+							<div class="col-12 col-md-4 mb-2 mb-md-0">
+								<div class="input-group">
+									<div class="input-group-prepend">
+										<span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+									</div>
+									<input type="text" id="low-stock-filter-input" class="form-control" placeholder="ค้นหา SKU หรือชื่อในรายการนี้...">
+								</div>
+							</div>
+							<div class="col-12 col-md-3 text-md-right">
+								<button class="btn btn-dark" onclick="printLowStockReport()">
+									<i class="fas fa-print mr-1"></i> พิมพ์รายงาน
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- Table Container -->
+					<div class="card border-0 shadow-sm">
+						<div class="table-responsive" style="max-height: 520px; overflow-y: auto;" id="low-stock-table-wrap">
+							<table class="table table-hover table-striped mb-0 text-center" id="tbl-low-stock">
+								<thead class="thead-dark" style="position: sticky; top: 0; z-index: 10;">
+									<tr>
+										<th style="width: 50px;">#</th>
+										<th style="width: 70px;">รูป</th>
+										<th style="width: 140px;">รหัส SKU</th>
+										<th class="text-left">ชื่อสินค้า</th>
+										<th class="text-left" style="width: 200px;">หมวดหมู่</th>
+										<th style="width: 90px;">เกณฑ์ขั้นต่ำ</th>
+										<th style="width: 80px;">หน้าร้าน</th>
+										<th style="width: 80px;">โกดัง</th>
+										<th style="width: 90px;">สต๊อกรวม</th>
+										<th style="width: 110px;">สถานะ</th>
+										<th style="width: 100px;">จัดการ</th>
+									</tr>
+								</thead>
+								<tbody id="tbody-low-stock">
+									<!-- Injected by JS -->
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer bg-white d-flex justify-content-between">
+					<div class="text-muted small">
+						<span id="low-stock-summary-text">พบสินค้าทั้งหมด 0 รายการ</span>
+					</div>
+					<button type="button" class="btn btn-secondary px-4" data-dismiss="modal">ปิดหน้าต่าง</button>
+				</div>
+			</div>
+		</div>
 	</div>
 
 	<!-- Edit Modal -->
@@ -1136,6 +1245,177 @@
 
 			$('#modal-stock-supplier-content').html(contentHtml);
 			$('#supplierStockModal').modal('show');
+		}
+
+		// =========================================================
+		// Item 3: Low Stock & Reorder Point Alert Logic
+		// =========================================================
+		var lowStockCache = [];
+		var currentLowStockMode = 'reorder';
+
+		function showLowStockModal() {
+			$('#lowStockModal').modal('show');
+			loadLowStockData(currentLowStockMode);
+		}
+
+		function loadLowStockData(mode) {
+			currentLowStockMode = mode || 'reorder';
+			$('#tbody-low-stock').html(
+				'<tr><td colspan="11" class="py-5 text-center text-muted">' +
+					'<i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>' +
+					'<div>กำลังตรวจสอบสต๊อกสินค้าและเกณฑ์ขั้นต่ำ...</div>' +
+				'</td></tr>'
+			);
+
+			$.ajax({
+				type: "GET",
+				url: "php/get_low_stock.php",
+				data: { mode: currentLowStockMode },
+				dataType: "json",
+				success: function(res) {
+					if (!res || res.status !== 'success' || !res.data || res.data.length === 0) {
+						lowStockCache = [];
+						$('#low-stock-badge').hide();
+						$('#tbody-low-stock').html(
+							'<tr><td colspan="11" class="py-5 text-center text-success">' +
+								'<i class="fas fa-check-circle fa-2x mb-2"></i>' +
+								'<div class="font-weight-bold">ยอดเยี่ยม! ไม่มีสินค้าต่ำกว่าเกณฑ์ขั้นต่ำในขณะนี้</div>' +
+							'</td></tr>'
+						);
+						$('#low-stock-summary-text').text('พบสินค้าทั้งหมด 0 รายการ');
+						return;
+					}
+
+					lowStockCache = res.data;
+					if (currentLowStockMode === 'reorder' && res.data.length > 0) {
+						$('#low-stock-badge').text(res.data.length).show();
+					}
+					renderLowStockTable(res.data);
+				},
+				error: function(xhr, status, error) {
+					$('#tbody-low-stock').html(
+						'<tr><td colspan="11" class="py-4 text-center text-danger">' +
+							'<i class="fas fa-exclamation-triangle fa-2x mb-2"></i>' +
+							'<div>เกิดข้อผิดพลาดในการโหลดข้อมูล (' + error + ')</div>' +
+						'</td></tr>'
+					);
+				}
+			});
+		}
+
+		function renderLowStockTable(data) {
+			var q = $('#low-stock-filter-input').val().toLowerCase().trim();
+			var filtered = data.filter(function(item) {
+				if (!q) return true;
+				var code = (item.prod_code || '').toLowerCase();
+				var name = (item.prod_name || '').toLowerCase();
+				var folder = (item.folder_path || '').toLowerCase();
+				return code.indexOf(q) !== -1 || name.indexOf(q) !== -1 || folder.indexOf(q) !== -1;
+			});
+
+			$('#low-stock-summary-text').text('พบสินค้าทั้งหมด ' + filtered.length + ' รายการ (จากทั้งหมด ' + data.length + ' รายการ)');
+
+			if (filtered.length === 0) {
+				$('#tbody-low-stock').html(
+					'<tr><td colspan="11" class="py-4 text-center text-muted">' +
+						'ไม่พบสินค้าที่ตรงกับการค้นหา' +
+					'</td></tr>'
+				);
+				return;
+			}
+
+			var html = [];
+			$.each(filtered, function(i, item) {
+				var imgUrl = (item.img && item.img !== 'img/no_img.png') ? item.img : 'img/no_img.png';
+				var safeCode = $('<div>').text(item.prod_code || '-').html();
+				var safeName = $('<div>').text(item.prod_name || '-').html();
+				var safePath = item.folder_path ? ('<small class="badge badge-light border text-secondary"><i class="fas fa-folder text-warning mr-1"></i>' + $('<div>').text(item.folder_path).html() + '</small>') : '<small class="text-muted">-</small>';
+
+				var badgeUrgency = '';
+				if (item.urgency === 'out') {
+					badgeUrgency = '<span class="badge badge-danger px-2 py-1"><i class="fas fa-times-circle mr-1"></i>หมดเกลี้ยง</span>';
+				} else if (item.urgency === 'critical') {
+					badgeUrgency = '<span class="badge badge-warning text-dark px-2 py-1"><i class="fas fa-exclamation-circle mr-1"></i>ใกล้วิกฤต</span>';
+				} else {
+					badgeUrgency = '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-exclamation mr-1"></i>ต่ำกว่าเกณฑ์</span>';
+				}
+
+				var rowHtml = '<tr>' +
+					'<td>' + (i + 1) + '</td>' +
+					'<td><img src="' + imgUrl + '" onerror="this.src=\'img/no_img.png\'" style="width:40px; height:40px; object-fit:contain; border-radius:4px; border:1px solid #ddd; background:#fff;"></td>' +
+					'<td class="font-weight-bold text-dark font-monospace">' + safeCode + '</td>' +
+					'<td class="text-left font-weight-bold text-dark">' + safeName + '</td>' +
+					'<td class="text-left">' + safePath + '</td>' +
+					'<td><span class="badge badge-dark px-2 py-1">' + item.min_amount + '</span></td>' +
+					'<td>' + item.shop_amount + '</td>' +
+					'<td>' + item.ware_amount + '</td>' +
+					'<td><strong class="text-danger" style="font-size:1.1rem;">' + item.total_amount + '</strong></td>' +
+					'<td>' + badgeUrgency + '</td>' +
+					'<td>' +
+						'<button class="btn btn-sm btn-outline-primary" title="สั่งซื้อ/นำเข้าสินค้า" onclick="importFromLowStock(' + item.prod_id + ', \'' + safeName.replace(/'/g, "\\'") + '\', \'' + imgUrl + '\')">' +
+							'<i class="fas fa-cart-plus"></i> สั่งของ' +
+						'</button>' +
+					'</td>' +
+				'</tr>';
+				html.push(rowHtml);
+			});
+
+			$('#tbody-low-stock').html(html.join(''));
+		}
+
+		$(document).on('input', '#low-stock-filter-input', function() {
+			renderLowStockTable(lowStockCache);
+		});
+
+		function importFromLowStock(prod_id, name, img) {
+			var item = [{
+				prod_id: prod_id,
+				name: name,
+				img: img
+			}];
+			localStorage.setItem('arr_prod_i', JSON.stringify(item));
+			window.location = "web_import.html";
+		}
+
+		function printLowStockReport() {
+			var printWindow = window.open('', '_blank');
+			var title = (currentLowStockMode === 'zero') ? 'รายงานสินค้าหมดสต๊อก' : 'รายงานสินค้าต่ำกว่าเกณฑ์สั่งซื้อซ้ำ (Reorder Point)';
+			var dateStr = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+			
+			var rows = '';
+			for(var i = 0; i < lowStockCache.length; i++) {
+				var it = lowStockCache[i];
+				rows += '<tr>' +
+					'<td style="text-align:center;">' + (i+1) + '</td>' +
+					'<td style="font-family:monospace; font-weight:bold;">' + (it.prod_code || '-') + '</td>' +
+					'<td>' + it.prod_name + '</td>' +
+					'<td>' + (it.folder_path || '-') + '</td>' +
+					'<td style="text-align:center;">' + it.min_amount + '</td>' +
+					'<td style="text-align:center;">' + it.shop_amount + '</td>' +
+					'<td style="text-align:center;">' + it.ware_amount + '</td>' +
+					'<td style="text-align:center; font-weight:bold; color:red;">' + it.total_amount + '</td>' +
+				'</tr>';
+			}
+
+			var html = '<!DOCTYPE html><html><head><title>' + title + '</title>' +
+				'<style>' +
+					'body { font-family: "Prompt", sans-serif; font-size: 13px; margin: 20px; }' +
+					'h2, h4 { margin: 4px 0; }' +
+					'table { width: 100%; border-collapse: collapse; margin-top: 15px; }' +
+					'th, td { border: 1px solid #ccc; padding: 6px 8px; font-size: 12px; }' +
+					'th { background: #eee; }' +
+					'@media print { @page { size: A4 landscape; margin: 10mm; } }' +
+				'</style></head><body>' +
+				'<h2>DD MOTOR SPORT - ' + title + '</h2>' +
+				'<div>วันที่พิมพ์รายงาน: ' + dateStr + ' | จำนวน: ' + lowStockCache.length + ' รายการ</div>' +
+				'<table><thead><tr>' +
+					'<th width="40">#</th><th width="120">รหัส SKU</th><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th width="80">เกณฑ์ขั้นต่ำ</th><th width="70">หน้าร้าน</th><th width="70">โกดัง</th><th width="70">รวมทั้งหมด</th>' +
+				'</tr></thead><tbody>' + rows + '</tbody></table>' +
+				'<script>window.onload = function() { window.print(); }<\/script>' +
+				'</body></html>';
+
+			printWindow.document.write(html);
+			printWindow.document.close();
 		}
 
 </script>

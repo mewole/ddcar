@@ -1,4 +1,5 @@
 <?php
+    ini_set('memory_limit', '512M');
     include "db.php";
     
     // 1. รับค่าและตัดเว้นวรรค
@@ -7,16 +8,15 @@
     $msg = ""; 
     $output = array();  
    
-    // 2. Query ดึงข้อมูลพร้อมนับจำนวนลูกใต้ Node
-    // - ถ้า (SELECT COUNT(*) FROM tree WHERE parent_title = node.title) > 0 แสดงว่ามันเป็น "โฟลเดอร์ย่อย" แน่นอน
+    // 2. Query ดึงข้อมูลพร้อมตรวจว่ามีลูกใต้ Node หรือไม่
     $sql = "SELECT 
                 node.title,
                 p.prod_name,
                 p.prod_code,
                 p.prod_id,
-                (SELECT COUNT(*) FROM tree WHERE parent_title = node.title) AS has_children
+                EXISTS(SELECT 1 FROM tree WHERE parent_title = node.title LIMIT 1) AS has_children
             FROM tree AS node
-            LEFT JOIN product AS p ON node.title = CAST(p.prod_id AS CHAR)
+            LEFT JOIN product AS p ON p.prod_id = node.title
             WHERE node.parent_title = '$parent'
             ORDER BY node.title ASC;"; 
 

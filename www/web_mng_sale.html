@@ -805,6 +805,9 @@
                 <button type="button" class="mode-tab-btn" id="tab-customer" onclick="switchMode('customer')">
                     <i class="fa fa-users"></i> แยกตามลูกค้า
                 </button>
+                <button type="button" class="mode-tab-btn" id="tab-analytics" onclick="switchMode('analytics')">
+                    <i class="fa fa-fire text-danger"></i> สินค้าขายดี & ค้างสต๊อก
+                </button>
             </div>
 
             <div class="d-flex align-items-center gap-2">
@@ -818,7 +821,7 @@
         </div>
 
         <!-- View Mode Switcher: Dashboard vs Bills List -->
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 no-print">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 no-print" id="main-view-switcher">
             <div class="view-mode-bar">
                 <button type="button" class="view-mode-btn active" id="btn-view-dashboard" onclick="switchView('dashboard')">
                     <i class="fa fa-chart-pie mr-1"></i> แดชบอร์ดสถิติ (Dashboard)
@@ -833,7 +836,7 @@
         </div>
 
         <!-- Dynamic Filter Toolbar -->
-        <div class="filter-toolbar no-print">
+        <div class="filter-toolbar no-print" id="main-filter-toolbar">
             <!-- Left Controls: Mode specific date/filter controls -->
             <div class="filter-group" id="toolbar-controls">
                 <!-- Injected via JavaScript based on active mode -->
@@ -853,7 +856,7 @@
         </div>
 
         <!-- KPI Cards Grid -->
-        <div class="kpi-grid">
+        <div class="kpi-grid" id="main-kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-card-header">
                     <div class="kpi-card-title">ยอดขายรวม</div>
@@ -995,6 +998,105 @@
                 </div>
             </div>
         </div>
+
+        <!-- Analytics Container (Item 4: Top Sellers & Dead Stock) -->
+        <div id="analytics-view-container" style="display: none;">
+            <!-- Analytics Sub-navigation & Toolbar -->
+            <div class="card p-3 mb-4 border-0 shadow-sm" style="border-radius: 14px; background: #ffffff;">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                        <label class="btn btn-outline-danger font-weight-bold active" id="btn-ana-top-sellers" onclick="setAnalyticsType('top_sellers')">
+                            <input type="radio" name="ana_type" checked> <i class="fas fa-trophy mr-1"></i> สินค้าขายดี 20 อันดับ (Top Sellers)
+                        </label>
+                        <label class="btn btn-outline-warning text-dark font-weight-bold" id="btn-ana-dead-stock" onclick="setAnalyticsType('dead_stock')">
+                            <input type="radio" name="ana_type"> <i class="fas fa-box-open mr-1"></i> สินค้าค้างสต๊อก / ไม่เคลื่อนไหว (Dead Stock)
+                        </label>
+                    </div>
+
+                    <div class="d-flex align-items-center flex-wrap gap-2">
+                        <div class="btn-group btn-group-toggle" data-toggle="buttons" id="ana-days-selector">
+                            <label class="btn btn-outline-secondary btn-sm active" onclick="setAnalyticsDays(30)">
+                                <input type="radio" name="ana_days" checked> 30 วัน
+                            </label>
+                            <label class="btn btn-outline-secondary btn-sm" onclick="setAnalyticsDays(60)">
+                                <input type="radio" name="ana_days"> 60 วัน
+                            </label>
+                            <label class="btn btn-outline-secondary btn-sm" onclick="setAnalyticsDays(90)">
+                                <input type="radio" name="ana_days"> 90 วัน
+                            </label>
+                        </div>
+
+                        <div id="ana-sort-wrap">
+                            <select id="select-ana-sort" class="form-control form-control-sm form-control-custom" onchange="setAnalyticsSort(this.value)">
+                                <option value="qty">เรียงตาม: จำนวนชิ้นขายดีสุด</option>
+                                <option value="revenue">เรียงตาม: ยอดขายรวมสูงสุด (฿)</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-dark btn-sm" onclick="printAnalyticsReport()">
+                            <i class="fas fa-print mr-1"></i> พิมพ์รายงาน
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics KPI Cards -->
+            <div class="kpi-grid mb-4" id="analytics-kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <div class="kpi-card-title" id="ana-kpi-title-1">จำนวนชิ้นที่ขายได้</div>
+                        <div class="kpi-card-icon kpi-icon-sales"><i class="fas fa-cubes"></i></div>
+                    </div>
+                    <div class="kpi-card-value" id="ana-kpi-val-1">0 ชิ้น</div>
+                    <div class="kpi-card-sub" id="ana-kpi-sub-1">ในช่วง 30 วันที่ผ่านมา</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <div class="kpi-card-title" id="ana-kpi-title-2">ยอดขายรวม</div>
+                        <div class="kpi-card-icon kpi-icon-profit"><i class="fas fa-coins"></i></div>
+                    </div>
+                    <div class="kpi-card-value text-success" id="ana-kpi-val-2">฿0.00</div>
+                    <div class="kpi-card-sub" id="ana-kpi-sub-2">รายได้จากสินค้ากลุ่มนี้</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <div class="kpi-card-title" id="ana-kpi-title-3">กำไรสุทธิโดยประมาณ</div>
+                        <div class="kpi-card-icon kpi-icon-bills"><i class="fas fa-chart-line"></i></div>
+                    </div>
+                    <div class="kpi-card-value text-primary" id="ana-kpi-val-3">฿0.00</div>
+                    <div class="kpi-card-sub" id="ana-kpi-sub-3">หักต้นทุนสินค้าแล้ว</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <div class="kpi-card-title" id="ana-kpi-title-4">จำนวนรายการ</div>
+                        <div class="kpi-card-icon kpi-icon-cost"><i class="fas fa-list-ol"></i></div>
+                    </div>
+                    <div class="kpi-card-value" id="ana-kpi-val-4">0 รายการ</div>
+                    <div class="kpi-card-sub" id="ana-kpi-sub-4">รายการสินค้าในรายงาน</div>
+                </div>
+            </div>
+
+            <!-- Analytics Content Card -->
+            <div class="content-card mt-0">
+                <div class="content-card-header d-flex justify-content-between align-items-center">
+                    <h5 class="content-card-title" id="ana-table-title">
+                        <i class="fas fa-trophy text-warning mr-2"></i> สินค้าขายดี 20 อันดับแรก
+                    </h5>
+                    <span class="badge badge-secondary px-3 py-2" id="ana-table-badge" style="border-radius: 6px; font-size: 0.88rem;">20 รายการ</span>
+                </div>
+
+                <div class="table-responsive-custom">
+                    <table class="table-report" id="ana-table">
+                        <thead id="ana-thead">
+                            <!-- Populated by JS -->
+                        </thead>
+                        <tbody id="ana-tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Print Modal (A4 or Thermal Receipt) -->
@@ -1109,24 +1211,310 @@
             $('#table-search').val('');
             $('#customer-profile-section').hide().empty();
 
-            renderToolbar();
+            if (mode === 'analytics') {
+                $('#main-view-switcher').hide();
+                $('#main-filter-toolbar').hide();
+                $('#main-kpi-grid').hide();
+                $('#dashboard-view-container').hide();
+                $('#table-view-container').hide();
+                $('#analytics-view-container').show();
+                loadAnalyticsData();
+            } else {
+                $('#main-view-switcher').show();
+                $('#main-filter-toolbar').show();
+                $('#main-kpi-grid').show();
+                $('#analytics-view-container').hide();
 
-            if (mode === 'daily') {
-                loadDailyData();
-            } else if (mode === 'monthly') {
-                loadMonthlyData();
-            } else if (mode === 'yearly') {
-                loadYearlyData();
-            } else if (mode === 'customer') {
-                loadCustomerData();
+                if (currentView === 'dashboard') {
+                    $('#dashboard-view-container').show();
+                    $('#table-view-container').hide();
+                } else {
+                    $('#dashboard-view-container').hide();
+                    $('#table-view-container').show();
+                }
+
+                renderToolbar();
+
+                if (mode === 'daily') {
+                    loadDailyData();
+                } else if (mode === 'monthly') {
+                    loadMonthlyData();
+                } else if (mode === 'yearly') {
+                    loadYearlyData();
+                } else if (mode === 'customer') {
+                    loadCustomerData();
+                }
             }
         }
 
         function refreshCurrentView() {
-            if (currentMode === 'daily') loadDailyData();
+            if (currentMode === 'analytics') loadAnalyticsData();
+            else if (currentMode === 'daily') loadDailyData();
             else if (currentMode === 'monthly') loadMonthlyData();
             else if (currentMode === 'yearly') loadYearlyData();
             else if (currentMode === 'customer') loadCustomerData();
+        }
+
+        // =========================================================
+        // Item 4: Top 20 Best Sellers & Dead Stock Analytics Logic
+        // =========================================================
+        var currentAnalyticsType = 'top_sellers'; // 'top_sellers' or 'dead_stock'
+        var currentAnalyticsDays = 30;
+        var currentAnalyticsSort = 'qty'; // 'qty' or 'revenue'
+        var analyticsDataCache = [];
+
+        function setAnalyticsType(type) {
+            currentAnalyticsType = type;
+            if (type === 'top_sellers') {
+                $('#btn-ana-top-sellers').addClass('active');
+                $('#btn-ana-dead-stock').removeClass('active');
+                $('#ana-sort-wrap').show();
+                $('#ana-table-title').html('<i class="fas fa-trophy text-warning mr-2"></i> สินค้าขายดี 20 อันดับแรก');
+                $('#ana-kpi-title-1').text('จำนวนชิ้นที่ขายได้');
+                $('#ana-kpi-title-2').text('ยอดขายรวม');
+                $('#ana-kpi-title-3').text('กำไรสุทธิโดยประมาณ');
+                $('#ana-kpi-title-4').text('จำนวนรายการ');
+            } else {
+                $('#btn-ana-top-sellers').removeClass('active');
+                $('#btn-ana-dead-stock').addClass('active');
+                $('#ana-sort-wrap').hide();
+                $('#ana-table-title').html('<i class="fas fa-box-open text-warning mr-2"></i> สินค้าค้างสต๊อก / ไม่เคลื่อนไหว (Dead Stock)');
+                $('#ana-kpi-title-1').text('สต๊อกคงเหลือรวม');
+                $('#ana-kpi-title-2').text('มูลค่าทุนจม (บาท)');
+                $('#ana-kpi-title-3').text('วันที่ตัดรอบยอดขาย');
+                $('#ana-kpi-title-4').text('จำนวนรายการค้าง');
+            }
+            loadAnalyticsData();
+        }
+
+        function setAnalyticsDays(days) {
+            currentAnalyticsDays = days;
+            loadAnalyticsData();
+        }
+
+        function setAnalyticsSort(sort) {
+            currentAnalyticsSort = sort;
+            loadAnalyticsData();
+        }
+
+        function loadAnalyticsData() {
+            EasyLoading.show({ text: "กำลังวิเคราะห์ข้อมูลยอดขาย & สต๊อก..." });
+
+            $.ajax({
+                type: "POST",
+                url: "php/get_sales_analytics.php",
+                data: {
+                    action: currentAnalyticsType,
+                    days: currentAnalyticsDays,
+                    sort_by: currentAnalyticsSort
+                },
+                dataType: "json",
+                success: function (res) {
+                    EasyLoading.hide();
+                    if (!res || !res.success || !res.items) {
+                        analyticsDataCache = [];
+                        renderAnalyticsEmpty();
+                        return;
+                    }
+
+                    analyticsDataCache = res.items;
+
+                    // Update KPIs
+                    if (currentAnalyticsType === 'top_sellers') {
+                        $('#ana-kpi-val-1').text((res.summary.total_qty || 0).toLocaleString() + ' ชิ้น');
+                        $('#ana-kpi-sub-1').text('ในช่วง ' + currentAnalyticsDays + ' วันที่ผ่านมา');
+                        $('#ana-kpi-val-2').text('฿' + formatMoney(res.summary.total_revenue));
+                        $('#ana-kpi-sub-2').text('ยอดขายรวมสินค้า Top 20');
+                        $('#ana-kpi-val-3').text('฿' + formatMoney(res.summary.total_profit));
+                        $('#ana-kpi-sub-3').text('กำไรสุทธิโดยประมาณ');
+                        $('#ana-kpi-val-4').text((res.summary.item_count || 0) + ' รายการ');
+                        $('#ana-kpi-sub-4').text('สินค้าติดอันดับ');
+                        $('#ana-table-badge').text((res.summary.item_count || 0) + ' รายการ');
+                    } else {
+                        $('#ana-kpi-val-1').text((res.summary.total_stock_qty || 0).toLocaleString() + ' ชิ้น');
+                        $('#ana-kpi-sub-1').text('ไม่มีการขายใน ' + currentAnalyticsDays + ' วัน');
+                        $('#ana-kpi-val-2').text('฿' + formatMoney(res.summary.total_frozen_capital));
+                        $('#ana-kpi-sub-2').text('มูลค่าเงินจมในสต๊อก');
+                        $('#ana-kpi-val-3').text('ย้อนหลัง ' + currentAnalyticsDays + ' วัน');
+                        $('#ana-kpi-sub-3').text('ตั้งแต่ ' + (res.date_cutoff ? res.date_cutoff.split(' ')[0] : ''));
+                        $('#ana-kpi-val-4').text((res.summary.item_count || 0) + ' รายการ');
+                        $('#ana-kpi-sub-4').text('สินค้าที่ไม่มีความเคลื่อนไหว');
+                        $('#ana-table-badge').text((res.summary.item_count || 0) + ' รายการ');
+                    }
+
+                    renderAnalyticsTable(res.items);
+                },
+                error: function (xhr, status, error) {
+                    EasyLoading.hide();
+                    renderAnalyticsEmpty("เกิดข้อผิดพลาดในการโหลดข้อมูล (" + error + ")");
+                }
+            });
+        }
+
+        function renderAnalyticsEmpty(msg) {
+            msg = msg || "ไม่พบข้อมูลสำหรับเงื่อนไขที่เลือก";
+            $('#ana-tbody').html(
+                '<tr><td colspan="10" class="py-5 text-center text-muted">' +
+                    '<i class="fas fa-info-circle fa-2x mb-2 text-secondary"></i>' +
+                    '<div>' + msg + '</div>' +
+                '</td></tr>'
+            );
+        }
+
+        function renderAnalyticsTable(items) {
+            if (!items || items.length === 0) {
+                renderAnalyticsEmpty();
+                return;
+            }
+
+            if (currentAnalyticsType === 'top_sellers') {
+                var thead = '<tr>' +
+                    '<th class="text-center" style="width: 60px;">อันดับ</th>' +
+                    '<th style="width: 70px;">รูป</th>' +
+                    '<th style="width: 140px;">รหัส SKU</th>' +
+                    '<th class="text-left">ชื่อสินค้า</th>' +
+                    '<th class="text-left" style="width: 220px;">หมวดหมู่</th>' +
+                    '<th class="text-right" style="width: 130px;">จำนวนที่ขาย</th>' +
+                    '<th class="text-right" style="width: 140px;">ยอดขายรวม</th>' +
+                    '<th class="text-right" style="width: 130px;">กำไรสุทธิ</th>' +
+                    '<th class="text-center" style="width: 120px;">สต๊อกคงเหลือ</th>' +
+                '</tr>';
+                $('#ana-thead').html(thead);
+
+                var maxQty = items[0] ? (items[0].total_qty || 1) : 1;
+                var tbody = '';
+                items.forEach(function (it) {
+                    var rankCls = (it.rank === 1) ? 'rank-1' : (it.rank === 2 ? 'rank-2' : (it.rank === 3 ? 'rank-3' : 'rank-other'));
+                    var imgUrl = (it.img && it.img !== 'img/no_img.png') ? it.img : 'img/no_img.png';
+                    var pct = Math.min(100, Math.round((it.total_qty / maxQty) * 100));
+
+                    var stockBadge = '';
+                    if (it.current_stock <= 0) {
+                        stockBadge = '<span class="badge badge-danger">หมดสต๊อก (0)</span>';
+                    } else if (it.current_stock < it.total_qty) {
+                        stockBadge = '<span class="badge badge-warning text-dark" title="สต๊อกเหลือน้อยกว่าที่ขายได้">' + it.current_stock + ' ชิ้น ⚠️</span>';
+                    } else {
+                        stockBadge = '<span class="badge badge-success">' + it.current_stock + ' ชิ้น</span>';
+                    }
+
+                    var folderBadge = it.folder_path 
+                        ? ('<small class="badge badge-light border text-secondary"><i class="fas fa-folder text-warning mr-1"></i>' + escapeHtml(it.folder_path) + '</small>')
+                        : '<small class="text-muted">-</small>';
+
+                    tbody += '<tr>' +
+                        '<td class="text-center"><span class="rank-badge ' + rankCls + '">' + it.rank + '</span></td>' +
+                        '<td class="text-center"><img src="' + imgUrl + '" onerror="this.src=\'img/no_img.png\'" style="width:42px; height:42px; object-fit:contain; border-radius:6px; border:1px solid #e2e8f0; background:#fff;"></td>' +
+                        '<td class="font-weight-bold text-dark font-monospace">' + escapeHtml(it.prod_code || '-') + '</td>' +
+                        '<td class="text-left font-weight-bold text-dark">' + escapeHtml(it.prod_name || '-') + '</td>' +
+                        '<td class="text-left">' + folderBadge + '</td>' +
+                        '<td class="text-right">' +
+                            '<strong class="text-primary" style="font-size:1.05rem;">' + (it.total_qty || 0).toLocaleString() + '</strong> ชิ้น' +
+                            '<div class="progress mt-1" style="height: 4px;">' +
+                                '<div class="progress-bar bg-primary" role="progressbar" style="width: ' + pct + '%;"></div>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td class="text-right font-weight-bold text-dark">฿' + formatMoney(it.total_revenue) + '</td>' +
+                        '<td class="text-right font-weight-bold text-success">฿' + formatMoney(it.total_profit) + '</td>' +
+                        '<td class="text-center">' + stockBadge + '</td>' +
+                    '</tr>';
+                });
+                $('#ana-tbody').html(tbody);
+
+            } else {
+                // Dead Stock View
+                var thead = '<tr>' +
+                    '<th class="text-center" style="width: 50px;">#</th>' +
+                    '<th style="width: 70px;">รูป</th>' +
+                    '<th style="width: 140px;">รหัส SKU</th>' +
+                    '<th class="text-left">ชื่อสินค้า</th>' +
+                    '<th class="text-left" style="width: 220px;">หมวดหมู่</th>' +
+                    '<th class="text-center" style="width: 100px;">สต๊อกหน้าร้าน</th>' +
+                    '<th class="text-center" style="width: 100px;">สต๊อกโกดัง</th>' +
+                    '<th class="text-center" style="width: 110px;">สต๊อกรวม</th>' +
+                    '<th class="text-right" style="width: 120px;">ราคาทุน</th>' +
+                    '<th class="text-right" style="width: 140px;">มูลค่าทุนจม</th>' +
+                '</tr>';
+                $('#ana-thead').html(thead);
+
+                var tbody = '';
+                items.forEach(function (it, idx) {
+                    var imgUrl = (it.img && it.img !== 'img/no_img.png') ? it.img : 'img/no_img.png';
+                    var folderBadge = it.folder_path 
+                        ? ('<small class="badge badge-light border text-secondary"><i class="fas fa-folder text-warning mr-1"></i>' + escapeHtml(it.folder_path) + '</small>')
+                        : '<small class="text-muted">-</small>';
+
+                    tbody += '<tr>' +
+                        '<td class="text-center text-muted font-weight-bold">' + (idx + 1) + '</td>' +
+                        '<td class="text-center"><img src="' + imgUrl + '" onerror="this.src=\'img/no_img.png\'" style="width:42px; height:42px; object-fit:contain; border-radius:6px; border:1px solid #e2e8f0; background:#fff;"></td>' +
+                        '<td class="font-weight-bold text-dark font-monospace">' + escapeHtml(it.prod_code || '-') + '</td>' +
+                        '<td class="text-left font-weight-bold text-dark">' + escapeHtml(it.prod_name || '-') + '</td>' +
+                        '<td class="text-left">' + folderBadge + '</td>' +
+                        '<td class="text-center">' + (it.shop_amount || 0) + '</td>' +
+                        '<td class="text-center">' + (it.ware_amount || 0) + '</td>' +
+                        '<td class="text-center"><span class="badge badge-dark px-2 py-1 font-weight-bold">' + (it.total_stock || 0) + ' ชิ้น</span></td>' +
+                        '<td class="text-right text-muted">฿' + formatMoney(it.prod_cost) + '</td>' +
+                        '<td class="text-right font-weight-bold text-danger" style="font-size:1.05rem;">฿' + formatMoney(it.frozen_capital) + '</td>' +
+                    '</tr>';
+                });
+                $('#ana-tbody').html(tbody);
+            }
+        }
+
+        function printAnalyticsReport() {
+            var printWindow = window.open('', '_blank');
+            var isTop = (currentAnalyticsType === 'top_sellers');
+            var title = isTop ? ('รายงานสินค้าขายดี 20 อันดับ (ย้อนหลัง ' + currentAnalyticsDays + ' วัน)') : ('รายงานสินค้าค้างสต๊อก / ไม่เคลื่อนไหว (Dead Stock ' + currentAnalyticsDays + ' วัน)');
+            var dateStr = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            var rows = '';
+            analyticsDataCache.forEach(function (it, idx) {
+                if (isTop) {
+                    rows += '<tr>' +
+                        '<td style="text-align:center;">' + it.rank + '</td>' +
+                        '<td style="font-family:monospace; font-weight:bold;">' + (it.prod_code || '-') + '</td>' +
+                        '<td>' + (it.prod_name || '-') + '</td>' +
+                        '<td>' + (it.folder_path || '-') + '</td>' +
+                        '<td style="text-align:right; font-weight:bold;">' + (it.total_qty || 0).toLocaleString() + '</td>' +
+                        '<td style="text-align:right;">฿' + formatMoney(it.total_revenue) + '</td>' +
+                        '<td style="text-align:right; color:green;">฿' + formatMoney(it.total_profit) + '</td>' +
+                        '<td style="text-align:center;">' + it.current_stock + '</td>' +
+                    '</tr>';
+                } else {
+                    rows += '<tr>' +
+                        '<td style="text-align:center;">' + (idx + 1) + '</td>' +
+                        '<td style="font-family:monospace; font-weight:bold;">' + (it.prod_code || '-') + '</td>' +
+                        '<td>' + (it.prod_name || '-') + '</td>' +
+                        '<td>' + (it.folder_path || '-') + '</td>' +
+                        '<td style="text-align:center;">' + (it.shop_amount || 0) + '</td>' +
+                        '<td style="text-align:center;">' + (it.ware_amount || 0) + '</td>' +
+                        '<td style="text-align:center; font-weight:bold;">' + (it.total_stock || 0) + '</td>' +
+                        '<td style="text-align:right;">฿' + formatMoney(it.prod_cost) + '</td>' +
+                        '<td style="text-align:right; font-weight:bold; color:red;">฿' + formatMoney(it.frozen_capital) + '</td>' +
+                    '</tr>';
+                }
+            });
+
+            var headerCols = isTop 
+                ? '<th width="40">อันดับ</th><th width="120">รหัส SKU</th><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th width="90">ขายได้ (ชิ้น)</th><th width="110">ยอดขายรวม</th><th width="100">กำไรสุทธิ</th><th width="80">สต๊อกคงเหลือ</th>'
+                : '<th width="40">#</th><th width="120">รหัส SKU</th><th>ชื่อสินค้า</th><th>หมวดหมู่</th><th width="70">หน้าร้าน</th><th width="70">โกดัง</th><th width="80">รวมสต๊อก</th><th width="90">ราคาทุน</th><th width="120">มูลค่าทุนจม</th>';
+
+            var html = '<!DOCTYPE html><html><head><title>' + title + '</title>' +
+                '<style>' +
+                    'body { font-family: "Prompt", sans-serif; font-size: 13px; margin: 20px; }' +
+                    'h2, h4 { margin: 4px 0; }' +
+                    'table { width: 100%; border-collapse: collapse; margin-top: 15px; }' +
+                    'th, td { border: 1px solid #ccc; padding: 6px 8px; font-size: 12px; }' +
+                    'th { background: #eee; }' +
+                    '@media print { @page { size: A4 landscape; margin: 10mm; } }' +
+                '</style></head><body>' +
+                '<h2>DD MOTOR SPORT - ' + title + '</h2>' +
+                '<div>พิมพ์เมื่อ: ' + dateStr + ' | จำนวน: ' + analyticsDataCache.length + ' รายการ</div>' +
+                '<table><thead><tr>' + headerCols + '</tr></thead><tbody>' + rows + '</tbody></table>' +
+                '<script>window.onload = function() { window.print(); }<\/script>' +
+                '</body></html>';
+
+            printWindow.document.write(html);
+            printWindow.document.close();
         }
 
         // View Switching (Dashboard vs Table)

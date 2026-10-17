@@ -371,6 +371,9 @@
         <div class="dashboard-subtitle">ระบบบริหารจัดการบัญชีผู้ใช้งาน บทบาทหน้าที่ และรหัสผ่าน DD ACCESSORIES</div>
       </div>
       <div class="mt-3 mt-md-0 d-flex gap-2">
+        <button type="button" class="btn btn-outline-info mr-2" onclick="showBackupModal()">
+          <i class="fa fa-database mr-1"></i> สำรองฐานข้อมูล (Backup DB)
+        </button>
         <button type="button" class="btn btn-ddcar-dark mr-2" data-toggle="modal" data-target="#modalAddUser">
           <i class="fa fa-user-plus mr-1"></i> เพิ่มผู้ใช้งานใหม่
         </button>
@@ -565,6 +568,62 @@
           <button type="button" class="btn btn-ddcar-dark" onclick="saveEditUser()">
             <i class="fa fa-check mr-1"></i> บันทึกการแก้ไข
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: สำรองฐานข้อมูล (Backup DB) -->
+  <div class="modal fade" id="modalBackupDB" tabindex="-1" role="dialog" aria-labelledby="modalBackupDBTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content shadow-lg border-0">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title" id="modalBackupDBTitle">
+            <i class="fa fa-database text-warning mr-2"></i> สำรองฐานข้อมูลและประวัติการสำรอง (Database Backup)
+          </h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="alert alert-secondary d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4">
+            <div>
+              <div class="font-weight-bold"><i class="fa fa-shield-alt text-primary mr-2"></i> นโยบายความปลอดภัยของข้อมูล (Data Retention Policy)</div>
+              <small class="text-muted">ระบบจะสำรองตารางและข้อมูลทั้งหมดพร้อมบีบอัด (.sql.gz) ไว้บนดิสก์ NAS อัตโนมัติ โดยจะจัดเก็บย้อนหลัง 14 วันเพื่อประหยัดพื้นที่</small>
+            </div>
+            <button type="button" class="btn btn-success mt-2 mt-md-0 ml-md-3 text-nowrap" id="btn-trigger-backup" onclick="triggerDatabaseBackup()">
+              <i class="fa fa-play-circle mr-1"></i> สำรองข้อมูลเดี๋ยวนี้
+            </button>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="font-weight-bold mb-0"><i class="fa fa-history text-muted mr-1"></i> รายการไฟล์สำรองที่มีในระบบ</h6>
+            <button class="btn btn-sm btn-outline-secondary" onclick="loadBackupList()">
+              <i class="fa fa-sync-alt mr-1"></i> โหลดรายการใหม่
+            </button>
+          </div>
+
+          <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+            <table class="table table-hover table-sm">
+              <thead class="thead-light">
+                <tr>
+                  <th>ชื่อไฟล์สำรอง</th>
+                  <th>วันที่/เวลาที่สร้าง</th>
+                  <th class="text-center">ขนาดไฟล์</th>
+                  <th class="text-center">อายุไฟล์</th>
+                  <th class="text-center" style="width: 120px;">ดาวน์โหลด</th>
+                </tr>
+              </thead>
+              <tbody id="backup-list-tbody">
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-3">กำลังโหลดรายการ...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">ปิดหน้าต่าง</button>
         </div>
       </div>
     </div>
@@ -980,6 +1039,85 @@
             text: 'ยกเลิก',
             action: function() {}
           }
+        }
+      });
+    // Backup DB Modal & Actions
+    function showBackupModal() {
+      $('#modalBackupDB').modal('show');
+      loadBackupList();
+    }
+
+    function loadBackupList() {
+      $('#backup-list-tbody').html('<tr><td colspan="5" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin mr-2"></i>กำลังโหลดรายการไฟล์สำรอง...</td></tr>');
+      $.getJSON('php/backup_db.php?action=list', function(res) {
+        if (!res || !res.success || !res.files || res.files.length === 0) {
+          $('#backup-list-tbody').html('<tr><td colspan="5" class="text-center text-muted py-4"><i class="fa fa-info-circle mr-1"></i>ยังไม่มีประวัติไฟล์สำรอง หรือเพิ่งเริ่มต้นใช้งาน</td></tr>');
+          return;
+        }
+        var html = '';
+        res.files.forEach(function(f) {
+          html += '<tr>';
+          html += '  <td class="font-weight-bold"><i class="fa fa-file-archive text-info mr-2"></i>' + $('<div>').text(f.filename).html() + '</td>';
+          html += '  <td>' + f.created_time + '</td>';
+          html += '  <td class="text-center"><span class="badge badge-light border">' + f.size_mb + ' MB</span></td>';
+          html += '  <td class="text-center text-muted">' + (f.age_days < 1 ? 'วันนี้' : f.age_days + ' วันก่อน') + '</td>';
+          html += '  <td class="text-center">';
+          html += '    <a href="php/backup_db.php?action=download&file=' + encodeURIComponent(f.filename) + '" class="btn btn-xs btn-primary py-1 px-2" title="ดาวน์โหลดไฟล์สำรอง">';
+          html += '      <i class="fa fa-download mr-1"></i> โหลด';
+          html += '    </a>';
+          html += '  </td>';
+          html += '</tr>';
+        });
+        $('#backup-list-tbody').html(html);
+      }).fail(function() {
+        $('#backup-list-tbody').html('<tr><td colspan="5" class="text-center text-danger py-3">โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง</td></tr>');
+      });
+    }
+
+    function triggerDatabaseBackup() {
+      var btn = $('#btn-trigger-backup');
+      btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin mr-1"></i> กำลังสำรองฐานข้อมูล...');
+      EasyLoading.show({ text: "กำลังสำรองฐานข้อมูล MySQL ทั้งหมดและบีบอัดไฟล์..." });
+
+      $.ajax({
+        type: 'POST',
+        url: 'php/backup_db.php',
+        data: { action: 'backup' },
+        dataType: 'json',
+        timeout: 300000,
+        success: function(res) {
+          EasyLoading.hide();
+          btn.prop('disabled', false).html('<i class="fa fa-play-circle mr-1"></i> สำรองข้อมูลเดี๋ยวนี้');
+          if (res && res.success) {
+            $.confirm({
+              title: 'สำรองข้อมูลสำเร็จ!',
+              content: 'สร้างไฟล์สำรองเรียบร้อยแล้ว:<br><b>' + res.filename + '</b><br>ขนาด: ' + res.size_mb + ' MB (ใช้เวลา: ' + res.duration_sec + ' วินาที)',
+              type: 'green',
+              buttons: {
+                ตกลง: function() {
+                  loadBackupList();
+                }
+              }
+            });
+            loadBackupList();
+          } else {
+            $.confirm({
+              title: 'เกิดข้อผิดพลาด',
+              content: 'ไม่สามารถสำรองฐานข้อมูลได้: ' + (res ? res.message : 'Unknown error'),
+              type: 'red',
+              buttons: { ตกลง: function() {} }
+            });
+          }
+        },
+        error: function(xhr, status, err) {
+          EasyLoading.hide();
+          btn.prop('disabled', false).html('<i class="fa fa-play-circle mr-1"></i> สำรองข้อมูลเดี๋ยวนี้');
+          $.confirm({
+            title: 'ข้อผิดพลาดเครือข่าย',
+            content: 'ไม่สามารถติดต่อเซิร์ฟเวอร์สำรองข้อมูลได้: ' + err,
+            type: 'red',
+            buttons: { ตกลง: function() {} }
+          });
         }
       });
     }

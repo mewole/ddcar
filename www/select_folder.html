@@ -162,6 +162,10 @@
                 });               
               }                               
             }                          
+        },
+        error: function(xhr, status, error) {
+          $(".overlay").prop('hidden', true);
+          console.error("select_folder error:", status, error);
         }               
       });
         // index = i;
@@ -375,29 +379,29 @@
 
     function getIn(arg, arg2){
       if(last_node == 0){
-        goto = "select_folder.html?from="+ from+ "&folder=" +arg;
+        goto = "select_folder.html?from="+ encodeURIComponent(from || "") + "&folder=" + encodeURIComponent(arg);
       }else if(last_node == 1){ 
         if($(".box").is(':visible')){
           if($("#box-"+arg2).hasClass('six')) check(arg2);
           else if($("#box-"+arg2).hasClass('checked')) uncheck(arg2);         
         }else if(from == "import"){
-          goto = "import.html?product="+arg;
+          goto = "import.html?product="+ encodeURIComponent(arg);
         }else if(from == "tran_in"){
-          goto = "transfer_in.html?product="+arg;
+          goto = "transfer_in.html?product="+ encodeURIComponent(arg);
         }else if(from == "export"){
-          goto = "export.html?product="+arg;
+          goto = "export.html?product="+ encodeURIComponent(arg);
         }else if(from == "sale"){
-          goto = "sale.html?product="+arg;
+          goto = "sale.html?product="+ encodeURIComponent(arg);
         }else if(from == "stock"){
-          goto = "stock.html?product="+arg;
+          goto = "stock.html?product="+ encodeURIComponent(arg);
         }else if(from == "thre"){
-          goto = "set_threshold.html?product="+arg;
+          goto = "set_threshold.html?product="+ encodeURIComponent(arg);
         }else if(from == "add"){
           var retrievedObject = localStorage.getItem('stack_folder');
           var arr_data = JSON.parse(retrievedObject);      
           arr_data.splice(arr_data.length-1,1);
           localStorage.setItem('stack_folder', JSON.stringify(arr_data));         
-          goto = "show_prod.html?prod_id="+arg+"&folder="+parent;        
+          goto = "show_prod.html?prod_id="+ encodeURIComponent(arg) +"&folder="+ encodeURIComponent(parent);        
         }
       }     
       
@@ -709,7 +713,7 @@
       var arr_data = JSON.parse(retrievedObject);      
       arr_data.splice(arr_data.length-1,1);
       localStorage.setItem('stack_folder', JSON.stringify(arr_data));  
-      goto = "add_prod.html?folder="+parent;         
+      goto = "add_prod.html?folder="+ encodeURIComponent(parent);         
       
       window.location = goto;
     }
