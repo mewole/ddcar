@@ -347,14 +347,18 @@
 				},             
 				success: function(data){  
 					EasyLoading.hide();
-					var obj = jQuery.parseJSON(data);										
-					if(obj.length > 0){
+					var obj = (typeof data === 'object') ? data : (data ? jQuery.parseJSON(data) : []);										
+					if(obj && obj.length > 0){
 						$.each(obj, function(i, field){ 
 							get_amt(field.prod_id, field.prod_name, field.img, field.prod_code, field.folder_path, field.folder_chain);       
 						}); 
 					}else{					
 						$('#append-ctn').append('<p class="display">ไม่พบสินค้า</p>');
 					}                                                                                                                                      
+				},
+				error: function(){
+					EasyLoading.hide();
+					$('#append-ctn').append('<p class="display">เกิดข้อผิดพลาดในการเชื่อมต่อ</p>');
 				}               
       		}); 
   		}
@@ -377,7 +381,7 @@
 				success: function(data){
 					EasyLoading.hide();				
 					var msg = "";		                      
-					var obj = jQuery.parseJSON(data); 	
+					var obj = (typeof data === 'object') ? data : (data ? jQuery.parseJSON(data) : []); 	
 					console.log(obj);
 					// หากไม่มี folder_path ส่งเข้ามา ให้ลองดึงจากผลลัพธ์ของ check_amt_prod.php
 					if(!folder_path && obj && obj.length > 0 && obj[0].folder_path){
@@ -415,7 +419,7 @@
 								},             
 								success: function(data){  
 									EasyLoading.hide();
-									var obj2 = jQuery.parseJSON(data);								
+									var obj2 = (typeof data === 'object') ? data : (data ? jQuery.parseJSON(data) : []);								
 									$.each(obj2, function(i, field){ 
 										addr = addr + field.place + ",";
 									}); 
