@@ -171,6 +171,7 @@
 			type: "POST",
 			url:"php/get_folder.php",
 			crossDomain: true,
+			timeout: 15000,
 			data: {'parent' : "car"},  
 			beforeSend: function(){
 				EasyLoading.show({                           
@@ -178,7 +179,6 @@
 					});			
 			},             
 			success: function(data){  
-				EasyLoading.hide();			          
 				var obj;
 				try {
 					obj = (typeof data === "object") ? data : jQuery.parseJSON(data);
@@ -201,7 +201,13 @@
 						$("#col-brand").append(text_html);							
 					});               
 				}                               
-				                          
+			},
+			complete: function(){
+				EasyLoading.hide();
+			},
+			error: function(xhr, status, err){
+				EasyLoading.hide();
+				console.error("Error loading brands:", err);
 			}               
 		});
 		
@@ -311,12 +317,16 @@
 			type: "POST",
 			url:"php/get_folder_web.php",
 			crossDomain: true,
+			timeout: 15000,
 			data: {'parent' : arg,
 							'order_by' : order_by},  
 			beforeSend: function(){
 				EasyLoading.show({                           
 						text: "กำลังโหลด"                            
 					});			
+			},
+			complete: function(){
+				EasyLoading.hide();
 			},             
 			success: function(data){  
 				EasyLoading.hide();
@@ -546,11 +556,16 @@
 	// Item 2: Global Folder Search & Quick Jump Logic
 	// =========================================================
 	var searchTimer = null;
+	var activeSearchXhr = null;
 	var globalSearchResultsCache = [];
 
 	$(document).on('input', '#global-folder-search', function() {
 		var q = $(this).val().trim();
 		clearTimeout(searchTimer);
+		if (activeSearchXhr) {
+			activeSearchXhr.abort();
+			activeSearchXhr = null;
+		}
 		if (q.length === 0) {
 			clearGlobalSearch();
 			return;
@@ -561,10 +576,14 @@
 		}
 		searchTimer = setTimeout(function() {
 			performGlobalFolderSearch(q);
-		}, 300);
+		}, 400);
 	});
 
 	function clearGlobalSearch() {
+		if (activeSearchXhr) {
+			activeSearchXhr.abort();
+			activeSearchXhr = null;
+		}
 		$('#global-folder-search').val('');
 		$('#btn-clear-search').hide();
 		$('#global-search-results').hide();
@@ -582,6 +601,11 @@
 	}
 
 	function performGlobalFolderSearch(phrase) {
+		if (activeSearchXhr) {
+			activeSearchXhr.abort();
+			activeSearchXhr = null;
+		}
+
 		$('#global-search-results').show();
 		$('#prod-empty-state').hide();
 		$('.prod-title').hide();
@@ -594,10 +618,24 @@
 			'</div>'
 		);
 
-		$.ajax({
+		activeSearchXhr = $.ajax({
 			type: "POST",
 			url: "php/search_prod.php",
 			data: { phrase: phrase },
+			dataType: "json",
+			timeout: 15000,
+			complete: function() {
+				activeSearchXhr = null;
+			},
+			error: function(xhr, status, err) {
+				if (status === 'abort') return;
+				$('#global-search-list').html(
+					'<div class="text-center py-5 text-danger">' +
+						'<i class="fas fa-exclamation-circle fa-2x mb-2"></i>' +
+						'<div>การค้นหาขัดข้องหรือหมดเวลา กรุณาลองพิมพ์ค้นหาใหม่อีกครั้ง</div>' +
+					'</div>'
+				);
+			},
 			dataType: "json",
 			success: function(data) {
 				if (!data || !Array.isArray(data) || data.length === 0) {

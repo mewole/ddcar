@@ -283,7 +283,7 @@
     var currentFilter = 'all';
     var currentSearch = '';
     var start = 0;
-    var limit = 40;
+    var limit = 25;
     var isLoading = false;
     var hasMore = true;
     window.productsMap = {};
@@ -366,6 +366,7 @@
           start: start,
           limit: limit
         },
+        timeout: 12000,
         dataType: "json",
         success: function(res) {
           if (isReset) {
@@ -401,13 +402,20 @@
             console.error('API Error:', res);
           }
         },
-        error: function(err) {
+        error: function(xhr, status, err) {
           if (isReset) {
-            $('#listContainer').html('<div class="text-center py-5 text-danger"><i class="fas fa-exclamation-triangle fa-3x mb-2"></i><div>เกิดข้อผิดพลาดในการโหลดข้อมูล</div></div>');
+            var msg = (status === 'timeout') ? 'การเชื่อมต่อใช้เวลานานเกินไป' : 'เกิดข้อผิดพลาดในการโหลดข้อมูล';
+            $('#listContainer').html(
+              '<div class="text-center py-5 text-muted">' +
+                '<i class="fas fa-exclamation-circle fa-3x mb-3 text-warning"></i>' +
+                '<div class="font-weight-bold mb-2 text-dark">' + msg + '</div>' +
+                '<button class="btn btn-outline-primary btn-sm px-3" onclick="loadData(true)"><i class="fas fa-sync-alt mr-1"></i> กดลองใหม่อีกครั้ง</button>' +
+              '</div>'
+            );
           }
           $('#loadMoreSpinner').prop('hidden', true);
           isLoading = false;
-          console.error("AJAX Error:", err);
+          console.error("AJAX Error:", status, err);
         }
       });
     }

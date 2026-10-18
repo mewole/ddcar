@@ -174,6 +174,7 @@ if ($action === 'daily') {
     $from_dt = $date_from . ' 00:00:00';
     $to_dt = $date_to . ' 23:59:59';
 
+    // ขั้นที่ 1: ดึงรายการบิลอย่างรวดเร็วผ่าน Index (date_time)
     $query = "SELECT 
                 s.order_id,
                 s.order_number,
@@ -185,58 +186,137 @@ if ($action === 'daily') {
                 s.customer_id,
                 COALESCE(c.cus_name, 'ลูกค้าทั่วไป') AS cus_name,
                 COALESCE(c.cus_tel, '-') AS cus_tel,
-                u.user_name,
-                COALESCE(cost_data.total_cost, 0) AS cost
+                u.user_name
               FROM sale_order s
               INNER JOIN user u ON s.user_id = u.user_id
               LEFT JOIN customer c ON s.customer_id = c.cus_id
-              LEFT JOIN (
-                  SELECT soi.order_id, SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS total_cost
-                  FROM sale_order_item soi
-                  INNER JOIN product pr ON soi.prod_id = pr.prod_id
-                  WHERE soi.order_id IN (
-                      SELECT order_id FROM sale_order 
-                      WHERE date_time BETWEEN '$from_dt' AND '$to_dt' 
-                        AND order_number NOT LIKE '%$txt_cancel%'
-                  )
-                  GROUP BY soi.order_id
-              ) cost_data ON s.order_id = cost_data.order_id
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
               ORDER BY s.order_id DESC";
 
     $result = mysqli_query($conn, $query);
     $bills = array();
+    $order_ids = array();
     $total_sales = 0;
-    $total_cost = 0;
-    $total_profit = 0;
     $total_bills = 0;
 
     if ($result && mysqli_num_rows($result) > 0) {
         while ($row = mysqli_fetch_assoc($result)) {
+            $row['order_id'] = intval($row['order_id']);
             $price = floatval($row['total_price']);
-            $cost = floatval($row['cost']);
-            $profit = ($price == 0) ? 0 : round($price - $cost, 2);
-
             $row['total_price'] = $price;
-            $row['cost'] = $cost;
-            $row['profit'] = $profit;
-
+            $row['cost'] = 0;
+            $row['profit'] = 0;
             $total_sales += $price;
-            $total_cost += $cost;
-            $total_profit += $profit;
             $total_bills++;
-
+            $order_ids[] = $row['order_id'];
             $bills[] = $row;
         }
+    }
+
+    // ขั้นที่ 2: ดึงต้นทุนสินค้าเฉพาะของบิลเหล่านี้ใน 1 Query สั้นๆ ผ่าน Index (order_id)
+    $total_cost = 0;
+    $total_profit = 0;
+    if (!empty($order_ids)) {
+        $idList = implode(',', $order_ids);
+        $q_cost = "SELECT soi.order_id, SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS total_cost 
+                   FROM sale_order_item soi 
+                   INNER JOIN product pr ON soi.prod_id = pr.prod_id 
+                   WHERE soi.order_id IN ($idList) 
+                   GROUP BY soi.order_id";
+        $res_cost = mysqli_query($conn, $q_cost);
+        $cost_map = array();
+        if ($res_cost) {
+            while ($rc = mysqli_fetch_assoc($res_cost)) {
+                $cost_map[intval($rc['order_id'])] = floatval($rc['total_cost']);
+            }
+        }
+        foreach ($bills as &$b) {
+            $oid = $b['order_id'];
+            $c = isset($cost_map[$oid]) ? $cost_map[$oid] : 0;
+            $p = ($b['total_price'] == 0) ? 0 : round($b['total_price'] - $c, 2);
+            $b['cost'] = $c;
+            $b['profit'] = $p;
+            $total_cost += $c;
+            $total_profit += $p;
+        }
+        unset($b);
     }
 
     $avg_per_bill = ($total_bills > 0) ? round($total_sales / $total_bills, 2) : 0;
     $margin_pct = ($total_sales > 0) ? round(($total_profit / $total_sales) * 100, 2) : 0;
 
+    // คำนวณ Payment Breakdown และ Hourly Breakdown โดยตรงจากข้อมูลบิล (ความเร็ว <1ms ไม่ต้องรัน SQL ซ้ำ)
+    $pay_map = array();
+    $hour_map = array();
+    foreach ($bills as $b) {
+        // Payment
+        $pt = !empty(trim($b['payment_type'])) ? trim($b['payment_type']) : 'ไม่ระบุ';
+        if (!isset($pay_map[$pt])) {
+            $pay_map[$pt] = array('payment_type' => $pt, 'bill_count' => 0, 'total_sales' => 0);
+        }
+        $pay_map[$pt]['bill_count']++;
+        $pay_map[$pt]['total_sales'] += $b['total_price'];
+
+        // Hourly
+        $h = intval(date('H', strtotime($b['date_time'])));
+        if (!isset($hour_map[$h])) {
+            $hour_map[$h] = array(
+                'hour' => $h,
+                'hour_label' => sprintf('%02d:00', $h),
+                'bill_count' => 0,
+                'sales' => 0,
+                'cost' => 0,
+                'profit' => 0
+            );
+        }
+        $hour_map[$h]['bill_count']++;
+        $hour_map[$h]['sales'] += $b['total_price'];
+        $hour_map[$h]['cost'] += $b['cost'];
+        $hour_map[$h]['profit'] += $b['profit'];
+    }
+
+    $payment_breakdown = array_values($pay_map);
+    usort($payment_breakdown, function($a, $b) {
+        return $b['total_sales'] <=> $a['total_sales'];
+    });
+    foreach ($payment_breakdown as &$pb) {
+        $pb['total_sales'] = round($pb['total_sales'], 2);
+    }
+    unset($pb);
+
+    $hourly_breakdown = array();
+    $min_h = 8;
+    $max_h = 18;
+    if (!empty($hour_map)) {
+        $keys = array_keys($hour_map);
+        $min_h = min(min($keys), 8);
+        $max_h = max(max($keys), 18);
+    }
+    for ($h = $min_h; $h <= $max_h; $h++) {
+        if (isset($hour_map[$h])) {
+            $hourly_breakdown[] = array(
+                'hour' => $h,
+                'hour_label' => sprintf('%02d:00', $h),
+                'bill_count' => $hour_map[$h]['bill_count'],
+                'sales' => round($hour_map[$h]['sales'], 2),
+                'cost' => round($hour_map[$h]['cost'], 2),
+                'profit' => round($hour_map[$h]['profit'], 2)
+            );
+        } else {
+            $hourly_breakdown[] = array(
+                'hour' => $h,
+                'hour_label' => sprintf('%02d:00', $h),
+                'bill_count' => 0,
+                'sales' => 0,
+                'cost' => 0,
+                'profit' => 0
+            );
+        }
+    }
+
     $top_products = get_top_products($conn, $from_dt, $to_dt, $txt_cancel, null, 10);
-    $payment_breakdown = get_payment_breakdown($conn, $from_dt, $to_dt, $txt_cancel);
-    $hourly_breakdown = get_hourly_breakdown($conn, $from_dt, $to_dt, $txt_cancel);
+
 
     echo json_encode(array(
         'success' => true,

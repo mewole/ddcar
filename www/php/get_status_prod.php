@@ -1,5 +1,6 @@
 <?php
     include "db.php";
+    include_once "img_helper.php";
     header("Content-Type: application/json; charset=UTF-8");
 
     // ตาราง product_status_ext ถูกสร้างไว้แล้วในฐานข้อมูล
@@ -137,14 +138,16 @@
                 }
             }
 
-            // B. รูปภาพสินค้าเฉพาะ 50 รายการนี้
-            $q_img = mysqli_query($conn, "SELECT prod_id, img FROM product WHERE prod_id IN ('$idList')");
+            // B. รูปภาพสินค้าเฉพาะรายการในหน้านี้ (ตรวจสอบจากไฟล์จริงบนดิสก์โดยตรง หลีกเลี่ยง MySQL off-page BLOB ที่ทำให้ระบบค้าง)
             $img_map = [];
-            if ($q_img) {
-                while ($ri = mysqli_fetch_assoc($q_img)) {
-                    if (!empty($ri['img'])) {
-                        $img_map[$ri['prod_id']] = $ri['img'];
-                    }
+            $img_dir = __DIR__ . '/../img/products';
+            foreach ($prod_ids as $pid) {
+                if (file_exists($img_dir . '/' . $pid . '.jpg')) {
+                    $img_map[$pid] = 'img/products/' . $pid . '.jpg';
+                } else if (file_exists($img_dir . '/' . $pid . '.png')) {
+                    $img_map[$pid] = 'img/products/' . $pid . '.png';
+                } else {
+                    $img_map[$pid] = '';
                 }
             }
 

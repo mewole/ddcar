@@ -24,6 +24,14 @@ if (!function_exists('save_product_image_from_base64')) {
             @mkdir($target_dir, 0777, true);
         }
 
+        $filename = $prod_id . '.jpg';
+        $filepath = $target_dir . '/' . $filename;
+
+        // หากมีไฟล์อยู่แล้วและขนาด > 100 ไบต์ คืนค่า path ได้ทันที ไม่ต้อง decode ซ้ำ
+        if (file_exists($filepath) && filesize($filepath) > 100) {
+            return 'img/products/' . $filename;
+        }
+
         $parts = explode(',', $b64_string, 2);
         if (count($parts) < 2) {
             return false;
@@ -34,22 +42,7 @@ if (!function_exists('save_product_image_from_base64')) {
             return false;
         }
 
-        $filename = $prod_id . '.jpg';
-        $filepath = $target_dir . '/' . $filename;
-
-        $saved = false;
-        if (function_exists('imagecreatefromstring') && function_exists('imagejpeg')) {
-            $img = @imagecreatefromstring($binary);
-            if ($img !== false) {
-                // บีบอัดคุณภาพ 85% คมชัดและขนาดไฟล์เล็ก (ประมาณ 40-70 KB)
-                $saved = @imagejpeg($img, $filepath, 85);
-                @imagedestroy($img);
-            }
-        }
-
-        if (!$saved) {
-            $saved = (@file_put_contents($filepath, $binary) !== false);
-        }
+        $saved = (@file_put_contents($filepath, $binary) !== false);
 
         if ($saved) {
             return 'img/products/' . $filename;

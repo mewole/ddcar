@@ -20,6 +20,9 @@
   <link rel="stylesheet" href="css/easy-loading.css">
   <script src="js/easy-loading.js"></script>
 
+  <!-- Server Config -->
+  <script type="text/javascript" src="js/config.js"></script>
+
   <!-- Prompt Font & Design System -->
   <link href="https://fonts.googleapis.com/css?family=Prompt:300,400,500,600,700" rel="stylesheet">
   <link href="css/untitled.css?v=2.0" rel="stylesheet">
@@ -666,16 +669,28 @@
       });
     });
 
+    // API Base URL helper
+    function getApiBase() {
+      var apiBase = (window.location.protocol === 'file:' && localStorage.pathServer) ? localStorage.pathServer : '';
+      if (apiBase && !apiBase.endsWith('/')) apiBase += '/';
+      return apiBase;
+    }
+
     // Fetch user list from backend
     function get_user() {
       $.ajax({
         type: "POST",
-        url: "php/get_user.php",
+        url: getApiBase() + "php/get_user.php",
+        dataType: "json",
         beforeSend: function() {
-          EasyLoading.show({ text: "กำลังโหลดข้อมูลผู้ใช้งาน..." });
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.show({ text: "กำลังโหลดข้อมูลผู้ใช้งาน..." });
+          }
         },
         success: function(data) {
-          EasyLoading.hide();
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
           try {
             allUsers = (typeof data === "object") ? data : JSON.parse(data);
           } catch (e) {
@@ -691,7 +706,9 @@
           renderUserTable();
         },
         error: function(err) {
-          EasyLoading.hide();
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
           console.error("AJAX error:", err);
           $.confirm({
             title: 'ข้อผิดพลาด',
@@ -745,9 +762,9 @@
 
         var matchSearch = true;
         if (currentSearchTerm !== '') {
-          var name = (u.user_name || '').toLowerCase();
-          var phone = (u.phone || '').toLowerCase();
-          var role = (u.user_role || '').toLowerCase();
+          var name = String(u.user_name || '').toLowerCase();
+          var phone = String(u.phone || '').toLowerCase();
+          var role = String(u.user_role || '').toLowerCase();
           matchSearch = name.includes(currentSearchTerm) || phone.includes(currentSearchTerm) || role.includes(currentSearchTerm);
         }
 
@@ -763,13 +780,15 @@
 
       filtered.forEach(function(u, idx) {
         var roleBadge = getRoleBadgeHtml(u.user_role);
-        var hasPhone = (u.phone && u.phone.trim() !== '');
+        var phoneStr = String(u.phone || '').trim();
+        var hasPhone = (phoneStr !== '');
         var phoneDisplay = hasPhone
-          ? '<i class="fa fa-phone text-muted mr-1" style="font-size: 0.85rem;"></i> ' + $('<div>').text(u.phone.trim()).html()
+          ? '<i class="fa fa-phone text-muted mr-1" style="font-size: 0.85rem;"></i> ' + $('<div>').text(phoneStr).html()
           : '<span class="text-muted font-weight-light">-</span>';
-        var firstLetter = (u.user_name && u.user_name.length > 0) ? u.user_name.charAt(0).toUpperCase() : '?';
+        var uName = String(u.user_name || '').trim();
+        var firstLetter = (uName.length > 0) ? uName.charAt(0).toUpperCase() : '?';
 
-        var safeName = $('<div>').text(u.user_name || '').html();
+        var safeName = $('<div>').text(uName).html();
 
         var rowHtml = '<tr>' +
           '<td class="text-center font-weight-bold text-muted">' + (idx + 1) + '</td>' +
@@ -778,7 +797,7 @@
               '<span class="user-avatar-circle">' + firstLetter + '</span>' +
               '<div>' +
                 '<strong class="text-dark">' + safeName + '</strong>' +
-                (u.user_name === localStorage.user_name ? ' <span class="badge badge-secondary ml-1" style="font-size: 0.72rem;">บัญชีปัจจุบัน</span>' : '') +
+                (uName === localStorage.user_name ? ' <span class="badge badge-secondary ml-1" style="font-size: 0.72rem;">บัญชีปัจจุบัน</span>' : '') +
               '</div>' +
             '</div>' +
           '</td>' +
@@ -870,10 +889,12 @@
         return;
       }
 
-      EasyLoading.show({ text: "กำลังบันทึกข้อมูล..." });
+      if (typeof EasyLoading !== 'undefined') {
+        EasyLoading.show({ text: "กำลังบันทึกข้อมูล..." });
+      }
       $.ajax({
         type: "POST",
-        url: "php/register.php",
+        url: getApiBase() + "php/register.php",
         data: {
           user: username,
           pass: password,
@@ -881,7 +902,9 @@
           role: role
         },
         success: function(resp) {
-          EasyLoading.hide();
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
           if (resp && resp.trim() === 'success') {
             $('#modalAddUser').modal('hide');
             $.confirm({
@@ -904,7 +927,9 @@
           }
         },
         error: function(err) {
-          EasyLoading.hide();
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
           console.error(err);
           alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
         }
@@ -928,10 +953,12 @@
       // If password is blank, pass '********' so php/rename_user.php keeps existing password
       var passToSend = password ? password : '********';
 
-      EasyLoading.show({ text: "กำลังบันทึกการแก้ไข..." });
+      if (typeof EasyLoading !== 'undefined') {
+        EasyLoading.show({ text: "กำลังบันทึกการแก้ไข..." });
+      }
       $.ajax({
         type: "POST",
-        url: "php/rename_user.php",
+        url: getApiBase() + "php/rename_user.php",
         data: {
           user_id: userId,
           name: username,
@@ -940,7 +967,9 @@
           pass: passToSend
         },
         success: function(resp) {
-          EasyLoading.hide();
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
           if (resp && resp.trim() === 'success') {
             $('#modalEditUser').modal('hide');
 
@@ -971,7 +1000,9 @@
           }
         },
         error: function(err) {
-          EasyLoading.hide();
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
           console.error(err);
           alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
         }
@@ -1000,13 +1031,17 @@
             text: 'ยืนยันลบ',
             btnClass: 'btn-danger',
             action: function() {
-              EasyLoading.show({ text: "กำลังลบข้อมูล..." });
+              if (typeof EasyLoading !== 'undefined') {
+                EasyLoading.show({ text: "กำลังลบข้อมูล..." });
+              }
               $.ajax({
                 type: "POST",
-                url: "php/delete_user.php",
+                url: getApiBase() + "php/delete_user.php",
                 data: { name: userName },
                 success: function(resp) {
-                  EasyLoading.hide();
+                  if (typeof EasyLoading !== 'undefined') {
+                    EasyLoading.hide();
+                  }
                   if (resp && resp.trim() === 'success') {
                     $.confirm({
                       title: 'ลบสำเร็จ',
@@ -1028,7 +1063,9 @@
                   }
                 },
                 error: function(err) {
-                  EasyLoading.hide();
+                  if (typeof EasyLoading !== 'undefined') {
+                    EasyLoading.hide();
+                  }
                   console.error(err);
                   alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
                 }
@@ -1041,6 +1078,8 @@
           }
         }
       });
+    }
+
     // Backup DB Modal & Actions
     function showBackupModal() {
       $('#modalBackupDB').modal('show');
@@ -1049,7 +1088,7 @@
 
     function loadBackupList() {
       $('#backup-list-tbody').html('<tr><td colspan="5" class="text-center text-muted py-3"><i class="fa fa-spinner fa-spin mr-2"></i>กำลังโหลดรายการไฟล์สำรอง...</td></tr>');
-      $.getJSON('php/backup_db.php?action=list', function(res) {
+      $.getJSON(getApiBase() + 'php/backup_db.php?action=list', function(res) {
         if (!res || !res.success || !res.files || res.files.length === 0) {
           $('#backup-list-tbody').html('<tr><td colspan="5" class="text-center text-muted py-4"><i class="fa fa-info-circle mr-1"></i>ยังไม่มีประวัติไฟล์สำรอง หรือเพิ่งเริ่มต้นใช้งาน</td></tr>');
           return;
@@ -1062,7 +1101,7 @@
           html += '  <td class="text-center"><span class="badge badge-light border">' + f.size_mb + ' MB</span></td>';
           html += '  <td class="text-center text-muted">' + (f.age_days < 1 ? 'วันนี้' : f.age_days + ' วันก่อน') + '</td>';
           html += '  <td class="text-center">';
-          html += '    <a href="php/backup_db.php?action=download&file=' + encodeURIComponent(f.filename) + '" class="btn btn-xs btn-primary py-1 px-2" title="ดาวน์โหลดไฟล์สำรอง">';
+          html += '    <a href="' + getApiBase() + 'php/backup_db.php?action=download&file=' + encodeURIComponent(f.filename) + '" class="btn btn-xs btn-primary py-1 px-2" title="ดาวน์โหลดไฟล์สำรอง">';
           html += '      <i class="fa fa-download mr-1"></i> โหลด';
           html += '    </a>';
           html += '  </td>';
@@ -1077,16 +1116,20 @@
     function triggerDatabaseBackup() {
       var btn = $('#btn-trigger-backup');
       btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin mr-1"></i> กำลังสำรองฐานข้อมูล...');
-      EasyLoading.show({ text: "กำลังสำรองฐานข้อมูล MySQL ทั้งหมดและบีบอัดไฟล์..." });
+      if (typeof EasyLoading !== 'undefined') {
+        EasyLoading.show({ text: "กำลังสำรองฐานข้อมูล MySQL ทั้งหมดและบีบอัดไฟล์..." });
+      }
 
       $.ajax({
         type: 'POST',
-        url: 'php/backup_db.php',
+        url: getApiBase() + 'php/backup_db.php',
         data: { action: 'backup' },
         dataType: 'json',
         timeout: 300000,
         success: function(res) {
-          EasyLoading.hide();
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
           btn.prop('disabled', false).html('<i class="fa fa-play-circle mr-1"></i> สำรองข้อมูลเดี๋ยวนี้');
           if (res && res.success) {
             $.confirm({
@@ -1110,7 +1153,9 @@
           }
         },
         error: function(xhr, status, err) {
-          EasyLoading.hide();
+          if (typeof EasyLoading !== 'undefined') {
+            EasyLoading.hide();
+          }
           btn.prop('disabled', false).html('<i class="fa fa-play-circle mr-1"></i> สำรองข้อมูลเดี๋ยวนี้');
           $.confirm({
             title: 'ข้อผิดพลาดเครือข่าย',

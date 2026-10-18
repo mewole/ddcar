@@ -1,6 +1,6 @@
 <?php
     include "db.php";
-    $start = $_POST['start'];
+    $start = isset($_POST['start']) ? intval($_POST['start']) : 0;
     $output = array();
     $txt = "(cancel)";
 
