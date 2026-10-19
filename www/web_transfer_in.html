@@ -969,12 +969,89 @@
                       loadPendingTransfers();
                     }
 
+                    function showTransferStockRemainModal(sourceName, items, tfNumber, onComplete) {
+                      var rows = '';
+                      for (var i = 0; i < items.length; i++) {
+                        var it = items[i];
+                        var name = it.prod_name || '';
+                        var code = it.prod_code ? ('<br><small class="text-muted"><i class="fa fa-barcode mr-1"></i>' + it.prod_code + '</small>') : '';
+                        var transferQty = parseInt(it.amt || it.prod_amount, 10) || 1;
+                        var beforeQty = (it.stock !== undefined && it.stock !== null) ? parseInt(it.stock, 10) : 0;
+                        var remainQty = beforeQty - transferQty;
+                        var badgeClass = remainQty > 0 ? 'badge-success' : 'badge-danger';
+                        var remainTxt = remainQty + ' ชิ้น' + (remainQty <= 0 ? ' (หมด)' : '');
+
+                        rows += '<tr>' +
+                          '<td style="vertical-align: middle;"><strong>' + name + '</strong>' + code + '</td>' +
+                          '<td class="text-center font-weight-bold text-danger" style="vertical-align: middle;">-' + transferQty + '</td>' +
+                          '<td class="text-center" style="vertical-align: middle;"><span class="badge ' + badgeClass + ' px-2 py-1 font-weight-bold" style="font-size: 0.9rem;">' + remainTxt + '</span></td>' +
+                        '</tr>';
+                      }
+
+                      var contentHtml = '<div class="py-1">' +
+                        '<div class="alert alert-success py-2 px-3 mb-3 d-flex align-items-center" style="font-size: 0.95rem;">' +
+                          '<i class="fa fa-check-circle fa-lg mr-2"></i>' +
+                          '<div><strong>ตัดสต๊อกต้นทางเรียบร้อยแล้ว</strong>' + (tfNumber ? ' (ใบโอนเลขที่: <strong class="text-primary">' + tfNumber + '</strong>)' : '') + '</div>' +
+                        '</div>' +
+                        '<div class="table-responsive" style="max-height: 350px; overflow-y: auto;">' +
+                          '<table class="table table-bordered table-sm mb-0" style="font-size: 0.92rem;">' +
+                            '<thead class="thead-light">' +
+                              '<tr>' +
+                                '<th>รายการสินค้า</th>' +
+                                '<th class="text-center" style="width: 90px;">ตัดโอนออก</th>' +
+                                '<th class="text-center" style="width: 130px;">คงเหลือล่าสุด</th>' +
+                              '</tr>' +
+                            '</thead>' +
+                            '<tbody>' + rows + '</tbody>' +
+                          '</table>' +
+                        '</div>' +
+                      '</div>';
+
+                      $.confirm({
+                        title: '<div class="font-weight-bold text-dark"><i class="fa fa-boxes text-primary mr-2"></i> จำนวนคงเหลือใน ' + sourceName + '</div>',
+                        content: contentHtml,
+                        columnClass: 'medium',
+                        backgroundDismiss: false,
+                        buttons: {
+                          formSubmit: {
+                            text: '<i class="fa fa-check mr-1"></i> ตกลง',
+                            btnClass: 'btn-success px-4 py-2 font-weight-bold',
+                            action: function () {
+                              if (typeof onComplete === 'function') {
+                                onComplete();
+                              }
+                            }
+                          }
+                        }
+                      });
+                    }
+
+                    // สร้างตารางแสดงสรุปสต๊อกคงเหลือต้นทาง
+                    var previewRows = '';
+                    slipData.items.forEach(function(it) {
+                      var tQty = parseInt(it.amt || it.prod_amount, 10) || 1;
+                      var bQty = (it.stock !== undefined && it.stock !== null) ? parseInt(it.stock, 10) : 0;
+                      var rQty = bQty - tQty;
+                      var rBadge = rQty > 0 ? ('<span class="badge badge-success px-2 py-1">' + rQty + ' ชิ้น</span>') : ('<span class="badge badge-danger px-2 py-1">' + rQty + ' ชิ้น (หมด)</span>');
+                      previewRows += '<tr>' +
+                        '<td><strong>' + (it.prod_name || '') + '</strong></td>' +
+                        '<td class="text-center text-danger font-weight-bold">-' + tQty + '</td>' +
+                        '<td class="text-center">' + rBadge + '</td>' +
+                      '</tr>';
+                    });
+
                     // Popup Modal asking user to choose between POS and A4
                     $.confirm({
                       title: '<div class="text-success font-weight-bold"><i class="fa fa-check-circle mr-2"></i> โอนย้ายสินค้าสำเร็จ!</div>',
                       content: '<div class="py-2">' +
                                  '<p class="mb-2" style="font-size: 1.15rem;">สร้างใบโอนเลขที่: <strong class="text-primary">' + tfNumber + '</strong></p>' +
-                                 '<p class="text-muted mb-3"><i class="fa fa-exchange-alt mr-1"></i> เส้นทาง: <strong>' + sourceName + '</strong> ➜ <strong>' + destName + '</strong> (รวม <strong>' + res.total_qty + '</strong> ชิ้น)</p>' +
+                                 '<p class="text-muted mb-2"><i class="fa fa-exchange-alt mr-1"></i> เส้นทาง: <strong>' + sourceName + '</strong> ➜ <strong>' + destName + '</strong> (รวม <strong>' + res.total_qty + '</strong> ชิ้น)</p>' +
+                                 '<div class="table-responsive mb-3" style="max-height: 180px; overflow-y: auto;">' +
+                                   '<table class="table table-bordered table-sm mb-0 text-left" style="font-size: 0.88rem;">' +
+                                     '<thead class="thead-light"><tr><th>รายการสินค้า</th><th class="text-center" style="width: 80px;">ตัดโอน</th><th class="text-center" style="width: 130px;">คงเหลือใน ' + sourceName + '</th></tr></thead>' +
+                                     '<tbody>' + previewRows + '</tbody>' +
+                                   '</table>' +
+                                 '</div>' +
                                  '<div class="alert alert-primary py-2 text-center font-weight-bold mb-1" style="font-size: 1rem;">' +
                                    '🖨️ กรุณาเลือกรูปแบบการพิมพ์ใบโอน:' +
                                  '</div>' +
@@ -987,7 +1064,7 @@
                           btnClass: 'btn-warning text-dark font-weight-bold px-3 py-2',
                           action: function() {
                             printTransferSlip('bill', slipData);
-                            resetTransferForm();
+                            showTransferStockRemainModal(sourceName, slipData.items, tfNumber, resetTransferForm);
                           }
                         },
                         printA4: {
@@ -995,14 +1072,14 @@
                           btnClass: 'btn-primary font-weight-bold px-3 py-2',
                           action: function() {
                             printTransferSlip('a4', slipData);
-                            resetTransferForm();
+                            showTransferStockRemainModal(sourceName, slipData.items, tfNumber, resetTransferForm);
                           }
                         },
                         noPrint: {
                           text: '<i class="fa fa-times mr-1"></i> ไม่พิมพ์ (เสร็จสิ้น)',
                           btnClass: 'btn-secondary py-2',
                           action: function() {
-                            resetTransferForm();
+                            showTransferStockRemainModal(sourceName, slipData.items, tfNumber, resetTransferForm);
                           }
                         }
                       }

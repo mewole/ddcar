@@ -900,71 +900,117 @@
                 success: function(data){  
                     EasyLoading.hide();                
                     if(data != "fail"){
-						var dat = " ____________________"
-						var WinPrint  = window.open();
-						var ele =  document.getElementById('show_qr').innerHTML;
-						WinPrint.document.write("<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'><link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css' integrity='sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T' crossorigin='anonymous'>");
-						WinPrint.document.write("<style>@page {size: auto; margin: 0mm;} body{line-height: 1.5; font-size: 0.9em;} .title{margin-bottom: 0.1em;} .line{text-decoration: underline;} .price, .no{letter-spacing: -0.05em;} .items{margin-bottom: 5px;}</style></head><body>" +
-							"<div style='width: 7cm;'>"+
-							"<div class='col-12 text-center'>DD MOTOR SPORT</div>"+
-							"<div class='col-12 text-center'>B-24, B-28 อาคารศรีวรจักร ถ.หลวงป้อมปราบศัตรูพ่าย</div>"+
-							"<div class='col-12 text-center'>โทร. 02-2265280 , 02-2222437</div>"+
-							"<div class='col-12 text-center line' style='margin-top: 0.5em; margin-bottom: 0.5em;'>ใบรายการสินค้าออกโกดัง</div>"+						
-								"<div class='row justify-content-center title'>" +
-								"<div class='col-4 text-right'>เลขที่ : </div>" +
-								"<div class='col-6 text-center'>"+data+"</div>" +
-								"</div>" +
-								"<div class='row justify-content-center title'>" +
-								"<div class='col-4 text-right'>โกดัง : </div>" +
-								"<div class='col-6 text-center'>"+localStorage.ware_name_ex+"</div>" +
-								"</div>" +
-								"<div class='row justify-content-center title'>" +
-								"<div class='col-4 text-right'>พนักงาน : </div>" +
-								"<div class='col-6 text-center'>"+localStorage.user_name+"</div>" +
-								"</div>" +
-								"<div class='row justify-content-center title'>" +
-								"<div class='col-4 text-right'>วันที่ : </div>" +
-								"<div class='col-3 text-right'>"+date+"  </div>" +
-								"<div class='col-3'>"+time+"</div>" +
-								"</div>" +								
-													
-								"<hr style='width: 90%; border-top: 1px dashed; border-bottom: none; margin-top: 5px;'>"+
-								"<div class='row justify-content-center' style='margin-bottom: 5px;'>" +								
-								"<div class='col-8 text-center line'>รายการ</div>" +
-								"<div class='col-4 text-left line'>จำนวน</div>" +
-							"</div>"+
-							text+
-							"<hr style='width: 90%; border-top: 1px; border-top: 1px dashed; border-bottom: none; margin-top: 0;'>"+
-							"<div class='row justify-content-center title'>"+
-								"<div class='col-4 text-right'>รวม : </div>" +
-								"<div class='col-6 text-center'>"+total_amt+"</div>"+
-							"</div>"+
-							"<div class='col-12 text-center'>ผู้นำสินค้าออก : "+dat+"</div>"+
-							"<div class='col-12 text-center'>ผู้เช็คสินค้า : "+dat+"</div>"+
-							"<div class='col-12 text-center'>ผู้นำสินค้าเข้า : "+dat+"</div>"+
-							"<div class='col-12 text-center' style='margin-top: 15px'>"+
-								ele+
-							"</div>"+							
-							"</div>");
-						WinPrint.document.write('</body></html>');							
-						WinPrint.document.close();
-						WinPrint.focus();
-						setTimeout(function() {
-						WinPrint.print();
-						WinPrint.close();
-						}, 250);
+						var dat = " ____________________";
+						var WinPrint = null;
+						try {
+							WinPrint = window.open('', '_blank');
+						} catch(e) {
+							console.warn('Popup blocked:', e);
+						}
+
+						if(WinPrint && !WinPrint.closed){
+							try {
+								var ele = document.getElementById('show_qr').innerHTML;
+								WinPrint.document.write("<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'><link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css' integrity='sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T' crossorigin='anonymous'>");
+								WinPrint.document.write("<style>@page {size: auto; margin: 0mm;} body{line-height: 1.5; font-size: 0.9em;} .title{margin-bottom: 0.1em;} .line{text-decoration: underline;} .price, .no{letter-spacing: -0.05em;} .items{margin-bottom: 5px;}</style></head><body>" +
+									"<div style='width: 7cm;'>"+
+									"<div class='col-12 text-center'>DD MOTOR SPORT</div>"+
+									"<div class='col-12 text-center'>B-24, B-28 อาคารศรีวรจักร ถ.หลวงป้อมปราบศัตรูพ่าย</div>"+
+									"<div class='col-12 text-center'>โทร. 02-2265280 , 02-2222437</div>"+
+									"<div class='col-12 text-center line' style='margin-top: 0.5em; margin-bottom: 0.5em;'>ใบรายการสินค้าออกโกดัง</div>"+						
+										"<div class='row justify-content-center title'>" +
+										"<div class='col-4 text-right'>เลขที่ : </div>" +
+										"<div class='col-6 text-center'>"+data+"</div>" +
+										"</div>" +
+										"<div class='row justify-content-center title'>" +
+										"<div class='col-4 text-right'>โกดัง : </div>" +
+										"<div class='col-6 text-center'>"+localStorage.ware_name_ex+"</div>" +
+										"</div>" +
+										"<div class='row justify-content-center title'>" +
+										"<div class='col-4 text-right'>พนักงาน : </div>" +
+										"<div class='col-6 text-center'>"+localStorage.user_name+"</div>" +
+										"</div>" +
+										"<div class='row justify-content-center title'>" +
+										"<div class='col-4 text-right'>วันที่ : </div>" +
+										"<div class='col-3 text-right'>"+date+"  </div>" +
+										"<div class='col-3'>"+time+"</div>" +
+										"</div>" +								
+															
+										"<hr style='width: 90%; border-top: 1px dashed; border-bottom: none; margin-top: 5px;'>"+
+										"<div class='row justify-content-center' style='margin-bottom: 5px;'>" +								
+										"<div class='col-8 text-center line'>รายการ</div>" +
+										"<div class='col-4 text-left line'>จำนวน</div>" +
+									"</div>"+
+									text+
+									"<hr style='width: 90%; border-top: 1px; border-top: 1px dashed; border-bottom: none; margin-top: 0;'>"+
+									"<div class='row justify-content-center title'>"+
+										"<div class='col-4 text-right'>รวม : </div>" +
+										"<div class='col-6 text-center'>"+total_amt+"</div>"+
+									"</div>"+
+									"<div class='col-12 text-center'>ผู้นำสินค้าออก : "+dat+"</div>"+
+									"<div class='col-12 text-center'>ผู้เช็คสินค้า : "+dat+"</div>"+
+									"<div class='col-12 text-center'>ผู้นำสินค้าเข้า : "+dat+"</div>"+
+									"<div class='col-12 text-center' style='margin-top: 15px'>"+
+										ele+
+									"</div>"+							
+									"</div>");
+								WinPrint.document.write('</body></html>');							
+								WinPrint.document.close();
+								WinPrint.focus();
+								setTimeout(function() {
+									try { WinPrint.print(); } catch(e){}
+								}, 350);
+							} catch(err) {
+								console.error("Print write error:", err);
+							}
+						}
+
+						var rows = '';
+						for(var i = 0 ; i < arr_data.length;i++){
+							var it = arr_data[i];
+							var tQty = parseInt(it.amt, 10) || 1;
+							var bQty = (it.min !== undefined && it.min !== null) ? parseInt(it.min, 10) : 0;
+							var rQty = bQty - tQty;
+							var badgeClass = rQty > 0 ? 'badge-success' : 'badge-danger';
+							var rTxt = rQty + ' ชิ้น' + (rQty <= 0 ? ' (หมด)' : '');
+							rows += '<tr>' +
+								'<td style="vertical-align: middle;"><strong>' + it.name + '</strong></td>' +
+								'<td class="text-center font-weight-bold text-danger" style="vertical-align: middle;">-' + tQty + '</td>' +
+								'<td class="text-center" style="vertical-align: middle;"><span class="badge ' + badgeClass + ' px-2 py-1 font-weight-bold" style="font-size: 0.9rem;">' + rTxt + '</span></td>' +
+							'</tr>';
+						}
+
+						var contentHtml = '<div class="py-1">' +
+							'<div class="alert alert-success py-2 px-3 mb-3 d-flex align-items-center" style="font-size: 0.95rem;">' +
+								'<i class="fa fa-check-circle fa-lg mr-2"></i>' +
+								'<div><strong>ตัดสต๊อกออกเรียบร้อยแล้ว</strong> (เลขที่: <strong class="text-primary">' + data + '</strong>)</div>' +
+							'</div>' +
+							'<div class="table-responsive" style="max-height: 350px; overflow-y: auto;">' +
+								'<table class="table table-bordered table-sm mb-0" style="font-size: 0.92rem;">' +
+									'<thead class="thead-light">' +
+										'<tr>' +
+											'<th>รายการสินค้า</th>' +
+											'<th class="text-center" style="width: 90px;">ตัดออก</th>' +
+											'<th class="text-center" style="width: 130px;">คงเหลือล่าสุด</th>' +
+										'</tr>' +
+									'</thead>' +
+									'<tbody>' + rows + '</tbody>' +
+								'</table>' +
+							'</div>' +
+						'</div>';
 						
 						$.confirm({
-                            title: 'จำนวนคงเหลือใน'+ $('#btn-b').text(),
-                            content: msg_alert,
+                            title: '<div class="font-weight-bold text-dark"><i class="fa fa-boxes text-primary mr-2"></i> จำนวนคงเหลือใน ' + $('#btn-b').text() + '</div>',
+                            content: contentHtml,
+                            columnClass: 'medium',
                             backgroundDismiss: false,
                             buttons: {
                                 formSubmit: {
-                                text: 'ตกลง',
-                                btnClass: 'btn-regis',
-                                action: function () {
-									cancel();    
-                                }
+									text: '<i class="fa fa-check mr-1"></i> ตกลง',
+									btnClass: 'btn-success px-4 py-2 font-weight-bold',
+									action: function () {
+										cancel();    
+									}
                                 }
                             }
                         });     

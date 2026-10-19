@@ -1281,8 +1281,13 @@
 				msg_alert += arr_data[i].name + " คงเหลือ " + (arr_data[i].min-arr_data[i].amt) + '<br>';
 			}	
 
+			var WinPrint = null;
 			if(print == "print" && pay != "ตัดไม่คิดเงิน"){
-				var WinPrint  = window.open();
+				try {
+					WinPrint = window.open('', '_blank');
+				} catch(e) {
+					console.warn("Popup blocked:", e);
+				}
 			}			
 			
 			$.ajax({
@@ -1296,90 +1301,76 @@
 					},               
 					success: function(data){  
 						EasyLoading.hide();
-							if(data != "fail"){
-								if(print == "print" && pay != "ตัดไม่คิดเงิน"){
-									var temp = data.split(" ");
-									var order_num = temp[0];
-									
+						if(data != "fail"){
+							var temp = data.split(" ");
+							var order_num = temp[0];
+							
+							if(print == "print" && pay != "ตัดไม่คิดเงิน" && WinPrint && !WinPrint.closed){
+								try {
 									if(print_type == "bill"){
-									var dt = datetime.split(" ");
-									var time = dt[1];
-									var d = dt[0].split("-");
-									var date = d[2] + "/" + d[1] + "/" + d[0];
-									WinPrint.document.write("<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'><link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css' integrity='sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T' crossorigin='anonymous'>");
-									WinPrint.document.write("<style>@page {size: auto; margin: 0mm;} body{line-height: 1.5; font-size: 0.9em; } .title{margin-bottom: 0.1em;} .line{text-decoration: underline;} .price, .no{letter-spacing: -0.05em;} .items{margin-bottom: 5px;}</style></head><body>" +
-										"<div style='width: 7cm;'>"+
-											"<div class='col-12 text-center'>"+billshopName+"</div>"+
-											"<div class='col-12 text-center'>"+billshopDestination+"</div>"+
-											"<div class='col-12 text-center'>"+billshopTel+"</div>"+
-											"<div class='col-12 text-center line' style='margin-top: 0.5em; margin-bottom: 0.5em;'>ใบเสร็จรับเงิน</div>"+						
-												"<div class='row justify-content-center title'>" +
-												"<div class='col-4 text-right'>ลูกค้า : </div>" +
-												"<div class='col-6 text-center'>"+$('#cus').val()+"</div>" +
-												"</div>" +
-												"<div class='row justify-content-center title'>" +
-												"<div class='col-4 text-right'>ประเภท : </div>" +
-												"<div class='col-6 text-center'>"+$('#btn-p').text()+"</div>" +
-												"</div>" +
-												"<div class='row justify-content-center title'>" +
-												"<div class='col-4 text-right'>เลขที่บิล : </div>" +
-												"<div class='col-6 text-center'>"+order_num+"</div>" +
-												"</div>" +
-												"<div class='row justify-content-center title'>" +
-												"<div class='col-4 text-right'>วันที่ : </div>" +
-												"<div class='col-3 text-right'>"+date+"  </div>" +
-												"<div class='col-3'>"+time+"</div>" +
-												"</div>" +								
-																	
-												"<hr style='width: 90%; border-top: 1px dashed; border-bottom: none; margin-top: 5px;'>"+
-												"<div class='row justify-content-center' style='margin-bottom: 5px;'>" +
-												"<div class='col-2 text-center line'>จำนวน</div>" +
-												"<div class='col-6 text-center line'>รายการ</div>" +
-												"<div class='col-4 text-center line'>ราคา</div>" +
-											"</div>"+
-											text+
-											"<hr style='width: 90%; border-top: 1px; border-top: 1px dashed; border-bottom: none; margin-top: 0;'>"+
-											"<div class='row justify-content-center title'>"+
-												"<div class='col-4 text-right'>ราคารวม : </div>" +
-												"<div class='col-6 text-center'>"+$('#net-price').val()+" บาท</div>"+
-											"</div>"+
-											"<div class='row justify-content-center title'>"+
-												"<div class='col-4 text-right'>ส่วนลด : </div>" +
-												"<div class='col-6 text-center'>"+dis+" บาท</div>"+
-											"</div>"+
-											"<div class='row justify-content-center title'>"+
-												"<div class='col-4 text-right'>สุทธิ : </div>" +
-												"<div class='col-6 text-center'>"+$('#final-price').val()+" บาท</div>"+
-											"</div>"+
-											"<div class='row justify-content-center title'>"+
-												"<div class='col-4 text-right'>รับ / ทอน : </div>" +
-												"<div class='col-4 text-right'>"+$('#get-money').val()+" บาท</div>"+
-												"<div class='col-4 text-right'>"+$('#change-money').val()+" บาท</div>"+
-											"</div>"+
-											"<div class='col-12 text-center'>พนักงานขาย : "+localStorage.user_name+"</div>"+
-											"</div>");
-									WinPrint.document.write('</body></html>');
-									WinPrint.document.close();
-									WinPrint.focus();
-									setTimeout(function() {
-										WinPrint.print();
-										WinPrint.close();		
-										$.confirm({
-                            title: 'จำนวนคงเหลือใน'+ $('#btn-b').text(),
-                            content: msg_alert,
-                            backgroundDismiss: false,
-                            buttons: {
-                                formSubmit: {
-                                text: 'ตกลง',
-                                btnClass: 'btn-regis',
-                                action: function () {
-																	cancel();    
-                                }
-                                }
-                            }
-                        }); 
-									}, 250);										
-								}
+										var dt = datetime.split(" ");
+										var time = dt[1];
+										var d = dt[0].split("-");
+										var date = d[2] + "/" + d[1] + "/" + d[0];
+										WinPrint.document.write("<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'><link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css' integrity='sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T' crossorigin='anonymous'>");
+										WinPrint.document.write("<style>@page {size: auto; margin: 0mm;} body{line-height: 1.5; font-size: 0.9em; } .title{margin-bottom: 0.1em;} .line{text-decoration: underline;} .price, .no{letter-spacing: -0.05em;} .items{margin-bottom: 5px;}</style></head><body>" +
+											"<div style='width: 7cm;'>"+
+												"<div class='col-12 text-center'>"+billshopName+"</div>"+
+												"<div class='col-12 text-center'>"+billshopDestination+"</div>"+
+												"<div class='col-12 text-center'>"+billshopTel+"</div>"+
+												"<div class='col-12 text-center line' style='margin-top: 0.5em; margin-bottom: 0.5em;'>ใบเสร็จรับเงิน</div>"+						
+													"<div class='row justify-content-center title'>" +
+													"<div class='col-4 text-right'>ลูกค้า : </div>" +
+													"<div class='col-6 text-center'>"+$('#cus').val()+"</div>" +
+													"</div>" +
+													"<div class='row justify-content-center title'>" +
+													"<div class='col-4 text-right'>ประเภท : </div>" +
+													"<div class='col-6 text-center'>"+$('#btn-p').text()+"</div>" +
+													"</div>" +
+													"<div class='row justify-content-center title'>" +
+													"<div class='col-4 text-right'>เลขที่บิล : </div>" +
+													"<div class='col-6 text-center'>"+order_num+"</div>" +
+													"</div>" +
+													"<div class='row justify-content-center title'>" +
+													"<div class='col-4 text-right'>วันที่ : </div>" +
+													"<div class='col-3 text-right'>"+date+"  </div>" +
+													"<div class='col-3'>"+time+"</div>" +
+													"</div>" +								
+																		
+													"<hr style='width: 90%; border-top: 1px dashed; border-bottom: none; margin-top: 5px;'>"+
+													"<div class='row justify-content-center' style='margin-bottom: 5px;'>" +
+													"<div class='col-2 text-center line'>จำนวน</div>" +
+													"<div class='col-6 text-center line'>รายการ</div>" +
+													"<div class='col-4 text-center line'>ราคา</div>" +
+												"</div>"+
+												text+
+												"<hr style='width: 90%; border-top: 1px; border-top: 1px dashed; border-bottom: none; margin-top: 0;'>"+
+												"<div class='row justify-content-center title'>"+
+													"<div class='col-4 text-right'>ราคารวม : </div>" +
+													"<div class='col-6 text-center'>"+$('#net-price').val()+" บาท</div>"+
+												"</div>"+
+												"<div class='row justify-content-center title'>"+
+													"<div class='col-4 text-right'>ส่วนลด : </div>" +
+													"<div class='col-6 text-center'>"+dis+" บาท</div>"+
+												"</div>"+
+												"<div class='row justify-content-center title'>"+
+													"<div class='col-4 text-right'>สุทธิ : </div>" +
+													"<div class='col-6 text-center'>"+$('#final-price').val()+" บาท</div>"+
+												"</div>"+
+												"<div class='row justify-content-center title'>"+
+													"<div class='col-4 text-right'>รับ / ทอน : </div>" +
+													"<div class='col-4 text-right'>"+$('#get-money').val()+" บาท</div>"+
+													"<div class='col-4 text-right'>"+$('#change-money').val()+" บาท</div>"+
+												"</div>"+
+												"<div class='col-12 text-center'>พนักงานขาย : "+localStorage.user_name+"</div>"+
+												"</div>");
+										WinPrint.document.write('</body></html>');
+										WinPrint.document.close();
+										WinPrint.focus();
+										setTimeout(function() {
+											try { WinPrint.print(); } catch(e){}
+										}, 350);
+									}
 									else if(print_type == "a4"){
 										var dt = datetime.split(" ");
 										var time = dt[1];
@@ -1491,58 +1482,79 @@
 										WinPrint.document.close();
 										WinPrint.focus();
 										setTimeout(function() {
-											WinPrint.print();
-											WinPrint.close();
-											$.confirm({
-                            title: 'จำนวนคงเหลือใน'+ $('#btn-b').text(),
-                            content: msg_alert,
-                            backgroundDismiss: false,
-                            buttons: {
-                                formSubmit: {
-                                text: 'ตกลง',
-                                btnClass: 'btn-regis',
-                                action: function () {
-																	cancel();    
-                                }
-                                }
-                            }
-                        });    
-										}, 250);										
-									}			
-								}else{
-									$.confirm({
-											title: 'จำนวนคงเหลือใน'+ $('#btn-b').text(),
-											content: msg_alert,
-											backgroundDismiss: false,
-											buttons: {
-													formSubmit: {
-													text: 'ตกลง',
-													btnClass: 'btn-regis',
-													action: function () {
-														cancel();    
-													}
-													}
-											}
-									}); 
-								}						
-							}else{
-									$.confirm({
-											title: 'พบข้อผิดพลาด',
-											content: 'ลองอีกครั้ง',
-											backgroundDismiss: true,
-											buttons: {
-													formSubmit: {
-													text: 'ตกลง',
-													btnClass: 'btn-regis',
-													action: function () {
-													}
-													}
-											}
-									});
+											try { WinPrint.print(); } catch(e){}
+										}, 350);
+									}
+								} catch(e) {
+									console.error("Print write error:", e);
+								}
 							}
+
+							// แสดงป๊อปอัปแจ้งเตือนสต๊อกคงเหลือในหน้าร้าน/โกดังที่ตัดออกเสมอ 100%
+							showSaleStockRemainModal($('#btn-b').text(), arr_data, order_num);
+						} else {
+							$.alert({
+								title: 'พบข้อผิดพลาด',
+								content: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง'
+							});
+						}
 					}               
 			});
 						
+		}
+
+		function showSaleStockRemainModal(placeName, items, orderNum) {
+			var rows = '';
+			for (var i = 0; i < items.length; i++) {
+				var it = items[i];
+				var name = it.name || it.prod_name || '';
+				var soldQty = parseInt(it.amt, 10) || 1;
+				var beforeQty = (it.min !== undefined && it.min !== null) ? parseInt(it.min, 10) : 0;
+				var remainQty = beforeQty - soldQty;
+				var badgeClass = remainQty > 0 ? 'badge-success' : 'badge-danger';
+				var remainTxt = remainQty + ' ชิ้น' + (remainQty <= 0 ? ' (หมด)' : '');
+
+				rows += '<tr>' +
+					'<td style="vertical-align: middle;"><strong>' + name + '</strong></td>' +
+					'<td class="text-center font-weight-bold text-danger" style="vertical-align: middle;">-' + soldQty + '</td>' +
+					'<td class="text-center" style="vertical-align: middle;"><span class="badge ' + badgeClass + ' px-2 py-1 font-weight-bold" style="font-size: 0.9rem;">' + remainTxt + '</span></td>' +
+				'</tr>';
+			}
+
+			var contentHtml = '<div class="py-1">' +
+				'<div class="alert alert-success py-2 px-3 mb-3 d-flex align-items-center" style="font-size: 0.95rem;">' +
+					'<i class="fa fa-check-circle fa-lg mr-2"></i>' +
+					'<div><strong>ขายและตัดสต๊อกเรียบร้อยแล้ว</strong>' + (orderNum ? ' (เลขที่บิล: <strong class="text-primary">' + orderNum + '</strong>)' : '') + '</div>' +
+				'</div>' +
+				'<div class="table-responsive" style="max-height: 350px; overflow-y: auto;">' +
+					'<table class="table table-bordered table-sm mb-0" style="font-size: 0.92rem;">' +
+						'<thead class="thead-light">' +
+							'<tr>' +
+								'<th>รายการสินค้า</th>' +
+								'<th class="text-center" style="width: 80px;">ตัดขาย</th>' +
+								'<th class="text-center" style="width: 130px;">คงเหลือล่าสุด</th>' +
+							'</tr>' +
+						'</thead>' +
+						'<tbody>' + rows + '</tbody>' +
+					'</table>' +
+				'</div>' +
+			'</div>';
+
+			$.confirm({
+				title: '<div class="font-weight-bold text-dark"><i class="fa fa-boxes text-primary mr-2"></i> จำนวนคงเหลือใน ' + placeName + '</div>',
+				content: contentHtml,
+				columnClass: 'medium',
+				backgroundDismiss: false,
+				buttons: {
+					formSubmit: {
+						text: '<i class="fa fa-check mr-1"></i> ตกลง',
+						btnClass: 'btn-success px-4 py-2 font-weight-bold',
+						action: function () {
+							cancel();
+						}
+					}
+				}
+			});
 		}
 
 		function set_print_title(){
