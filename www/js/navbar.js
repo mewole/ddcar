@@ -28,6 +28,7 @@
                 { label: 'รายงานบิล', icon: 'fa fa-file-invoice-dollar', href: 'web_mng_bill.html' },
                 { label: 'รายงานสินค้าเข้าหน้าร้าน', icon: 'fa fa-store', href: 'web_mng_import.html' },
                 { label: 'รายงานการโอนย้ายสินค้า', icon: 'fa fa-exchange-alt', href: 'web_mng_transfer.html' },
+                { label: 'รายงานการปรับ/ตัดสต๊อก', icon: 'fa fa-clipboard-check', href: 'web_mng_adjust.html' },
                 { label: 'รายงานสินค้าเข้าโกดัง', icon: 'fa fa-warehouse', href: 'web_mng_import_warehouse.html' },
                 { label: 'รายงานสินค้าออกโกดัง (เดิม)', icon: 'fa fa-dolly-flatbed', href: 'web_mng_export.html' },
                 { label: 'รายงานสรุปยอดขาย', icon: 'fa fa-chart-line', href: 'web_mng_sale.html', ownerOnly: true },
@@ -66,6 +67,7 @@
             case 'web_credit.html': return 'รายงานเครดิตลูกค้า';
             case 'web_mng_sale.html': return 'รายงานสรุปยอดขาย';
             case 'web_mng_import.html': return 'รายงานสินค้าเข้าหน้าร้าน';
+            case 'web_mng_adjust.html': return 'รายงานประวัติการปรับ/ตัดสต๊อก';
             case 'web_mng_import_warehouse.html': return 'รายงานสินค้าเข้าโกดัง';
             case 'web_mng_transfer.html': return 'รายงานการโอนย้ายสินค้า';
             case 'web_mng_export.html': return 'รายงานสินค้าออกโกดัง';

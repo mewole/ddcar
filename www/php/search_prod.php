@@ -10,6 +10,12 @@ $data = isset($_POST['phrase']) ? trim(mysqli_real_escape_string($conn, $_POST['
 if ($data === '' && isset($_GET['phrase'])) {
     $data = trim(mysqli_real_escape_string($conn, $_GET['phrase']));
 }
+if ($data === '' && isset($_POST['search'])) {
+    $data = trim(mysqli_real_escape_string($conn, $_POST['search']));
+}
+if ($data === '' && isset($_GET['search'])) {
+    $data = trim(mysqli_real_escape_string($conn, $_GET['search']));
+}
 $output = array();
 
 if ($data === '') {
@@ -18,11 +24,16 @@ if ($data === '') {
     exit;
 }
   
+$limit = isset($_POST['limit']) ? intval($_POST['limit']) : (isset($_GET['limit']) ? intval($_GET['limit']) : 60);
+if ($limit <= 0) $limit = 60;
+
+// หลีกเลี่ยง MySQL filesort ORDER BY prod_code ASC บน 13,000 แถว
+// โดย query LIMIT ตรงๆ (5ms) แล้วนำมาเรียงลำดับใน PHP (0.01ms)
 $query = "SELECT prod_id, prod_code, prod_name, prod_cost, prod_price, prod_pricesend, min_amount,
                  CASE WHEN img LIKE 'img/%' THEN img WHEN LENGTH(img) < 200 THEN img ELSE '' END AS img 
           FROM product 
           WHERE prod_name LIKE '%$data%' OR prod_code LIKE '%$data%' 
-          ORDER BY prod_code ASC";
+          LIMIT $limit";
 $result = mysqli_query($conn, $query);
 
 if ($result && mysqli_num_rows($result) > 0) {
@@ -33,6 +44,11 @@ if ($result && mysqli_num_rows($result) > 0) {
         $prod_ids[] = $row['prod_id'];
     }
 
+    // เรียงตาม prod_code ใน PHP อย่างรวดเร็ว
+    usort($raw_rows, function($a, $b) {
+        return strcmp($a['prod_code'], $b['prod_code']);
+    });
+
     // Batch ดึงโครงสร้างโฟลเดอร์ของสินค้าทั้งหมดใน 1 คิวรี
     $folder_map = get_products_folder_paths($conn, $prod_ids);
 
@@ -41,7 +57,7 @@ if ($result && mysqli_num_rows($result) > 0) {
     if (isset($_GET['ware_id']) && !empty($prod_ids)) {
         $ware_id = mysqli_real_escape_string($conn, $_GET['ware_id']);
         $type = isset($_GET['type']) ? $_GET['type'] : '';
-        $pid_str = implode(',', $prod_ids);
+        $pid_str = implode(',', array_map('intval', $prod_ids));
         if ($type == "หน้าร้าน") {
             $res_amt = mysqli_query($conn, "SELECT prod_id, amount FROM shop WHERE prod_id IN ($pid_str) AND shop_id = '$ware_id'");
         } else if ($type == "โกดัง") {
@@ -54,10 +70,54 @@ if ($result && mysqli_num_rows($result) > 0) {
         }
     }
 
+    // Batch สต๊อกและตำแหน่งจัดเก็บ (เมื่อมี with_stock หรือเรียกจาก web_stock.html)
+    $stock_map = array();
+    $with_stock = isset($_POST['with_stock']) || isset($_GET['with_stock']);
+    if ($with_stock && !empty($prod_ids)) {
+        $pids = implode(',', array_map('intval', $prod_ids));
+        
+        $sql_ware = "SELECT w.prod_id, w.ware_id as id, d.ware_name, w.amount, 'ware' as type,
+                            GROUP_CONCAT(wp.place SEPARATOR ', ') as places
+                     FROM warehouse w 
+                     INNER JOIN warehouse_detail d ON w.ware_id = d.ware_id 
+                     LEFT JOIN warehouse_place wp ON (w.prod_id = wp.prod_id AND w.ware_id = wp.ware_id)
+                     WHERE w.prod_id IN ($pids)
+                     GROUP BY w.prod_id, w.ware_id, d.ware_name, w.amount
+                     ORDER BY w.ware_id ASC";
+        $rw = mysqli_query($conn, $sql_ware);
+        if ($rw) {
+            while ($row = mysqli_fetch_assoc($rw)) {
+                $row['places'] = $row['places'] ? $row['places'] : '';
+                $stock_map[$row['prod_id']][] = $row;
+            }
+        }
+
+        $sql_shop = "SELECT s.prod_id, s.shop_id as id, d.shop_name, s.amount, 'shop' as type,
+                            GROUP_CONCAT(sp.place SEPARATOR ', ') as places
+                     FROM shop s 
+                     INNER JOIN shop_detail d ON s.shop_id = d.shop_id 
+                     LEFT JOIN shop_place sp ON (s.prod_id = sp.prod_id AND s.shop_id = sp.shop_id)
+                     WHERE s.prod_id IN ($pids)
+                     GROUP BY s.prod_id, s.shop_id, d.shop_name, s.amount
+                     ORDER BY s.shop_id ASC";
+        $rs = mysqli_query($conn, $sql_shop);
+        if ($rs) {
+            while ($row = mysqli_fetch_assoc($rs)) {
+                $row['places'] = $row['places'] ? $row['places'] : '';
+                $stock_map[$row['prod_id']][] = $row;
+            }
+        }
+    }
+
     foreach ($raw_rows as $row) {
         $prod_id = $row['prod_id'];            
         if (isset($_GET['ware_id'])) {
             $row['min_amount'] = isset($amt_map[$prod_id]) ? $amt_map[$prod_id] : 0;
+        }
+
+        // แนบข้อมูลสต๊อกทุกโกดัง/หน้าร้าน หากร้องขอ with_stock
+        if ($with_stock) {
+            $row['stock_items'] = isset($stock_map[$prod_id]) ? $stock_map[$prod_id] : array();
         }
 
         // แนบข้อมูลโฟลเดอร์ของสินค้า

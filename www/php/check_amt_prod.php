@@ -6,14 +6,17 @@
 
     if(isset($_POST['qr'])){
         $qr = mysqli_real_escape_string($conn, $_POST['qr']); 
-        $query = "SELECT d.ware_name,p.prod_name,w.amount,p.img,p.prod_cost,p.prod_pricesend,p.prod_price,w.ware_id as id,p.prod_id FROM warehouse w INNER JOIN warehouse_detail d
-        ON w.ware_id = d.ware_id INNER JOIN product p ON w.prod_id = p.prod_id WHERE p.prod_code = '$qr' 
-        ORDER BY  w.ware_id ASC";
+        $query = "SELECT d.ware_name,p.prod_name,w.amount,p.img,p.prod_cost,p.prod_pricesend,p.prod_price,w.ware_id as id,p.prod_id,
+                         (SELECT GROUP_CONCAT(place SEPARATOR ', ') FROM warehouse_place wp WHERE wp.prod_id = p.prod_id AND wp.ware_id = w.ware_id) as places
+                  FROM warehouse w INNER JOIN warehouse_detail d
+                  ON w.ware_id = d.ware_id INNER JOIN product p ON w.prod_id = p.prod_id WHERE p.prod_code = '$qr' 
+                  ORDER BY w.ware_id ASC";
         $result = mysqli_query($conn, $query);
         
         if($result && mysqli_num_rows($result) > 0){    
           while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){ 
                 $target_prod_id = $row['prod_id'];
+                $row['places'] = isset($row['places']) && $row['places'] !== null ? $row['places'] : '';
                 $row['type'] = "ware";
                 $row['place_type'] = "ware";
                 $row[0] = $row['ware_name'];
@@ -30,14 +33,17 @@
           }   
         }
     
-        $query = "SELECT d.shop_name,p.prod_name,s.amount,p.img,p.prod_cost,p.prod_pricesend,p.prod_price,s.shop_id as id,p.prod_id FROM shop s INNER JOIN shop_detail d
-        ON s.shop_id = d.shop_id INNER JOIN product p ON s.prod_id = p.prod_id WHERE p.prod_code = '$qr' 
-        ORDER BY s.shop_id ASC";
+        $query = "SELECT d.shop_name,p.prod_name,s.amount,p.img,p.prod_cost,p.prod_pricesend,p.prod_price,s.shop_id as id,p.prod_id,
+                         (SELECT GROUP_CONCAT(place SEPARATOR ', ') FROM shop_place sp WHERE sp.prod_id = p.prod_id AND sp.shop_id = s.shop_id) as places
+                  FROM shop s INNER JOIN shop_detail d
+                  ON s.shop_id = d.shop_id INNER JOIN product p ON s.prod_id = p.prod_id WHERE p.prod_code = '$qr' 
+                  ORDER BY s.shop_id ASC";
         $result = mysqli_query($conn, $query);
         
         if($result && mysqli_num_rows($result) > 0){    
           while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){ 
                 $target_prod_id = $row['prod_id'];
+                $row['places'] = isset($row['places']) && $row['places'] !== null ? $row['places'] : '';
                 $row['type'] = "shop";
                 $row['place_type'] = "shop";
                 $row[0] = $row['shop_name'];
@@ -56,13 +62,16 @@
     }else if(isset($_POST['prod_id'])){
         $prod_id = mysqli_real_escape_string($conn, $_POST['prod_id']);
         $target_prod_id = $prod_id;
-        $query = "SELECT d.ware_name,p.prod_name,p.prod_code,w.amount,p.img,p.prod_cost,p.prod_pricesend,p.prod_price,w.ware_id as id FROM warehouse w INNER JOIN warehouse_detail d
-        ON w.ware_id = d.ware_id INNER JOIN product p ON w.prod_id = p.prod_id WHERE p.prod_id = '$prod_id' 
-        ORDER BY  w.ware_id ASC";
+        $query = "SELECT d.ware_name,p.prod_name,p.prod_code,w.amount,p.img,p.prod_cost,p.prod_pricesend,p.prod_price,w.ware_id as id,
+                         (SELECT GROUP_CONCAT(place SEPARATOR ', ') FROM warehouse_place wp WHERE wp.prod_id = p.prod_id AND wp.ware_id = w.ware_id) as places
+                  FROM warehouse w INNER JOIN warehouse_detail d
+                  ON w.ware_id = d.ware_id INNER JOIN product p ON w.prod_id = p.prod_id WHERE p.prod_id = '$prod_id' 
+                  ORDER BY w.ware_id ASC";
         $result = mysqli_query($conn, $query);
         
         if($result && mysqli_num_rows($result) > 0){    
           while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){  
+                $row['places'] = isset($row['places']) && $row['places'] !== null ? $row['places'] : '';
                 $row['type'] = "ware";
                 $row['place_type'] = "ware";
                 $row[0] = $row['ware_name'];
@@ -79,13 +88,16 @@
           }   
         }
     
-        $query = "SELECT d.shop_name,p.prod_name,p.prod_code,s.amount,p.img,p.prod_cost,p.prod_pricesend,p.prod_price,s.shop_id as id FROM shop s INNER JOIN shop_detail d
-        ON s.shop_id = d.shop_id INNER JOIN product p ON s.prod_id = p.prod_id WHERE p.prod_id = '$prod_id' 
-        ORDER BY s.shop_id ASC";
+        $query = "SELECT d.shop_name,p.prod_name,p.prod_code,s.amount,p.img,p.prod_cost,p.prod_pricesend,p.prod_price,s.shop_id as id,
+                         (SELECT GROUP_CONCAT(place SEPARATOR ', ') FROM shop_place sp WHERE sp.prod_id = p.prod_id AND sp.shop_id = s.shop_id) as places
+                  FROM shop s INNER JOIN shop_detail d
+                  ON s.shop_id = d.shop_id INNER JOIN product p ON s.prod_id = p.prod_id WHERE p.prod_id = '$prod_id' 
+                  ORDER BY s.shop_id ASC";
         $result = mysqli_query($conn, $query);
         
         if($result && mysqli_num_rows($result) > 0){    
           while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){
+                $row['places'] = isset($row['places']) && $row['places'] !== null ? $row['places'] : '';
                 $row['type'] = "shop";
                 $row['place_type'] = "shop";
                 $row[0] = $row['shop_name'];

@@ -919,16 +919,19 @@
             action: function() {
               EasyLoading.show({ text: "กำลังบันทึกและตัดสต๊อก..." });
               var d = new Date();
-              var dateStr = ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear();
-              var timeStr = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+              var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+              var dateStr = pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear();
+              var timeStr = pad(d.getHours()) + ':' + pad(d.getMinutes());
               var displayDateTime = dateStr + ' ' + timeStr;
+              var localDateTime = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
+                                  pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
 
               var postData = {
                 JSON: JSON.stringify(transferItems),
                 direction: currentDirection,
                 from_id: fromId,
                 to_id: toId,
-                date: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                date: localDateTime,
                 user_id: localStorage.user_id,
                 comment: comment
               };

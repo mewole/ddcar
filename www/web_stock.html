@@ -254,6 +254,15 @@
 				delete_prod(pid, pname);
 			});
 
+			$(document).off('click', '.btn-open-adjust').on('click', '.btn-open-adjust', function(e) {
+				e.preventDefault();
+				var pid = $(this).data('prod-id');
+				var pname = $(this).data('prod-name');
+				var pcode = $(this).data('prod-code');
+				var pimg = $('#img-' + pid).attr('src') || 'img/no_img.png';
+				openAdjustStockModal(pid, pname, pcode, pimg);
+			});
+
 			// เช็คจำนวนสินค้าใกล้หมดเพื่อแสดง badge เตือน
 			$.get("php/get_low_stock.php?mode=reorder", function(res) {
 				if (res && res.status === 'success' && res.data && res.data.length > 0) {
@@ -335,185 +344,214 @@
   			
   			$("#detail-ctn").prop('hidden', false);
   						 
+			EasyLoading.show({                           
+				text: "กำลังโหลดข้อมูลสินค้า..."                            
+			});		
+
 			$.ajax({
 				type: "POST",
 				url: "php/search_prod.php",
-				data: {'phrase' : val},
-				//async: false,
-				beforeSend: function(){
-					EasyLoading.show({                           
-						text: "กำลังโหลด"                            
-					});		
-				},             
+				data: {'phrase' : val, 'with_stock': 1},
+				dataType: "json",
 				success: function(data){  
-					EasyLoading.hide();
 					var obj = (typeof data === 'object') ? data : (data ? jQuery.parseJSON(data) : []);										
 					if(obj && obj.length > 0){
+						if(obj.length >= 60){
+							$('#append-ctn').append('<div class="col-12 text-center text-muted mb-3 font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-info-circle mr-1 text-primary"></i> แสดง 60 รายการแรกที่ตรงกับคำค้นหา (หากไม่พบสินค้า กรุณาระบุชื่อหรือรหัส SKU ให้เจาะจงขึ้น)</div>');
+						}
 						$.each(obj, function(i, field){ 
-							get_amt(field.prod_id, field.prod_name, field.img, field.prod_code, field.folder_path, field.folder_chain);       
+							render_product_card_from_data(field);
 						}); 
+						set_fullImage();
 					}else{					
 						$('#append-ctn').append('<p class="display">ไม่พบสินค้า</p>');
 					}                                                                                                                                      
 				},
 				error: function(){
-					EasyLoading.hide();
 					$('#append-ctn').append('<p class="display">เกิดข้อผิดพลาดในการเชื่อมต่อ</p>');
+				},
+				complete: function(){
+					EasyLoading.hide();
 				}               
       		}); 
   		}
 
+		function render_product_card_from_data(field){
+			var prod_id = field.prod_id;
+			var name = field.prod_name || "";
+			var img = field.img || "";
+			var code = field.prod_code || "";
+			var folder_path = field.folder_path || "";
+			var folder_chain = field.folder_chain || [];
+			var stock_items = field.stock_items || [];
+
+			var msg = "";
+			if(stock_items && stock_items.length > 0){
+				$.each(stock_items, function(i, item){
+					var placeType = item.type || item.place_type || 'shop';
+					var type_label = (placeType == "ware") ? "โกดัง" : "หน้าร้าน";
+					if (item.ware_name) { type_label = item.ware_name; }
+					else if (item.shop_name) { type_label = item.shop_name; }
+
+					var addr_clean = item.places ? item.places.replace(/,+$/, '').replace(/,/g, ', ') : '';
+					var place_label = addr_clean 
+						? '<span class="text-primary font-weight-bold"><i class="fas fa-map-marker-alt text-danger mr-1"></i>' + addr_clean + '</span>'
+						: '<span class="text-muted" style="font-size: 0.88rem;">(ไม่ระบุตำแหน่ง)</span>';
+
+					msg += '<div class="inforow row justify-content-center align-items-center my-1">'+
+								'<span class="badge badge-light border text-dark px-2 py-1 mr-1 font-weight-bold">'+type_label+'</span>'+
+								'<span class="font-weight-bold text-dark">: ' + (item.amount || 0) + ' ชิ้น</span>'+
+								'<span class="text-muted mx-2">|</span>'+
+								place_label +
+							'</div>';
+				});
+			}else{
+				msg = '<div class="inforow row justify-content-center">'+
+						'<p class="text-muted">ไม่มีสินค้าในโกดัง/หน้าร้าน</p>'+
+					  '</div>';
+			}
+
+			var msg_price = "";
+			if(localStorage.user_role != "แอดมิน" && localStorage.user_role != "เจ้าของร้าน"){
+				msg_price = '<p class="m-0">ส่ง : ' + (field.prod_pricesend || '-') + '  ปลีก : ' + (field.prod_price || '-') + '</p>';
+			}else{
+				msg_price = '<p class="m-0">ทุน : ' + (field.prod_cost || '-') + '  ส่ง : ' + (field.prod_pricesend || '-') + '  ปลีก : ' + (field.prod_price || '-') + '</p>';
+			}
+
+			var folder_html = render_folder_badge(folder_path, folder_chain);
+			var code_html = code 
+				? '<span class="prod-code-badge"><i class="fas fa-barcode mr-1"></i><span class="code-text">' + code + '</span></span>'
+				: '';
+			var img_html = (!img || img == "img/no_img.png") 
+				? '<div class="prod-img-wrap"><img id="img-'+prod_id+'" src="img/no_img.png" alt="pic"></div>'
+				: '<div class="prod-img-wrap"><img id="img-'+prod_id+'" class="thumbnails" src="'+img+'" alt="pic"></div>';
+
+			var $card = $(
+				'<div id="div-'+prod_id+'" class="jumbotron text-center jumbo-center position-relative">' +
+					'<div class="d-flex justify-content-between align-items-center mb-2">' +
+						'<div class="prod-code-container">' + code_html + '</div>' +
+						'<div>' +
+							'<i id="i-'+prod_id+'" class="fas fa-pen text-primary btn-edit-prod" data-toggle="modal" data-target="#EditModal" style="cursor: pointer; margin-right: 15px;" title="แก้ไขสินค้า"></i>' +
+							'<i id="trash-'+prod_id+'" class="fas fa-trash text-danger btn-delete-prod" style="cursor: pointer;" title="ลบสินค้า"></i>' +
+						'</div>' +
+					'</div>' +
+					'<div class="folder-path-container">' + folder_html + '</div>' +
+					'<p id="p-'+prod_id+'" class="display prod-title-name"></p>' +
+					msg_price +
+					' <hr class="jumbohr">' +
+					img_html +
+					msg +
+					(canViewCost() ? '<div id="supplier-badge-' + prod_id + '" class="supplier-badge-wrap"></div>' : '') +
+					'<button type="button" class="btn btn-sm btn-outline-danger btn-block mt-3 font-weight-bold btn-open-adjust" id="btn-adj-'+prod_id+'" title="ตัดของชำรุด/ของหาย/ปรับสต๊อกโดยตรง">' +
+						'<i class="fas fa-minus-circle mr-1"></i> ปรับลด / ตัดสต๊อก' +
+					'</button>' +
+				'</div>'
+			);
+
+			// กำหนดชื่อสินค้าแบบ safe text ป้องกัน quote หลุดและ XSS
+			$card.find('#p-' + prod_id).text(name);
+
+			// แนบข้อมูลลงใน jQuery .data() เพื่อรองรับชื่อสินค้าที่มีเครื่องหมายคำพูด (") เช่น 4" หรือ (') ได้ 100%
+			$card.find('#i-' + prod_id)
+				.data('prod-id', prod_id)
+				.data('prod-name', name)
+				.data('prod-code', code);
+
+			$card.find('#trash-' + prod_id)
+				.data('prod-id', prod_id)
+				.data('prod-name', name);
+
+			$card.find('#btn-adj-' + prod_id)
+				.data('prod-id', prod_id)
+				.data('prod-name', name)
+				.data('prod-code', code);
+
+			$('#append-ctn').append($card);
+
+			if (!img || img == "img/no_img.png") {
+				$.ajax({
+					type: "POST",
+					url: "php/search_img.php",
+					data: { prod_id: prod_id },
+					dataType: "json",
+					success: function(res) {
+						if (res && res.length > 0 && res[0].img && res[0].img !== "img/no_img.png") {
+							$('#img-' + prod_id).attr('src', res[0].img).addClass('thumbnails');
+							set_fullImage();
+						}
+					}
+				});
+			}
+
+			if (canViewCost()) {
+				observeSupplierBadge(prod_id, name, code);
+			}
+		}
+
+		function observeSupplierBadge(pid, pname, pcode) {
+			var el = document.getElementById('supplier-badge-' + pid);
+			if (!el) return;
+			if ('IntersectionObserver' in window) {
+				if (!window.supplierBadgeObserver) {
+					window.supplierBadgeObserver = new IntersectionObserver(function(entries) {
+						entries.forEach(function(entry) {
+							if (entry.isIntersecting) {
+								var target = entry.target;
+								window.supplierBadgeObserver.unobserve(target);
+								var targetPid = $(target).data('prod-id');
+								var targetName = $(target).data('prod-name');
+								var targetCode = $(target).data('prod-code');
+								load_stock_supplier_badge(targetPid, targetName, targetCode);
+							}
+						});
+					}, { rootMargin: '200px' });
+				}
+				$(el).data('prod-id', pid).data('prod-name', pname).data('prod-code', pcode);
+				window.supplierBadgeObserver.observe(el);
+			} else {
+				load_stock_supplier_badge(pid, pname, pcode);
+			}
+		}
+
 		function get_amt(prod_id,name,img,code,folder_path,folder_chain){
 			code = code || "";
 			folder_path = folder_path || "";
-			var namedq = name ? name.replace(/"/g, '\\"') : "";	
-			var addr;
 			$.ajax({
 				type: "POST",
 				url: "php/check_amt_prod.php",                
 				data: {'prod_id': prod_id},    
-				async: false,
-				beforeSend: function(){
-					EasyLoading.show({                           
-						text: "กำลังโหลด"                            
-					});		
-				},                   
+				dataType: "json",
 				success: function(data){
-					EasyLoading.hide();				
-					var msg = "";		                      
 					var obj = (typeof data === 'object') ? data : (data ? jQuery.parseJSON(data) : []); 	
-					console.log(obj);
-					// หากไม่มี folder_path ส่งเข้ามา ให้ลองดึงจากผลลัพธ์ของ check_amt_prod.php
-					if(!folder_path && obj && obj.length > 0 && obj[0].folder_path){
-						folder_path = obj[0].folder_path;
-						folder_chain = obj[0].folder_chain;
-					}
-					if(!code && obj && obj.length > 0 && obj[0].prod_code){
-						code = obj[0].prod_code;
-					}
+					var item = {
+						prod_id: prod_id,
+						prod_name: name || (obj && obj[0] ? obj[0].prod_name : ''),
+						img: img || (obj && obj[0] ? obj[0].img : ''),
+						prod_code: code || (obj && obj[0] ? obj[0].prod_code : ''),
+						prod_cost: (obj && obj[0] ? obj[0].prod_cost : ''),
+						prod_pricesend: (obj && obj[0] ? obj[0].prod_pricesend : ''),
+						prod_price: (obj && obj[0] ? obj[0].prod_price : ''),
+						folder_path: folder_path || (obj && obj[0] ? obj[0].folder_path : ''),
+						folder_chain: folder_chain || (obj && obj[0] ? obj[0].folder_chain : []),
+						stock_items: []
+					};
 
-					var msg_price = "";					
-					if(obj != "" && obj.length > 0){                
-						$.each(obj, function(i, field){            				
-							var id = obj[i].id;
-							var price = obj[i].prod_price;
-							var pricesend = obj[i].prod_pricesend;
-							var cost = obj[i].prod_cost;
-							var datastr;
-							var placeType = obj[i].type || obj[i].place_type || obj[i][9] || obj[i][8] || obj[i][0];
-							if(placeType == "ware"){
-								datastr = {'prod_id':prod_id,'ware_id':id};
-							}else{
-								datastr = {'prod_id':prod_id,'shop_id':id};
-							}
-							addr = "";
-							$.ajax({
-								type: "POST",
-								url: "php/get_place.php",
-								data: datastr,
-								async: false,
-								beforeSend: function(){
-									EasyLoading.show({                           
-										text: "กำลังโหลด"                            
-									});		
-								},             
-								success: function(data){  
-									EasyLoading.hide();
-									var obj2 = (typeof data === 'object') ? data : (data ? jQuery.parseJSON(data) : []);								
-									$.each(obj2, function(i, field){ 
-										addr = addr + field.place + ",";
-									}); 
-								}               
-							});	
-							var addr_clean = addr ? addr.replace(/,+$/, '').replace(/,/g, ', ') : '';
-							var place_label = addr_clean 
-								? '<span class="text-primary font-weight-bold"><i class="fas fa-map-marker-alt text-danger mr-1"></i>' + addr_clean + '</span>'
-								: '<span class="text-muted" style="font-size: 0.88rem;">(ไม่ระบุตำแหน่ง)</span>';
-							var type_label = (placeType == "ware") ? "โกดัง" : "หน้าร้าน";
-							if (obj[i].ware_name) { type_label = obj[i].ware_name; }
-							else if (obj[i].shop_name) { type_label = obj[i].shop_name; }
-							else if (obj[i][0] && obj[i][0] !== "ware" && obj[i][0] !== "shop") { type_label = obj[i][0]; }
-
-							msg = msg + '<div class="inforow row justify-content-center align-items-center my-1">'+
-											'<span class="badge badge-light border text-dark px-2 py-1 mr-1 font-weight-bold">'+type_label+'</span>'+
-											'<span class="font-weight-bold text-dark">: '+obj[i].amount+' ชิ้น</span>'+
-											'<span class="text-muted mx-2">|</span>'+
-											place_label +
-										'</div>';												
-						});	
-						if(localStorage.user_role != "แอดมิน" && localStorage.user_role != "เจ้าของร้าน"){
-							msg_price = '<p class="m-0">ส่ง : '+obj[0].prod_pricesend+'  ปลีก : '+obj[0].prod_price+'</p>';
-						}else{
-							msg_price = '<p class="m-0">ทุน : '+obj[0].prod_cost+'  ส่ง : '+obj[0].prod_pricesend+'  ปลีก : '+obj[0].prod_price+'</p>';
-						}
-					}else{
-						msg = '<div class="inforow row justify-content-center">'+
-								'<p class="text-muted">ไม่มีสินค้าในโกดัง/หน้าร้าน</p>'+
-							  '</div>';
-						msg_price = '';
-					}
-
-					var folder_html = render_folder_badge(folder_path, folder_chain);
-					var code_html = code 
-						? '<span class="prod-code-badge"><i class="fas fa-barcode mr-1"></i><span class="code-text">' + code + '</span></span>'
-						: '';
-					var img_html = (img == "") 
-						? '<div class="prod-img-wrap"><img id="img-'+prod_id+'" src="img/no_img.png" alt="pic"></div>'
-						: '<div class="prod-img-wrap"><img id="img-'+prod_id+'" class="thumbnails" src="'+img+'" alt="pic"></div>';
-
-					var $card = $(
-						'<div id="div-'+prod_id+'" class="jumbotron text-center jumbo-center position-relative">' +
-							'<div class="d-flex justify-content-between align-items-center mb-2">' +
-								'<div class="prod-code-container">' + code_html + '</div>' +
-								'<div>' +
-									'<i id="i-'+prod_id+'" class="fas fa-pen text-primary btn-edit-prod" data-toggle="modal" data-target="#EditModal" style="cursor: pointer; margin-right: 15px;" title="แก้ไขสินค้า"></i>' +
-									'<i id="trash-'+prod_id+'" class="fas fa-trash text-danger btn-delete-prod" style="cursor: pointer;" title="ลบสินค้า"></i>' +
-								'</div>' +
-							'</div>' +
-							'<div class="folder-path-container">' + folder_html + '</div>' +
-							'<p id="p-'+prod_id+'" class="display prod-title-name"></p>' +
-							msg_price +
-							' <hr class="jumbohr">' +
-							img_html +
-							msg +
-							(canViewCost() ? '<div id="supplier-badge-' + prod_id + '" class="supplier-badge-wrap"></div>' : '') +
-						'</div>'
-					);
-
-					// กำหนดชื่อสินค้าแบบ safe text ป้องกัน quote หลุดและ XSS
-					$card.find('#p-' + prod_id).text(name);
-
-					// แนบข้อมูลลงใน jQuery .data() เพื่อรองรับชื่อสินค้าที่มีเครื่องหมายคำพูด (") เช่น 4" หรือ (') ได้ 100%
-					$card.find('#i-' + prod_id)
-						.data('prod-id', prod_id)
-						.data('prod-name', name)
-						.data('prod-code', code);
-
-					$card.find('#trash-' + prod_id)
-						.data('prod-id', prod_id)
-						.data('prod-name', name);
-
-					$('#append-ctn').append($card);
-					if (!img || img == "img/no_img.png") {
-						$.ajax({
-							type: "POST",
-							url: "php/search_img.php",
-							data: { prod_id: prod_id },
-							dataType: "json",
-							success: function(res) {
-								if (res && res.length > 0 && res[0].img && res[0].img !== "img/no_img.png") {
-									$('#img-' + prod_id).attr('src', res[0].img).addClass('thumbnails');
-									set_fullImage();
-								}
-							}
+					if(obj && obj.length > 0){                
+						$.each(obj, function(i, row){            				
+							item.stock_items.push({
+								id: row.id,
+								type: row.type || row.place_type || 'shop',
+								ware_name: row.ware_name,
+								shop_name: row.shop_name,
+								amount: row.amount,
+								places: row.places || ''
+							});
 						});
 					}
-					if (canViewCost()) {
-						load_stock_supplier_badge(prod_id, name, code);
-					}
+					render_product_card_from_data(item);
+					set_fullImage();
 				}               
 			});
-			set_fullImage();
    		}
 		
 		function set_fullImage(){
@@ -766,16 +804,21 @@
     	</div>
     	<hr style="width: 85%;">
     	<div id="row-folder" class="row justify-content-center my-4 px-2">
-            <div class="col-12 col-md-5 col-lg-4 text-center mb-2 mb-md-0">
+            <div class="col-12 col-md-4 col-lg-3 text-center mb-2 mb-md-0">
     		    <button class="btn btn-lg btn-outline-secondary btn-block py-3" style="font-size: 1.15rem; border-radius: 8px;" onclick="select_folder()">
-                    <i class="fa fa-folder-open mr-2 text-warning"></i> เลือกจากหมวดหมู่สินค้า
+                    <i class="fa fa-folder-open mr-2 text-warning"></i> เลือกจากหมวดหมู่
                 </button>
             </div>
-            <div class="col-12 col-md-5 col-lg-4 text-center">
+            <div class="col-12 col-md-4 col-lg-4 text-center mb-2 mb-md-0">
     		    <button class="btn btn-lg btn-outline-danger btn-block py-3 font-weight-bold" style="font-size: 1.15rem; border-radius: 8px;" onclick="showLowStockModal()">
                     <i class="fas fa-exclamation-triangle mr-2 text-danger"></i> สินค้าใกล้หมด / Reorder Point
                     <span id="low-stock-badge" class="badge badge-danger ml-2" style="display:none;">0</span>
                 </button>
+            </div>
+            <div class="col-12 col-md-4 col-lg-3 text-center">
+    		    <a href="web_mng_adjust.html" class="btn btn-lg btn-outline-dark btn-block py-3 font-weight-bold" style="font-size: 1.15rem; border-radius: 8px;">
+                    <i class="fas fa-history mr-2 text-danger"></i> ประวัติตัดสต๊อก
+                </a>
             </div>
     	</div>
     </div>
@@ -994,6 +1037,116 @@
 		  </div>
 		</div>
 	  </div>
+
+	<!-- Modal ปรับลด / ตัดสต๊อกสินค้าโดยตรง (Stock Adjust / Write-off) -->
+	<div class="modal fade" id="AdjustStockModal" tabindex="-1" role="dialog" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+	    <div class="modal-content shadow-lg border-0">
+	      <div class="modal-header bg-danger text-white py-3">
+	        <h5 class="modal-title font-weight-bold d-flex align-items-center">
+	          <i class="fas fa-minus-circle mr-2" style="font-size: 1.3rem;"></i>
+	          <span>ปรับลด / ตัดสต๊อกสินค้า (Stock Adjustment / Write-off)</span>
+	        </h5>
+	        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body p-4">
+	        <input type="hidden" id="adj-modal-prod-id" value="">
+
+	        <!-- Product Summary Header -->
+	        <div class="d-flex align-items-center p-3 mb-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+	          <div style="width: 70px; height: 70px; min-width: 70px; border-radius: 8px; overflow: hidden; background: #fff; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center;" class="mr-3">
+	            <img id="adj-modal-prod-img" src="img/no_img.png" alt="Product" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+	          </div>
+	          <div class="flex-grow-1">
+	            <span id="adj-modal-prod-code" class="badge badge-dark px-2 py-1 mb-1 font-monospace" style="font-size: 0.85rem;"></span>
+	            <h5 id="adj-modal-prod-name" class="font-weight-bold text-dark mb-0" style="font-size: 1.15rem; line-height: 1.4;"></h5>
+	          </div>
+	        </div>
+
+	        <!-- Location Selection -->
+	        <div class="form-group mb-3">
+	          <label class="font-weight-bold text-dark"><i class="fas fa-map-marker-alt text-danger mr-1"></i> เลือกสถานที่ที่ต้องการตัดสต๊อก: <span class="text-danger">*</span></label>
+	          <select id="adj-place-select" class="form-control form-control-lg font-weight-bold" style="border-radius: 8px; font-size: 1.05rem;">
+	            <!-- Dynamically populated -->
+	          </select>
+	        </div>
+
+	        <!-- Quantity Input & Calculation -->
+	        <div class="row align-items-center mb-3">
+	          <div class="col-md-6 mb-2 mb-md-0">
+	            <label class="font-weight-bold text-dark"><i class="fas fa-sort-numeric-down text-primary mr-1"></i> จำนวนที่ต้องการตัดออก: <span class="text-danger">*</span></label>
+	            <div class="input-group">
+	              <div class="input-group-prepend">
+	                <button class="btn btn-outline-secondary px-3" type="button" onclick="stepAdjustQty(-1)"><i class="fas fa-minus"></i></button>
+	              </div>
+	              <input type="number" id="adj-qty" class="form-control form-control-lg text-center font-weight-bold text-danger" style="font-size: 1.4rem;" min="1" value="1">
+	              <div class="input-group-append">
+	                <button class="btn btn-outline-secondary px-3" type="button" onclick="stepAdjustQty(1)"><i class="fas fa-plus"></i></button>
+	                <button class="btn btn-outline-danger font-weight-bold px-3" type="button" onclick="setAdjustQtyAll()" title="ตัดยอดทั้งหมดที่มี">ทั้งหมด</button>
+	              </div>
+	            </div>
+	          </div>
+	          <div class="col-md-6">
+	            <div class="p-3 rounded border bg-light">
+	              <div class="d-flex justify-content-between mb-1">
+	                <span class="text-muted">สต๊อกเดิมที่จุดนี้:</span>
+	                <span id="adj-current-stock-info" class="font-weight-bold">-</span>
+	              </div>
+	              <div class="d-flex justify-content-between">
+	                <span class="text-muted">สต๊อกหลังตัดออก:</span>
+	                <span id="adj-after-stock-info" class="font-weight-bold text-primary">-</span>
+	              </div>
+	            </div>
+	          </div>
+	        </div>
+
+	        <!-- MANDATORY REASON (ช่องสีแดง) -->
+	        <div class="form-group mb-3">
+	          <label class="font-weight-bold text-danger d-flex align-items-center justify-content-between">
+	            <span><i class="fas fa-exclamation-circle mr-1"></i> เหตุผลในการตัดสต๊อก <span class="badge badge-danger">บังคับระบุทุกครั้ง</span>:</span>
+	            <small class="text-muted font-weight-normal">* ระบบจะบันทึกลงประวัติเพื่อตรวจสอบย้อนหลัง</small>
+	          </label>
+	          <textarea id="adj-reason" class="form-control" rows="3" 
+	                    placeholder="* บังคับระบุเหตุผล เช่น ของชำรุดแตกหัก, ของสูญหาย, นับสต๊อกแล้วไม่ตรง, เบิกเป็นสินค้าตัวอย่าง, ปรับยอดให้ตรงกับสต๊อกจริง..." 
+	                    style="border: 2px solid #dc3545; box-shadow: 0 0 8px rgba(220, 53, 69, 0.25); border-radius: 8px; font-size: 1rem;"></textarea>
+	          <div class="invalid-feedback font-weight-bold">
+	            กรุณาระบุเหตุผลในการตัดสต๊อกทุกครั้ง!
+	          </div>
+
+	          <!-- Quick Reason Tags -->
+	          <div class="mt-2">
+	            <small class="text-muted d-block mb-1 font-weight-bold"><i class="fas fa-tags mr-1"></i> เลือกเหตุผลด่วน:</small>
+	            <button type="button" class="btn btn-sm btn-outline-danger mr-1 mb-1" onclick="insertAdjReason('ของชำรุด / เสียหาย')"><i class="fas fa-heart-broken mr-1"></i> ของชำรุด/เสียหาย</button>
+	            <button type="button" class="btn btn-sm btn-outline-danger mr-1 mb-1" onclick="insertAdjReason('ของสูญหาย / นับสต๊อกไม่ตรง')"><i class="fas fa-search-minus mr-1"></i> ของสูญหาย/นับไม่ตรง</button>
+	            <button type="button" class="btn btn-sm btn-outline-danger mr-1 mb-1" onclick="insertAdjReason('สินค้าหมดอายุ / เสื่อมสภาพ')"><i class="fas fa-calendar-times mr-1"></i> หมดอายุ/เสื่อมสภาพ</button>
+	            <button type="button" class="btn btn-sm btn-outline-danger mr-1 mb-1" onclick="insertAdjReason('ตัดเป็นสินค้าตัวอย่าง / ใช้งานในร้าน')"><i class="fas fa-store mr-1"></i> สินค้าตัวอย่าง/ใช้ในร้าน</button>
+	            <button type="button" class="btn btn-sm btn-outline-secondary mr-1 mb-1" onclick="insertAdjReason('ปรับยอดสต๊อกให้ตรงตามจริง')"><i class="fas fa-balance-scale mr-1"></i> ปรับยอดให้ตรงตามจริง</button>
+	          </div>
+	        </div>
+
+	        <!-- Audit Info (Operator & Timestamp) -->
+	        <div class="p-2 rounded bg-light border text-muted small d-flex justify-content-between align-items-center">
+	          <div><i class="fas fa-user-shield text-primary mr-1"></i> ผู้ทำรายการ: <strong class="text-dark" id="adj-user-display">พนักงาน</strong></div>
+	          <div><i class="fas fa-clock text-secondary mr-1"></i> วันที่ทำรายการ: <span id="adj-time-display">-</span></div>
+	        </div>
+	      </div>
+
+	      <div class="modal-footer py-2 justify-content-between bg-light">
+	        <a href="web_mng_adjust.html" class="btn btn-outline-dark btn-sm font-weight-bold" target="_blank">
+	          <i class="fas fa-history mr-1"></i> ดูประวัติตัดสต๊อก
+	        </a>
+	        <div>
+	          <button type="button" class="btn btn-secondary px-3" data-dismiss="modal">ยกเลิก</button>
+	          <button type="button" class="btn btn-danger font-weight-bold px-4" id="btn-submit-adjust" onclick="submitStockAdjustment()">
+	            <i class="fas fa-check-circle mr-1"></i> ยืนยันตัดสต๊อก
+	          </button>
+	        </div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
 
     <script>
     	$("#input-search").on('focusin', function(event) {
@@ -1420,6 +1573,268 @@
 
 			printWindow.document.write(html);
 			printWindow.document.close();
+		}
+
+		// =========================================================
+		// Direct Stock Adjustment (Write-off / Damaged / Adjust)
+		// =========================================================
+		function openAdjustStockModal(prodId, prodName, prodCode, prodImg) {
+			$('#adj-modal-prod-id').val(prodId);
+			$('#adj-modal-prod-name').text(prodName);
+			$('#adj-modal-prod-code').text(prodCode ? ('SKU: ' + prodCode) : '');
+			$('#adj-modal-prod-img').attr('src', prodImg || 'img/no_img.png');
+			$('#adj-reason').val('').removeClass('is-invalid');
+			$('#adj-qty').val(1);
+			$('#adj-place-select').empty().append('<option value="">-- กำลังโหลดสถานที่... --</option>');
+			$('#adj-current-stock-info').text('-');
+			$('#adj-after-stock-info').text('-');
+			$('#btn-submit-adjust').prop('disabled', true);
+
+			var userName = localStorage.getItem('user_name') || localStorage.getItem('user_id') || 'พนักงาน';
+			$('#adj-user-display').text(userName);
+			var now = new Date();
+			var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+			var nowStr = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ' น.';
+			$('#adj-time-display').text(nowStr);
+
+			$('#AdjustStockModal').modal('show');
+
+			$.ajax({
+				type: "POST",
+				url: "php/check_amt_prod.php",
+				data: { prod_id: prodId },
+				dataType: "json",
+				success: function(res) {
+					$('#adj-place-select').empty();
+					var validOptions = 0;
+					if (res && res.length > 0) {
+						$.each(res, function(i, item) {
+							var placeType = item.type || (item.ware_name ? 'ware' : 'shop');
+							var placeName = (placeType === 'ware') ? (item.ware_name || 'โกดัง ' + item.id) : (item.shop_name || 'หน้าร้าน ' + item.id);
+							var amt = parseInt(item.amount, 10) || 0;
+							if (amt > 0) {
+								validOptions++;
+								var optLabel = (placeType === 'ware' ? '🏬 โกดัง: ' : '🏪 หน้าร้าน: ') + placeName + ' (คงเหลือ ' + amt + ' ชิ้น)';
+								var $opt = $('<option></option>')
+									.val(placeType + '-' + item.id)
+									.text(optLabel)
+									.data('place-type', placeType)
+									.data('place-id', item.id)
+									.data('place-name', placeName)
+									.data('amount', amt);
+								$('#adj-place-select').append($opt);
+							}
+						});
+					}
+
+					if (validOptions === 0) {
+						$('#adj-place-select').append('<option value="">-- ไม่มีสินค้าคงเหลือในระบบสำหรับตัดสต๊อก --</option>');
+						$('#adj-current-stock-info').html('<span class="text-danger font-weight-bold">0 ชิ้น (ไม่มีสินค้าให้ตัด)</span>');
+						$('#adj-qty').prop('disabled', true).val(0);
+						$('#btn-submit-adjust').prop('disabled', true);
+					} else {
+						$('#adj-qty').prop('disabled', false).val(1);
+						$('#btn-submit-adjust').prop('disabled', false);
+						updateAdjustStockCalculations();
+					}
+				},
+				error: function() {
+					$('#adj-place-select').html('<option value="">เกิดข้อผิดพลาดในการโหลดข้อมูล</option>');
+				}
+			});
+		}
+
+		function updateAdjustStockCalculations() {
+			var $selected = $('#adj-place-select option:selected');
+			var maxAmt = parseInt($selected.data('amount'), 10) || 0;
+			var qty = parseInt($('#adj-qty').val(), 10) || 1;
+
+			if (qty < 1) qty = 1;
+			if (qty > maxAmt && maxAmt > 0) qty = maxAmt;
+			$('#adj-qty').val(qty);
+			$('#adj-qty').attr('max', maxAmt);
+
+			$('#adj-current-stock-info').html('<strong class="text-dark">' + maxAmt + '</strong> ชิ้น');
+			var afterAmt = maxAmt - qty;
+			if (afterAmt < 0) afterAmt = 0;
+			$('#adj-after-stock-info').html('<strong class="' + (afterAmt === 0 ? 'text-danger' : 'text-primary') + '">' + afterAmt + '</strong> ชิ้น');
+		}
+
+		$(document).on('change', '#adj-place-select', function() {
+			updateAdjustStockCalculations();
+		});
+
+		$(document).on('input change', '#adj-qty', function() {
+			updateAdjustStockCalculations();
+		});
+
+		function stepAdjustQty(delta) {
+			var cur = parseInt($('#adj-qty').val(), 10) || 1;
+			$('#adj-qty').val(cur + delta);
+			updateAdjustStockCalculations();
+		}
+
+		function setAdjustQtyAll() {
+			var $selected = $('#adj-place-select option:selected');
+			var maxAmt = parseInt($selected.data('amount'), 10) || 0;
+			if (maxAmt > 0) {
+				$('#adj-qty').val(maxAmt);
+				updateAdjustStockCalculations();
+			}
+		}
+
+		function insertAdjReason(reasonText) {
+			var $t = $('#adj-reason');
+			var cur = $t.val().trim();
+			if (cur === "") {
+				$t.val(reasonText);
+			} else if (cur.indexOf(reasonText) === -1) {
+				$t.val(cur + " - " + reasonText);
+			}
+			$t.removeClass('is-invalid').focus();
+		}
+
+		function submitStockAdjustment() {
+			var prodId = $('#adj-modal-prod-id').val();
+			var prodName = $('#adj-modal-prod-name').text();
+			var $selected = $('#adj-place-select option:selected');
+			var placeType = $selected.data('place-type');
+			var placeId = $selected.data('place-id');
+			var placeName = $selected.data('place-name');
+			var currentAmt = parseInt($selected.data('amount'), 10) || 0;
+			var qty = parseInt($('#adj-qty').val(), 10) || 0;
+			var reason = $('#adj-reason').val().trim();
+			var userId = localStorage.getItem('user_id') || 1;
+			var userName = localStorage.getItem('user_name') || 'พนักงาน';
+
+			// STRICT VALIDATION 1: REASON IS MANDATORY! (บังคับช่องแดง)
+			if (!reason || reason.length === 0) {
+				$('#adj-reason').addClass('is-invalid').focus();
+				$.alert({
+					title: '<span class="text-danger"><i class="fas fa-exclamation-triangle mr-2"></i>กรุณาระบุเหตุผล!</span>',
+					content: '<strong>จำเป็นต้องใส่เหตุผลทุกครั้งที่ทำการตัดสต๊อก</strong><br>กรุณากรอกเหตุผลในช่องสีแดง เช่น ของชำรุด, แตกหัก, ของสูญหาย, ปรับยอดสต๊อกให้ตรงตามจริง หรือเลือกจากปุ่มลัดด้านล่าง',
+					type: 'red',
+					theme: 'modern'
+				});
+				return;
+			}
+
+			// STRICT VALIDATION 2: Quantity
+			if (!placeId || !placeType || currentAmt <= 0) {
+				$.alert({
+					title: 'ไม่สามารถทำรายการได้',
+					content: 'ไม่มีสต๊อกสินค้าในสถานที่ที่เลือกให้ตัด',
+					type: 'red'
+				});
+				return;
+			}
+
+			if (qty <= 0) {
+				$.alert({
+					title: 'จำนวนไม่ถูกต้อง',
+					content: 'จำนวนที่ต้องการตัดออกต้องมากกว่า 0',
+					type: 'red'
+				});
+				return;
+			}
+
+			if (qty > currentAmt) {
+				$.alert({
+					title: 'จำนวนเกินสต๊อก',
+					content: 'จำนวนที่ต้องการตัด (' + qty + ') มากกว่าสต๊อกคงเหลือจริง (' + currentAmt + ')',
+					type: 'red'
+				});
+				return;
+			}
+
+			// Confirm dialog
+			$.confirm({
+				title: '<span class="text-danger"><i class="fas fa-minus-circle mr-2"></i>ยืนยันการตัดสต๊อกสินค้า</span>',
+				content: '<div class="p-2">' +
+							'<div class="mb-2"><strong>สินค้า:</strong> ' + prodName + '</div>' +
+							'<div class="mb-2"><strong>สถานที่:</strong> ' + placeName + '</div>' +
+							'<div class="mb-2"><strong>จำนวนที่ตัด:</strong> <span class="badge badge-danger" style="font-size:1rem;">-' + qty + ' ชิ้น</span> (คงเหลือ ' + (currentAmt - qty) + ' ชิ้น)</div>' +
+							'<div class="p-2 bg-light border border-danger rounded text-danger mb-2"><strong>เหตุผล:</strong> ' + reason + '</div>' +
+							'<div class="text-muted small">ผู้ทำรายการ: ' + userName + '</div>' +
+							'<hr><div class="text-danger font-weight-bold"><i class="fas fa-info-circle mr-1"></i> ยอดสต๊อกจะถูกหักออกจากระบบทันที และถูกบันทึกในรายงานประวัติตัดสต๊อก</div>' +
+						 '</div>',
+				type: 'red',
+				theme: 'modern',
+				buttons: {
+					confirm: {
+						text: 'ยืนยันตัดสต๊อกทันที',
+						btnClass: 'btn-danger font-weight-bold',
+						action: function() {
+							EasyLoading.show({ text: "กำลังตัดสต๊อกสินค้า..." });
+							$.ajax({
+								type: "POST",
+								url: "php/save_stock_adjustment.php",
+								data: {
+									prod_id: prodId,
+									place_type: placeType,
+									place_id: placeId,
+									place_name: placeName,
+									adjust_qty: qty,
+									reason: reason,
+									user_id: userId,
+									user_name: userName
+								},
+								dataType: "json",
+								success: function(res) {
+									EasyLoading.hide();
+									if (res && res.status === 'success') {
+										$('#AdjustStockModal').modal('hide');
+										$.confirm({
+											title: '<span class="text-success"><i class="fas fa-check-circle mr-2"></i>ตัดสต๊อกสำเร็จ!</span>',
+											content: 'บันทึกการตัดสต๊อกเรียบร้อยแล้ว<br>' +
+													 '<strong>เลขที่เอกสาร:</strong> ' + res.adj_number + '<br>' +
+													 '<strong>สถานที่:</strong> ' + res.place_name + '<br>' +
+													 '<strong>คงเหลือก่อนตัด:</strong> ' + res.before_qty + ' ชิ้น ➔ <strong>คงเหลือหลังตัด:</strong> ' + res.after_qty + ' ชิ้น',
+											type: 'green',
+											theme: 'modern',
+											buttons: {
+												history: {
+													text: 'ดูประวัติตัดสต๊อก',
+													btnClass: 'btn-info',
+													action: function() {
+														window.location = 'web_mng_adjust.html';
+													}
+												},
+												close: {
+													text: 'ตกลง',
+													btnClass: 'btn-success',
+													action: function() {
+														// Refresh product list
+														show();
+													}
+												}
+											}
+										});
+									} else {
+										$.alert({
+											title: 'พบข้อผิดพลาด',
+											content: (res && res.message) ? res.message : 'ไม่สามารถตัดสต๊อกได้ กรุณาลองใหม่อีกครั้ง',
+											type: 'red'
+										});
+									}
+								},
+								error: function(xhr, status, err) {
+									EasyLoading.hide();
+									$.alert({
+										title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
+										content: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้: ' + err,
+										type: 'red'
+									});
+								}
+							});
+						}
+					},
+					cancel: {
+						text: 'ยกเลิก',
+						action: function() {}
+					}
+				}
+			});
 		}
 
 </script>
