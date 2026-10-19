@@ -3,7 +3,7 @@
     $bill_id = $_POST['bill_id'];
 
     $query = "SELECT s.order_number,c.cus_name,s.date_time,s.payment_type,s.branch_id,s.type,s.sum_price,
-    s.total_discount,s.total_price,s.get_price,s.chng,u.user_name,i.item_id,i.prod_id,p.prod_name,i.prod_price,
+    s.total_discount,s.total_price,s.get_price,s.chng,u.user_name,i.item_id,i.prod_id,p.prod_name,p.prod_code,i.prod_price,
     i.prod_amount,s.credit_id,s.comment
     FROM sale_order s INNER JOIN customer c ON s.customer_id = c.cus_id INNER JOIN user u ON s.user_id = u.user_id 
     INNER JOIN sale_order_item i ON s.order_id = i.order_id INNER JOIN product p ON i.prod_id = p.prod_id 

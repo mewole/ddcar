@@ -1,0 +1,146 @@
+/**
+ * hover_preview.css
+ * Floating product thumbnail preview card on mouse hover
+ */
+
+.hover-prod-preview {
+    cursor: pointer !important;
+    position: relative;
+    display: inline-block;
+    color: inherit;
+    border-bottom: 1px dotted rgba(52, 152, 219, 0.7);
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+.hover-prod-preview:hover {
+    color: #007bff !important;
+    border-bottom: 1px solid #007bff !important;
+    background-color: rgba(0, 123, 255, 0.06);
+}
+
+/* Floating Popover Container */
+#prod-hover-popover {
+    position: fixed;
+    z-index: 9999999 !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    width: 176px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 16px 38px -4px rgba(15, 23, 42, 0.28), 0 6px 14px -2px rgba(15, 23, 42, 0.12);
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    font-family: 'Prompt', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.92) translateY(6px);
+    transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.15s;
+    will-change: transform, opacity;
+}
+
+#prod-hover-popover.prod-hover-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1) translateY(0);
+}
+
+/* Image container */
+#prod-hover-popover .prod-hover-img-wrap {
+    width: 156px;
+    height: 156px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+#prod-hover-popover .prod-hover-img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    transition: opacity 0.2s ease;
+    border-radius: 6px;
+    display: block;
+}
+
+/* Spinner */
+#prod-hover-popover .prod-hover-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #3b82f6;
+    font-size: 1.6rem;
+    display: none;
+}
+
+#prod-hover-popover.is-loading .prod-hover-spinner {
+    display: block;
+}
+
+#prod-hover-popover.is-loading .prod-hover-img {
+    opacity: 0.15;
+}
+
+/* Meta info */
+#prod-hover-popover .prod-hover-code {
+    display: inline-block;
+    background: #e2e8f0;
+    color: #334155;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: monospace, monospace;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    max-width: 156px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#prod-hover-popover .prod-hover-code:empty {
+    display: none;
+}
+
+#prod-hover-popover .prod-hover-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.25;
+    max-width: 156px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+#prod-hover-popover .prod-hover-noimg-label {
+    position: absolute;
+    bottom: 6px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #ffffff;
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    display: none;
+}
+
+#prod-hover-popover.has-no-img .prod-hover-noimg-label {
+    display: block;
+}

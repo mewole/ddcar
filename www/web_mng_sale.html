@@ -31,6 +31,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Main Design System -->
     <link href="css/untitled.css" rel="stylesheet">
+    <!-- Product Hover Preview -->
+    <link rel="stylesheet" href="css/hover_preview.css">
+    <script src="js/hover_preview.js"></script>
 
     <style>
         body {
@@ -2205,7 +2208,7 @@
                         itemsHtml += '<tr>' +
                             '<td class="text-center text-muted">' + (idx + 1) + '</td>' +
                             '<td>' + (item.prod_code || '-') + '</td>' +
-                            '<td class="font-weight-bold text-dark">' + item.prod_name + '</td>' +
+                            '<td class="font-weight-bold text-dark"><span class="hover-prod-preview" data-prod-id="' + item.prod_id + '" data-prod-code="' + (item.prod_code || '') + '">' + item.prod_name + '</span></td>' +
                             '<td class="text-center font-weight-bold">' + item.prod_amount + '</td>' +
                             '<td class="text-right">฿' + formatMoney(item.prod_price) + '</td>' +
                             '<td class="text-right font-weight-bold">฿' + formatMoney(lineTotal) + '</td>' +
@@ -2693,7 +2696,7 @@
                 var rClass = (p.rank === 1) ? 'product-rank-1' : (p.rank === 2) ? 'product-rank-2' : (p.rank === 3) ? 'product-rank-3' : 'product-rank-n';
                 listHtml += '<div class="product-rank-item">' +
                     '<span class="product-rank-badge ' + rClass + '">' + p.rank + '</span>' +
-                    '<div class="product-rank-name" title="' + escapeHtml(p.prod_name) + '">' + escapeHtml(p.prod_name) + '</div>' +
+                    '<div class="product-rank-name hover-prod-preview" data-prod-id="' + (p.prod_id || '') + '" title="' + escapeHtml(p.prod_name) + '">' + escapeHtml(p.prod_name) + '</div>' +
                     '<div class="product-rank-stat">' +
                     '<div class="product-rank-qty">' + Number(p.total_qty).toLocaleString() + ' <span class="small font-weight-normal text-muted">ชิ้น</span></div>' +
                     '<div class="product-rank-rev">฿' + formatMoney(p.total_revenue) + '</div>' +

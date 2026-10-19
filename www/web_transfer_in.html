@@ -36,6 +36,8 @@
   <!-- Fonts & Main Styles -->
   <link href="https://fonts.googleapis.com/css?family=Prompt:300,400,500,600,700" rel="stylesheet">
   <link href="css/untitled.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/hover_preview.css">
+  <script src="js/hover_preview.js"></script>
   <script type="text/javascript" src="js/config.js"></script>
 
   <style>
@@ -281,32 +283,21 @@
           <!-- Item rows inserted here -->
         </div>
 
-        <!-- Section 4: Print Options & Notes -->
+        <!-- Section 4: Notes & Print Info -->
         <hr class="my-3">
         <div class="row align-items-center">
-          <div class="col-12 col-md-6 mb-2 mb-md-0">
-            <span class="font-weight-bold mr-2"><i class="fa fa-print mr-1"></i> การพิมพ์ใบโอน:</span>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="print_type" id="print-bill" value="bill" checked>
-              <label class="form-check-label" for="print-bill">🧾 สลิปความร้อน (Bill 80mm)</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="print_type" id="print-a4" value="a4">
-              <label class="form-check-label" for="print-a4">📄 กระดาษ A4</label>
-            </div>
-            <div class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" name="print_type" id="print-none" value="none">
-              <label class="form-check-label" for="print-none">❌ ไม่พิมพ์</label>
-            </div>
-          </div>
-
-          <div class="col-12 col-md-6">
+          <div class="col-12 col-md-7 mb-2 mb-md-0">
             <div class="input-group">
               <div class="input-group-prepend">
-                <span class="input-group-text"><i class="fa fa-comment-dots"></i></span>
+                <span class="input-group-text font-weight-bold"><i class="fa fa-comment-dots mr-1"></i> หมายเหตุ:</span>
               </div>
-              <input id="transfer-comment" type="text" class="form-control" placeholder="หมายเหตุช่วยจำ (ถ้ามี เช่น ย้ายของเคลียร์พื้นที่)">
+              <input id="transfer-comment" type="text" class="form-control" placeholder="หมายเหตุช่วยจำ (ถ้ามี เช่น ย้ายของเคลียร์พื้นที่ / งานด่วน)">
             </div>
+          </div>
+          <div class="col-12 col-md-5 text-md-right text-muted">
+            <span class="badge badge-light border text-dark p-2" style="font-size: 0.88rem;">
+              <i class="fa fa-print text-primary mr-1"></i> เมื่อกดบันทึก จะมีป๊อปอัปให้เลือกพิมพ์ A4 หรือ สลิป POS ทันที
+            </span>
           </div>
         </div>
       </div>
@@ -763,7 +754,7 @@
           '<div class="col-2 font-weight-bold text-center">' + item.prod_code + '</div>' +
           '<div class="col-4 d-flex align-items-center">' +
             '<img src="' + item.img + '" class="thumb-img mr-2">' +
-            '<div><div class="font-weight-bold text-dark">' + item.prod_name + '</div><small class="text-muted">คงเหลือต้นทาง: ' + item.stock + '</small></div>' +
+            '<div><div class="font-weight-bold text-dark hover-prod-preview" data-prod-id="' + item.prod_id + '" data-prod-code="' + (item.prod_code || '') + '">' + item.prod_name + '</div><small class="text-muted">คงเหลือต้นทาง: ' + item.stock + '</small></div>' +
           '</div>' +
           '<div class="col-2 text-center">' +
             '<input type="number" class="form-control text-center font-weight-bold d-inline-block" style="width: 80px;" value="' + item.amt + '" min="1" onchange="updateItemQty(' + idx + ', this.value)">' +
@@ -917,7 +908,6 @@
       var fromId = $('#sel-source').val();
       var toId = $('#sel-dest').val();
       var comment = $('#transfer-comment').val();
-      var printType = $('input[name="print_type"]:checked').val();
 
       $.confirm({
         title: 'ยืนยันการโอนย้ายสินค้า',
@@ -927,12 +917,6 @@
             text: 'บันทึกและส่งของ',
             btnClass: 'btn-success',
             action: function() {
-              // Pre-open print window on user action to avoid popup blockers
-              var winPrint = null;
-              if (printType !== 'none') {
-                winPrint = window.open('', '_blank');
-              }
-
               EasyLoading.show({ text: "กำลังบันทึกและตัดสต๊อก..." });
               var d = new Date();
               var dateStr = ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear();
@@ -959,51 +943,72 @@
                   if (res && res.status === 'success') {
                     var tfNumber = res.tf_number;
                     var tfId = res.tf_id;
+                    var slipData = {
+                      tf_number: tfNumber,
+                      date_time: displayDateTime,
+                      source_name: sourceName,
+                      dest_name: destName,
+                      sender_name: localStorage.user_name || 'พนักงาน',
+                      items: JSON.parse(JSON.stringify(transferItems)),
+                      total_qty: res.total_qty,
+                      remark: comment
+                    };
 
-                    // Print if chosen
-                    if (printType !== 'none') {
-                      printTransferSlip(printType, {
-                        tf_number: tfNumber,
-                        date_time: displayDateTime,
-                        source_name: sourceName,
-                        dest_name: destName,
-                        sender_name: localStorage.user_name || 'พนักงาน',
-                        items: transferItems,
-                        total_qty: res.total_qty,
-                        remark: comment
-                      }, winPrint);
-                    } else if (winPrint) {
-                      winPrint.close();
+                    function resetTransferForm() {
+                      transferItems = [];
+                      localStorage.removeItem('arr_trans_new');
+                      localStorage.removeItem('transfer_direction');
+                      localStorage.removeItem('transfer_source');
+                      localStorage.removeItem('transfer_dest');
+                      localStorage.removeItem('transfer_comment');
+                      renderItems();
+                      setDefault();
+                      loadPendingTransfers();
                     }
 
-                    $.alert({
-                      title: 'สำเร็จ! 📦',
-                      content: 'สร้างใบโอนเลขที่ <strong>' + tfNumber + '</strong> เรียบร้อยแล้ว!<br>สถานะ: <strong>รอสาขาปลายทางตรวจรับ</strong>',
+                    // Popup Modal asking user to choose between POS and A4
+                    $.confirm({
+                      title: '<div class="text-success font-weight-bold"><i class="fa fa-check-circle mr-2"></i> โอนย้ายสินค้าสำเร็จ!</div>',
+                      content: '<div class="py-2">' +
+                                 '<p class="mb-2" style="font-size: 1.15rem;">สร้างใบโอนเลขที่: <strong class="text-primary">' + tfNumber + '</strong></p>' +
+                                 '<p class="text-muted mb-3"><i class="fa fa-exchange-alt mr-1"></i> เส้นทาง: <strong>' + sourceName + '</strong> ➜ <strong>' + destName + '</strong> (รวม <strong>' + res.total_qty + '</strong> ชิ้น)</p>' +
+                                 '<div class="alert alert-primary py-2 text-center font-weight-bold mb-1" style="font-size: 1rem;">' +
+                                   '🖨️ กรุณาเลือกรูปแบบการพิมพ์ใบโอน:' +
+                                 '</div>' +
+                               '</div>',
+                      columnClass: 'medium',
+                      backgroundDismiss: false,
                       buttons: {
-                        ok: {
-                          text: 'ตกลง',
-                          btnClass: 'btn-primary',
+                        printPos: {
+                          text: '<i class="fa fa-receipt mr-1"></i> พิมพ์สลิป POS (80mm)',
+                          btnClass: 'btn-warning text-dark font-weight-bold px-3 py-2',
                           action: function() {
-                            transferItems = [];
-                            localStorage.removeItem('arr_trans_new');
-                            localStorage.removeItem('transfer_direction');
-                            localStorage.removeItem('transfer_source');
-                            localStorage.removeItem('transfer_dest');
-                            localStorage.removeItem('transfer_comment');
-                            renderItems();
-                            setDefault();
-                            loadPendingTransfers();
+                            printTransferSlip('bill', slipData);
+                            resetTransferForm();
+                          }
+                        },
+                        printA4: {
+                          text: '<i class="fa fa-file-alt mr-1"></i> พิมพ์กระดาษ A4',
+                          btnClass: 'btn-primary font-weight-bold px-3 py-2',
+                          action: function() {
+                            printTransferSlip('a4', slipData);
+                            resetTransferForm();
+                          }
+                        },
+                        noPrint: {
+                          text: '<i class="fa fa-times mr-1"></i> ไม่พิมพ์ (เสร็จสิ้น)',
+                          btnClass: 'btn-secondary py-2',
+                          action: function() {
+                            resetTransferForm();
                           }
                         }
                       }
                     });
                   } else {
-                    if (winPrint) { winPrint.close(); }
                     $.alert({ title: 'พบข้อผิดพลาด', content: res.message || 'ไม่สามารถบันทึกได้' });
                   }
                 },
                 error: function(xhr) {
-                  if (winPrint) { winPrint.close(); }
                   EasyLoading.hide();
                   $.alert({ title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ', content: xhr.responseText || 'Error' });
                 }
@@ -1017,9 +1022,17 @@
 
     // Print Transfer Slip (Thermal 80mm or A4)
     function printTransferSlip(type, data, existingWin) {
+      // Defensive check in case arguments were passed in reverse order (e.g. data, type)
+      if (typeof type === 'object' && typeof data === 'string') {
+        var tmp = type;
+        type = data;
+        data = tmp;
+      }
+      type = (type === 'a4') ? 'a4' : 'bill';
+
       var w = existingWin || window.open('', '_blank');
       if (!w) {
-        $.alert({ title: 'แจ้งเตือน', content: 'เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาตป๊อปอัป' });
+        $.alert({ title: 'แจ้งเตือน', content: 'เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาตป๊อปอัป (Pop-up)' });
         return;
       }
 
@@ -1032,15 +1045,18 @@
       if (type === 'bill') {
         html += '<style>' +
           '* { box-sizing: border-box; margin: 0; padding: 0; } ' +
-          '@page { size: auto; margin: 0mm; } ' +
-          '@media print { html, body { width: 100% !important; min-width: 0 !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } } ' +
+          '@page { size: 80mm auto; margin: 0mm; } ' +
+          '@media print { ' +
+          '  html, body { width: 100% !important; min-width: 0 !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } ' +
+          '  @page { size: 80mm auto; margin: 0mm; } ' +
+          '} ' +
           'body { font-family: "Prompt", "Maitree", Tahoma, "Segoe UI", sans-serif; font-size: 13px; line-height: 1.35; color: #000 !important; background: #fff; width: 100%; } ' +
-          '.bill-wrap { width: 72mm; margin: 0 auto; padding: 3mm 2mm; } ' +
+          '.bill-wrap { width: 72mm; margin: 0 auto; padding: 4mm 2mm; } ' +
           '.text-center { text-align: center; } .text-left { text-align: left; } .text-right { text-align: right; } ' +
           '.font-bold { font-weight: bold; } ' +
           '.line-dashed { border-top: 1px dashed #000; margin: 6px 0; } ' +
           '.row-info { display: flex; margin-bottom: 3px; font-size: 12px; } ' +
-          '.row-info .lbl { width: 68px; font-weight: bold; text-align: right; padding-right: 6px; flex-shrink: 0; } ' +
+          '.row-info .lbl { width: 70px; font-weight: bold; text-align: right; padding-right: 6px; flex-shrink: 0; } ' +
           '.row-info .val { flex-grow: 1; text-align: left; word-break: break-word; } ' +
           'table.items-table { width: 100%; border-collapse: collapse; margin: 6px 0; } ' +
           'table.items-table th { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; font-size: 12px; font-weight: bold; } ' +
@@ -1066,8 +1082,13 @@
         html += '<table class="items-table"><thead><tr><th style="width: 12%; text-align: center;">#</th><th style="width: 63%; text-align: left;">รายการ</th><th style="width: 25%; text-align: right;">จำนวน</th></tr></thead><tbody>';
         data.items.forEach(function(it, i) {
           var name = it.prod_name || '';
+          var code = it.prod_code || '';
           var amt = it.amt || it.prod_amount || 1;
-          html += '<tr><td style="text-align: center;">' + (i + 1) + '</td><td style="text-align: left; word-break: break-word;">' + name + '</td><td style="text-align: right; font-weight: bold;">' + amt + ' ชิ้น</td></tr>';
+          html += '<tr>' +
+                    '<td style="text-align: center;">' + (i + 1) + '</td>' +
+                    '<td style="text-align: left; word-break: break-word;">' + name + (code ? ('<br><span style="font-size: 11px; color: #475569;">' + code + '</span>') : '') + '</td>' +
+                    '<td style="text-align: right; font-weight: bold;">' + amt + ' ชิ้น</td>' +
+                  '</tr>';
         });
         html += '</tbody></table>';
 
@@ -1082,7 +1103,7 @@
       } else { // A4
         html += '<style>' +
           '* { box-sizing: border-box; } ' +
-          '@page { size: A4; margin: 12mm; } ' +
+          '@page { size: A4 portrait; margin: 10mm; } ' +
           '@media print { body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } } ' +
           'body { font-family: "Prompt", "Maitree", Tahoma, sans-serif; font-size: 13px; color: #1e293b; background: #fff; margin: 0; padding: 0; } ' +
           'table { width: 100%; border-collapse: collapse; margin-top: 15px; } ' +
@@ -1111,16 +1132,14 @@
         html += '</div>';
       }
 
-      html += '</body></html>';
+      html += '<script>' +
+        'window.onload = function() { window.focus(); setTimeout(function() { window.print(); }, 400); };' +
+        '<\/script></body></html>';
 
       w.document.open();
       w.document.write(html);
       w.document.close();
       w.focus();
-
-      setTimeout(function() {
-        w.print();
-      }, 500);
     }
 
     // Load Pending Transfers for Tab 2
@@ -1265,7 +1284,7 @@
           items.forEach(function(it, i) {
             var q = parseInt(it.prod_amount || 0);
             totalQty += q;
-            tbl += '<tr><td>' + (i+1) + '</td><td class="text-left"><strong>' + it.prod_name + '</strong><br><small class="text-muted">' + it.prod_code + '</small></td><td class="font-weight-bold text-primary">' + q + ' ชิ้น</td></tr>';
+            tbl += '<tr><td>' + (i+1) + '</td><td class="text-left"><strong class="hover-prod-preview" data-prod-id="' + it.prod_id + '" data-prod-code="' + (it.prod_code || '') + '">' + it.prod_name + '</strong><br><small class="text-muted">' + it.prod_code + '</small></td><td class="font-weight-bold text-primary">' + q + ' ชิ้น</td></tr>';
           });
           tbl += '</tbody><tfoot><tr class="font-weight-bold"><td colspan="2" class="text-right">รวมสินค้าทั้งหมด:</td><td class="text-primary">' + totalQty + ' ชิ้น</td></tr></tfoot></table></div>';
 
@@ -1344,7 +1363,7 @@
               };
             })
           };
-          printTransferSlip(slipData, format);
+          printTransferSlip(format, slipData);
         },
         error: function() {
           EasyLoading.hide();
@@ -1383,7 +1402,7 @@
           items.forEach(function(it, idx) {
             var qty = parseInt(it.prod_amount || 0);
             totalQty += qty;
-            tblHtml += '<tr><td class="text-center">' + (idx + 1) + '</td><td><strong>' + it.prod_name + '</strong><br><small class="text-muted">' + it.prod_code + '</small></td><td class="text-center font-weight-bold text-primary" style="font-size: 1.1rem;">' + qty + ' ชิ้น</td></tr>';
+            tblHtml += '<tr><td class="text-center">' + (idx + 1) + '</td><td><strong class="hover-prod-preview" data-prod-id="' + it.prod_id + '" data-prod-code="' + (it.prod_code || '') + '">' + it.prod_name + '</strong><br><small class="text-muted">' + it.prod_code + '</small></td><td class="text-center font-weight-bold text-primary" style="font-size: 1.1rem;">' + qty + ' ชิ้น</td></tr>';
           });
           tblHtml += '</tbody></table>';
           $table.html(tblHtml);

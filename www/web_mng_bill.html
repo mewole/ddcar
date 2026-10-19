@@ -29,6 +29,9 @@
     <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
     <!-- Main -->
     <link href="css/untitled.css" rel="stylesheet">
+    <!-- Product Hover Preview -->
+    <link rel="stylesheet" href="css/hover_preview.css">
+    <script src="js/hover_preview.js"></script>
     <style>
     body{color: var(--text-primary);}
     .bill-odd, .bill-even{
@@ -97,28 +100,47 @@
 
 
     $(document).keydown(function(objEvent) {
-      if (objEvent.keyCode == 13) {  //enter pressed
-        objEvent.preventDefault();        
+      if (objEvent.keyCode == 13) {  // enter pressed
+        if (!$(objEvent.target).is('#in-amt, #in-price, textarea')) {
+          objEvent.preventDefault();        
           search();       
+        }
       }         
-    })
+    });
 
-    var val;
+    var val_bill_prod = "";
+    var val_cus = "";
     function search(){
-      if($('#input-search').val() == ""){
-        return 0;
+      var bill_prod = ($('#input-search-bill-prod').val() || '').trim();
+      var cus = ($('#input-search-cus').val() || '').trim();
+
+      if(bill_prod === "" && cus === ""){
+        reset_search();
+        return;
       }
-      // $('#search_bill').blur();
-      val = $('#input-search').val()
+
+      val_bill_prod = bill_prod;
+      val_cus = cus;
       start_s = 0;
       bool_s = false;
       $("#myS").prop('hidden', false);
       $("#myUL").prop('hidden', true);     
       $("#myS").empty();
-      // $("#i-back").attr("onclick","showUL()");
-      tempdate = ""
-      no = 1
+      tempdate = "";
+      no = 1;
       get_bill_s();
+    }
+
+    function reset_search(){
+      $('#input-search-bill-prod').val('');
+      $('#input-search-cus').val('');
+      val_bill_prod = "";
+      val_cus = "";
+      start_s = 0;
+      bool_s = false;
+      $("#myS").empty();
+      $("#myS").prop('hidden', true);
+      $("#myUL").prop('hidden', false);
     }
 
     var tempdate,no = 1
@@ -165,21 +187,33 @@
     }
 
     function get_bill_s(){
-      console.log(start_s)
+      console.log(start_s);
       $.ajax({
         type: "POST",
-        url:"php/get_bill.php",
-        data: {'start': start_s, 'value' : val},
+        url: "php/get_bill.php",
+        data: {
+          'start': start_s, 
+          'bill_prod': val_bill_prod,
+          'cus_name': val_cus
+        },
         beforeSend: function(){
           EasyLoading.show({                           
-						text: "กำลังโหลด"
-					});
+            text: "กำลังโหลด"
+          });
         },                       
         success: function(data){ 
           EasyLoading.hide();
           var obj = jQuery.parseJSON(data);
-          if(obj[0] == "last"){
-            bool_s = true
+          if(!obj || obj.length === 0 || obj[0] == "last"){
+            bool_s = true;
+          }
+          if(start_s === 0 && (!obj || obj.length <= 1)){
+            $('#myS').html('<li class="text-center py-5 text-muted" style="list-style:none;">' +
+              '<i class="fas fa-search fa-3x mb-3 text-secondary" style="opacity: 0.4;"></i>' +
+              '<h5 class="text-muted font-weight-bold">ไม่พบรายการบิลที่ตรงกับการค้นหา</h5>' +
+              '<p class="small text-muted mb-0">ลองตรวจสอบเลขที่บิล, ชื่อสินค้า หรือชื่อลูกค้าอีกครั้ง</p>' +
+            '</li>');
+            return;
           }
           $.each(obj, function(i, field){
             if(i > 0){
@@ -187,8 +221,8 @@
               var txt2 = txt[0].split("-");
               var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2);
               if(tempdate != date){
-                  tempdate = date
-                  no = 1
+                  tempdate = date;
+                  no = 1;
               }
               $('#myS').append(' <li id="bills-'+field.order_id+'">' +
                     '<div class="row justify-content-center bill-even" data-toggle="collapse" href="#details-'+field.order_id+'" role="button" aria-expanded="false" aria-controls="details-'+field.order_id+'" onclick="appendCollapses('+field.order_id+');">' +
@@ -198,7 +232,7 @@
                         '<div class="col-4 text-center"><h5>'+field.cus_name+'</h5></div>' +
                     '</div>' +
                 '</li>');
-                no++
+              no++;
             }                                                
           });                                         
         }               
@@ -369,7 +403,7 @@
               '<div id="item-'+field.prod_id+'" class="row justify-content-center">'+
                 '<div class="col-1 text-center items">'+(i+1)+'</div>'+
                 '<div id="amt-'+field.prod_id+'" class="col-1 text-center items">'+field.prod_amount+'</div>'+
-                '<div class="col-6 text-center items">'+field.prod_name+'</div>'+
+                '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span></div>'+
                 '<div class="col-1 text-center items">'+field.prod_price+'</div>'+
                 '<div id="itemsum-'+field.prod_id+'" class="col-1 text-center items">'+sum+'</div>'+
                 '<div class="col-2 text-center items">'+
@@ -470,7 +504,7 @@
               '<div id="item-'+field.prod_id+'" class="row justify-content-center">'+
                 '<div class="col-1 text-center items">'+(i+1)+'</div>'+
                 '<div id="amt-'+field.prod_id+'" class="col-1 text-center items">'+field.prod_amount+'</div>'+
-                '<div class="col-6 text-center items">'+field.prod_name+'</div>'+
+                '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span></div>'+
                 '<div class="col-1 text-center items">'+field.prod_price+'</div>'+
                 '<div id="itemsum-'+field.prod_id+'" class="col-1 text-center items">'+sum+'</div>'+
                 '<div class="col-2 text-center items">'+
@@ -1023,9 +1057,43 @@
         </nav>
         <div class="container-fullwidth my-3">          
             <div class="row justify-content-center px-2">              
-                <div class="col-12 col-md-8 col-lg-6">
-                    <input id="input-search" type="text" class="form-control form-control-lg text-center"
-                        placeholder="ค้นหา เลขที่บิล / ลูกค้า">
+                <div class="col-12 col-md-11 col-lg-9 col-xl-8">
+                    <div class="card shadow-sm border-0" style="border-radius: 12px; background: #ffffff;">
+                        <div class="card-body p-3">
+                            <div class="form-row align-items-center">
+                                <div class="col-12 col-md-5 mb-2 mb-md-0">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light border-right-0" style="border-radius: 8px 0 0 8px;">
+                                                <i class="fas fa-file-invoice text-primary"></i>
+                                            </span>
+                                        </div>
+                                        <input id="input-search-bill-prod" type="text" class="form-control border-left-0" style="border-radius: 0 8px 8px 0; font-size: 1.02rem;"
+                                            placeholder="เลขที่บิล / ชื่อสินค้า" autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-4 mb-2 mb-md-0">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light border-right-0" style="border-radius: 8px 0 0 8px;">
+                                                <i class="fas fa-user text-info"></i>
+                                            </span>
+                                        </div>
+                                        <input id="input-search-cus" type="text" class="form-control border-left-0" style="border-radius: 0 8px 8px 0; font-size: 1.02rem;"
+                                            placeholder="ชื่อลูกค้า" autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-3 d-flex">
+                                    <button id="btn-search" type="button" class="btn btn-primary flex-grow-1 mr-2 font-weight-bold" style="border-radius: 8px;" onclick="search()">
+                                        <i class="fas fa-search mr-1"></i> ค้นหา
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" style="border-radius: 8px;" onclick="reset_search()" title="ล้างการค้นหา">
+                                        <i class="fas fa-redo"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

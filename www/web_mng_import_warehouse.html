@@ -33,6 +33,9 @@
     <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
     <!-- Main -->
     <link href="css/untitled.css" rel="stylesheet">
+    <!-- Product Hover Preview -->
+    <link rel="stylesheet" href="css/hover_preview.css">
+    <script src="js/hover_preview.js"></script>
     <style>
     body{color: var(--text-primary);}
     .ipt-odd, .ipt-even{
@@ -291,7 +294,7 @@
                 text = text + '<div id="item-'+field.item_id+'" class="row justify-content-center">'+
                   '<div class="col-1 text-center items">'+(i+1)+'</div>'+
                   '<div class="col-1 text-center items">'+field.amount+'</div>'+
-                  '<div class="col-6 text-center items">'+field.prod_name+(field.source_from && field.source_from.trim() !== '' ? ' <span class="badge badge-info ml-1 font-weight-bold" style="font-size: 0.78rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>' : '')+'</div>'+
+                  '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span>'+(field.source_from && field.source_from.trim() !== '' ? ' <span class="badge badge-info ml-1 font-weight-bold" style="font-size: 0.78rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>' : '')+'</div>'+
                   '<div class="col-2 text-center items">'+cost+'</div>'+
                   '<div class="col-2 text-center items">'+field.amount*field.stock_cost+'</div>'+
                 '</div>'
@@ -364,7 +367,7 @@
                 text = text + '<div id="item-'+field.item_id+'"" class="row justify-content-center">'+
                   '<div class="col-1 text-center items">'+(i+1)+'</div>'+
                   '<div class="col-1 text-center items">'+field.amount+'</div>'+
-                  '<div class="col-6 text-center items">'+field.prod_name+(field.source_from && field.source_from.trim() !== '' ? ' <span class="badge badge-info ml-1 font-weight-bold" style="font-size: 0.78rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>' : '')+'</div>'+
+                  '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span>'+(field.source_from && field.source_from.trim() !== '' ? ' <span class="badge badge-info ml-1 font-weight-bold" style="font-size: 0.78rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>' : '')+'</div>'+
                   '<div class="col-2 text-center items">'+cost+'</div>'+
                   '<div class="col-2 text-center items">'+field.amount*field.stock_cost+'</div>'+
                 '</div>'

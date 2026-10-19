@@ -28,6 +28,8 @@
   <!-- DatePicker -->
   <link rel="stylesheet" href="css/duDatepicker.css">
   <script src="js/duDatepicker.js"></script>
+  <link rel="stylesheet" href="css/hover_preview.css">
+  <script src="js/hover_preview.js"></script>
 
   <style>
     hr{
@@ -114,7 +116,7 @@
                 '<p id="amt-'+field.item_id+'" class="amount">'+field.prod_amount+'</p>' +
               '</div>' +
               '<div class="col-7 text-center nopd">' +
-                '<p id="name-'+field.item_id+'">'+field.prod_name+'</p>' +
+                '<p id="name-'+field.item_id+'" class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</p>' +
                 '</div>' +
                 '<div class="col-2 text-center">' +
                   '<p id="price-'+field.item_id+'">'+field.prod_price+'</p>' +
