@@ -76,74 +76,8 @@
           var obj = jQuery.parseJSON(data);
           if(obj){
             arr = [];
-            var d = new Date($.now());
             $.each(obj, function(i, field){
-              var txt = field.date_time.split(" ");
-              var date = txt[0].split("-");
-              var credit_id = field.credit_id;
-              var cus = field.cus_name;              
-              var total = field.credit_price;
-              var cus_id = field.cus_id;                    
-              var last_d = new Date(d.getFullYear(),d.getMonth()+1, 0).getDate();              
-              var cd = last_d - d.getDate();
-              if(d.getMonth()+1 != date[1]){
-                cd = "เลย";
-              }
-              if(cd <= 3 && cd > 1){
-                if(i % 2 == 0){
-                  $('#myUL').append('<li> <div class="row justify-content-center cus-odd">'+
-                    '<div class="col-1"><i class="fas fa-circle yellow"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');   
-                }else{
-                  $('#myUL').append('<li> <div class="row justify-content-center cus-even">'+
-                    '<div class="col-1"><i class="fas fa-circle yellow"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');
-                }                
-              }else if(cd <= 1 || cd == "เลย"){
-                if(i % 2 == 0){
-                  $('#myUL').append('<li> <div class="row justify-content-center cus-odd">'+
-                    '<div class="col-1"><i class="fas fa-circle red"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');   
-                }else{
-                  $('#myUL').append('<li> <div class="row justify-content-center cus-even">'+
-                    '<div class="col-1"><i class="fas fa-circle red"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');
-                }    
-              }else{
-                if(i % 2 == 0){
-                  $('#myUL').append('<li> <div class="row justify-content-center cus-odd">'+
-                    '<div class="col-1"><i class="fas fa-circle green"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');   
-                }else{
-                  $('#myUL').append('<li> <div class="row justify-content-center cus-even">'+
-                    '<div class="col-1"><i class="fas fa-circle green"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');
-                }    
-              }                                        
+              renderCreditRow(field, i, '#myUL');
             });                
           }                                
         }               
@@ -193,77 +127,236 @@
           var obj = jQuery.parseJSON(data);
           if(obj){
             arr = [];
-            var d = new Date($.now());
             $.each(obj, function(i, field){
-              var txt = field.date_time.split(" ");
-              var date = txt[0].split("-");
-              var credit_id = field.credit_id;
-              var cus = field.cus_name;              
-              var total = field.credit_price;
-              var cus_id = field.cus_id;                    
-              var last_d = new Date(d.getFullYear(),d.getMonth()+1, 0).getDate();              
-              var cd = last_d - d.getDate();
-              if(d.getMonth()+1 != date[1] || d.getFullYear() != date[0]){
-                cd = "เลย";
-              }
-              if(cd <= 3 && cd > 1){
-                if(i % 2 == 0){
-                  $('#myS').append('<li> <div class="row justify-content-center cus-odd">'+
-                    '<div class="col-1"><i class="fas fa-circle yellow"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');   
-                }else{
-                  $('#myS').append('<li> <div class="row justify-content-center cus-even">'+
-                    '<div class="col-1"><i class="fas fa-circle yellow"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');
-                }                
-              }else if(cd <= 1 || cd == "เลย"){
-                if(i % 2 == 0){
-                  $('#myS').append('<li> <div class="row justify-content-center cus-odd">'+
-                    '<div class="col-1"><i class="fas fa-circle red"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');   
-                }else{
-                  $('#myS').append('<li> <div class="row justify-content-center cus-even">'+
-                    '<div class="col-1"><i class="fas fa-circle red"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');
-                }    
-              }else{
-                if(i % 2 == 0){
-                  $('#myS').append('<li> <div class="row justify-content-center cus-odd">'+
-                    '<div class="col-1"><i class="fas fa-circle green"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');   
-                }else{
-                  $('#myS').append('<li> <div class="row justify-content-center cus-even">'+
-                    '<div class="col-1"><i class="fas fa-circle green"></i></div>'+
-                    '<div class="col-4 text-center"><h5>'+cus+'</h5></div>'+
-                    '<div class="col-3" style="padding-left: 8%;"><h5>'+cd+' วัน</h5></div>'+
-                    '<div class="col-2 text-center"><h5>'+total+'</h5></div>'+
-                    '<div onclick="print('+credit_id+',\''+cd+'\')" class="col-1 text-right"><h5><i class="fa fa-print" style="color: #ffd17c;"></i></h5></div>'+
-                  '</div></li>');
-                }    
-              }                                         
+              renderCreditRow(field, i, '#myS');
             });                
           }                                
         }               
+      });
+    }
+
+    function renderCreditRow(field, i, targetList) {
+      var txt = field.date_time.split(" ");
+      var date = txt[0].split("-");
+      var credit_id = field.credit_id;
+      var cus = field.cus_name;              
+      var total = parseFloat(field.credit_price) || 0;
+      var cus_id = field.cus_id;                    
+      var d = new Date($.now());
+      var last_d = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();              
+      var cd = last_d - d.getDate();
+      if(d.getMonth()+1 != date[1] || d.getFullYear() != date[0]){
+        cd = "เลย";
+      }
+
+      var colorClass = "green";
+      if(cd <= 1 || cd == "เลย"){
+        colorClass = "red";
+      } else if(cd <= 3){
+        colorClass = "yellow";
+      }
+
+      var rowClass = (i % 2 == 0) ? "cus-odd" : "cus-even";
+      var cdDisplay = (cd === "เลย") ? '<span class="text-danger font-weight-bold">เลยกำหนด</span>' : (cd + ' วัน');
+      var isCleared = (total <= 0);
+
+      var actionHtml = '';
+      if (isCleared) {
+        actionHtml = '<span class="badge badge-success px-2 py-1 font-weight-bold mr-1" style="font-size: 0.85rem;"><i class="fas fa-check mr-1"></i> ชำระครบ</span>';
+      } else {
+        actionHtml = '<button class="btn btn-sm btn-success font-weight-bold mr-1 px-2 py-1" onclick="openPayModal(' + credit_id + ', \'' + escapeHtml(cus) + '\', ' + total + ');" title="รับชำระหนี้"><i class="fas fa-dollar-sign mr-1"></i> รับชำระ</button>';
+      }
+
+      actionHtml += '<button class="btn btn-sm btn-outline-warning mr-1 px-2 py-1" onclick="print(' + credit_id + ', \'' + cd + '\')" title="พิมพ์ใบวางบิล A4"><i class="fa fa-print"></i></button>';
+      actionHtml += '<button class="btn btn-sm btn-outline-info px-2 py-1" onclick="viewHistory(' + credit_id + ', \'' + escapeHtml(cus) + '\')" title="ประวัติการชำระเงิน"><i class="fas fa-history"></i></button>';
+
+      var html = '<li id="cr-item-' + credit_id + '"> ' +
+        '<div class="row justify-content-center align-items-center ' + rowClass + ' py-2">' +
+          '<div class="col-1 text-center"><i class="fas fa-circle ' + colorClass + '"></i></div>' +
+          '<div class="col-4 text-left pl-3 font-weight-bold"><h5 class="mb-0 text-dark">' + cus + '</h5></div>' +
+          '<div class="col-2 text-center"><h5 class="mb-0">' + cdDisplay + '</h5></div>' +
+          '<div class="col-2 text-right pr-3"><h5 class="mb-0 font-weight-bold ' + (isCleared ? 'text-muted' : 'text-danger') + '" id="cr-price-' + credit_id + '">' + decimalWithComma(total) + '</h5></div>' +
+          '<div class="col-3 text-right pr-3 d-flex align-items-center justify-content-end">' + actionHtml + '</div>' +
+        '</div>' +
+      '</li>';
+
+      $(targetList).append(html);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function openPayModal(credit_id, cusName, currentBalance) {
+      var curVal = parseFloat(currentBalance) || 0;
+      if (curVal <= 0) {
+        $.alert({
+          title: 'แจ้งเตือน',
+          content: 'ลูกหนี้รายนี้ชำระเงินครบถ้วนแล้ว (ยอดค้าง 0 บาท)',
+          type: 'green'
+        });
+        return;
+      }
+
+      var contentHtml = '<div class="py-2 text-left">' +
+        '<div class="alert alert-info py-2 px-3 mb-3 d-flex justify-content-between align-items-center">' +
+          '<div><strong>ลูกค้า: </strong>' + cusName + '</div>' +
+          '<div>ยอดค้างชำระ: <strong class="text-danger" style="font-size: 1.15rem;">' + decimalWithComma(curVal) + ' บาท</strong></div>' +
+        '</div>' +
+        '<div class="form-group mb-3">' +
+          '<label class="font-weight-bold mb-1">จำนวนเงินที่รับชำระ (บาท): <span class="text-danger">*</span></label>' +
+          '<div class="input-group">' +
+            '<input type="number" step="0.01" min="1" max="' + curVal + '" id="modal-pay-amount" class="form-control form-control-lg font-weight-bold text-success" value="' + curVal + '">' +
+            '<div class="input-group-append">' +
+              '<button class="btn btn-outline-secondary font-weight-bold" type="button" onclick="$(\'#modal-pay-amount\').val(' + curVal + ')">เต็มจำนวน</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="form-group mb-3">' +
+          '<label class="font-weight-bold mb-1">ช่องทางการชำระเงิน: <span class="text-danger">*</span></label>' +
+          '<select id="modal-pay-method" class="form-control">' +
+            '<option value="โอนเงิน / สแกน QR" selected>โอนเงิน / สแกน QR ธนาคาร</option>' +
+            '<option value="เงินสด">เงินสด</option>' +
+            '<option value="เช็ค">เช็ค</option>' +
+            '<option value="บัตรเครดิต">บัตรเครดิต</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="form-group mb-2">' +
+          '<label class="font-weight-bold mb-1">หมายเหตุ / อ้างอิงสลิปโอน (ถ้ามี):</label>' +
+          '<input type="text" id="modal-pay-note" class="form-control" placeholder="เช่น สลิป ธ.กสิกรไทย หรือเลขอ้างอิง">' +
+        '</div>' +
+      '</div>';
+
+      $.confirm({
+        title: '<div class="font-weight-bold text-dark"><i class="fas fa-hand-holding-usd text-success mr-2"></i> รับชำระหนี้เครดิต</div>',
+        content: contentHtml,
+        columnClass: 'medium',
+        backgroundDismiss: false,
+        buttons: {
+          submit: {
+            text: '<i class="fas fa-check-circle mr-1"></i> ยืนยันรับชำระ',
+            btnClass: 'btn-success font-weight-bold px-4 py-2',
+            action: function() {
+              var payAmount = parseFloat($('#modal-pay-amount').val());
+              var method = $('#modal-pay-method').val();
+              var note = $('#modal-pay-note').val();
+
+              if (!payAmount || payAmount <= 0) {
+                $.alert('กรุณากรอกจำนวนเงินที่ถูกต้อง (มากกว่า 0 บาท)');
+                return false;
+              }
+
+              EasyLoading.show({ text: "กำลังบันทึกรับชำระ..." });
+
+              $.ajax({
+                type: "POST",
+                url: "php/pay_credit.php",
+                data: {
+                  action: 'pay',
+                  credit_id: credit_id,
+                  amount: payAmount,
+                  payment_method: method,
+                  note: note,
+                  user_id: localStorage.user_id || 0,
+                  user_name: localStorage.user_name || 'ผู้ใช้งาน'
+                },
+                dataType: "json",
+                success: function(res) {
+                  EasyLoading.hide();
+                  if (res && res.status === 'success') {
+                    $.alert({
+                      title: '<span class="text-success"><i class="fa fa-check-circle mr-2"></i> บันทึกสำเร็จ!</span>',
+                      content: 'บันทึกรับชำระเงินเรียบร้อยแล้ว<br>' +
+                               'ยอดชำระ: <strong>' + decimalWithComma(res.paid_amount) + ' บาท</strong><br>' +
+                               'คงเหลือปัจจุบัน: <strong class="' + (res.remaining_balance <= 0 ? 'text-success' : 'text-danger') + '">' + decimalWithComma(res.remaining_balance) + ' บาท</strong>' +
+                               (res.is_cleared ? '<div class="mt-2 text-success font-weight-bold">✓ ปิดยอดหนี้รายการนี้ครบถ้วนแล้ว</div>' : ''),
+                      buttons: {
+                        ok: {
+                          text: 'ตกลง',
+                          btnClass: 'btn-success',
+                          action: function() {
+                            location.reload();
+                          }
+                        }
+                      }
+                    });
+                  } else {
+                    $.alert('ไม่สามารถบันทึกได้: ' + (res.message || ''));
+                  }
+                },
+                error: function(err) {
+                  EasyLoading.hide();
+                  $.alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+                }
+              });
+            }
+          },
+          cancel: {
+            text: 'ยกเลิก',
+            btnClass: 'btn-secondary py-2'
+          }
+        }
+      });
+    }
+
+    function viewHistory(credit_id, cusName) {
+      EasyLoading.show({ text: "กำลังโหลดประวัติ..." });
+      $.ajax({
+        type: "POST",
+        url: "php/pay_credit.php",
+        data: { action: 'get_history', credit_id: credit_id },
+        dataType: "json",
+        success: function(res) {
+          EasyLoading.hide();
+          if (res && res.status === 'success') {
+            var list = res.history || [];
+            var tableRows = '';
+            if (list.length === 0) {
+              tableRows = '<tr><td colspan="5" class="text-center text-muted py-3">ยังไม่มีประวัติการชำระเงินสำหรับยอดเครดิตนี้</td></tr>';
+            } else {
+              list.forEach(function(h, idx) {
+                tableRows += '<tr>' +
+                  '<td>' + (idx + 1) + '</td>' +
+                  '<td>' + h.date_time + '</td>' +
+                  '<td class="font-weight-bold text-success text-right">' + decimalWithComma(h.amount) + '</td>' +
+                  '<td>' + (h.payment_method || '-') + '</td>' +
+                  '<td class="text-left">' + (h.note || '-') + ' <small class="text-muted">(' + (h.user_name || '') + ')</small></td>' +
+                '</tr>';
+              });
+            }
+
+            var modalContent = '<div class="table-responsive text-left" style="max-height: 350px;">' +
+              '<table class="table table-bordered table-sm table-striped text-center mb-0" style="font-size: 0.9rem;">' +
+                '<thead class="thead-dark">' +
+                  '<tr>' +
+                    '<th width="40">#</th>' +
+                    '<th width="150">วันที่/เวลา</th>' +
+                    '<th width="130" class="text-right">จำนวนเงิน (บาท)</th>' +
+                    '<th width="140">วิธีชำระ</th>' +
+                    '<th class="text-left">หมายเหตุ / ผู้รับ</th>' +
+                  '</tr>' +
+                '</thead>' +
+                '<tbody>' + tableRows + '</tbody>' +
+              '</table>' +
+            '</div>';
+
+            $.alert({
+              title: '<div class="text-dark font-weight-bold"><i class="fas fa-history text-info mr-2"></i> ประวัติการชำระเงิน - ' + cusName + '</div>',
+              content: modalContent,
+              columnClass: 'large',
+              buttons: {
+                ok: { text: 'ปิด', btnClass: 'btn-secondary' }
+              }
+            });
+          } else {
+            $.alert('ไม่สามารถดึงข้อมูลประวัติได้');
+          }
+        },
+        error: function() {
+          EasyLoading.hide();
+          $.alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+        }
       });
     }
 
@@ -576,13 +669,15 @@
         </div>
       </div>
     </div>
-    <div class="container-fullwidth">
-      <div class="row justify-content-center">
-        <div class="col-4 text-center"><h4>ชื่อลูกค้า</h4></div>
-        <div class="col-3"><h4>ครบกำหนดวางบิล</h4></div>
-        <div class="col-2 text-center"><h4>ราคารวม</h4></div>
+    <div class="container-fullwidth px-2 px-md-3">
+      <div class="row justify-content-center align-items-center font-weight-bold text-muted py-2" style="font-size: 1.05rem;">
+        <div class="col-1 text-center">สถานะ</div>
+        <div class="col-4 text-left pl-3">ชื่อลูกค้า</div>
+        <div class="col-2 text-center">ครบกำหนดวางบิล</div>
+        <div class="col-2 text-right pr-3">ยอดค้างชำระ</div>
+        <div class="col-3 text-right pr-3">จัดการ / พิมพ์</div>
       </div>
-    </div><hr style="width: 75%; margin-top: 0;"> <br>
+    </div><hr style="width: 95%; margin-top: 0;">
     <div id="ctn-append" class="container-fullwidth">
       <ul id="myUL"> </ul>
       <ul id="myS"> </ul>            

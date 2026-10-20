@@ -1,8 +1,12 @@
 param(
-    [string]$NasHost = ""
+    [string]$NasHost = "",
+    [switch]$All
 )
 
+$srcDir = if (Test-Path "$PSScriptRoot\www") { "$PSScriptRoot\www" } elseif (Test-Path "c:\ddcar\www") { "c:\ddcar\www" } else { "d:\MewP\ddcar\www" }
+
 $files = @(
+    # Core Web Pages
     "web_warehouse.html",
     "web_customer.html",
     "web_admin_customer.html",
@@ -20,27 +24,37 @@ $files = @(
     "web_mng_transfer.html",
     "web_mng_import_warehouse.html",
     "web_mng_export.html",
+    "web_mng_adjust.html",
     "web_admin_user.html",
     "web_transfer_in.html",
     "web_login.html",
     "web_folder.html",
+    "web_catalog.html",
+    "bill_info.html",
+    "sale_info.html",
     "select_folder.html",
     "add_prod.html",
     "edit_prod.html",
-    "web_catalog.html",
     "stock.html",
-    "js\navbar.js",
-    "js\scanqr.js",
-    "js\capacitor-bridge.js",
     "index.html",
     "login.html",
     "select_cus.html",
     "show_pic.html",
     "show_credit.html",
-    "sale_info.html",
-    "bill_info.html",
+
+    # JavaScript Components
+    "js\navbar.js",
+    "js\hover_preview.js",
+    "js\scanqr.js",
+    "js\capacitor-bridge.js",
+    "search_trans.js",
+
+    # Stylesheets
     "css\untitled.css",
     "css\web_folder.css",
+    "css\hover_preview.css",
+
+    # Core Backend PHP Handlers
     "php\folder_helper.php",
     "php\get_folder_web.php",
     "php\get_folder.php",
@@ -57,7 +71,10 @@ $files = @(
     "php\reject_transfer.php",
     "php\get_transfer_to.php",
     "php\get_transfer_to_info.php",
+    "php\get_transfer.php",
+    "php\get_transfer_info.php",
     "php\get_sale.php",
+    "php\save_order.php",
     "php\add_prod.php",
     "php\img_helper.php",
     "php\migrate_images.php",
@@ -66,13 +83,52 @@ $files = @(
     "php\get_low_stock.php",
     "php\get_sales_analytics.php",
     "php\backup_db.php",
+    "php\get_stock_adjustments.php",
+    "php\save_stock_adjustment.php",
+    "php\migrate_adjustment.php",
+    "php\update_bell_status.php",
+    "php\get_status_prod.php",
+    "php\get_import.php",
+    "php\get_import_info.php",
+    "php\get_credit.php",
+    "php\get_credit_info.php",
+    "php\pay_credit.php",
+    "php\get_bill.php",
+    "php\get_bill_info.php",
+    "php\rename_bill.php",
+    "php\delete_bill.php",
+    "php\restore_product.php",
+    "php\save_credit.php",
+    "php\check_version.php",
+    "php\search_img.php",
+    "php\search_amount.php",
+    "php\search_cusprice.php",
+    "php\get_autoprod.php",
+    "php\setup_status_ext.php",
+    "php\add_performance_indexes.php",
+    "php\db.php",
+
+    # Assets
     "img\logo.jpg"
 )
 
-$srcDir = if (Test-Path "$PSScriptRoot\www") { "$PSScriptRoot\www" } elseif (Test-Path "c:\ddcar\www") { "c:\ddcar\www" } else { "d:\MewP\ddcar\www" }
+if ($All) {
+    Write-Host "Mode: Sync all active web files from www/" -ForegroundColor Cyan
+    $activeWww = Get-ChildItem -Path $srcDir -Recurse -File | Where-Object {
+        $_.FullName -notmatch '\\(android|node_modules|\.git|_backup.*)\\' -and
+        $_.Name -notmatch '(_bk\.html$|_old|\.bak|\.tmp|\.txt$|test_.*\.php$)'
+    } | ForEach-Object {
+        $_.FullName.Substring($srcDir.Length).TrimStart('\', '/')
+    }
+    $files = $activeWww | Select-Object -Unique
+}
 
-# Check target destinations (LAN IP or Tailscale IP)
-$candidateDirs = @(
+# Check target destinations (LAN IP or Tailscale IP or Custom NasHost)
+$candidateDirs = @()
+if ($NasHost) {
+    $candidateDirs += "\\$NasHost\Web\dd-shop"
+}
+$candidateDirs += @(
     "\\192.168.1.51\Web\dd-shop",
     "\\100.77.57.16\Web\dd-shop"
 )
@@ -86,13 +142,13 @@ foreach ($dir in $candidateDirs) {
 }
 
 if (-not $dstDir) {
-    $dstDir = $candidateDirs[0] # Default fallback
+    $dstDir = $candidateDirs[0]
     Write-Warning "Could not automatically reach candidate share paths. Trying $dstDir..."
 } else {
-    Write-Host "Connected destination: $dstDir"
+    Write-Host "Connected destination: $dstDir" -ForegroundColor Green
 }
 
-$backupDir = Join-Path $dstDir "_backup_update_customer"
+$backupDir = Join-Path $dstDir "_backup_deploy"
 if (-not (Test-Path $backupDir)) {
     try {
         New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
@@ -104,12 +160,19 @@ if (-not (Test-Path $backupDir)) {
 
 $successCount = 0
 $failCount = 0
+$skipCount = 0
 
 foreach ($f in $files) {
     $src = Join-Path $srcDir $f
     $dst = Join-Path $dstDir $f
     $bak = Join-Path $backupDir $f
     
+    if (-not (Test-Path $src)) {
+        Write-Host "SKIP (not found locally): $f" -ForegroundColor Yellow
+        $skipCount++
+        continue
+    }
+
     try {
         $parentDir = Split-Path $dst -Parent
         if (-not (Test-Path $parentDir)) {
@@ -129,19 +192,19 @@ foreach ($f in $files) {
         $dstLen = (Get-Item $dst).Length
         
         if ($srcLen -eq $dstLen) {
-            Write-Host "SUCCESS: $f ($srcLen bytes)"
+            Write-Host "SUCCESS: $f ($srcLen bytes)" -ForegroundColor Green
             $successCount++
         } else {
-            Write-Host "SIZE MISMATCH: $f src=$srcLen dst=$dstLen"
+            Write-Host "SIZE MISMATCH: $f src=$srcLen dst=$dstLen" -ForegroundColor Red
             $failCount++
         }
     } catch {
-        Write-Host "ERROR on $f : $($_.Exception.Message)"
+        Write-Host "ERROR on $f : $($_.Exception.Message)" -ForegroundColor Red
         $failCount++
     }
 }
 
-Write-Host "`nResult: $successCount succeeded, $failCount failed."
+Write-Host "`nResult: $successCount succeeded, $failCount failed, $skipCount skipped." -ForegroundColor Cyan
 
 # Reset PHP OPcache on server if accessible
 try {
@@ -150,7 +213,7 @@ try {
     [System.IO.File]::WriteAllText($tmpReset, $resetPhp, [System.Text.Encoding]::UTF8)
     $null = Invoke-RestMethod -Uri "http://100.77.57.16:8083/dd-shop/php/_tmp_opcache_reset.php" -TimeoutSec 3 -ErrorAction SilentlyContinue
     Remove-Item $tmpReset -Force -ErrorAction SilentlyContinue
-    Write-Host "PHP OPcache successfully reset on server."
+    Write-Host "PHP OPcache successfully reset on server." -ForegroundColor Green
 } catch {
     # Ignore if offline
 }

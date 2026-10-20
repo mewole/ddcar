@@ -1,22 +1,30 @@
 <?php
-    include "db.php";
-    $prod_id = $_POST['prod_id'];   
-    $output = array(); 
-   
-    $query = "SELECT prod_id,prod_name,prod_code,prod_price,prod_pricesend,prod_cost FROM product";     
-    $result = mysqli_query($conn, $query);
+/**
+ * get_autoprod.php
+ * คืนค่ารายการสินค้าทั้งหมดสำหรับ Autocomplete พร้อม Gzip Compression และ Caching
+ */
+if (!ob_start("ob_gzhandler")) {
+    ob_start();
+}
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: public, max-age=1800'); // Cache 30 นาทีใน Browser
 
-    if(mysqli_num_rows($result) > 0){
-      //ini_set('memory_limit', '-1');
-      while($row = mysqli_fetch_array($result)){      
-        $output[] = $row;  
-      }   
-    }
+include "db.php";
 
-    if($result){
-        echo json_encode($output);		   
-    }else{
-        echo "fail";
+$query = "SELECT prod_id, prod_name, prod_code, prod_price, prod_pricesend, prod_cost FROM product";     
+$result = mysqli_query($conn, $query);
+
+$output = array();
+if ($result && mysqli_num_rows($result) > 0) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $output[] = $row;
     }
-	mysqli_close($conn);
+}
+
+if ($result) {
+    echo json_encode($output);		   
+} else {
+    echo "fail";
+}
+mysqli_close($conn);
 ?>

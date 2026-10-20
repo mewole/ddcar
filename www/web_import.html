@@ -37,7 +37,7 @@
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet"> 
   <!-- Main -->
-  <link href="css/untitled.css" rel="stylesheet">
+  <link href="css/untitled.css?v=2.1" rel="stylesheet">
   <link rel="stylesheet" href="css/popup.css">
 
   <style>
@@ -119,93 +119,64 @@
             }    
 
 			var arrayReturn = [];
-			$.ajax({
-				url: "php/get_autoprod.php",
-				async: true,
-				dataType: 'json',
-				success: function (data) {
-					for (var i = 0, len = data.length; i < len; i++) {
-						var id = (data[i].prod_id).toString();
-						arrayReturn.push({'value' : data[i].prod_name, 'id' : id, 'code' : data[i].prod_code,
-						'price' : data[i].prod_price, 'pricesend' : data[i].prod_pricesend, 'cost' : data[i].prod_cost});
-					}					
-					loadSuggestions(arrayReturn);						
-					//console.log(arrayReturn);
+			function initAutoprod() {
+				var cached = sessionStorage.getItem('dd_catalog_cache_import');
+				if (cached) {
+					try {
+						arrayReturn = JSON.parse(cached);
+						loadSuggestions(arrayReturn);
+					} catch(e) {}
 				}
-			});
+				$.ajax({
+					url: "php/get_autoprod.php",
+					async: true,
+					dataType: 'json',
+					success: function (data) {
+						if (!data || !Array.isArray(data)) return;
+						var fresh = [];
+						for (var i = 0, len = data.length; i < len; i++) {
+							var id = (data[i].prod_id || '').toString();
+							fresh.push({
+								'value' : data[i].prod_name || '',
+								'id' : id,
+								'code' : data[i].prod_code || '',
+								'price' : data[i].prod_price,
+								'pricesend' : data[i].prod_pricesend,
+								'cost' : data[i].prod_cost
+							});
+						}
+						arrayReturn = fresh;
+						try { sessionStorage.setItem('dd_catalog_cache_import', JSON.stringify(fresh)); } catch(e){}
+						loadSuggestions(arrayReturn);
+					}
+				});
+			}
+			initAutoprod();
+
 			function loadSuggestions(options) {
 				$('#name').autocomplete({					
-					showNoSuggestionNotice:true,
-					triggerSelectOnValidInput:false,
+					showNoSuggestionNotice: true,
+					triggerSelectOnValidInput: false,
+					minChars: 1,
+					lookupLimit: 50,
 					lookup: function(query, done) {
-						// query is what you type
-						// done is what is returned to the user
-
-						// BEGIN hasMatch() function
-						function hasMatch(key_value, match_type) {
-						// BEGIN if match_type === "start"
-						if (match_type === "start") {
-							// check if query is at the 0 index of object's 'value' string
-							var is_at_start_of_string =
-							key_value.toLowerCase().indexOf(query.toLowerCase()) === 0;
-							if (is_at_start_of_string === true) {
-							console.log("query is at start of object's 'value' string");
-							}
-							return is_at_start_of_string;
-						} else if (match_type === "anywhere") {
-							// END if match_type === "start"
-
-							// BEGIN if match_type === "anywhere"
-							// check if query is at any index of object's 'product_desc' string
-							var exists_in_string =
-							key_value.toLowerCase().indexOf(query.toLowerCase()) !== -1;
-							if (exists_in_string === true) {
-							console.log("query exists in product_desc string");
-							}
-							return exists_in_string;
+						var q = (query || "").trim().toLowerCase();
+						if (q === "") {
+							done({ suggestions: [] });
+							return; 
 						}
-						// END if match_type === "anywhere"
-						}
-						// END hasMatch() function
-
-						// declare variables
-						// the iterator
-						var i;
-						// a result object
-						var obj;
-						// the array containing result objects
 						var matches = [];
-
-						// BEGIN if query is empty string
-						// return an empty array
-						if (query === "") {
-						console.log("this thing is happening");
-						var result = {}; 
-						result["suggestions"] = [];
-						done(result);
-						return; 
+						var len = options.length;
+						for (var i = 0; i < len; i++) {
+							var obj = options[i];
+							var val = (obj.value || "").toLowerCase();
+							var code = (obj.code || "").toLowerCase();
+							if (val.indexOf(q) !== -1 || code.indexOf(q) !== -1) {
+								matches.push(obj);
+								if (matches.length >= 50) break; // แสดงสูงสุด 50 รายการ เพื่อความรวดเร็วและไม่หน่วง DOM
+							}
 						}
-						// END if query is empty string
-						// return an empty array
-
-						// get length of array_of_objects
-						var products_array_length = options.length;
-
-						// for each object in the array, call the hasMatch() function and pass it the object's 'value' and 'product_desc' strings
-						for (i = 0; i < products_array_length; i++) {
-						obj = options[i];
-						// if either of the below conditions return true,
-						// push the object to the matches array
-						if (
-							hasMatch(obj.value, "anywhere") ||
-							hasMatch(obj.code, "start")
-						) {
-							matches.push(obj);
-						}
-						}
-						var result = {}; 
-						result["suggestions"] = matches;
-						done(result);
+						done({ suggestions: matches });
 					},					
 					onSelect: function (suggestion) {
 						$('#name').val(suggestion.value);
@@ -1249,7 +1220,13 @@
 				msg_alert += arr_data[i].name + " คงเหลือ " + (parseInt(arr_data[i].min)+parseInt(arr_data[i].amt)) + '<br>';
 			}			
 
-			var WinPrint  = window.open();
+			var WinPrint = null;
+			try {
+				WinPrint = window.open('', '_blank');
+			} catch(e) {
+				console.warn("Popup blocked:", e);
+			}
+
 			$.ajax({
 				type: "POST",
 				url:"php/stock_in.php",           
@@ -1270,33 +1247,26 @@
 					EasyLoading.hide();
 					console.log(data);    
 					if(data && data.trim() == "success"){ 
-						var ele =  document.getElementById('show_qr').innerHTML;			
-						WinPrint.document.write("<html><head><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'></head><body>");
-						WinPrint.document.write("<style>@media print {body {-webkit-print-color-adjust: exact;}} @page {size: auto; margin: 0mm;} .name{line-height: 1.2; font-size: 0.9em; word-wrap:break-word; height: 3.5em; margin-top: 0%;}.ctn{width: 10.1cm; height: 3.79cm; margin-top: -2.1mm; margin-left: 0mm;} .left{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .right{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .qr-r{width: 15mm; height: 15mm; margin-right: 2%; float: right; background-color: black; color: white;} .code-r{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-r{margin-top: 8%;font-size: 1em;} .qr-l{width: 15mm; height: 15mm; margin-right: 2%; float: left; background-color: black; color: white;} .code-l{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-l{margin-top: 8%;font-size: 1em;} </style>" +
-							ele);
-						WinPrint.document.write('</body></html>');
-						WinPrint.document.close();
-						WinPrint.focus();
-						window.setTimeout(function() {
-							WinPrint.print();
-							WinPrint.close();
-							$.confirm({
-								title: 'จำนวนคงเหลือใน'+ $('#btn-b').text(),
-								content: msg_alert,
-								backgroundDismiss: false,
-								buttons: {
-									formSubmit: {
-									text: 'ตกลง',
-									btnClass: 'btn-regis',
-									action: function () {
-										cancel();    
-									}
-									}
-								}
-							}); 		
-						}, 250);			                     
+						try {
+							var ele = document.getElementById('show_qr').innerHTML;
+							if (WinPrint && !WinPrint.closed) {
+								WinPrint.document.write("<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'></head><body>");
+								WinPrint.document.write("<style>@media print {body {-webkit-print-color-adjust: exact;}} @page {size: auto; margin: 0mm;} .name{line-height: 1.2; font-size: 0.9em; word-wrap:break-word; height: 3.5em; margin-top: 0%;}.ctn{width: 10.1cm; height: 3.79cm; margin-top: -2.1mm; margin-left: 0mm;} .left{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .right{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .qr-r{width: 15mm; height: 15mm; margin-right: 2%; float: right; background-color: black; color: white;} .code-r{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-r{margin-top: 8%;font-size: 1em;} .qr-l{width: 15mm; height: 15mm; margin-right: 2%; float: left; background-color: black; color: white;} .code-l{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-l{margin-top: 8%;font-size: 1em;} </style>" + ele);
+								WinPrint.document.write('</body></html>');
+								WinPrint.document.close();
+								WinPrint.focus();
+								setTimeout(function() {
+									try { WinPrint.print(); } catch(e){}
+								}, 300);
+							}
+						} catch(e) {
+							console.warn("Print error/blocked:", e);
+						}
+
+						// แสดงป๊อปอัปสรุปยอดสต๊อกคงเหลือล่าสุดในสถานที่นำเข้า 100% เสมอ
+						showImportStockRemainModal($('#btn-b').text(), arr_data, cancel);
 					}else{
-						if (WinPrint) WinPrint.close();
+						if (WinPrint && !WinPrint.closed) WinPrint.close();
 						$.confirm({
 							title: 'พบข้อผิดพลาด',
 							content: 'ไม่สามารถบันทึกได้: ' + (data || 'ไม่ทราบสาเหตุ'),
@@ -1314,7 +1284,7 @@
 				},
 				error: function(xhr){
 					EasyLoading.hide();
-					if (WinPrint) WinPrint.close();
+					if (WinPrint && !WinPrint.closed) WinPrint.close();
 					$.confirm({
 						title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
 						content: 'สถานะ: ' + xhr.status + ' (' + (xhr.statusText || 'Error') + ')',
@@ -1330,6 +1300,63 @@
 				}               
 			});
 		}	
+
+		function showImportStockRemainModal(placeName, items, onComplete) {
+			var rows = '';
+			for (var i = 0; i < items.length; i++) {
+				var it = items[i];
+				var name = it.name || '';
+				var code = it.qr ? ('<br><small class="text-muted"><i class="fa fa-barcode mr-1"></i>' + it.qr + '</small>') : '';
+				var importQty = parseInt(it.amt, 10) || 0;
+				var beforeQty = (it.min !== undefined && it.min !== null && it.min !== '') ? parseInt(it.min, 10) : 0;
+				var newTotalQty = beforeQty + importQty;
+
+				rows += '<tr>' +
+					'<td style="vertical-align: middle;"><strong>' + name + '</strong>' + code + '</td>' +
+					'<td class="text-center font-weight-bold text-success" style="vertical-align: middle;">+' + importQty + '</td>' +
+					'<td class="text-center" style="vertical-align: middle;"><span class="badge badge-success px-2 py-1 font-weight-bold" style="font-size: 0.95rem;">' + newTotalQty + ' ชิ้น</span></td>' +
+				'</tr>';
+			}
+
+			var contentHtml = '<div class="py-1">' +
+				'<div class="alert alert-success py-2 px-3 mb-3 d-flex align-items-center" style="font-size: 0.95rem;">' +
+					'<i class="fa fa-check-circle fa-lg mr-2"></i>' +
+					'<div><strong>นำเข้าและเพิ่มยอดสต๊อกสำเร็จแล้ว</strong></div>' +
+				'</div>' +
+				'<div class="table-responsive" style="max-height: 350px; overflow-y: auto;">' +
+					'<table class="table table-bordered table-sm mb-0" style="font-size: 0.92rem;">' +
+						'<thead class="thead-light">' +
+							'<tr>' +
+								'<th>รายการสินค้า</th>' +
+								'<th class="text-center" style="width: 110px;">จำนวนรับเข้า</th>' +
+								'<th class="text-center" style="width: 140px;">ยอดสต๊อกล่าสุด</th>' +
+							'</tr>' +
+						'</thead>' +
+						'<tbody>' + rows + '</tbody>' +
+					'</table>' +
+				'</div>' +
+			'</div>';
+
+			$.confirm({
+				title: '<div class="font-weight-bold text-dark"><i class="fa fa-boxes text-success mr-2"></i> ยอดสต๊อกคงเหลือล่าสุดใน ' + placeName + '</div>',
+				content: contentHtml,
+				columnClass: 'medium',
+				backgroundDismiss: false,
+				buttons: {
+					formSubmit: {
+						text: '<i class="fa fa-check mr-1"></i> ตกลง',
+						btnClass: 'btn-success px-4 py-2 font-weight-bold',
+						action: function () {
+							if (typeof onComplete === 'function') {
+								onComplete();
+							} else {
+								cancel();
+							}
+						}
+					}
+				}
+			});
+		}
 
 		function logout(){
 			localStorage.clear();
@@ -1484,11 +1511,11 @@
 			  	<button class="btn btn-sm btn-success" hidden disabled> <i class="fa fa-check"></i></button>
 			  </div>
 			</div><br>
-			<div class="row">
+			<div class="row mt-2 mb-2">
 				<div class="col-11 text-right" style="margin-left: 5%;">
-					<button class="btn btn-md btn-success" style="margin-right: 5px;" onclick="add();">เพิ่มสินค้า (F2)</button>
-					<button id="btn-folder" class="select_folder btn btn-md btn-primary" style="margin-right: 5px;" onclick="selectfolder();">เลือกสินค้า (F7)</button>
-					<button id="btn-def" class="btn btn-md btn-danger" onclick="set_default()">ค่าเริ่มต้น (F4)</button>
+					<button id="btn-add" class="btn btn-md btn-success" style="margin-right: 8px;" onclick="add();"><i class="fas fa-plus mr-1"></i> เพิ่มสินค้า (F2)</button>
+					<button id="btn-folder" class="select_folder btn btn-md btn-primary" style="margin-right: 8px;" onclick="selectfolder();"><i class="fas fa-folder-open mr-1"></i> เลือกสินค้า (F7)</button>
+					<button id="btn-def" class="btn btn-md btn-danger" onclick="set_default()"><i class="fas fa-redo-alt mr-1"></i> ค่าเริ่มต้น (F4)</button>
 				</div>
 			</div>
 		</div>

@@ -243,93 +243,64 @@
 			update_summary();
 
 			var arrayReturn = [];
-			$.ajax({
-				url: "php/get_autoprod.php",
-				async: true,
-				dataType: 'json',
-				success: function (data) {
-					for (var i = 0, len = data.length; i < len; i++) {
-						var id = (data[i].prod_id).toString();
-						arrayReturn.push({'value' : data[i].prod_name, 'id' : id, 'code' : data[i].prod_code,
-						'price' : data[i].prod_price, 'pricesend' : data[i].prod_pricesend, 'cost' : data[i].prod_cost});
-					}					
-					loadSuggestions(arrayReturn);						
-					//console.log(arrayReturn);
+			function initAutoprod() {
+				var cached = sessionStorage.getItem('dd_catalog_cache_qr');
+				if (cached) {
+					try {
+						arrayReturn = JSON.parse(cached);
+						loadSuggestions(arrayReturn);
+					} catch(e) {}
 				}
-			});	
+				$.ajax({
+					url: "php/get_autoprod.php",
+					async: true,
+					dataType: 'json',
+					success: function (data) {
+						if (!data || !Array.isArray(data)) return;
+						var fresh = [];
+						for (var i = 0, len = data.length; i < len; i++) {
+							var id = (data[i].prod_id || '').toString();
+							fresh.push({
+								'value' : data[i].prod_name || '',
+								'id' : id,
+								'code' : data[i].prod_code || '',
+								'price' : data[i].prod_price,
+								'pricesend' : data[i].prod_pricesend,
+								'cost' : data[i].prod_cost
+							});
+						}
+						arrayReturn = fresh;
+						try { sessionStorage.setItem('dd_catalog_cache_qr', JSON.stringify(fresh)); } catch(e){}
+						loadSuggestions(arrayReturn);
+					}
+				});
+			}
+			initAutoprod();
+
 			function loadSuggestions(options) {
 				$('#name').autocomplete({					
-					showNoSuggestionNotice:true,
-					triggerSelectOnValidInput:false,
+					showNoSuggestionNotice: true,
+					triggerSelectOnValidInput: false,
+					minChars: 1,
+					lookupLimit: 50,
 					lookup: function(query, done) {
-						// query is what you type
-						// done is what is returned to the user
-
-						// BEGIN hasMatch() function
-						function hasMatch(key_value, match_type) {
-						// BEGIN if match_type === "start"
-						if (match_type === "start") {
-							// check if query is at the 0 index of object's 'value' string
-							var is_at_start_of_string =
-							key_value.toLowerCase().indexOf(query.toLowerCase()) === 0;
-							if (is_at_start_of_string === true) {
-							console.log("query is at start of object's 'value' string");
-							}
-							return is_at_start_of_string;
-						} else if (match_type === "anywhere") {
-							// END if match_type === "start"
-
-							// BEGIN if match_type === "anywhere"
-							// check if query is at any index of object's 'product_desc' string
-							var exists_in_string =
-							key_value.toLowerCase().indexOf(query.toLowerCase()) !== -1;
-							if (exists_in_string === true) {
-							console.log("query exists in product_desc string");
-							}
-							return exists_in_string;
+						var q = (query || "").trim().toLowerCase();
+						if (q === "") {
+							done({ suggestions: [] });
+							return; 
 						}
-						// END if match_type === "anywhere"
-						}
-						// END hasMatch() function
-
-						// declare variables
-						// the iterator
-						var i;
-						// a result object
-						var obj;
-						// the array containing result objects
 						var matches = [];
-
-						// BEGIN if query is empty string
-						// return an empty array
-						if (query === "") {
-						console.log("this thing is happening");
-						var result = {}; 
-						result["suggestions"] = [];
-						done(result);
-						return; 
+						var len = options.length;
+						for (var i = 0; i < len; i++) {
+							var obj = options[i];
+							var val = (obj.value || "").toLowerCase();
+							var code = (obj.code || "").toLowerCase();
+							if (val.indexOf(q) !== -1 || code.indexOf(q) !== -1) {
+								matches.push(obj);
+								if (matches.length >= 50) break; // แสดงสูงสุด 50 รายการ เพื่อความรวดเร็วและไม่หน่วง DOM
+							}
 						}
-						// END if query is empty string
-						// return an empty array
-
-						// get length of array_of_objects
-						var products_array_length = options.length;
-
-						// for each object in the array, call the hasMatch() function and pass it the object's 'value' and 'product_desc' strings
-						for (i = 0; i < products_array_length; i++) {
-						obj = options[i];
-						// if either of the below conditions return true,
-						// push the object to the matches array
-						if (
-							hasMatch(obj.value, "anywhere") ||
-							hasMatch(obj.code, "start")
-						) {
-							matches.push(obj);
-						}
-						}
-						var result = {}; 
-						result["suggestions"] = matches;
-						done(result);
+						done({ suggestions: matches });
 					},
 					onSelect: function (suggestion) {
 						$('#name').val(suggestion.value);						

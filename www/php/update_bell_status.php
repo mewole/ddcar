@@ -24,12 +24,29 @@
             $total_amt += intval($rs['sum_s']);
         }
 
-        // คำนวณสถานะใหม่
+        // คำนวณสถานะใหม่ตาม min_amount อย่างสมเหตุสมผล
         $new_status = 'normal';
-        if ($total_amt <= 10) {
+        if ($total_amt <= 0) {
             $new_status = 'danger';
-        } else if ($total_amt <= $min) {
-            $new_status = 'warning';
+        } else if ($min > 0) {
+            if ($total_amt <= $min) {
+                // หากสต๊อกเหลือ <= กึ่งหนึ่งของเกณฑ์ขั้นต่ำ หรือ <= 5 ชิ้น ให้เป็นระดับวิกฤต (danger)
+                $danger_threshold = max(1, min(10, ceil($min / 2)));
+                if ($total_amt <= $danger_threshold) {
+                    $new_status = 'danger';
+                } else {
+                    $new_status = 'warning';
+                }
+            } else {
+                $new_status = 'normal';
+            }
+        } else {
+            // กรณีไม่ได้ตั้งเกณฑ์ขั้นต่ำ (min = 0) ใช้เกณฑ์มาตรฐานเดิม <= 10 เป็น danger
+            if ($total_amt <= 10) {
+                $new_status = 'danger';
+            } else {
+                $new_status = 'normal';
+            }
         }
 
         $sql = "UPDATE product SET min_amount = '$min', status = '$new_status' WHERE prod_id = '$prod_id'";

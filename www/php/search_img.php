@@ -1,21 +1,18 @@
 <?php
-    include "db.php"; 
-    $prod_id = $_POST['prod_id'];  
-    $output = array(); 
-   
-    $query = "SELECT img FROM product WHERE prod_id = '$prod_id'";     
+include "db.php"; 
+$prod_id = isset($_POST['prod_id']) ? intval($_POST['prod_id']) : 0;  
+$output = array(); 
+
+if ($prod_id > 0) {
+    $query = "SELECT img FROM product WHERE prod_id = '$prod_id' LIMIT 1";     
     $result = mysqli_query($conn, $query);
 
-    if(mysqli_num_rows($result) > 0){      
-      while($row = mysqli_fetch_array($result)){      
+    if ($result && mysqli_num_rows($result) > 0) {      
+        $row = mysqli_fetch_assoc($result);      
         $output[] = $row;  
-      }   
     }
+}
 
-    if($result){
-        echo json_encode($output);		   
-    }else{
-        echo "fail";
-    }
-	mysqli_close($conn);
+echo json_encode($output);
+mysqli_close($conn);
 ?>

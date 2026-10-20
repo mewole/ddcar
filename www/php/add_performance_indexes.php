@@ -64,6 +64,16 @@ $indexes = [
     ],
     "customer" => [
         "idx_cus_name" => "ADD INDEX idx_cus_name (cus_name)"
+    ],
+    // 7. warehouse & shop (Stock lookups)
+    "warehouse" => [
+        "idx_wh_prod_ware" => "ADD INDEX idx_wh_prod_ware (prod_id, ware_id)"
+    ],
+    "shop" => [
+        "idx_sh_prod_shop" => "ADD INDEX idx_sh_prod_shop (prod_id, shop_id)"
+    ],
+    "detail_cus" => [
+        "idx_dc_prod_cus" => "ADD INDEX idx_dc_prod_cus (prod_id, cus_id)"
     ]
 ];
 

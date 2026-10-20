@@ -5,8 +5,14 @@
     $txt = "(cancel)";
 
     if(isset($_POST['date'])){
-        $date = mysqli_real_escape_string($conn, $_POST['date']);
-        $date_to = mysqli_real_escape_string($conn, $_POST['date_to']);
+        $date = mysqli_real_escape_string($conn, trim($_POST['date']));
+        $date_to = mysqli_real_escape_string($conn, trim($_POST['date_to']));
+        if (strlen($date) <= 10 && !empty($date)) {
+            $date .= ' 00:00:00';
+        }
+        if (strlen($date_to) <= 10 && !empty($date_to)) {
+            $date_to .= ' 23:59:59';
+        }
         $query = "SELECT s.stock_id, s.stock_number, w.ware_name, s.date_time 
                   FROM stock_in s 
                   INNER JOIN warehouse_detail w ON s.ware_id = w.ware_id 

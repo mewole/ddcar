@@ -583,27 +583,53 @@
     }
 
     function setupAutocomplete() {
+      var cached = sessionStorage.getItem('dd_catalog_cache_transfer');
+      if (cached) {
+        try {
+          var items = JSON.parse(cached);
+          bindTransferAutocomplete(items);
+        } catch(e) {}
+      }
+
       $.ajax({
         url: 'php/get_autoprod.php',
         type: 'GET',
         dataType: 'json',
         success: function(data) {
-          var items = (data || []).map(function(d) {
+          if (!data || !Array.isArray(data)) return;
+          var items = data.map(function(d) {
             return {
-              value: d.prod_name,
+              value: d.prod_name || '',
               id: d.prod_id,
-              code: d.prod_code,
+              code: d.prod_code || '',
               price: d.prod_price
             };
           });
+          try { sessionStorage.setItem('dd_catalog_cache_transfer', JSON.stringify(items)); } catch(e){}
+          bindTransferAutocomplete(items);
+        }
+      });
+    }
 
-          $('#name').autocomplete({
-            lookup: items,
-            minChars: 2,
-            onSelect: function(suggestion) {
-              loadProductById(suggestion.id);
+    function bindTransferAutocomplete(items) {
+      $('#name').autocomplete({
+        minChars: 1,
+        lookupLimit: 50,
+        lookup: function(query, done) {
+          var q = (query || "").trim().toLowerCase();
+          if (!q) { done({ suggestions: [] }); return; }
+          var matches = [];
+          for (var i = 0, len = items.length; i < len; i++) {
+            var it = items[i];
+            if ((it.value || '').toLowerCase().indexOf(q) !== -1 || (it.code || '').toLowerCase().indexOf(q) !== -1) {
+              matches.push(it);
+              if (matches.length >= 50) break;
             }
-          });
+          }
+          done({ suggestions: matches });
+        },
+        onSelect: function(suggestion) {
+          loadProductById(suggestion.id);
         }
       });
     }

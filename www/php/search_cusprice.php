@@ -1,21 +1,18 @@
 <?php
-    include "db.php";
-    $cus_id = $_POST['cus_id'];   
-    $prod_id = $_POST['prod_id'];
-    $output = array();       
-    
-    $query = "SELECT cus_price FROM detail_cus WHERE prod_id = '$prod_id' AND cus_id = '$cus_id'"; 
-    $result = mysqli_query($conn, $query);   
-    if(mysqli_num_rows($result) > 0){    
-        while($row = mysqli_fetch_array($result)){ 
-            $output[] = $row;
-        }
-    }
+include "db.php";
+$cus_id = isset($_POST['cus_id']) ? intval($_POST['cus_id']) : 0;   
+$prod_id = isset($_POST['prod_id']) ? intval($_POST['prod_id']) : 0;
+$output = array();       
 
-    if($result){
-        echo json_encode($output);		   
-    }else{
-        echo "fail";
+if ($cus_id > 0 && $prod_id > 0) {
+    $query = "SELECT cus_price FROM detail_cus WHERE prod_id = '$prod_id' AND cus_id = '$cus_id' LIMIT 1"; 
+    $result = mysqli_query($conn, $query);   
+    if ($result && mysqli_num_rows($result) > 0) {    
+        $row = mysqli_fetch_assoc($result); 
+        $output[] = $row;
     }
-    mysqli_close($conn);
+}
+
+echo json_encode($output);
+mysqli_close($conn);
 ?>

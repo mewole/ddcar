@@ -506,7 +506,7 @@ textarea:focus {
    POS Cashiering & Inventory Responsive Overrides
    ========================================================= */
 
-#btn-b, #btn-c, #btn-p, #from, #btn-folder, #btn-def {
+#btn-b, #btn-c, #btn-p, #from {
   background-color: #ffffff !important;
   border: 1.5px solid var(--color-dark) !important;
   color: var(--color-dark) !important;
@@ -522,19 +522,142 @@ textarea:focus {
   text-overflow: ellipsis;
 }
 
-#btn-b:hover, #btn-c:hover, #btn-p:hover, #from:hover, #btn-folder:hover, #btn-def:hover {
+#btn-b:hover, #btn-c:hover, #btn-p:hover, #from:hover {
   background-color: var(--color-dark) !important;
   color: #ffffff !important;
 }
 
+/* POS & Inventory Action Buttons: Compact Size & Distinct Colors */
+#btn-add,
+.btn-action-add {
+  background-color: #16a34a !important;
+  border: 1.5px solid #15803d !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 7px 16px !important;
+  width: auto !important;
+  min-width: 120px !important;
+  min-height: 38px !important;
+  font-size: 0.92rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.22) !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer;
+}
+
+#btn-add:hover,
+.btn-action-add:hover {
+  background-color: #15803d !important;
+  border-color: #166534 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 8px rgba(22, 163, 74, 0.32) !important;
+  transform: translateY(-1px);
+}
+
+#btn-folder,
+.select_folder {
+  background-color: #2563eb !important;
+  border: 1.5px solid #1d4ed8 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 7px 16px !important;
+  width: auto !important;
+  min-width: 120px !important;
+  min-height: 38px !important;
+  font-size: 0.92rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.22) !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer;
+}
+
+#btn-folder:hover,
+.select_folder:hover {
+  background-color: #1d4ed8 !important;
+  border-color: #1e40af !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.32) !important;
+  transform: translateY(-1px);
+}
+
+#btn-def {
+  background-color: #dc2626 !important;
+  border: 1.5px solid #b91c1c !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 7px 16px !important;
+  width: auto !important;
+  min-width: 120px !important;
+  min-height: 38px !important;
+  font-size: 0.92rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.22) !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer;
+}
+
+#btn-def:hover {
+  background-color: #b91c1c !important;
+  border-color: #991b1b !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.32) !important;
+  transform: translateY(-1px);
+}
+
+#btn-add:disabled,
+#btn-folder:disabled,
+.select_folder:disabled,
+#btn-def:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Bottom Bar Checkout & Actions */
+#btn_checkbill {
+  background-color: #16a34a !important;
+  border: 1.5px solid #15803d !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.25) !important;
+  transition: all 0.15s ease !important;
+}
+
+#btn_checkbill:hover {
+  background-color: #15803d !important;
+  border-color: #166534 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 8px rgba(22, 163, 74, 0.35) !important;
+  transform: translateY(-1px);
+}
+
+#ctn-bttm {
+  background-color: #ffffff !important;
+  border-top: 1px solid var(--border-light) !important;
+  box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.06) !important;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
 #head {
-  background: #f1f5f9;
+  background: #e2e8f0;
   border-radius: var(--radius-sm);
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: 9px;
+  padding-bottom: 9px;
   font-weight: 600;
   color: var(--color-black) !important;
-  border: 1px solid var(--border-light);
+  border: 1px solid #cbd5e1;
 }
 
 #head div {

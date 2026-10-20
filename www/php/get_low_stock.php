@@ -18,9 +18,8 @@ $items = array();
 
 if ($mode === 'zero') {
     // โหมดสินค้าหมดสต๊อก (รวมทุกรายการที่มีในระบบแต่สต๊อก = 0)
-    // 1. ดึงสินค้าทั้งหมดที่ active 500 รายการ
+    // 1. ดึงสินค้าทั้งหมดที่ active 500 รายการ โดยไม่แตะ longtext img ในตอนแรก
     $sql = "SELECT prod_id, prod_code, prod_name, 
-            CASE WHEN img LIKE 'img/%' THEN img WHEN LENGTH(img) < 200 THEN img ELSE '' END AS img, 
             prod_cost, prod_price, prod_pricesend, CAST(min_amount AS SIGNED) AS min_amount
             FROM product 
             ORDER BY prod_id DESC 
@@ -30,6 +29,7 @@ if ($mode === 'zero') {
     $pids = array();
     if ($res) {
         while ($r = mysqli_fetch_assoc($res)) {
+            $r['img'] = '';
             $prod_list[] = $r;
             $pids[] = intval($r['prod_id']);
         }
@@ -37,7 +37,6 @@ if ($mode === 'zero') {
 } else {
     // โหมดมาตรฐาน 'reorder': ดึงเฉพาะสินค้าที่ผู้ใช้ตั้งค่า min_amount > 0 ไว้
     $sql = "SELECT prod_id, prod_code, prod_name, 
-            CASE WHEN img LIKE 'img/%' THEN img WHEN LENGTH(img) < 200 THEN img ELSE '' END AS img, 
             prod_cost, prod_price, prod_pricesend, CAST(min_amount AS SIGNED) AS min_amount
             FROM product 
             WHERE min_amount != '' AND min_amount != '0' AND min_amount IS NOT NULL
@@ -48,6 +47,7 @@ if ($mode === 'zero') {
     $pids = array();
     if ($res) {
         while ($r = mysqli_fetch_assoc($res)) {
+            $r['img'] = '';
             $prod_list[] = $r;
             $pids[] = intval($r['prod_id']);
         }
@@ -56,6 +56,19 @@ if ($mode === 'zero') {
 
 if (!empty($pids)) {
     $pid_str = implode(',', $pids);
+
+    // ดึงรูปเฉพาะ $pids ที่เลือกด้วย Primary Key (< 5ms)
+    $res_img = mysqli_query($conn, "SELECT prod_id, CASE WHEN img LIKE 'img/%' THEN img WHEN LENGTH(img) < 200 THEN img ELSE '' END AS img FROM product WHERE prod_id IN ($pid_str)");
+    $img_map = array();
+    if ($res_img) {
+        while ($ri = mysqli_fetch_assoc($res_img)) {
+            $img_map[$ri['prod_id']] = $ri['img'];
+        }
+    }
+    foreach ($prod_list as &$pitem) {
+        $pitem['img'] = isset($img_map[$pitem['prod_id']]) ? $img_map[$pitem['prod_id']] : '';
+    }
+    unset($pitem);
 
     // 2. Batch ดึงจำนวนสต๊อกหน้าร้าน
     $shop_map = array();
