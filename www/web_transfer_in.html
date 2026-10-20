@@ -1239,13 +1239,20 @@
       }
 
       html += '<script>' +
-        'window.onload = function() { window.focus(); setTimeout(function() { window.print(); }, 400); };' +
+        'window.onload = function() { window.focus(); setTimeout(function() { window.print(); }, 250); };' +
+        'window.addEventListener("afterprint", function() { try { if (window.opener) window.opener.focus(); } catch(e){} setTimeout(function() { window.close(); }, 50); });' +
         '<\/script></body></html>';
 
       w.document.open();
       w.document.write(html);
       w.document.close();
       w.focus();
+      setTimeout(function() {
+        try {
+          w.print();
+          w.close();
+        } catch(e){}
+      }, 350);
     }
 
     // Load Pending Transfers for Tab 2

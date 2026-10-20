@@ -955,11 +955,17 @@
 										ele+
 									"</div>"+							
 									"</div>");
+								WinPrint.document.write("<script>" +
+									"window.addEventListener('afterprint', function() { try { if (window.opener) window.opener.focus(); } catch(e){} setTimeout(function() { window.close(); }, 50); });" +
+									"<\/script>");
 								WinPrint.document.write('</body></html>');							
 								WinPrint.document.close();
 								WinPrint.focus();
 								setTimeout(function() {
-									try { WinPrint.print(); } catch(e){}
+									try {
+										WinPrint.print();
+										WinPrint.close();
+									} catch(e){}
 								}, 350);
 							} catch(err) {
 								console.error("Print write error:", err);

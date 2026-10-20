@@ -1074,6 +1074,7 @@
 			var text = "";
       		var texta4 = "";
 			var c = 1;
+			var total_qty = 0;
 			for(var i = 0 ; i < arr_data.length ; i ++){                
 				if(arr_data[i].old_price != arr_data[i].price){
 					item = {};                 
@@ -1110,11 +1111,20 @@
 					c = 1;
 					texta4 = "";
 				}
-				text = text + "<div class='row items'>" +
-                                "<div class='col-2 no text-center'>"+arr_data[i].amt+"</div>" +
-                                "<div class='col-6 text-center'>"+arr_data[i].name+"</div>" +
-                                "<div class='col-4 price text-center'>"+arr_data[i].price+"</div>" +
-                              "</div>"
+
+				var itemQty = parseFloat(arr_data[i].amt) || 1;
+				var itemUnitPrice = parseFloat(arr_data[i].price) || 0;
+				var itemLineTotal = (parseFloat(arr_data[i].total) || (itemUnitPrice * itemQty));
+				total_qty += itemQty;
+				var itemQr = arr_data[i].qr ? '<div style="font-size: 10px; color: #475569;">' + arr_data[i].qr + '</div>' : '';
+				var itemSubPrice = itemQty > 1 ? '<div style="font-size: 10px; color: #64748b;">(@ ' + itemUnitPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')</div>' : '';
+
+				text = text + "<tr>" +
+					"<td style='text-align: center; vertical-align: top;'>" + (i + 1) + "</td>" +
+					"<td style='text-align: left; word-break: break-word; vertical-align: top;'>" + arr_data[i].name + itemQr + itemSubPrice + "</td>" +
+					"<td style='text-align: center; vertical-align: top;'>" + itemQty + "</td>" +
+					"<td style='text-align: right; vertical-align: top; font-weight: bold;'>" + itemLineTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + "</td>" +
+					"</tr>";
 			}			
 			for(var a = 0;a < arr_a4.length;a++){
 				texta4 = ""
@@ -1279,66 +1289,107 @@
 								try {
 									if(print_type == "bill"){
 										var dt = datetime.split(" ");
-										var time = dt[1];
+										var time = dt[1] || '';
 										var d = dt[0].split("-");
 										var date = d[2] + "/" + d[1] + "/" + d[0];
-										WinPrint.document.write("<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'><link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css' integrity='sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T' crossorigin='anonymous'>");
-										WinPrint.document.write("<style>@page {size: auto; margin: 0mm;} body{line-height: 1.5; font-size: 0.9em; } .title{margin-bottom: 0.1em;} .line{text-decoration: underline;} .price, .no{letter-spacing: -0.05em;} .items{margin-bottom: 5px;}</style></head><body>" +
-											"<div style='width: 7cm;'>"+
-												"<div class='col-12 text-center'>"+billshopName+"</div>"+
-												"<div class='col-12 text-center'>"+billshopDestination+"</div>"+
-												"<div class='col-12 text-center'>"+billshopTel+"</div>"+
-												"<div class='col-12 text-center line' style='margin-top: 0.5em; margin-bottom: 0.5em;'>ใบเสร็จรับเงิน</div>"+						
-													"<div class='row justify-content-center title'>" +
-													"<div class='col-4 text-right'>ลูกค้า : </div>" +
-													"<div class='col-6 text-center'>"+$('#cus').val()+"</div>" +
-													"</div>" +
-													"<div class='row justify-content-center title'>" +
-													"<div class='col-4 text-right'>ประเภท : </div>" +
-													"<div class='col-6 text-center'>"+$('#btn-p').text()+"</div>" +
-													"</div>" +
-													"<div class='row justify-content-center title'>" +
-													"<div class='col-4 text-right'>เลขที่บิล : </div>" +
-													"<div class='col-6 text-center'>"+order_num+"</div>" +
-													"</div>" +
-													"<div class='row justify-content-center title'>" +
-													"<div class='col-4 text-right'>วันที่ : </div>" +
-													"<div class='col-3 text-right'>"+date+"  </div>" +
-													"<div class='col-3'>"+time+"</div>" +
-													"</div>" +								
-																		
-													"<hr style='width: 90%; border-top: 1px dashed; border-bottom: none; margin-top: 5px;'>"+
-													"<div class='row justify-content-center' style='margin-bottom: 5px;'>" +
-													"<div class='col-2 text-center line'>จำนวน</div>" +
-													"<div class='col-6 text-center line'>รายการ</div>" +
-													"<div class='col-4 text-center line'>ราคา</div>" +
-												"</div>"+
-												text+
-												"<hr style='width: 90%; border-top: 1px; border-top: 1px dashed; border-bottom: none; margin-top: 0;'>"+
-												"<div class='row justify-content-center title'>"+
-													"<div class='col-4 text-right'>ราคารวม : </div>" +
-													"<div class='col-6 text-center'>"+$('#net-price').val()+" บาท</div>"+
-												"</div>"+
-												"<div class='row justify-content-center title'>"+
-													"<div class='col-4 text-right'>ส่วนลด : </div>" +
-													"<div class='col-6 text-center'>"+dis+" บาท</div>"+
-												"</div>"+
-												"<div class='row justify-content-center title'>"+
-													"<div class='col-4 text-right'>สุทธิ : </div>" +
-													"<div class='col-6 text-center'>"+$('#final-price').val()+" บาท</div>"+
-												"</div>"+
-												"<div class='row justify-content-center title'>"+
-													"<div class='col-4 text-right'>รับ / ทอน : </div>" +
-													"<div class='col-4 text-right'>"+$('#get-money').val()+" บาท</div>"+
-													"<div class='col-4 text-right'>"+$('#change-money').val()+" บาท</div>"+
-												"</div>"+
-												"<div class='col-12 text-center'>พนักงานขาย : "+localStorage.user_name+"</div>"+
-												"</div>");
-										WinPrint.document.write('</body></html>');
+										var netVal = parseFloat($('#net-price').val()) || 0;
+										var disVal = parseFloat(dis) || 0;
+										var finalVal = parseFloat($('#final-price').val()) || 0;
+										var getVal = parseFloat($('#get-money').val()) || 0;
+										var chngVal = parseFloat($('#change-money').val()) || 0;
+										var cusVal = $('#cus').val() || '-';
+										var payVal = $('#btn-p').text() || 'เงินสด';
+										var cmtVal = ($('#comment').val() || '').trim();
+
+										var shopName = (typeof billshopName !== 'undefined' && billshopName) ? billshopName : 'DD MOTOR SPORT';
+										var shopAddr = (typeof billshopDestination !== 'undefined' && billshopDestination) ? billshopDestination : 'B-24, B-28 อาคารศรีวรจักร ถ.หลวงป้อมปราบศัตรูพ่าย';
+										var shopTel = (typeof billshopTel !== 'undefined' && billshopTel) ? billshopTel : 'โทร. 02-2265280 , 02-2222437';
+
+										var billHtml = "<!DOCTYPE html><html><head><meta charset='utf-8'>" +
+											"<title>ใบเสร็จรับเงิน - " + order_num + "</title>" +
+											"<link href='https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Maitree:wght@400;600&display=swap' rel='stylesheet'>" +
+											"<style>" +
+											"* { box-sizing: border-box; margin: 0; padding: 0; } " +
+											"@page { size: 80mm auto; margin: 0mm; } " +
+											"@media print { " +
+											"  html, body { width: 100% !important; min-width: 0 !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } " +
+											"  @page { size: 80mm auto; margin: 0mm; } " +
+											"} " +
+											"body { font-family: 'Prompt', 'Maitree', Tahoma, 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.35; color: #000 !important; background: #fff; width: 100%; } " +
+											".bill-wrap { width: 72mm; margin: 0 auto; padding: 4mm 2mm; } " +
+											".text-center { text-align: center; } .text-left { text-align: left; } .text-right { text-align: right; } " +
+											".font-bold { font-weight: bold; } " +
+											".line-dashed { border-top: 1px dashed #000; margin: 6px 0; } " +
+											".row-info { display: flex; margin-bottom: 3px; font-size: 12px; } " +
+											".row-info .lbl { width: 72px; font-weight: bold; text-align: right; padding-right: 6px; flex-shrink: 0; } " +
+											".row-info .val { flex-grow: 1; text-align: left; word-break: break-word; } " +
+											"table.items-table { width: 100%; border-collapse: collapse; margin: 6px 0; } " +
+											"table.items-table th { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; font-size: 12px; font-weight: bold; } " +
+											"table.items-table td { padding: 4px 0; font-size: 12px; vertical-align: top; } " +
+											".row-summary { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; } " +
+											".row-summary.total { font-size: 14px; font-weight: bold; margin-top: 3px; } " +
+											".footer-box { margin-top: 12px; text-align: center; font-size: 11px; line-height: 1.6; } " +
+											"</style></head><body>" +
+											"<div class='bill-wrap'>" +
+											"<div class='text-center font-bold' style='font-size: 16px;'>" + shopName + "</div>" +
+											"<div class='text-center' style='font-size: 11px;'>" + shopAddr + "</div>" +
+											"<div class='text-center' style='font-size: 11px;'>" + shopTel + "</div>" +
+											"<div class='text-center font-bold' style='margin: 6px 0; font-size: 14px; text-decoration: underline;'>ใบเสร็จรับเงิน</div>" +
+											"<div class='line-dashed'></div>" +
+											"<div class='row-info'><div class='lbl'>เลขที่บิล :</div><div class='val font-bold'>" + order_num + "</div></div>" +
+											"<div class='row-info'><div class='lbl'>วันที่ :</div><div class='val'>" + date + " " + time + "</div></div>" +
+											"<div class='row-info'><div class='lbl'>ลูกค้า :</div><div class='val font-bold'>" + cusVal + "</div></div>" +
+											"<div class='row-info'><div class='lbl'>การชำระ :</div><div class='val'>" + payVal + "</div></div>" +
+											"<div class='row-info'><div class='lbl'>พนักงาน :</div><div class='val'>" + (localStorage.user_name || '-') + "</div></div>";
+
+										if (cmtVal) {
+											billHtml += "<div class='row-info'><div class='lbl'>หมายเหตุ :</div><div class='val'>" + cmtVal + "</div></div>";
+										}
+
+										billHtml += "<table class='items-table'><thead><tr>" +
+											"<th style='width: 10%; text-align: center;'>#</th>" +
+											"<th style='width: 52%; text-align: left;'>รายการ</th>" +
+											"<th style='width: 14%; text-align: center;'>จำนวน</th>" +
+											"<th style='width: 24%; text-align: right;'>รวม (฿)</th>" +
+											"</tr></thead><tbody>" +
+											text +
+											"</tbody></table>" +
+											"<div class='line-dashed'></div>" +
+											"<div class='row-summary'><span>รวมเงิน (" + total_qty + " ชิ้น) :</span><span>" + netVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " บาท</span></div>";
+
+										if (disVal > 0) {
+											billHtml += "<div class='row-summary'><span>ส่วนลด :</span><span>-" + disVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " บาท</span></div>";
+										}
+
+										billHtml += "<div class='row-summary total'><span>ยอดสุทธิ :</span><span style='font-size: 15px;'>" + finalVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " บาท</span></div>";
+
+										if (payVal === 'เงินสด' || getVal > 0) {
+											billHtml += "<div class='line-dashed' style='margin: 4px 0;'></div>" +
+												"<div class='row-summary'><span>รับเงิน :</span><span>" + getVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " บาท</span></div>" +
+												"<div class='row-summary font-bold'><span>เงินทอน :</span><span>" + chngVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " บาท</span></div>";
+										}
+
+										billHtml += "<div class='line-dashed'></div>" +
+											"<div class='footer-box'>" +
+											"<div class='font-bold'>ขอบคุณที่ใช้บริการ</div>" +
+											"<div style='font-size: 10px; color: #475569; margin-top: 2px;'>สินค้าซื้อแล้วกรุณาตรวจสอบความถูกต้อง</div>" +
+											"</div>" +
+											"</div>" +
+											"<script>" +
+											"window.onload = function() { window.focus(); setTimeout(function() { window.print(); }, 250); };" +
+											"window.addEventListener('afterprint', function() { try { if (window.opener) window.opener.focus(); } catch(e){} setTimeout(function() { window.close(); }, 50); });" +
+											"<\/script>" +
+											"</body></html>";
+
+										WinPrint.document.open();
+										WinPrint.document.write(billHtml);
 										WinPrint.document.close();
 										WinPrint.focus();
 										setTimeout(function() {
-											try { WinPrint.print(); } catch(e){}
+											try {
+												WinPrint.print();
+												WinPrint.close();
+											} catch(e){}
 										}, 350);
 									}
 									else if(print_type == "a4"){
@@ -1448,11 +1499,17 @@
 													arr_dat[m] +
 											'</div>');
 										}										
+										WinPrint.document.write("<script>" +
+											"window.addEventListener('afterprint', function() { try { if (window.opener) window.opener.focus(); } catch(e){} setTimeout(function() { window.close(); }, 50); });" +
+											"<\/script>");
 										WinPrint.document.write('</body></html>');
 										WinPrint.document.close();
 										WinPrint.focus();
 										setTimeout(function() {
-											try { WinPrint.print(); } catch(e){}
+											try {
+												WinPrint.print();
+												WinPrint.close();
+											} catch(e){}
 										}, 350);
 									}
 								} catch(e) {

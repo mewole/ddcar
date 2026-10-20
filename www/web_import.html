@@ -1252,11 +1252,18 @@
 							if (WinPrint && !WinPrint.closed) {
 								WinPrint.document.write("<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'></head><body>");
 								WinPrint.document.write("<style>@media print {body {-webkit-print-color-adjust: exact;}} @page {size: auto; margin: 0mm;} .name{line-height: 1.2; font-size: 0.9em; word-wrap:break-word; height: 3.5em; margin-top: 0%;}.ctn{width: 10.1cm; height: 3.79cm; margin-top: -2.1mm; margin-left: 0mm;} .left{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .right{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .qr-r{width: 15mm; height: 15mm; margin-right: 2%; float: right; background-color: black; color: white;} .code-r{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-r{margin-top: 8%;font-size: 1em;} .qr-l{width: 15mm; height: 15mm; margin-right: 2%; float: left; background-color: black; color: white;} .code-l{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-l{margin-top: 8%;font-size: 1em;} </style>" + ele);
+								WinPrint.document.write("<script>" +
+									"window.onload = function() { window.focus(); setTimeout(function() { window.print(); }, 250); };" +
+									"window.addEventListener('afterprint', function() { try { if (window.opener) window.opener.focus(); } catch(e){} setTimeout(function() { window.close(); }, 50); });" +
+									"<\/script>");
 								WinPrint.document.write('</body></html>');
 								WinPrint.document.close();
 								WinPrint.focus();
 								setTimeout(function() {
-									try { WinPrint.print(); } catch(e){}
+									try {
+										WinPrint.print();
+										WinPrint.close();
+									} catch(e){}
 								}, 300);
 							}
 						} catch(e) {
