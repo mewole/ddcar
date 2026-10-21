@@ -16,12 +16,6 @@
         exit;
     }
 
-    // 1. ตรวจสอบว่าคอลัมน์ source_from มีใน stock_in_item หรือไม่ หากยังไม่มีให้สร้างอัตโนมัติ
-    $checkCol = mysqli_query($conn, "SHOW COLUMNS FROM stock_in_item LIKE 'source_from'");
-    if ($checkCol && mysqli_num_rows($checkCol) == 0) {
-        @mysqli_query($conn, "ALTER TABLE stock_in_item ADD COLUMN source_from VARCHAR(50) NULL DEFAULT NULL AFTER amount");
-    }
-
     // 2. ดึงข้อมูลต้นทุนปัจจุบันของสินค้า
     $current_cost = 0;
     $prod_name = '';
@@ -116,28 +110,8 @@
         }
     }
 
-    // 7. ดึงรายชื่อร้านทั้งหมดที่เคยมีในระบบ (สำหรับทำ Autocomplete)
+    // 7. รายชื่อร้านทั้งหมดโหลดผ่าน get_suppliers.php อยู่แล้ว ไม่ต้อง scan ซ้ำ
     $all_suppliers = array();
-    $sql_all_sup = "SELECT DISTINCT name FROM (
-                        SELECT supplier_name AS name FROM stock_in WHERE supplier_name IS NOT NULL AND TRIM(supplier_name) != ''
-                        UNION
-                        SELECT supplier_name AS name FROM transfer_in WHERE supplier_name IS NOT NULL AND TRIM(supplier_name) != ''
-                        UNION
-                        SELECT supplier_name AS name FROM product_supplier_sku WHERE supplier_name IS NOT NULL AND TRIM(supplier_name) != ''
-                        UNION
-                        SELECT source_from AS name FROM stock_in_item WHERE source_from IS NOT NULL AND TRIM(source_from) != '' 
-                        UNION 
-                        SELECT source_from AS name FROM transfer_in_item WHERE source_from IS NOT NULL AND TRIM(source_from) != '' 
-                    ) AS u_sup ORDER BY name ASC";
-    $res_supp = mysqli_query($conn, $sql_all_sup);
-    if ($res_supp) {
-        while ($rs = mysqli_fetch_assoc($res_supp)) {
-            $sname = trim($rs['name']);
-            if (!empty($sname) && !in_array($sname, $all_suppliers)) {
-                $all_suppliers[] = $sname;
-            }
-        }
-    }
 
     echo json_encode([
         'status' => 'success',

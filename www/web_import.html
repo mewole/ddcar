@@ -76,7 +76,30 @@
 	}
   </style>
 
-  <script>	
+  <script>
+
+		// DD Accessories - Quick Fix Retail Price to Break-Even Floor (+5% Net)
+		function quickFixRetail(rowIdx, newPrice) {
+			$('#retaill-' + rowIdx).val(newPrice);
+			$('#add-' + rowIdx).removeClass('row-loss-warning');
+			$('#loss-badge-' + rowIdx).hide();
+			
+			// Update arr_data array
+			for (var i = 0; i < arr_data.length; i++) {
+				if (arr_data[i].count == rowIdx || i == rowIdx) {
+					arr_data[i].price = newPrice;
+					break;
+				}
+			}
+			localStorage.setItem('arr_prod', JSON.stringify(arr_data));
+			$.confirm({
+				title: '⚡ ปรับราคาขายสำเร็จ!',
+				content: 'ปรับราคาขายปลีกเป็น <b>฿' + Number(newPrice).toLocaleString() + '</b> เรียบร้อยแล้ว (รับสุทธิ > ทุน 5% ปลอดภัย ไม่ขาดทุน)',
+				type: 'green',
+				buttons: { ok: { text: 'ตกลง', btnClass: 'btn-success' } }
+			});
+		}
+	
 		var prod_id,img,cost_o,min;
 		var flag = 0;
 		arr_data = [];
@@ -180,6 +203,7 @@
 						done({ suggestions: matches });
 					},					
 					onSelect: function (suggestion) {
+						typed_into = false; // ป้องกันไม่ให้ event change ยิง get_prod.php ซ้ำเมื่อโฟกัสเปลี่ยน
 						$('#name').val(suggestion.value);
 						if($('#btn-b').text() == "เลือกโกดัง/หน้าร้าน"){
 							$.confirm({
@@ -212,12 +236,11 @@
 						prod_id = suggestion.id;						
 						$.ajax({
 							url: "php/search_amount.php",
-							async: false,
 							dataType: 'json',
 							type: 'POST',
 							data:{'prod_id' : prod_id,'ware_id': localStorage.ware_id_im,'type': localStorage.type_im},
 							success: function (data) {									
-								if(data.length > 0){
+								if(data && data.length > 0){
 									min = data[0].amount;
 								}else{
 									min = 0;
@@ -226,12 +249,13 @@
 						});				
 						$.ajax({
 							url: "php/search_img.php",
-							async: false,
 							dataType: 'json',
 							type: 'POST',
 							data:{'prod_id' : prod_id},
 							success: function (data) {									
-								img = data[0].img;
+								if(data && data.length > 0){
+									img = data[0].img;
+								}
 							}
 						});
 						var price = suggestion.price;
@@ -385,42 +409,52 @@
                     type: "POST",
                     url:"php/get_prod.php",    
                     data:{'prod_id' : id, 'ware_id' : localStorage.ware_id_im, 'type' : localStorage.type_im, 'supplier_name' : $('#header_supplier').val().trim()},
-                    //async: false,                       
+                    timeout: 4000,
                     beforeSend: function(){
 						EasyLoading.show({                           
-							text: "กำลังโหลด"                            
+							text: "กำลังโหลด",
+							timeout: 2500
 						});
                     },             
                     success: function(data){  
                         EasyLoading.hide();
-                        var obj = jQuery.parseJSON(data);                                         
-                        $.each(obj, function(i, field){
-                            $('#name').val(obj[i].prod_name);
-							$('#barcode').val(obj[i].prod_code); 
-							$('#amount').val("1");
-                            cost_o = obj[i].prod_cost;                       
-							img = obj[i].img;
-							min = obj[i].min_amount;							
-                            if(obj[i].prod_cost == 0 && obj[i].prod_price == 0 && obj[i].prod_pricesend == 0){
-                                $('#fund').val("");
-                                $('#whole').val("");
-								$('#retail').val("");
-                            }else{
-                                $('#fund').val(cost_o);
-                                $('#whole').val(obj[i].prod_pricesend);
-                                $('#retail').val(obj[i].prod_price);                     
-								flag = 1;
-                            }
-                            if(obj[i].supplier_sku){
-                                $('#supplier_sku').val(obj[i].supplier_sku);
-                            }
-                            if(obj[i].supplier_last_cost && parseFloat(obj[i].supplier_last_cost) > 0){
-                                $('#fund').val(obj[i].supplier_last_cost);
-                            }
-						});  
-						get_place();                                                           
-						get_supplier_history(prod_id, $('#name').val());
-                    }               
+                        var obj = null;
+                        try { obj = (typeof data === 'object') ? data : jQuery.parseJSON(data); } catch(e){}
+                        if(obj && Array.isArray(obj) && obj.length > 0){
+                            $.each(obj, function(i, field){
+                                $('#name').val(obj[i].prod_name);
+								$('#barcode').val(obj[i].prod_code); 
+								$('#amount').val("1");
+                                cost_o = obj[i].prod_cost;                       
+								img = obj[i].img;
+								min = obj[i].min_amount;							
+                                if(obj[i].prod_cost == 0 && obj[i].prod_price == 0 && obj[i].prod_pricesend == 0){
+                                    $('#fund').val("");
+                                    $('#whole').val("");
+									$('#retail').val("");
+                                }else{
+                                    $('#fund').val(cost_o);
+                                    $('#whole').val(obj[i].prod_pricesend);
+                                    $('#retail').val(obj[i].prod_price);                     
+									flag = 1;
+                                }
+                                if(obj[i].supplier_sku){
+                                    $('#supplier_sku').val(obj[i].supplier_sku);
+                                }
+                                if(obj[i].supplier_last_cost && parseFloat(obj[i].supplier_last_cost) > 0){
+                                    $('#fund').val(obj[i].supplier_last_cost);
+                                }
+							});  
+							get_place();                                                           
+							get_supplier_history(prod_id, $('#name').val());
+                        }
+                    },
+                    complete: function(){
+                        EasyLoading.hide();
+                    },
+                    error: function(){
+                        EasyLoading.hide();
+                    }
                 });                    
             }else{
             	show('dup');
@@ -468,10 +502,12 @@
 
 			$.ajax({
 				type: "GET",
-				url:"php/get_ware_shop.php",                            
+				url:"php/get_ware_shop.php",
+				timeout: 5000,
 				beforeSend: function(){
 					EasyLoading.show({                           
-						text: "กำลังโหลด"                            
+						text: "กำลังโหลด",
+						timeout: 3000
 					});
 				},             
 				success: function(data){  
@@ -486,6 +522,12 @@
 							}										
 						}); 
 					}
+				},
+				complete: function(){
+					EasyLoading.hide();
+				},
+				error: function(){
+					EasyLoading.hide();
 				}               
 			}); 	
 		}
@@ -524,9 +566,6 @@
 		function get_place(){
 			if($('#name').val() == ""){
 				return;
-			}
-			if(prod_id){
-				get_supplier_history(prod_id, $('#name').val());
 			}
 			var dataStr;
 			if(localStorage.type_im == "โกดัง"){
@@ -807,60 +846,32 @@
 			}
 
 			var cost = cost_val;
+			var cost_to_update = cost;
+			var need_update = false;
+
 			if(flag == 0){
-				$.ajax({
-					type: "POST",
-					url:"php/update_prod.php",
-					data: {prod:prod_id , cost:cost , price_s:price_s , price_w:price_w},
-					success: function(data){
-						if(data == "success"){
-							show();
-						}else{
-							$.confirm({
-								title: 'พบข้อผิดพลาด',
-								content: 'ลองอีกครั้ง',
-								backgroundDismiss: true,
-								buttons: {
-									formSubmit: {
-										text: 'ตกลง',
-										btnClass: 'btn-regis',
-										action: function () {}
-									}
-								}
-							});
-						}
-					}
-				});
+				need_update = true;
+				cost_to_update = cost;
 			}else if(flag == 1 && check == 1){
-				var cost_avg = Math.round(avg);
+				need_update = true;
+				cost_to_update = Math.round(avg);
+			}
+			flag = 0;
+			check = 0;
+
+			// 1. เพิ่มรายการสินค้าและเคลียร์ช่องอินพุตทันที ให้ขึ้นบรรทัดใหม่ทันทีแบบไม่ต้องรอเซิร์ฟเวอร์ (Instant <10ms)
+			show();
+
+			// 2. อัปเดตราคา/ต้นทุนในฐานข้อมูล product เบื้องหลังแบบ Asynchronous
+			if(need_update && prod_id){
 				$.ajax({
 					type: "POST",
-					url:"php/update_prod.php",
-					data: {prod:prod_id , cost:cost_avg , price_s:price_s , price_w:price_w},
-					success: function(data){
-						if(data == "success"){
-							flag = 0;
-							check = 0;
-							show();
-						}else{
-							$.confirm({
-								title: 'พบข้อผิดพลาด',
-								content: 'ลองอีกครั้ง',
-								backgroundDismiss: true,
-								buttons: {
-									formSubmit: {
-										text: 'ตกลง',
-										btnClass: 'btn-regis',
-										action: function () {}
-									}
-								}
-							});
-						}
+					url: "php/update_prod.php",
+					data: {prod: prod_id, cost: cost_to_update, price_s: price_s, price_w: price_w},
+					error: function(err){
+						console.warn("Background update_prod failed", err);
 					}
 				});
-			}else{
-				flag = 0;
-				show();
 			}
 		}
 
@@ -875,9 +886,18 @@
 			msg = "";
 			if(localStorage.user_role != "พนักงาน"){
 				msg = '<input id="fundd" type="number" value="'+$('#fund').val()+'" class="form-control text-center no-spin" min="0" readonly>';
-			}  
+			}
+
+			// DD Accessories: Calculate Auto Loss-Defense Floor (+5% Net over Cost after Lazada 33% + VAT 7%)
+			var cur_cost = parseFloat($('#fund').val()) || 0;
+			var cur_retail = parseFloat($('#retail').val()) || 0;
+			var safe_floor = cur_cost > 0 ? Math.ceil((cur_cost * 1.05 / 0.60) / 50) * 50 : 0;
+			var is_loss = (cur_retail > 0 && cur_cost > 0 && (cur_retail * 0.60 < cur_cost * 1.05));
+			var prod_name_val = $('#name').val() || '';
+			var is_bundle_item = /คู่|ชุด|SET|L\+R|โลโก้/i.test(prod_name_val);
+			var row_class = is_loss ? 'row mgb-5 row-loss-warning' : 'row mgb-5';
 			
-			$("#cnt-add").append('<div id="add-'+count+'" class="row mgb-5">'+
+			$("#cnt-add").append('<div id="add-'+count+'" class="'+row_class+'">'+
           '<div class="col-2">'+
             '<div class="input-group-prepend">'+
               '<span id="span-no-'+count+'" class="input-group-text">'+(count+1)+'</span>'+
@@ -890,9 +910,10 @@
           '<div class="col-1 nopd-8">'+
             '<input id="sku-'+count+'" type="text" value="'+($('#supplier_sku').val().trim() || '-')+'" placeholder="SKU ร้าน" class="form-control text-center font-weight-bold text-info" readonly>'+
           '</div>'+
-          '<div class="col-3 nopd-8">'+
-            '<input id="name-'+count+'" value="'+$('#name').val()+'" class="form-control text-center" rel="popover" data-img="'+img+'" readonly>'+
-          '</div>'+
+          <div class="col-3 nopd-8">
+            <input id="name-'+count+'" value="'+$('#name').val()+'" class="form-control text-center" rel="popover" data-img="'+img+'" readonly>
+            '+(is_bundle_item ? '<div class="text-center"><span class="badge-bundle-tag"><i class="fas fa-boxes mr-1"></i>สินค้าชุด / คู่</span></div>' : '')+'
+          </div>
           '<div class="col-1 nopd-8">'+
             '<input id="amount-'+count+'" value="'+$('#amount').val()+'" type="number" class="form-control text-center no-spin" min="1" readonly>'+
           '</div>'+
@@ -902,9 +923,10 @@
           '<div class="col-1 nopd-8">'+
             '<input id="wholee" type="number" value="'+$('#whole').val()+'" class="form-control text-center no-spin" min="0" readonly>'+
           '</div>'+
-          '<div class="col-1 nopd-8">'+
-            '<input id="retaill" type="number" value="'+$('#retail').val()+'" class="form-control text-center no-spin" min="0" readonly>'+
-          '</div>'+
+          <div class="col-1 nopd-8">
+            <input id="retaill-'+count+'" type="number" value="'+$('#retail').val()+'" class="form-control text-center no-spin font-weight-bold '+(is_loss ? 'text-danger' : '')+'" min="0" readonly>
+            '+(is_loss ? '<div id="loss-badge-'+count+'"><button type="button" class="badge-auto-fix-btn" onclick="quickFixRetail('+count+', '+safe_floor+');" title="ขายขาดทุน! คลิกเพื่อปรับราคาเป็น ฿'+safe_floor+' ทันที"><i class="fas fa-bolt mr-1"></i>ปรับ ฿'+safe_floor+'</button></div>' : '')+'
+          </div>
           '<div class="col-1 nopd text-center">'+
           '<button id="btn-edit-'+count+'" class="btn btn-sm btn-primary mgr-5" onclick="edit('+count+');"> <i class="fas fa-pencil-alt"></i></button>'+
           '<button id="btn-save-'+count+'" class="btn btn-sm btn-success mgr-5" onclick="save('+count+');" hidden> <i class="fa fa-check"></i></button>'+
@@ -989,7 +1011,14 @@
 					$("#cnt-add").animate({scrollTop: $('#cnt-add').prop('scrollHeight')});
 				}   
 
-				$("#cnt-add").append('<div id="add-'+arr_data[i].count+'" class="row mgb-5">'+
+				var prev_cost = parseFloat(arr_data[i].cost) || 0;
+				var prev_retail = parseFloat(arr_data[i].price) || 0;
+				var prev_safe = prev_cost > 0 ? Math.ceil((prev_cost * 1.05 / 0.60) / 50) * 50 : 0;
+				var prev_is_loss = (prev_retail > 0 && prev_cost > 0 && (prev_retail * 0.60 < prev_cost * 1.05));
+				var prev_bundle = /คู่|ชุด|SET|L\+R|โลโก้/i.test(arr_data[i].name || '');
+				var prev_class = prev_is_loss ? 'row mgb-5 row-loss-warning' : 'row mgb-5';
+
+				$("#cnt-add").append('<div id="add-'+arr_data[i].count+'" class="'+prev_class+'">'+
 				'<div class="col-2">'+
 					'<div class="input-group-prepend">'+
 					'<span id="span-no-'+arr_data[i].count+'" class="input-group-text">'+(arr_data[i].count+1)+'</span>'+
@@ -1272,7 +1301,8 @@
 					user_id: localStorage.user_id,
 					type: localStorage.type_im,
 					supplier_name: supplier_val,
-					ref_invoice: $('#header_ref_no').val().trim()
+					ref_invoice: $('#header_ref_no').val().trim(),
+					bill_vat_type: $('#header_vat_type').val() || 'vat_7'
 				},               
 				beforeSend: function(){
 					EasyLoading.show({                           
@@ -1286,7 +1316,54 @@
 						try {
 							var ele = document.getElementById('show_qr').innerHTML;
 							if (WinPrint && !WinPrint.closed) {
-								WinPrint.document.write("<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'></head><body>");
+								WinPrint.document.write("<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'>
+  <style>
+    /* DD Accessories - Auto Loss Defense Highlight Styling */
+    .row-loss-warning {
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.16), rgba(245, 158, 11, 0.12)) !important;
+      border-left: 5px solid #8B5CF6 !important;
+      box-shadow: inset 0 0 16px rgba(139, 92, 246, 0.2) !important;
+      border-radius: 6px !important;
+      margin-bottom: 6px !important;
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+      transition: all 0.25s ease;
+    }
+    .badge-auto-fix-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: linear-gradient(135deg, #8B5CF6, #F59E0B);
+      color: #FFFFFF !important;
+      font-weight: 700;
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(139, 92, 246, 0.4);
+      margin-top: 2px;
+      border: none;
+    }
+    .badge-auto-fix-btn:hover {
+      filter: brightness(1.15);
+      transform: scale(1.02);
+    }
+    .badge-bundle-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: rgba(99, 102, 241, 0.15);
+      color: #6366F1 !important;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 1px 5px;
+      margin-top: 2px;
+    }
+  </style>
+
+</head><body>");
 								WinPrint.document.write("<style>@media print {body {-webkit-print-color-adjust: exact;}} @page {size: auto; margin: 0mm;} .name{line-height: 1.2; font-size: 0.9em; word-wrap:break-word; height: 3.5em; margin-top: 0%;}.ctn{width: 10.1cm; height: 3.79cm; margin-top: -2.1mm; margin-left: 0mm;} .left{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .right{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .qr-r{width: 15mm; height: 15mm; margin-right: 2%; float: right; background-color: black; color: white;} .code-r{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-r{margin-top: 8%;font-size: 1em;} .qr-l{width: 15mm; height: 15mm; margin-right: 2%; float: left; background-color: black; color: white;} .code-l{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-l{margin-top: 8%;font-size: 1em;} </style>" + ele);
 								WinPrint.document.write("<script>" +
 									"window.onload = function() { window.focus(); setTimeout(function() { window.print(); }, 250); };" +
@@ -1487,6 +1564,14 @@
       						<input id="header_ref_no" type="text" class="form-control" placeholder="เลขที่บิลอ้างอิง (ถ้ามี)" autocomplete="off">
       					</div>
 
+      					<div class="col-md-2 col-sm-6 mb-2 mb-md-0">
+      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.9rem;"><i class="fas fa-receipt text-danger mr-1"></i> ประเภทภาษีบิล</label>
+      						<select id="header_vat_type" class="form-control font-weight-bold">
+      							<option value="vat_7" selected>🟢 บิลมี VAT 7%</option>
+      							<option value="non_vat_0">🟠 บิลเงินสด (ไม่มี VAT)</option>
+      						</select>
+      					</div>
+
       					<div class="col-md-3 col-sm-6 mb-2 mb-md-0 text-md-right text-left">
       						<div style="font-size: 0.88rem; color: #6c757d;">
       							<div><i class="far fa-calendar-alt mr-1"></i> วันที่: <strong id="date" class="text-dark">-</strong></div>
@@ -1591,10 +1676,19 @@
 		// });
 
 		$('#name').on({
-			keypress: function() { typed_into = true; },
+			keypress: function(e) {
+				if (e.which === 13) return; // ignore Enter
+				typed_into = true;
+			},
 			change: function() {
 				if (typed_into) {
-					var name = $('#name').val();
+					typed_into = false; // Reset immediately
+					var name = ($('#name').val() || '').trim();
+					if (!name) return 0;
+					// If already resolved by autocomplete and barcode matches, don't re-query
+					if (prod_id && $('#barcode').val() && $('#name').val() === name) {
+						return 0;
+					}
 					if($('#btn-b').text() == "เลือกโกดัง/หน้าร้าน"){
 						$.confirm({
 							title: 'พบข้อผิดพลาด',
@@ -1611,79 +1705,88 @@
 						});  
 						return 0;
 					}
-				if(!$('#btn-folder').prop('disabled')){
-					var bool = true;
-					if(arr_data.length > 0){
-						for(var b = 0; b < arr_data.length; b++){
-							if(name == arr_data[b].qr){
-								$.confirm({
-									title: 'เตือน',
-									content: 'มีการเพิ่มสินค้า ' + arr_data[b].name + ' กรุณาแก้ไขที่จำนวนของสินค้าที่ได้เพิ่มแล้ว',
-									backgroundDismiss: true,
-									buttons: {
-										formSubmit: {
-										text: 'ตกลง',
-										btnClass: 'btn-regis',
-										action: function () {
+					if(!$('#btn-folder').prop('disabled')){
+						var bool = true;
+						if(arr_data.length > 0){
+							for(var b = 0; b < arr_data.length; b++){
+								if(name == arr_data[b].qr){
+									$.confirm({
+										title: 'เตือน',
+										content: 'มีการเพิ่มสินค้า ' + arr_data[b].name + ' กรุณาแก้ไขที่จำนวนของสินค้าที่ได้เพิ่มแล้ว',
+										backgroundDismiss: true,
+										buttons: {
+											formSubmit: {
+												text: 'ตกลง',
+												btnClass: 'btn-regis',
+												action: function () {
+												}
+											}
 										}
-										}
-									}
-								});  
-								bool = false;                               
-								break;           
-							}
-						}                 
-					}
-					if(bool){
-						$.ajax({
-							type: "POST",
-							url:"php/get_prod.php",    
-							data:{'qr' : name, 'ware_id' : localStorage.ware_id_im, 'type' : localStorage.type_im, 'supplier_name' : $('#header_supplier').val().trim()},
-							//async: false,                       
-							beforeSend: function(){
-								EasyLoading.show({                           
-									text: "กำลังโหลด"                            
-								});
-							},             
-							success: function(data){  
-								EasyLoading.hide();
-								var obj = jQuery.parseJSON(data);                                         
-								$.each(obj, function(i, field){
-									prod_id = obj[i].prod_id;
-									$('#name').val(obj[i].prod_name);
-									$('#barcode').val(obj[i].prod_code); 
-									$('#amount').val("1");
-									cost_o = obj[i].prod_cost;                       
-									img = obj[i].img;
-									min = obj[i].min_amount; 
-									if(obj[i].prod_cost == 0 && obj[i].prod_price == 0 && obj[i].prod_pricesend == 0){
-										$('#fund').val("");
-										$('#whole').val("");
-										$('#retail').val("");  
-									}else{
-										$('#fund').val(cost_o);
-										$('#whole').val(obj[i].prod_pricesend);
-										$('#retail').val(obj[i].prod_price);                     
-										flag = 1;
-									}
-									if(obj[i].supplier_sku){
-										$('#supplier_sku').val(obj[i].supplier_sku);
-									}
-									if(obj[i].supplier_last_cost && parseFloat(obj[i].supplier_last_cost) > 0){
-										$('#fund').val(obj[i].supplier_last_cost);
-									}
-								});  
-								get_place();
-								if(prod_id){
-									get_supplier_history(prod_id, $('#name').val());
+									});  
+									bool = false;                               
+									break;           
 								}
-							}               
-						});                    
-					}else{
-						show('dup');
+							}                 
+						}
+						if(bool){
+							$.ajax({
+								type: "POST",
+								url:"php/get_prod.php",    
+								data:{'qr' : name, 'ware_id' : localStorage.ware_id_im, 'type' : localStorage.type_im, 'supplier_name' : $('#header_supplier').val().trim()},
+								timeout: 4000,
+								beforeSend: function(){
+									EasyLoading.show({                           
+										text: "กำลังโหลด",
+										timeout: 2500
+									});
+								},             
+								success: function(data){  
+									EasyLoading.hide();
+									var obj = null;
+									try { obj = (typeof data === 'object') ? data : jQuery.parseJSON(data); } catch(e){}
+									if(obj && Array.isArray(obj) && obj.length > 0){
+										$.each(obj, function(i, field){
+											prod_id = obj[i].prod_id;
+											$('#name').val(obj[i].prod_name);
+											$('#barcode').val(obj[i].prod_code); 
+											$('#amount').val("1");
+											cost_o = obj[i].prod_cost;                       
+											img = obj[i].img;
+											min = obj[i].min_amount; 
+											if(obj[i].prod_cost == 0 && obj[i].prod_price == 0 && obj[i].prod_pricesend == 0){
+												$('#fund').val("");
+												$('#whole').val("");
+												$('#retail').val("");  
+											}else{
+												$('#fund').val(cost_o);
+												$('#whole').val(obj[i].prod_pricesend);
+												$('#retail').val(obj[i].prod_price);                     
+												flag = 1;
+											}
+											if(obj[i].supplier_sku){
+												$('#supplier_sku').val(obj[i].supplier_sku);
+											}
+											if(obj[i].supplier_last_cost && parseFloat(obj[i].supplier_last_cost) > 0){
+												$('#fund').val(obj[i].supplier_last_cost);
+											}
+										});  
+										get_place();
+										if(prod_id){
+											get_supplier_history(prod_id, $('#name').val());
+										}
+									}
+								},
+								complete: function(){
+									EasyLoading.hide();
+								},
+								error: function(){
+									EasyLoading.hide();
+								}               
+							});                    
+						}else{
+							show('dup');
+						}
 					}
-				}
-					typed_into = false; //reset type listener
 				} else {
 					console.log('not type');
 				}
@@ -1718,38 +1821,52 @@
 
 	<script>
 		var current_supplier_data = null;
+		var supplier_history_cache = {};
+
+		function applySupplierAutoFill(data) {
+			var curSup = ($('#header_supplier').val() || '').trim().toLowerCase();
+			if (curSup && data.supplier_skus && data.supplier_skus.length > 0) {
+				for (var sk = 0; sk < data.supplier_skus.length; sk++) {
+					var sObj = data.supplier_skus[sk];
+					if ((sObj.supplier_name || '').toLowerCase() === curSup) {
+						if ($('#supplier_sku').val() === '') {
+							$('#supplier_sku').val(sObj.supplier_sku);
+						}
+						if (sObj.last_cost && parseFloat(sObj.last_cost) > 0 && ($('#fund').val() === '' || $('#fund').val() == '0')) {
+							$('#fund').val(sObj.last_cost);
+						}
+						break;
+					}
+				}
+			}
+		}
 
 		function get_supplier_history(pid, pname) {
 			if (!pid) return;
+			if (supplier_history_cache[pid]) {
+				var data = supplier_history_cache[pid];
+				current_supplier_data = data;
+				renderSupplierBadge(data);
+				populateSupplierDatalist(data);
+				applySupplierAutoFill(data);
+				return;
+			}
 			$.ajax({
 				type: "POST",
 				url: "php/get_supplier_prices.php",
 				data: { 'prod_id': pid },
 				dataType: 'json',
+				timeout: 3000,
 				success: function(data) {
 					if (!data || data.status !== 'success') {
 						$('#best-price-badge').hide().empty();
 						return;
 					}
+					supplier_history_cache[pid] = data;
 					current_supplier_data = data;
 					renderSupplierBadge(data);
 					populateSupplierDatalist(data);
-					// หากมี Supplier SKU ผูกกับร้านค้าที่หัวบิล ให้ auto-fill ลงในช่อง #supplier_sku ทันที
-					var curSup = ($('#header_supplier').val() || '').trim().toLowerCase();
-					if (curSup && data.supplier_skus && data.supplier_skus.length > 0) {
-						for (var sk = 0; sk < data.supplier_skus.length; sk++) {
-							var sObj = data.supplier_skus[sk];
-							if ((sObj.supplier_name || '').toLowerCase() === curSup) {
-								if ($('#supplier_sku').val() === '') {
-									$('#supplier_sku').val(sObj.supplier_sku);
-								}
-								if (sObj.last_cost && parseFloat(sObj.last_cost) > 0 && ($('#fund').val() === '' || $('#fund').val() == '0')) {
-									$('#fund').val(sObj.last_cost);
-								}
-								break;
-							}
-						}
-					}
+					applySupplierAutoFill(data);
 				},
 				error: function() {
 					$('#best-price-badge').hide().empty();

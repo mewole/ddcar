@@ -398,72 +398,29 @@
                 return 0;
             }            
             if(name != "" && amt != "" && code != "" && cost != "" && price_s != "" && price_w != "" && jQuery.inArray($('#prod-addr').val().toLowerCase(),arr_place) == -1 && $("#h5-title").text() != "เลือกโกดัง(เข้า)"){      
-                if(flag == 0){                 
-                    $.ajax({
-                        type: "POST",
-                        url:localStorage.pathServer + "php/update_prod.php",           
-                        data: {prod:prod_id , cost:cost , price_s:price_s , price_w:price_w},               
-                        beforeSend: function(){
-                            $(".overlay").prop('hidden', false);
-                        },             
-                        success: function(data){  
-                            $(".overlay").prop('hidden', true);                             
-                           if(data == "success"){
-                                show(code,cost);
-                           }else{
-                            $.confirm({
-                                title: 'พบข้อผิดพลาด',
-                                content: 'ลองอีกครั้ง',
-                                backgroundDismiss: true,
-                                buttons: {
-                                    formSubmit: {
-                                    text: 'ตกลง',
-                                    btnClass: 'btn-regis',
-                                    action: function () {
-                                    }
-                                    }
-                                }
-                            });
-                           }
-                        }               
-                    });                   
+                var cost_to_update = cost;
+                var need_update = false;
+                if(flag == 0){
+                    need_update = true;
+                    cost_to_update = cost;
                 }else if(flag == 1 && check == 1){
-                    var cost_avg = Math.round(avg);
+                    need_update = true;
+                    cost_to_update = Math.round(avg);
+                }
+                flag = 0;
+                check = 0;
+                show(code,cost);
+
+                if(need_update && prod_id){
                     $.ajax({
                         type: "POST",
-                        url:localStorage.pathServer + "php/update_prod.php",           
-                        data: {prod:prod_id , cost:cost_avg , price_s:price_s , price_w:price_w},
-                        //async : false,              
-                        beforeSend: function(){
-                            $(".overlay").prop('hidden', false);
-                        },             
-                        success: function(data){  
-                        $(".overlay").prop('hidden', true);                             
-                           if(data == "success"){
-                                flag = 0;
-                                check = 0;                                
-                                show(code,cost);
-                           }else{
-                            $.confirm({
-                                title: 'พบข้อผิดพลาด',
-                                content: 'ลองอีกครั้ง',
-                                backgroundDismiss: true,
-                                buttons: {
-                                    formSubmit: {
-                                    text: 'ตกลง',
-                                    btnClass: 'btn-regis',
-                                    action: function () {
-                                    }
-                                    }
-                                }
-                            });
-                           }
-                        }               
-                    });                                      
-                }else{
-                    flag = 0;
-                    show(code,cost);
-                }               
+                        url: localStorage.pathServer + "php/update_prod.php",
+                        data: {prod: prod_id, cost: cost_to_update, price_s: price_s, price_w: price_w},
+                        error: function(err){
+                            console.warn("Background update_prod failed", err);
+                        }
+                    });
+                }
             }else{
                 $.confirm({
                   title: 'พบข้อผิดพลาด',

@@ -13,6 +13,7 @@
     $type = isset($_POST['type']) ? trim($_POST['type']) : '';
     $supplier_name = isset($_POST['supplier_name']) ? mysqli_real_escape_string($conn, trim($_POST['supplier_name'])) : '';
     $ref_invoice = isset($_POST['ref_invoice']) ? mysqli_real_escape_string($conn, trim($_POST['ref_invoice'])) : '';
+    $bill_vat_type = isset($_POST['bill_vat_type']) ? mysqli_real_escape_string($conn, trim($_POST['bill_vat_type'])) : 'vat_7';
     $last_id = "";
     $i = 0;
 
@@ -23,6 +24,44 @@
 
     if($type == "โกดัง" || $type == "ware" || $type == "warehouse"){
         try {
+            
+    // DD Accessories - Auto Migration for VAT & Bundle Tables
+    @mysqli_query($conn, "ALTER TABLE stock_in ADD COLUMN bill_vat_type VARCHAR(20) DEFAULT 'vat_7'");
+    @mysqli_query($conn, "CREATE TABLE IF NOT EXISTS bundle_recipes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        bundle_sku VARCHAR(100) NOT NULL,
+        bundle_name VARCHAR(255) NOT NULL,
+        bundle_type VARCHAR(50) DEFAULT 'pair_lr',
+        component_sku VARCHAR(100) NOT NULL,
+        component_name VARCHAR(255) DEFAULT '',
+        qty INT DEFAULT 1,
+        is_secret TINYINT(1) DEFAULT 0,
+        picking_note TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX (bundle_sku),
+        INDEX (component_sku)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    @mysqli_query($conn, "CREATE TABLE IF NOT EXISTS pending_input_vat (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        order_no VARCHAR(100) NOT NULL,
+        channel VARCHAR(100) NOT NULL,
+        prod_id INT DEFAULT 0,
+        prod_code VARCHAR(100) NOT NULL,
+        prod_name VARCHAR(255) NOT NULL,
+        qty INT DEFAULT 1,
+        unit_cost DECIMAL(12,2) DEFAULT 0,
+        total_cost DECIMAL(12,2) DEFAULT 0,
+        input_vat_to_recover DECIMAL(12,2) DEFAULT 0,
+        supplier_name VARCHAR(255) DEFAULT '',
+        supplier_contact VARCHAR(255) DEFAULT '',
+        status VARCHAR(20) DEFAULT 'pending',
+        cleared_tax_invoice_no VARCHAR(100) DEFAULT NULL,
+        cleared_at DATETIME DEFAULT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX (status),
+        INDEX (prod_code)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
             mysqli_begin_transaction($conn);
             $sql = "SELECT stock_number,count FROM stock_in ORDER BY stock_id DESC LIMIT 1"; 
             $result = mysqli_query($conn, $sql);   
@@ -37,8 +76,8 @@
                 }
             }
             $stock_number = "IMP" . $year_cur . "-" . str_pad($count, 5, "0", STR_PAD_LEFT);
-            $sql2 = "INSERT INTO stock_in (stock_number,date_time,ware_id,user_id,supplier_name,ref_invoice,total_stock,count) 
-                     VALUES ('$stock_number','$dt','$ware_id','$user_id','$supplier_name','$ref_invoice','$sum','$count')"; 
+            $sql2 = "INSERT INTO stock_in (stock_number,date_time,ware_id,user_id,supplier_name,ref_invoice,total_stock,count,bill_vat_type) 
+                     VALUES ('$stock_number','$dt','$ware_id','$user_id','$supplier_name','$ref_invoice','$sum','$count','$bill_vat_type')"; 
             $result2 = mysqli_query($conn, $sql2);
             if(!$result2){
                 throw new Exception("ไม่สามารถบันทึกข้อมูลใบรับเข้าคลังได้: " . mysqli_error($conn));
