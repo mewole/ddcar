@@ -3099,10 +3099,11 @@
                         "<div class='font-bold'>ขอบคุณที่ใช้บริการ</div>" +
                         "<div style='font-size: 10px; color: #475569; margin-top: 2px;'>สินค้าซื้อแล้วกรุณาตรวจสอบความถูกต้อง</div>" +
                         "</div>" +
-                        "</div><script>
-window.onload = function() { window.focus(); setTimeout(function() { window.print(); }, 250); };
-window.addEventListener('afterprint', function() { try { if (window.opener) window.opener.focus(); } catch(e){} setTimeout(function() { window.close(); }, 50); });
-<\/script></body></html>";
+                        "</div>" +
+                        "<scr" + "ipt>\n" +
+                        "window.onload = function() { window.focus(); setTimeout(function() { window.print(); }, 250); };\n" +
+                        "window.addEventListener('afterprint', function() { try { if (window.opener) window.opener.focus(); } catch(e){} setTimeout(function() { window.close(); }, 50); });\n" +
+                        "</scr" + "ipt></body></html>";
 
                     var WinPrint = window.open('', '', 'width=450,height=600');
                     if (WinPrint) {
