@@ -212,6 +212,10 @@
 		}
 	</style>
   <script>
+		window.canViewCost = window.canViewCost || function() {
+			return (localStorage.user_role == "แอดมิน" || localStorage.user_role == "เจ้าของร้าน");
+		};
+
 		$(document).ready(function () {
 			if(!localStorage.user_id){
 				window.location = 'web_login.html';
@@ -220,7 +224,7 @@
 			}
 			if(localStorage.arr_prod_st){
 				$("#main-ctn").prop('hidden', true);
-				$("#detail-ctn").prop('hidden', false);
+				$("#detail-ctn").prop('hidden', false).removeAttr('hidden').show();
 				var retrievedObject = localStorage.getItem('arr_prod_st');
 				var arr_data = JSON.parse(retrievedObject); 
 				for(var i = 0 ; i < arr_data.length ; i++){
@@ -288,7 +292,7 @@
   		$("#back i").prop('hidden', true);
   		$('hr').prop('hidden', false);
   		$("#input-search").val("");
-			$("#detail-ctn").prop('hidden', true);
+			$("#detail-ctn").prop('hidden', true).attr('hidden', true).hide();
 			$("#main-ctn").prop('hidden', false);
 			$('#append-ctn').empty();
 			localStorage.arr_prod_st = "";
@@ -337,7 +341,7 @@
 
 		function show(){
 			$('#append-ctn').empty();
-			var val = $('#input-search').val();
+			var val = $.trim($('#input-search').val());
 			if(val == ""){
 				return 0;
 			}    
@@ -605,7 +609,6 @@
 			$("#save-edit").off('click').on('click', function() {
 				save_edit(prod_id);
 			});
-		});
 		}
 
 		function delete_prod(prod_id, name){
@@ -696,24 +699,25 @@
 				};			
 			}
 			setTimeout(function() {
+				// Save Platform SKUs and Dual Tax Buckets
+				$.ajax({
+					url: 'php/save_platform_sku.php',
+					type: 'POST',
+					contentType: 'application/json',
+					data: JSON.stringify({
+						prod_id: prod_id,
+						prod_code: $("#code-prod").val().trim(),
+						shopee_sku: ($('#edit-shopee-sku').val() || '').trim(),
+						lazada_sku: ($('#edit-lazada-sku').val() || '').trim(),
+						tiktok_sku: ($('#edit-tiktok-sku').val() || '').trim(),
+						vat_stock: parseInt($('#edit-vat-stock').val()) || 0,
+						non_vat_stock: parseInt($('#edit-non-vat-stock').val()) || 0
+					})
+				});
+
 				$.ajax({
 					type: "POST",
-					// Save Platform SKUs and Dual Tax Buckets
-							$.ajax({
-								url: 'php/save_platform_sku.php',
-								type: 'POST',
-								contentType: 'application/json',
-								data: JSON.stringify({
-									prod_id: prod_id,
-									prod_code: $("#code-prod").val().trim(),
-									shopee_sku: ($('#edit-shopee-sku').val() || '').trim(),
-									lazada_sku: ($('#edit-lazada-sku').val() || '').trim(),
-									tiktok_sku: ($('#edit-tiktok-sku').val() || '').trim(),
-									vat_stock: parseInt($('#edit-vat-stock').val()) || 0,
-									non_vat_stock: parseInt($('#edit-non-vat-stock').val()) || 0
-								})
-							});
-							url: "php/rename_prod_web.php",
+					url: "php/rename_prod_web.php",
 					data: {'prod_id' : prod_id,
 						'name_prod' : name,
 						'code' : code,
@@ -1253,7 +1257,12 @@
 	</div>
 
     <script>
-    	$("#input-search").on('focusin', function(event) {
+    	$("#input-search").on('keydown', function(e) {
+			if (e.key === "Enter" || e.keyCode === 13) {
+				e.preventDefault();
+				show();
+			}
+		}).on('focusin', function(event) {
     		event.preventDefault();
     		$("#main-ctn").css('margin-top', '3%');
     		$("#row-folder").prop('hidden', true);
