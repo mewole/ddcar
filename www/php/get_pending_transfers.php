@@ -11,7 +11,7 @@ if ($type === 'recent') {
     $whereStatus = "t.status IN ('received', 'rejected')";
     $limitSql = "LIMIT " . max(1, min(50, $limit));
 } else {
-    $whereStatus = "t.status = 'pending'";
+    $whereStatus = "t.status = 'pending' AND (SELECT COUNT(*) FROM transfer_record_item WHERE tf_id = t.tf_id) > 0";
     $limitSql = "";
 }
 

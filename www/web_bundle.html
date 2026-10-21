@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>จับคู่สินค้าชุด (Bundle & BOM) - DD ACCESSORIES</title>
+
+  <!-- Bootstrap 4 -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css">
+
+  <!-- jQuery Confirm -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
+
+  <!-- Loading Overlay -->
+  <link rel="stylesheet" href="css/easy-loading.css">
+  <script src="js/easy-loading.js"></script>
+
+  <!-- Prompt Font & Unified CSS -->
+  <link href="https://fonts.googleapis.com/css?family=Prompt:300,400,500,600,700" rel="stylesheet">
+  <link href="css/untitled.css?v=2.1" rel="stylesheet">
+  <script type="text/javascript" src="js/config.js"></script>
+
+  <style>
+    body {
+      background-color: #f4f6f9;
+      color: #333333;
+      font-family: 'Prompt', sans-serif;
+    }
+    .bundle-header-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .kpi-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+      display: flex;
+      align-items: center;
+    }
+    .kpi-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-right: 16px;
+    }
+    .progress-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px 24px;
+      margin-bottom: 20px;
+    }
+    .progress-custom {
+      height: 18px;
+      border-radius: 10px;
+      background-color: #e9ecef;
+      overflow: hidden;
+    }
+    .progress-bar-custom {
+      background: linear-gradient(90deg, #10B981, #059669);
+      font-weight: 600;
+      font-size: 0.8rem;
+      line-height: 18px;
+      transition: width 0.6s ease;
+    }
+    .badge-mapped {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .badge-pending {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .badge-hidden-bom {
+      background-color: #ede9fe;
+      color: #6b21a8;
+      border: 1px solid #ddd6fe;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+      margin-top: 3px;
+    }
+    .recipe-chip {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.8rem;
+      display: inline-block;
+      margin: 2px 4px 2px 0;
+    }
+    .table-container {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .btn-edit-recipe {
+      background: #4f46e5;
+      color: #ffffff;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 0.85rem;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-edit-recipe:hover {
+      background: #4338ca;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <!-- Central Unified Navbar Mount Point -->
+  <div id="ddcar-nav-mount"></div>
+
+  <div class="container-fluid py-4" style="max-width: 1400px;">
+    
+    <!-- Header -->
+    <div class="bundle-header-card d-flex flex-wrap justify-content-between align-items-center">
+      <div>
+        <h4 class="font-weight-bold mb-1"><i class="fas fa-layer-group text-primary mr-2"></i> ศูนย์จัดการสินค้าชุด & จับคู่ Master SKU (Bundle & BOM)</h4>
+        <p class="text-muted mb-0 font-weight-normal" style="font-size: 0.95rem;">
+          ตั้งค่าสูตรตัดสต็อกสินค้าชุด (เช่น ซ้าย+ขวา L/R หรือ กระจังหน้า+โลโก้) พร้อมระบบ <strong>สูตรลับ (Hidden BOM)</strong> ซ่อนรหัสชิ้นส่วนไม่ให้แสดงในแพลตฟอร์ม
+        </p>
+      </div>
+      <div class="mt-2 mt-md-0">
+        <a href="web_import.html" class="btn btn-outline-secondary btn-sm mr-2 font-weight-bold">
+          <i class="fas fa-arrow-down mr-1"></i> หน้ารับเข้าสินค้า
+        </a>
+        <button type="button" class="btn btn-primary btn-sm font-weight-bold" onclick="loadBundleData();">
+          <i class="fas fa-sync-alt mr-1"></i> รีเฟรชข้อมูล
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress Queue Bar -->
+    <div class="progress-box">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="font-weight-bold" style="font-size: 0.95rem;">
+          <i class="fas fa-tasks text-success mr-2"></i> คิวความคืบหน้าการจับคู่สินค้าชุด (Progress Queue)
+        </span>
+        <span id="txt-progress-stat" class="font-weight-bold text-primary">0 / 0 รายการ (0%)</span>
+      </div>
+      <div class="progress progress-custom">
+        <div id="bar-progress" class="progress-bar progress-bar-custom" role="progressbar" style="width: 0%;">0%</div>
+      </div>
+      <div class="small text-muted mt-2">
+        <i class="fas fa-info-circle mr-1 text-info"></i> แนะนำ: สามารถทยอยเปิดเข้ามาจับคู่วันละ 30–40 รายการตามเวลาว่าง ระบบจะตัดสต็อกสินค้าส่วนประกอบตามสูตรทันที
+      </div>
+    </div>
+
+    <!-- KPI Summary -->
+    <div class="row">
+      <div class="col-md-4">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-primary">
+            <i class="fas fa-boxes"></i>
+          </div>
+          <div>
+            <div class="text-muted small">สินค้าชุดทั้งหมดในระบบ</div>
+            <div id="kpi-total" class="h4 font-weight-bold mb-0">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-success">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div>
+            <div class="text-muted small">ผูกสูตรเรียบร้อยแล้ว</div>
+            <div id="kpi-mapped" class="h4 font-weight-bold text-success mb-0">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-warning">
+            <i class="fas fa-hourglass-half"></i>
+          </div>
+          <div>
+            <div class="text-muted small">รอดำเนินการ (รอจับคู่)</div>
+            <div id="kpi-pending" class="h4 font-weight-bold text-warning mb-0">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="table-container mb-4">
+      <div class="row align-items-center mb-3">
+        <div class="col-md-6 col-sm-12 mb-2 mb-md-0">
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+            </div>
+            <input id="txt-search" type="text" class="form-control" placeholder="ค้นหาชื่อสินค้า หรือ SKU..." oninput="filterTable();">
+          </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-2 mb-md-0">
+          <select id="sel-filter-status" class="form-control" onchange="filterTable();">
+            <option value="all">แสดงทั้งหมด</option>
+            <option value="pending" selected>🟠 แสดงเฉพาะรอดำเนินการ (Queue)</option>
+            <option value="mapped">🟢 แสดงเฉพาะที่ผูกสูตรแล้ว</option>
+          </select>
+        </div>
+        <div class="col-md-2 col-sm-6 text-right">
+          <span id="txt-row-count" class="text-muted small font-weight-bold">พบ 0 รายการ</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="thead-light">
+            <tr>
+              <th style="width: 130px;">สถานะ</th>
+              <th style="width: 160px;">รหัสแม่ (Master SKU)</th>
+              <th>ชื่อสินค้าชุด (ในระบบ DDcar)</th>
+              <th style="width: 140px;" class="text-right">ราคาปลีก / ทุน</th>
+              <th>สูตรส่วนประกอบที่ผูกไว้ (Recipe BOM)</th>
+              <th style="width: 110px;" class="text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-bundle-body">
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">กำลังโหลดข้อมูลสินค้าชุด...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal: Recipe Editor -->
+  <div class="modal fade" id="modalRecipe" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title font-weight-bold"><i class="fas fa-layer-group text-warning mr-2"></i> กำหนดสูตรสินค้าชุด (Master SKU Recipe)</h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body p-4">
+          
+          <div class="alert alert-light border mb-3">
+            <div class="row">
+              <div class="col-md-4">
+                <span class="text-muted small d-block">รหัสแม่ (Master SKU):</span>
+                <strong id="modal-bundle-sku" class="text-primary font-weight-bold">-</strong>
+              </div>
+              <div class="col-md-8">
+                <span class="text-muted small d-block">ชื่อสินค้าชุด:</span>
+                <strong id="modal-bundle-name" class="text-dark">-</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="font-weight-bold mb-0"><i class="fas fa-cogs text-secondary mr-1"></i> รายการชิ้นส่วนที่ต้องตัดสต็อก (Child Items):</h6>
+            <button type="button" class="btn btn-success btn-sm font-weight-bold" onclick="addChildRow();">
+              <i class="fas fa-plus mr-1"></i> เพิ่มชิ้นส่วน
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th style="width: 25%;">รหัสชิ้นส่วน (Child SKU) *</th>
+                  <th>ชื่อชิ้นส่วน</th>
+                  <th style="width: 12%;" class="text-center">จำนวน (ชิ้น)</th>
+                  <th style="width: 25%;" class="text-center">สูตรลับ (Hidden BOM)</th>
+                  <th style="width: 8%;" class="text-center">ลบ</th>
+                </tr>
+              </thead>
+              <tbody id="modal-child-tbody">
+                <!-- Child Rows -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="small text-muted mt-3">
+            <i class="fas fa-shield-alt text-warning mr-1"></i> <strong>โหมดสูตรลับ (Hidden BOM):</strong> หากติ๊กเลือก ระบบจะใช้ตัดสต็อกภายในร้าน แต่จะไม่แสดงรหัสชิ้นส่วนนี้ให้คู่แข่งหรือลูกค้าเห็นบนชื่อสินค้าในแพลตฟอร์มออนไลน์
+          </div>
+
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary font-weight-bold px-4" onclick="saveRecipe();">
+            <i class="fas fa-save mr-1"></i> บันทึกสูตรสินค้าชุด
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var allItems = [];
+    var currentEditingSku = '';
+    var currentEditingName = '';
+
+    $(document).ready(function() {
+      loadBundleData();
+    });
+
+    function loadBundleData() {
+      EasyLoading.show({ text: 'กำลังโหลดรายการสินค้าชุด...' });
+      $.ajax({
+        url: 'php/get_bundle_recipes.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res.success) {
+            allItems = res.items || [];
+            updateKpis(res);
+            renderTable(allItems);
+          } else {
+            $.alert('เกิดข้อผิดพลาด: ' + (res.message || 'ไม่สามารถโหลดข้อมูลได้'));
+          }
+        },
+        error: function(xhr, status, err) {
+          EasyLoading.hide();
+          $.alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + err);
+        }
+      });
+    }
+
+    function updateKpis(res) {
+      $('#kpi-total').text(res.total.toLocaleString());
+      $('#kpi-mapped').text(res.mapped.toLocaleString());
+      $('#kpi-pending').text(res.pending.toLocaleString());
+
+      var pct = res.percent || 0;
+      $('#txt-progress-stat').text(res.mapped.toLocaleString() + ' / ' + res.total.toLocaleString() + ' รายการ (' + pct + '%)');
+      $('#bar-progress').css('width', pct + '%').text(pct + '%');
+    }
+
+    function renderTable(items) {
+      var tbody = $('#tbl-bundle-body');
+      tbody.empty();
+
+      if (!items || items.length === 0) {
+        tbody.append('<tr><td colspan="6" class="text-center py-4 text-muted">ไม่พบรายการสินค้าชุดตามเงื่อนไข</td></tr>');
+        $('#txt-row-count').text('พบ 0 รายการ');
+        return;
+      }
+
+      $('#txt-row-count').text('พบ ' + items.length.toLocaleString() + ' รายการ');
+
+      items.forEach(function(item) {
+        var statusBadge = item.is_mapped 
+          ? '<span class="badge-mapped"><i class="fas fa-check-circle mr-1"></i> ผูกสูตรแล้ว</span>'
+          : '<span class="badge-pending"><i class="fas fa-hourglass-half mr-1"></i> รอดำเนินการ</span>';
+
+        var recipeHtml = '';
+        if (item.children && item.children.length > 0) {
+          item.children.forEach(function(c) {
+            var hiddenTag = c.is_hidden_bom == 1 
+              ? '<span class="badge-hidden-bom ml-1"><i class="fas fa-lock mr-1"></i>สูตรลับ</span>' 
+              : '';
+            recipeHtml += '<div class="recipe-chip">' + 
+                            '<strong>' + c.child_sku + '</strong> ' + 
+                            (c.child_name ? '<span class="text-muted">(' + c.child_name + ')</span> ' : '') + 
+                            '<span class="badge badge-secondary">x' + c.ratio + '</span>' + 
+                            hiddenTag + 
+                          '</div>';
+          });
+        } else {
+          recipeHtml = '<span class="text-muted small"><em>ยังไม่ได้ผูกสูตรส่วนประกอบ</em></span>';
+        }
+
+        var priceStr = '฿' + (item.price || 0).toLocaleString();
+        var costStr = item.cost > 0 ? '<div class="text-muted small">ทุน: ฿' + item.cost.toLocaleString() + '</div>' : '';
+
+        var tr = $('<tr></tr>');
+        tr.append('<td>' + statusBadge + '</td>');
+        tr.append('<td><strong class="text-primary font-weight-bold">' + item.sku + '</strong></td>');
+        tr.append('<td>' + item.name + '</td>');
+        tr.append('<td class="text-right"><strong>' + priceStr + '</strong>' + costStr + '</td>');
+        tr.append('<td>' + recipeHtml + '</td>');
+        tr.append('<td class="text-center"><button class="btn-edit-recipe" onclick="openRecipeModal(\'' + escapeHtml(item.sku) + '\', \'' + escapeHtml(item.name) + '\')"><i class="fas fa-edit mr-1"></i> แก้ไข</button></td>');
+        
+        tbody.append(tr);
+      });
+    }
+
+    function filterTable() {
+      var query = ($('#txt-search').val() || '').trim().toLowerCase();
+      var statusFilter = $('#sel-filter-status').val();
+
+      var filtered = allItems.filter(function(item) {
+        var matchText = (item.sku && item.sku.toLowerCase().indexOf(query) !== -1) ||
+                        (item.name && item.name.toLowerCase().indexOf(query) !== -1);
+        
+        if (!matchText) return false;
+
+        if (statusFilter === 'pending') return !item.is_mapped;
+        if (statusFilter === 'mapped') return item.is_mapped;
+        return true;
+      });
+
+      renderTable(filtered);
+    }
+
+    function openRecipeModal(sku, name) {
+      currentEditingSku = sku;
+      currentEditingName = name;
+
+      $('#modal-bundle-sku').text(sku);
+      $('#modal-bundle-name').text(name);
+
+      var tbody = $('#modal-child-tbody');
+      tbody.empty();
+
+      // Find if item has existing children
+      var found = allItems.find(function(it) { return it.sku === sku; });
+      if (found && found.children && found.children.length > 0) {
+        found.children.forEach(function(c) {
+          addChildRow(c.child_sku, c.child_name, c.ratio, c.is_hidden_bom == 1);
+        });
+      } else {
+        // Pre-fill 1 empty row
+        addChildRow('', '', 1, false);
+      }
+
+      $('#modalRecipe').modal('show');
+    }
+
+    function addChildRow(sku, name, ratio, isHidden) {
+      sku = sku || '';
+      name = name || '';
+      ratio = ratio || 1;
+      var checked = isHidden ? 'checked' : '';
+
+      var tr = $('<tr class="child-row"></tr>');
+      tr.append('<td><input type="text" class="form-control form-control-sm child-sku font-weight-bold" placeholder="เช่น SK-L หรือ LOGO-01" value="' + escapeHtml(sku) + '"></td>');
+      tr.append('<td><input type="text" class="form-control form-control-sm child-name" placeholder="ชื่อชิ้นส่วน เช่น กันสาดข้างซ้าย" value="' + escapeHtml(name) + '"></td>');
+      tr.append('<td class="text-center"><input type="number" class="form-control form-control-sm text-center child-ratio" min="1" value="' + ratio + '"></td>');
+      tr.append('<td class="text-center"><label class="mb-0 small"><input type="checkbox" class="child-hidden" ' + checked + '> ซ่อนรหัส</label></td>');
+      tr.append('<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm" onclick="$(this).closest(\'tr\').remove();"><i class="fas fa-trash-alt"></i></button></td>');
+
+      $('#modal-child-tbody').append(tr);
+    }
+
+    function saveRecipe() {
+      var children = [];
+      var hasError = false;
+
+      $('#modal-child-tbody tr.child-row').each(function() {
+        var sku = $(this).find('.child-sku').val().trim();
+        var name = $(this).find('.child-name').val().trim();
+        var ratio = parseInt($(this).find('.child-ratio').val(), 10) || 1;
+        var isHidden = $(this).find('.child-hidden').is(':checked') ? 1 : 0;
+
+        if (sku !== '') {
+          children.push({
+            child_sku: sku,
+            child_name: name,
+            ratio: ratio,
+            is_hidden_bom: isHidden
+          });
+        }
+      });
+
+      if (children.length === 0) {
+        $.alert('กรุณาระบุชิ้นส่วนอย่างน้อย 1 รายการ');
+        return;
+      }
+
+      EasyLoading.show({ text: 'กำลังบันทึกสูตรสินค้าชุด...' });
+
+      $.ajax({
+        url: 'php/save_bundle_recipe.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          bundle_sku: currentEditingSku,
+          bundle_name: currentEditingName,
+          children: children
+        }),
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res.success) {
+            $('#modalRecipe').modal('hide');
+            $.alert({
+              title: 'สำเร็จ',
+              content: 'บันทึกสูตรสินค้าชุดเรียบร้อย',
+              type: 'green',
+              buttons: {
+                ok: function() {
+                  loadBundleData();
+                }
+              }
+            });
+          } else {
+            $.alert('บันทึกไม่สำเร็จ: ' + res.message);
+          }
+        },
+        error: function(xhr, status, err) {
+          EasyLoading.hide();
+          $.alert('เกิดข้อผิดพลาด: ' + err);
+        }
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+  </script>
+
+  <!-- Central Unified Navbar Script -->
+  <script src="js/navbar.js?v=2.3"></script>
+</body>
+</html>

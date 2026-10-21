@@ -1,0 +1,1905 @@
+{
+  "htmlResults": [
+    {
+      "target": "a4.html",
+      "status": 404,
+      "duration": 62,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "a4_check_stock_out.html",
+      "status": 404,
+      "duration": 45,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "a4_front.html",
+      "status": 404,
+      "duration": 64,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "add_prod.html",
+      "status": 200,
+      "duration": 123,
+      "length": 15328,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "bell.html",
+      "status": 404,
+      "duration": 45,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "bill_info.html",
+      "status": 200,
+      "duration": 143,
+      "length": 62030,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "clone_index.html",
+      "status": 404,
+      "duration": 45,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "customer.html",
+      "status": 404,
+      "duration": 45,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "customer_add.html",
+      "status": 404,
+      "duration": 45,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "customer_show.html",
+      "status": 404,
+      "duration": 44,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "edit_prod.html",
+      "status": 200,
+      "duration": 52,
+      "length": 18867,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "export.html",
+      "status": 404,
+      "duration": 13,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "export_check.html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "export_info.html",
+      "status": 404,
+      "duration": 10,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "h.html",
+      "status": 404,
+      "duration": 12,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "import.html",
+      "status": 200,
+      "duration": 64,
+      "length": 35281,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "import_check.html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "import_info.html",
+      "status": 404,
+      "duration": 10,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "index.html",
+      "status": 200,
+      "duration": 72,
+      "length": 15327,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <!-- <meta http-equiv=\"Content-Security-Policy\"        content=\"default-src 'self' data: gap: https://ssl.gstati"
+    },
+    {
+      "target": "login.html",
+      "status": 200,
+      "duration": 64,
+      "length": 6604,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "manage_bill.html",
+      "status": 200,
+      "duration": 39,
+      "length": 18125,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "manage_credit.html",
+      "status": 200,
+      "duration": 35,
+      "length": 14590,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "manage_export.html",
+      "status": 200,
+      "duration": 41,
+      "length": 17923,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "manage_import.html",
+      "status": 200,
+      "duration": 39,
+      "length": 17865,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "manage_salesum.html",
+      "status": 200,
+      "duration": 36,
+      "length": 9927,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "manage_transfer_in.html",
+      "status": 200,
+      "duration": 44,
+      "length": 17782,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "member.html",
+      "status": 404,
+      "duration": 12,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "member_show.html",
+      "status": 404,
+      "duration": 12,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "other.html",
+      "status": 404,
+      "duration": 12,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "print_qr.html",
+      "status": 404,
+      "duration": 19,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "register.html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "sale.html",
+      "status": 200,
+      "duration": 23,
+      "length": 36289,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "sale_check.html",
+      "status": 404,
+      "duration": 12,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "sale_info.html",
+      "status": 200,
+      "duration": 49,
+      "length": 65307,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "select_cus.html",
+      "status": 200,
+      "duration": 39,
+      "length": 5484,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "select_folder.html",
+      "status": 200,
+      "duration": 26,
+      "length": 32103,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "show_credit.html",
+      "status": 200,
+      "duration": 27,
+      "length": 17289,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "show_pic.html",
+      "status": 200,
+      "duration": 19,
+      "length": 3950,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "show_prod.html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "stock.html",
+      "status": 200,
+      "duration": 30,
+      "length": 15562,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "test.html",
+      "status": 200,
+      "duration": 53,
+      "length": 8078,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head> <meta charset=\"utf-8\"> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "test_print.html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "test_receipt.html",
+      "status": 200,
+      "duration": 81,
+      "length": 4209,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <title>ใบโอนย้ายสินค้า - TR26-00001</title>   <style>     @page {       size: auto;       mar"
+    },
+    {
+      "target": "transfer_in (not use).html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "transfer_in_check.html",
+      "status": 404,
+      "duration": 10,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "transfer_in_info.html",
+      "status": 404,
+      "duration": 10,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "update.html",
+      "status": 404,
+      "duration": 10,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "warehouse.html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "warehouse_add.html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "web_admin_customer.html",
+      "status": 200,
+      "duration": 69,
+      "length": 395,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta http-equiv=\"refresh\" content=\"0; url=web_customer.html\" />     <title>จัดการข้"
+    },
+    {
+      "target": "web_admin_shop.html",
+      "status": 404,
+      "duration": 20,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "web_admin_user.html",
+      "status": 200,
+      "duration": 72,
+      "length": 42281,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html lang=\"th\"> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-f"
+    },
+    {
+      "target": "web_catalog.html",
+      "status": 200,
+      "duration": 51,
+      "length": 20570,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta http-equiv=\"Cache-control\" content=\"no-cache\">   <meta name=\"viewport\" content=\"wi"
+    },
+    {
+      "target": "web_clone.html",
+      "status": 200,
+      "duration": 46,
+      "length": 38402,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head> <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">   "
+    },
+    {
+      "target": "web_contact.html",
+      "status": 200,
+      "duration": 30,
+      "length": 4574,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\""
+    },
+    {
+      "target": "web_credit.html",
+      "status": 200,
+      "duration": 55,
+      "length": 35417,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head> <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">   "
+    },
+    {
+      "target": "web_customer.html",
+      "status": 200,
+      "duration": 55,
+      "length": 40220,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html lang=\"th\"> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-f"
+    },
+    {
+      "target": "web_export.html",
+      "status": 200,
+      "duration": 42,
+      "length": 46748,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head> <meta charset=\"utf-8\">   <meta http-equiv=\"refresh\" content=\"0; url=web_transfer_in.html\">   <script>     // หน้า"
+    },
+    {
+      "target": "web_folder.html",
+      "status": 200,
+      "duration": 75,
+      "length": 74394,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head> <meta charset=\"utf-8\"> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"> "
+    },
+    {
+      "target": "web_import.html",
+      "status": 200,
+      "duration": 33,
+      "length": 82543,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head> <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">   <meta"
+    },
+    {
+      "target": "web_import_bk.html",
+      "status": 404,
+      "duration": 10,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "web_login.html",
+      "status": 200,
+      "duration": 34,
+      "length": 8105,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html lang=\"th\"> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-"
+    },
+    {
+      "target": "web_mng_adjust.html",
+      "status": 200,
+      "duration": 35,
+      "length": 20691,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html lang=\"th\"> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "web_mng_bell.html",
+      "status": 200,
+      "duration": 24,
+      "length": 40693,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html lang=\"th\"> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "web_mng_bill.html",
+      "status": 200,
+      "duration": 51,
+      "length": 66202,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "web_mng_export.html",
+      "status": 200,
+      "duration": 24,
+      "length": 25797,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "web_mng_import.html",
+      "status": 200,
+      "duration": 35,
+      "length": 25347,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">  "
+    },
+    {
+      "target": "web_mng_import_warehouse.html",
+      "status": 200,
+      "duration": 24,
+      "length": 26101,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">  "
+    },
+    {
+      "target": "web_mng_sale.html",
+      "status": 200,
+      "duration": 79,
+      "length": 154092,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html lang=\"th\"> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrin"
+    },
+    {
+      "target": "web_mng_transfer.html",
+      "status": 200,
+      "duration": 43,
+      "length": 43597,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>     <meta charset=\"utf-8\">     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "web_qrprint.html",
+      "status": 200,
+      "duration": 27,
+      "length": 40158,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head> <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">   "
+    },
+    {
+      "target": "web_sale.html",
+      "status": 200,
+      "duration": 13,
+      "length": 89250,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head> <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">   "
+    },
+    {
+      "target": "web_sale_bk.html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "web_search_cost.html",
+      "status": 200,
+      "duration": 43,
+      "length": 4084,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta http-equiv=\"Cache-control\" content=\"no-cache\">   <meta name=\"viewport\" content=\"wi"
+    },
+    {
+      "target": "web_select.html",
+      "status": 200,
+      "duration": 34,
+      "length": 15218,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html lang=\"th\"> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-f"
+    },
+    {
+      "target": "web_stock.html",
+      "status": 200,
+      "duration": 24,
+      "length": 77987,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html> <head>   <meta charset=\"utf-8\">   <meta http-equiv=\"Cache-control\" content=\"no-cache\">   <meta name=\"viewport\" content=\"wi"
+    },
+    {
+      "target": "web_stock_add quantity.html",
+      "status": 404,
+      "duration": 13,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "web_stock_bk.html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "web_stock_kit.html",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "web_transfer_in.html",
+      "status": 200,
+      "duration": 20,
+      "length": 76105,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html lang=\"th\"> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=n"
+    },
+    {
+      "target": "web_warehouse.html",
+      "status": 200,
+      "duration": 12,
+      "length": 30483,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE html> <html lang=\"th\"> <head>   <meta charset=\"utf-8\">   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to"
+    },
+    {
+      "target": "ใบวางบิล.html",
+      "status": 404,
+      "duration": 13,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    }
+  ],
+  "phpResults": [
+    {
+      "target": "php/add_cus.php",
+      "status": 200,
+      "duration": 876,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/add_folder.php",
+      "status": 200,
+      "duration": 395,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "fail"
+    },
+    {
+      "target": "php/add_folder_bk.php",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/add_performance_indexes.php",
+      "status": 200,
+      "duration": 4192,
+      "length": 1654,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[sale_order] idx_so_datetime: already exists [sale_order] idx_so_customer: already exists [sale_order] idx_so_number: already exists [sale_order_item]"
+    },
+    {
+      "target": "php/add_prod.php",
+      "status": 200,
+      "duration": 393,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "fail"
+    },
+    {
+      "target": "php/add_prod_bk.php",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/add_ware_shop.php",
+      "status": 500,
+      "duration": 229,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/backup_db.php",
+      "status": "TIMEOUT",
+      "duration": 8000,
+      "length": 0,
+      "hasFatal": true,
+      "errorMsg": "Timeout after 8000ms (ค้าง)",
+      "sample": ""
+    },
+    {
+      "target": "php/back_folder.php",
+      "status": 404,
+      "duration": 15,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/check_amt_prod.php",
+      "status": 200,
+      "duration": 212,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "fail"
+    },
+    {
+      "target": "php/check_version.php",
+      "status": 200,
+      "duration": 140,
+      "length": 22,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"v\":\"5.5.68-MariaDB\"}"
+    },
+    {
+      "target": "php/confirm_transfer.php",
+      "status": 200,
+      "duration": 152,
+      "length": 115,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"error\",\"message\":\"\\u0e44\\u0e21\\u0e48\\u0e1e\\u0e1a\\u0e23\\u0e2b\\u0e31\\u0e2a\\u0e43\\u0e1a\\u0e42\\u0e2d\\u0e19\"}"
+    },
+    {
+      "target": "php/count_prod.php",
+      "status": 404,
+      "duration": 33,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/create_transfer.php",
+      "status": 200,
+      "duration": 148,
+      "length": 48,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"error\",\"message\":\"ไม่มีรายการสินค้า\"}"
+    },
+    {
+      "target": "php/db.php",
+      "status": 200,
+      "duration": 33,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/debug_status.php",
+      "status": 404,
+      "duration": 29,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/delete_bill.php",
+      "status": 200,
+      "duration": 632,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/delete_cus.php",
+      "status": 200,
+      "duration": 476,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/delete_export.php",
+      "status": 200,
+      "duration": 253,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/delete_folder.php",
+      "status": 200,
+      "duration": 445,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "fail"
+    },
+    {
+      "target": "php/delete_folder_bk.php",
+      "status": 404,
+      "duration": 12,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/delete_import.php",
+      "status": 200,
+      "duration": 415,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/delete_place.php",
+      "status": 500,
+      "duration": 89,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/delete_prod.php",
+      "status": 200,
+      "duration": 49,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "fail"
+    },
+    {
+      "target": "php/delete_prod_bk.php",
+      "status": 404,
+      "duration": 11,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/delete_threshold.php",
+      "status": 500,
+      "duration": 102,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/delete_transfer.php",
+      "status": 200,
+      "duration": 229,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/delete_transfer_to.php",
+      "status": 200,
+      "duration": 52,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/delete_user.php",
+      "status": 200,
+      "duration": 182,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/delete_ware_shop.php",
+      "status": 200,
+      "duration": 13,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/folder_helper.php",
+      "status": 200,
+      "duration": 104,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/get_allamtstock.php",
+      "status": 200,
+      "duration": 954,
+      "length": 82,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "Warehouse amount of stock: 71503<br/>Shop amount of stock: 40053<br/>Total: 111556"
+    },
+    {
+      "target": "php/get_allprod.php",
+      "status": "TIMEOUT",
+      "duration": 8000,
+      "length": 0,
+      "hasFatal": true,
+      "errorMsg": "Timeout after 8000ms (ค้าง)",
+      "sample": ""
+    },
+    {
+      "target": "php/get_all_cost.php",
+      "status": 200,
+      "duration": 4995,
+      "length": 10,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "43192169.9"
+    },
+    {
+      "target": "php/get_all_cost_byprd.php",
+      "status": 200,
+      "duration": 4949,
+      "length": 10,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "43192169.9"
+    },
+    {
+      "target": "php/get_amt_prod.php",
+      "status": 200,
+      "duration": 888,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "-164"
+    },
+    {
+      "target": "php/get_autoprod.php",
+      "status": 200,
+      "duration": 3880,
+      "length": 2979237,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"prod_id\":\"36\",\"prod_name\":\"Snorkel vigo 2005-2014 TJM\",\"prod_code\":\"TYVG050001\",\"prod_price\":\"3800\",\"prod_pricesend\":\"2800\",\"prod_cost\":\"1509\"},{\"p"
+    },
+    {
+      "target": "php/get_bell.php",
+      "status": 200,
+      "duration": 67,
+      "length": 5,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "alert"
+    },
+    {
+      "target": "php/get_bill.php",
+      "status": 200,
+      "duration": 737,
+      "length": 6338,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[\"not last\",{\"0\":\"112734\",\"order_id\":\"112734\",\"1\":\"S26-13847\",\"order_number\":\"S26-13847\",\"2\":\"\\u0e40\\u0e2d\\u0e4b\\u0e23\\u0e16\\u0e42\\u0e1f\\u0e04\",\"cus_n"
+    },
+    {
+      "target": "php/get_bill_info.php",
+      "status": 200,
+      "duration": 1812,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "null"
+    },
+    {
+      "target": "php/get_bill_info4print.php",
+      "status": 200,
+      "duration": 82,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "null"
+    },
+    {
+      "target": "php/get_credit.php",
+      "status": 200,
+      "duration": 2020,
+      "length": 227906,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"credit_id\":\"2037\",\"cus_id\":\"547\",\"cus_name\":\"เจ๊สุ\",\"credit_price\":\"4200\",\"date_time\":\"2026-10-17 15:02:16\"},{\"credit_id\":\"2036\",\"cus_id\":\"19\",\"cus"
+    },
+    {
+      "target": "php/get_credit_info.php",
+      "status": 200,
+      "duration": 4840,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "null"
+    },
+    {
+      "target": "php/get_cus.php",
+      "status": 200,
+      "duration": 560,
+      "length": 280901,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"0\":\"17\",\"cus_id\":\"17\",\"1\":\"DEE GARAGE\",\"cus_name\":\"DEE GARAGE\",\"2\":\"\",\"cus_tel\":\"\",\"3\":\"Indo\",\"cus_addr\":\"Indo\",\"4\":\"\\u0e02\\u0e32\\u0e22\\u0e2a\\u0e48"
+    },
+    {
+      "target": "php/get_detail_cus.php",
+      "status": 200,
+      "duration": 673,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "null"
+    },
+    {
+      "target": "php/get_export.php",
+      "status": 200,
+      "duration": 6232,
+      "length": 6972,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[\"not last\",{\"0\":\"36495\",\"stock_out_id\":\"36495\",\"1\":\"EXP26-04317\",\"stock_out_number\":\"EXP26-04317\",\"2\":\"\\u0e42\\u0e01\\u0e14\\u0e31\\u0e07B\",\"ware_name\":\""
+    },
+    {
+      "target": "php/get_export_info.php",
+      "status": 200,
+      "duration": 244,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "null"
+    },
+    {
+      "target": "php/get_folder bk.php",
+      "status": 404,
+      "duration": 29,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/get_folder.php",
+      "status": 200,
+      "duration": 658,
+      "length": 2275,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"title\":\"4X4\"},{\"title\":\"AION\"},{\"title\":\"AUDI\"},{\"title\":\"BEATLE\"},{\"title\":\"BENZ\"},{\"title\":\"BIKE\"},{\"title\":\"BMW\"},{\"title\":\"BYD\"},{\"title\":\"CARR"
+    },
+    {
+      "target": "php/get_folder_web BK.php",
+      "status": 404,
+      "duration": 9,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/get_folder_web.php",
+      "status": 200,
+      "duration": 712,
+      "length": 2275,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"title\":\"4X4\"},{\"title\":\"AION\"},{\"title\":\"AUDI\"},{\"title\":\"BEATLE\"},{\"title\":\"BENZ\"},{\"title\":\"BIKE\"},{\"title\":\"BMW\"},{\"title\":\"BYD\"},{\"title\":\"CARR"
+    },
+    {
+      "target": "php/get_import.php",
+      "status": 200,
+      "duration": 6056,
+      "length": 5020,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[\"not last\",{\"stock_id\":\"11782\",\"stock_number\":\"IMP26-01544\",\"ware_name\":\"โกดังA\",\"date_time\":\"2026-10-21 14:50:17\",\"supplier_name\":\"lock tech\",\"ref_i"
+    },
+    {
+      "target": "php/get_import_info.php",
+      "status": 200,
+      "duration": 569,
+      "length": 2,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[]"
+    },
+    {
+      "target": "php/get_lastV.php",
+      "status": 200,
+      "duration": 542,
+      "length": 181,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"0\":\"http:\\/\\/ddaccessory.trueddns.com:24330\\/dd-shop\\/ddcar-latest.apk\",\"url\":\"http:\\/\\/ddaccessory.trueddns.com:24330\\/dd-shop\\/ddcar-latest.apk\","
+    },
+    {
+      "target": "php/get_low_stock.php",
+      "status": 200,
+      "duration": 4777,
+      "length": 81319,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"success\",\"total_count\":186,\"mode\":\"reorder\",\"data\":[{\"prod_id\":\"13714\",\"prod_code\":\"NSTERBNSVT\",\"prod_name\":\"\\u0e42\\u0e0a\\u0e4a\\u0e04\\u0e1d"
+    },
+    {
+      "target": "php/get_online_shop.php",
+      "status": 404,
+      "duration": 40,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/get_pending_transfers.php",
+      "status": 200,
+      "duration": 378,
+      "length": 735,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"tf_id\":\"2770\",\"tf_number\":\"TR26-00059\",\"direction\":\"shop_to_ware\",\"status\":\"pending\",\"total\":\"3\",\"date_time\":\"2026-10-21 14:45:22\",\"remark\":\"\",\"rec"
+    },
+    {
+      "target": "php/get_place.php",
+      "status": 200,
+      "duration": 491,
+      "length": 2,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[]"
+    },
+    {
+      "target": "php/get_prod.php",
+      "status": 200,
+      "duration": 378,
+      "length": 2,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[]"
+    },
+    {
+      "target": "php/get_prod_bk.php",
+      "status": 500,
+      "duration": 94,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/get_sale.php",
+      "status": 500,
+      "duration": 376,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/get_sales_analytics.php",
+      "status": 200,
+      "duration": 3110,
+      "length": 9331,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"success\":true,\"action\":\"top_sellers\",\"days\":30,\"sort_by\":\"qty\",\"date_cutoff\":\"2026-09-21 00:00:00\",\"summary\":{\"total_qty\":2866,\"total_revenue\":34733"
+    },
+    {
+      "target": "php/get_sales_summary.php",
+      "status": 200,
+      "duration": 4995,
+      "length": 17689,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"success\":true,\"mode\":\"daily\",\"date_from\":\"2026-10-21\",\"date_to\":\"2026-10-21\",\"summary\":{\"total_sales\":193263,\"total_cost\":126115,\"total_profit\":8032"
+    },
+    {
+      "target": "php/get_shift_bill.php",
+      "status": 200,
+      "duration": 4978,
+      "length": 4466,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"order_id\":\"112734\",\"order_number\":\"S26-13847\",\"user_name\":\"Apple\",\"total_price\":\"500\",\"count\":339},{\"order_id\":\"112733\",\"order_number\":\"S26-13846\","
+    },
+    {
+      "target": "php/get_shift_bill_web.php",
+      "status": 200,
+      "duration": 359,
+      "length": 14759,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"0\":\"112734\",\"order_id\":\"112734\",\"1\":\"S26-13847\",\"order_number\":\"S26-13847\",\"2\":\"Apple\",\"user_name\":\"Apple\",\"3\":\"500\",\"total_price\":\"500\",\"4\":\"2026-"
+    },
+    {
+      "target": "php/get_shop.php",
+      "status": 200,
+      "duration": 421,
+      "length": 153,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"0\":\"6\",\"shop_id\":\"6\",\"1\":\"\\u0e2b\\u0e19\\u0e49\\u0e32\\u0e23\\u0e49\\u0e32\\u0e19\",\"shop_name\":\"\\u0e2b\\u0e19\\u0e49\\u0e32\\u0e23\\u0e49\\u0e32\\u0e19\",\"2\":4005"
+    },
+    {
+      "target": "php/get_status_prod.php",
+      "status": 200,
+      "duration": 553,
+      "length": 3027,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"0\":\"Snorkel vigo 2005-2014 TJM\",\"prod_name\":\"Snorkel vigo 2005-2014 TJM\",\"1\":\"36\",\"prod_id\":\"36\",\"2\":\"danger\",\"status\":\"danger\",\"3\":8},{\"0\":\"Snorke"
+    },
+    {
+      "target": "php/get_stock_adjustments.php",
+      "status": 200,
+      "duration": 1093,
+      "length": 12829,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"success\",\"total\":39,\"count\":30,\"data\":[{\"adj_id\":\"39\",\"adj_number\":\"ADJ26-00039\",\"prod_id\":\"11081\",\"prod_name\":\"กระจังหน้า Revo 2015 เดิมๆ "
+    },
+    {
+      "target": "php/get_suppliers.php",
+      "status": 200,
+      "duration": 875,
+      "length": 345,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[\"a\",\"AA\",\"AA auto\",\"AA auto, AA\",\"ACE\",\"AKARA FB\",\"amc\",\"aos\",\"ARC\",\"BKK\",\"BVT\",\"INFINITY\",\"KQD\",\"KR\",\"KV\",\"LEDA\",\"LEDตรงข้ามตึก\",\"LK\",\"lock tech\",\"M"
+    },
+    {
+      "target": "php/get_supplier_prices.php",
+      "status": 200,
+      "duration": 316,
+      "length": 717,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"success\",\"prod_id\":\"1\",\"prod_name\":\"\",\"prod_code\":\"\",\"current_cost\":0,\"history\":[],\"supplier_skus\":[],\"recent_orders\":[{\"stock_cost\":\"100\","
+    },
+    {
+      "target": "php/get_threshold.php",
+      "status": 500,
+      "duration": 233,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/get_transfer.php",
+      "status": 200,
+      "duration": 2285,
+      "length": 5090,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[\"not last\",{\"tran_id\":\"65094\",\"tran_number\":\"TRA26-07493\",\"shop_name\":\"หน้าร้าน\",\"date_time\":\"2026-10-21 17:12:25\",\"supplier_name\":\"TU\",\"ref_invoice\""
+    },
+    {
+      "target": "php/get_transfer_info.php",
+      "status": 200,
+      "duration": 98,
+      "length": 2,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[]"
+    },
+    {
+      "target": "php/get_transfer_to.php",
+      "status": 200,
+      "duration": 515,
+      "length": 11594,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[\"not last\",{\"tf_id\":\"2775\",\"tf_number\":\"TR26-00064\",\"direction\":\"ware_to_shop\",\"status\":\"received\",\"total\":\"4\",\"date_time\":\"2026-10-21 16:33:31\",\"rem"
+    },
+    {
+      "target": "php/get_transfer_to_info.php",
+      "status": 200,
+      "duration": 517,
+      "length": 2,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[]"
+    },
+    {
+      "target": "php/get_user.php",
+      "status": 200,
+      "duration": 505,
+      "length": 3618,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"user_id\":\"20\",\"user_name\":\"มิว\",\"pass\":\"$2y$10$4quJ.xzF2tl9kFtHm\\/cGDeLoRKQSjgyfy9QifYm6EBKd.6KP\\/ZaPa\",\"phone\":\"0914086391\",\"user_role\":\"แอดมิน\"},"
+    },
+    {
+      "target": "php/get_ware.php",
+      "status": 200,
+      "duration": 226,
+      "length": 597,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"0\":\"1\",\"ware_id\":\"1\",\"1\":\"\\u0e42\\u0e01\\u0e14\\u0e31\\u0e07A\",\"ware_name\":\"\\u0e42\\u0e01\\u0e14\\u0e31\\u0e07A\",\"2\":27100},{\"0\":\"2\",\"ware_id\":\"2\",\"1\":\"\\u0"
+    },
+    {
+      "target": "php/get_ware_shop.php",
+      "status": 200,
+      "duration": 99,
+      "length": 937,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"0\":\"1\",\"ware_id\":\"1\",\"1\":\"\\u0e42\\u0e01\\u0e14\\u0e31\\u0e07A\",\"ware_name\":\"\\u0e42\\u0e01\\u0e14\\u0e31\\u0e07A\",\"2\":\"\\u0e42\\u0e01\\u0e14\\u0e31\\u0e07\"},{\"0\""
+    },
+    {
+      "target": "php/img_helper.php",
+      "status": 200,
+      "duration": 12,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/kill_zombies.php",
+      "status": 404,
+      "duration": 25,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/login.php",
+      "status": 200,
+      "duration": 477,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "fail"
+    },
+    {
+      "target": "php/migrate_adjustment.php",
+      "status": 200,
+      "duration": 577,
+      "length": 82,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"success\",\"message\":\"Table stock_adjustment created or already exists.\"}"
+    },
+    {
+      "target": "php/migrate_images.php",
+      "status": 200,
+      "duration": 443,
+      "length": 86,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"done\":false,\"start_id\":1,\"end_id\":250,\"next_id\":251,\"migrated\":0,\"bytes_saved_mb\":0}"
+    },
+    {
+      "target": "php/migrate_supplier_sku.php",
+      "status": 500,
+      "duration": 572,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/pay_credit.php",
+      "status": 200,
+      "duration": 577,
+      "length": 50,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"fail\",\"message\":\"รหัสเครดิตไม่ถูกต้อง\"}"
+    },
+    {
+      "target": "php/register.php",
+      "status": 200,
+      "duration": 613,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/reject_transfer.php",
+      "status": 200,
+      "duration": 442,
+      "length": 115,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"error\",\"message\":\"\\u0e44\\u0e21\\u0e48\\u0e1e\\u0e1a\\u0e23\\u0e2b\\u0e31\\u0e2a\\u0e43\\u0e1a\\u0e42\\u0e2d\\u0e19\"}"
+    },
+    {
+      "target": "php/rename_bill.php",
+      "status": 200,
+      "duration": 608,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/rename_cus.php",
+      "status": 200,
+      "duration": 17,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/rename_export.php",
+      "status": 200,
+      "duration": 53,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/rename_folder.php",
+      "status": 200,
+      "duration": 35,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "fail"
+    },
+    {
+      "target": "php/rename_folder_bk.php",
+      "status": 404,
+      "duration": 13,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/rename_import.php",
+      "status": 200,
+      "duration": 604,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/rename_place.php",
+      "status": 200,
+      "duration": 62,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/rename_prod.php",
+      "status": 200,
+      "duration": 43,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "fail"
+    },
+    {
+      "target": "php/rename_prod_web.php",
+      "status": 200,
+      "duration": 48,
+      "length": 4,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "fail"
+    },
+    {
+      "target": "php/rename_transfer.php",
+      "status": 200,
+      "duration": 26,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/rename_user.php",
+      "status": 200,
+      "duration": 208,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/rename_ware_shop.php",
+      "status": 200,
+      "duration": 23,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/restore_product.php",
+      "status": 500,
+      "duration": 498,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/save_credit.php",
+      "status": 500,
+      "duration": 877,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/save_order.php",
+      "status": 200,
+      "duration": 654,
+      "length": 15,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "S26-13848 false"
+    },
+    {
+      "target": "php/save_stock_adjustment.php",
+      "status": 200,
+      "duration": 217,
+      "length": 205,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"error\",\"message\":\"\\u0e44\\u0e21\\u0e48\\u0e1e\\u0e1a\\u0e23\\u0e2b\\u0e31\\u0e2a\\u0e2a\\u0e34\\u0e19\\u0e04\\u0e49\\u0e32\\u0e17\\u0e35\\u0e48\\u0e15\\u0e49\\"
+    },
+    {
+      "target": "php/search_amount.php",
+      "status": 200,
+      "duration": 370,
+      "length": 18,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"amount\":\"101\"}]"
+    },
+    {
+      "target": "php/search_cus.php",
+      "status": 200,
+      "duration": 237,
+      "length": 280901,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[{\"0\":\"17\",\"cus_id\":\"17\",\"1\":\"DEE GARAGE\",\"cus_name\":\"DEE GARAGE\",\"2\":\"\",\"cus_tel\":\"\",\"3\":\"Indo\",\"cus_addr\":\"Indo\",\"4\":\"\\u0e02\\u0e32\\u0e22\\u0e2a\\u0e48"
+    },
+    {
+      "target": "php/search_cusprice.php",
+      "status": 200,
+      "duration": 180,
+      "length": 2,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[]"
+    },
+    {
+      "target": "php/search_img.php",
+      "status": 200,
+      "duration": 154,
+      "length": 2,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[]"
+    },
+    {
+      "target": "php/search_prod.php",
+      "status": 200,
+      "duration": 311,
+      "length": 2,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[]"
+    },
+    {
+      "target": "php/search_prod_full.php",
+      "status": 200,
+      "duration": 154,
+      "length": 2,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "[]"
+    },
+    {
+      "target": "php/search_sale.php",
+      "status": 500,
+      "duration": 3072,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    },
+    {
+      "target": "php/setup_status_ext.php",
+      "status": 200,
+      "duration": 327,
+      "length": 838,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "product_status_ext created successfully! [     {         \"Id\": \"284893\",         \"User\": \"root\",         \"Host\": \"localhost\",         \"db\": \"ddcar\",  "
+    },
+    {
+      "target": "php/set_lastV.php",
+      "status": 200,
+      "duration": 311,
+      "length": 50,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"error\",\"message\":\"version is required\"}"
+    },
+    {
+      "target": "php/stock_in.php",
+      "status": 200,
+      "duration": 170,
+      "length": 28,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "fail: ไม่มีรายการสินค้าในบิล"
+    },
+    {
+      "target": "php/stock_out.php",
+      "status": 200,
+      "duration": 793,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/stock_out_web.php",
+      "status": 200,
+      "duration": 793,
+      "length": 11,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "EXP26-04318"
+    },
+    {
+      "target": "php/T001.php",
+      "status": 404,
+      "duration": 9,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/test_count.php",
+      "status": 200,
+      "duration": 422,
+      "length": 28,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "Total with min_amount: 12983"
+    },
+    {
+      "target": "php/test_low.php",
+      "status": 200,
+      "duration": 1282,
+      "length": 507,
+      "hasFatal": true,
+      "errorMsg": "PHP Fatal Error",
+      "sample": "Step 1: db.php... <br /> <b>Warning</b>:  Cannot modify header information - headers already sent by (output started at /share/CACHEDEV1_DATA/Web/dd-s"
+    },
+    {
+      "target": "php/test_perf.php",
+      "status": 404,
+      "duration": 12,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/test_query.php",
+      "status": 200,
+      "duration": 374,
+      "length": 13,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"c\":\"12983\"}"
+    },
+    {
+      "target": "php/test_speed.php",
+      "status": 404,
+      "duration": 12,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/test_stats_speed.php",
+      "status": 404,
+      "duration": 13,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/test_ver.php",
+      "status": 200,
+      "duration": 387,
+      "length": 6,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "8.2.27"
+    },
+    {
+      "target": "php/transfer_in.php",
+      "status": 404,
+      "duration": 10,
+      "length": 273,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"> <html><head> <title>404 Not Found</title> </head><body> <h1>Not Found</h1> <p>The requested URL was"
+    },
+    {
+      "target": "php/update_bell.php",
+      "status": 200,
+      "duration": 2453,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/update_bell_status.php",
+      "status": 200,
+      "duration": 130,
+      "length": 45,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "{\"status\":\"fail\",\"message\":\"Missing prod_id\"}"
+    },
+    {
+      "target": "php/update_credit_auto.php",
+      "status": "TIMEOUT",
+      "duration": 8000,
+      "length": 0,
+      "hasFatal": true,
+      "errorMsg": "Timeout after 8000ms (ค้าง)",
+      "sample": ""
+    },
+    {
+      "target": "php/update_prod.php",
+      "status": 200,
+      "duration": 376,
+      "length": 7,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": "success"
+    },
+    {
+      "target": "php/update_threshold.php",
+      "status": 500,
+      "duration": 63,
+      "length": 0,
+      "hasFatal": false,
+      "errorMsg": "",
+      "sample": ""
+    }
+  ]
+}

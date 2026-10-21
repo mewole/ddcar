@@ -2,52 +2,48 @@
 /**
  * get_low_stock.php
  * รายงานสินค้าใกล้หมด / ต่ำกว่าจุดสั่งซื้อซ้ำ (Reorder Point / min_amount)
- * ประสิทธิภาพสูง: ใช้ Batch Query 3 ครั้งจบ ไม่ใช้ correlated subquery
+ * ประสิทธิภาพสูง: ใช้ Index Query + Batch Stock Lookups + Lazy Attribute Fetching
  */
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-ini_set('memory_limit', '512M');
+if (!ob_start("ob_gzhandler")) {
+    ob_start();
+}
+ini_set('display_errors', 0);
+error_reporting(0);
 include "db.php";
 include_once "folder_helper.php";
 
 header('Content-Type: application/json; charset=utf-8');
 
 $mode = isset($_GET['mode']) ? $_GET['mode'] : 'reorder'; 
-
 $items = array();
+$prod_list = array();
+$pids = array();
 
 if ($mode === 'zero') {
-    // โหมดสินค้าหมดสต๊อก (รวมทุกรายการที่มีในระบบแต่สต๊อก = 0)
-    // 1. ดึงสินค้าทั้งหมดที่ active 500 รายการ โดยไม่แตะ longtext img ในตอนแรก
+    // โหมดสินค้าหมดสต๊อก: ดึงสินค้า 200 รายการล่าสุด
     $sql = "SELECT prod_id, prod_code, prod_name, 
             prod_cost, prod_price, prod_pricesend, CAST(min_amount AS SIGNED) AS min_amount
             FROM product 
             ORDER BY prod_id DESC 
-            LIMIT 500";
+            LIMIT 200";
     $res = mysqli_query($conn, $sql);
-    $prod_list = array();
-    $pids = array();
     if ($res) {
         while ($r = mysqli_fetch_assoc($res)) {
-            $r['img'] = '';
             $prod_list[] = $r;
             $pids[] = intval($r['prod_id']);
         }
     }
 } else {
-    // โหมดมาตรฐาน 'reorder': ดึงเฉพาะสินค้าที่ผู้ใช้ตั้งค่า min_amount > 0 ไว้
+    // โหมดมาตรฐาน 'reorder': ดึงเฉพาะสินค้าที่ตั้งค่า min_amount > 0 โดยใช้ Index idx_prod_min_amount
     $sql = "SELECT prod_id, prod_code, prod_name, 
             prod_cost, prod_price, prod_pricesend, CAST(min_amount AS SIGNED) AS min_amount
             FROM product 
-            WHERE min_amount != '' AND min_amount != '0' AND min_amount IS NOT NULL
+            WHERE min_amount > 0
             ORDER BY prod_id DESC
-            LIMIT 300";
+            LIMIT 200";
     $res = mysqli_query($conn, $sql);
-    $prod_list = array();
-    $pids = array();
     if ($res) {
         while ($r = mysqli_fetch_assoc($res)) {
-            $r['img'] = '';
             $prod_list[] = $r;
             $pids[] = intval($r['prod_id']);
         }
@@ -57,20 +53,7 @@ if ($mode === 'zero') {
 if (!empty($pids)) {
     $pid_str = implode(',', $pids);
 
-    // ดึงรูปเฉพาะ $pids ที่เลือกด้วย Primary Key (< 5ms)
-    $res_img = mysqli_query($conn, "SELECT prod_id, CASE WHEN img LIKE 'img/%' THEN img WHEN LENGTH(img) < 200 THEN img ELSE '' END AS img FROM product WHERE prod_id IN ($pid_str)");
-    $img_map = array();
-    if ($res_img) {
-        while ($ri = mysqli_fetch_assoc($res_img)) {
-            $img_map[$ri['prod_id']] = $ri['img'];
-        }
-    }
-    foreach ($prod_list as &$pitem) {
-        $pitem['img'] = isset($img_map[$pitem['prod_id']]) ? $img_map[$pitem['prod_id']] : '';
-    }
-    unset($pitem);
-
-    // 2. Batch ดึงจำนวนสต๊อกหน้าร้าน
+    // 1. Batch ดึงจำนวนสต๊อกหน้าร้าน (มี Index idx_sh_prod_shop)
     $shop_map = array();
     $sql_shop = "SELECT prod_id, SUM(amount) AS qty FROM shop WHERE prod_id IN ($pid_str) GROUP BY prod_id";
     $res_shop = mysqli_query($conn, $sql_shop);
@@ -80,7 +63,7 @@ if (!empty($pids)) {
         }
     }
 
-    // 3. Batch ดึงจำนวนสต๊อกโกดัง
+    // 2. Batch ดึงจำนวนสต๊อกโกดัง (มี Index idx_wh_prod_ware)
     $ware_map = array();
     $sql_ware = "SELECT prod_id, SUM(amount) AS qty FROM warehouse WHERE prod_id IN ($pid_str) GROUP BY prod_id";
     $res_ware = mysqli_query($conn, $sql_ware);
@@ -90,8 +73,7 @@ if (!empty($pids)) {
         }
     }
 
-    // 4. คำนวณสต๊อกรวมและเปรียบเทียบกับเกณฑ์
-    $low_pids = array();
+    // 3. คำนวณสต๊อกรวมและเปรียบเทียบกับเกณฑ์
     foreach ($prod_list as $p) {
         $pid = $p['prod_id'];
         $shop_qty = isset($shop_map[$pid]) ? $shop_map[$pid] : 0;
@@ -118,7 +100,7 @@ if (!empty($pids)) {
                 'prod_id' => $pid,
                 'prod_code' => $p['prod_code'],
                 'prod_name' => $p['prod_name'],
-                'img' => $p['img'],
+                'img' => '',
                 'prod_cost' => $p['prod_cost'],
                 'prod_price' => $p['prod_price'],
                 'prod_pricesend' => $p['prod_pricesend'],
@@ -127,9 +109,10 @@ if (!empty($pids)) {
                 'ware_amount' => $ware_qty,
                 'total_amount' => $total_qty,
                 'diff' => $total_qty - $min_amt,
-                'urgency' => $urgency
+                'urgency' => $urgency,
+                'folder_path' => '',
+                'folder_chain' => array()
             );
-            $low_pids[] = $pid;
         }
     }
 
@@ -141,17 +124,33 @@ if (!empty($pids)) {
         return $a['total_amount'] - $b['total_amount'];
     });
 
-    // 5. ดึงโครงสร้างโฟลเดอร์สำหรับสินค้าที่ติดแจ้งเตือน
+    if (count($items) > 150) {
+        $items = array_slice($items, 0, 150);
+    }
+
+    // 4. ดึงรูปภาพและโฟลเดอร์เฉพาะสินค้าที่ติดเกณฑ์จริง (ประหยัด memory และเวลาหลายร้อยเท่า)
+    $low_pids = array_map(function($it) { return $it['prod_id']; }, $items);
     if (!empty($low_pids)) {
+        $low_pid_str = implode(',', array_map('intval', $low_pids));
+        
+        $res_img = mysqli_query($conn, "SELECT prod_id, CASE WHEN img LIKE 'img/%' THEN img WHEN LENGTH(img) < 200 THEN img ELSE '' END AS img FROM product WHERE prod_id IN ($low_pid_str)");
+        $img_map = array();
+        if ($res_img) {
+            while ($ri = mysqli_fetch_assoc($res_img)) {
+                $img_map[$ri['prod_id']] = $ri['img'];
+            }
+        }
+
         $folder_map = get_products_folder_paths($conn, $low_pids);
+
         for ($i = 0; $i < count($items); $i++) {
-            $pid_key = (string)$items[$i]['prod_id'];
+            $pid = $items[$i]['prod_id'];
+            $items[$i]['img'] = isset($img_map[$pid]) ? $img_map[$pid] : '';
+
+            $pid_key = (string)$pid;
             if (isset($folder_map[$pid_key])) {
                 $items[$i]['folder_path'] = $folder_map[$pid_key]['path'];
                 $items[$i]['folder_chain'] = $folder_map[$pid_key]['chain'];
-            } else {
-                $items[$i]['folder_path'] = '';
-                $items[$i]['folder_chain'] = array();
             }
         }
     }

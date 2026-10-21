@@ -495,39 +495,45 @@
 
 		function get_header(){
 			var d = new Date($.now());			
-      var date = d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear();
+			var date = d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear();
 			$('#date').text(date);
 
-			$('#user').text(localStorage.user_name);
+			$('#user').text(localStorage.user_name || 'ผู้ใช้งาน');
 
 			$.ajax({
 				type: "GET",
-				url:"php/get_ware_shop.php",
-				timeout: 5000,
-				beforeSend: function(){
-					EasyLoading.show({                           
-						text: "กำลังโหลด",
-						timeout: 3000
-					});
-				},             
-				success: function(data){  
-					EasyLoading.hide();
-					var obj = jQuery.parseJSON(data); 
-					if(obj){
+				url: "php/get_ware_shop.php",
+				timeout: 8000,
+				dataType: "json",
+				success: function(obj){  
+					if(obj && Array.isArray(obj)){
+						var $b = $('#b');
+						$b.empty();
+
+						// Header โกดัง
+						$b.append('<h6 class="dropdown-header font-weight-bold text-dark px-3 py-1 mb-0" style="background:#f1f3f5;"><i class="fas fa-warehouse text-warning mr-1"></i> โกดัง</h6>');
 						$.each(obj, function(i, field){							
-							if(obj[i][2] == "โกดัง"){  						
-								$('#b').append('<a class="dropdown-item text-center" href="#" onclick="setware('+field.ware_id+',\''+field.ware_name+'\',\'โกดัง\')">'+field.ware_name+'</a>');
-							}else if(obj[i][2] == "หน้าร้าน"){						
-								$('#b').append('<a class="dropdown-item text-center" href="#" onclick="setware('+field.shop_id+',\''+field.shop_name+'\',\'หน้าร้าน\')">'+field.shop_name+'</a>');
+							if(field[2] == "โกดัง" || (field.ware_id && !field.shop_id)){  						
+								var wId = field.ware_id || field[0];
+								var wName = field.ware_name || field[1];
+								$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(' + wId + ',\'' + wName.replace(/'/g, "\\'") + '\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>' + wName + '</a>');
+							}										
+						});
+
+						// Header หน้าร้าน
+						$b.append('<div class="dropdown-divider my-1"></div>');
+						$b.append('<h6 class="dropdown-header font-weight-bold text-dark px-3 py-1 mb-0" style="background:#f1f3f5;"><i class="fas fa-store text-primary mr-1"></i> หน้าร้าน</h6>');
+						$.each(obj, function(i, field){							
+							if(field[2] == "หน้าร้าน" || field.shop_id){						
+								var sId = field.shop_id || field[0];
+								var sName = field.shop_name || field[1];
+								$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(' + sId + ',\'' + sName.replace(/'/g, "\\'") + '\',\'หน้าร้าน\')"><i class="fas fa-store-alt text-primary mr-2"></i>' + sName + '</a>');
 							}										
 						}); 
 					}
 				},
-				complete: function(){
-					EasyLoading.hide();
-				},
-				error: function(){
-					EasyLoading.hide();
+				error: function(xhr, status, err){
+					console.error("Failed to load warehouses/shops:", status, err);
 				}               
 			}); 	
 		}
@@ -602,9 +608,29 @@
 			localStorage.ware_id_im = arg;			
 			localStorage.ware_name_im = arg2;
 			localStorage.type_im = arg3;
-			$('#btn-b').text(arg2);
+			$('#btn-b').text(arg2).removeClass('border-danger is-invalid');
+			$('#select-ware').removeClass('show');
+			$('#b').removeClass('show');
+			$('#btn-b').attr('aria-expanded', 'false');
 			get_place();
 		}
+
+		$(document).on('click', '#btn-b', function(e) {
+			e.preventDefault();
+			if ($(this).is(':disabled')) return;
+			$('#select-ware').toggleClass('show');
+			$('#b').toggleClass('show');
+			var isOpen = $('#b').hasClass('show');
+			$(this).attr('aria-expanded', isOpen ? 'true' : 'false');
+		});
+
+		$(document).on('click', function(e) {
+			if (!$(e.target).closest('#select-ware').length) {
+				$('#select-ware').removeClass('show');
+				$('#b').removeClass('show');
+				$('#btn-b').attr('aria-expanded', 'false');
+			}
+		});
 	
 		
 		function cal_avg(type){
@@ -910,10 +936,10 @@
           '<div class="col-1 nopd-8">'+
             '<input id="sku-'+count+'" type="text" value="'+($('#supplier_sku').val().trim() || '-')+'" placeholder="SKU ร้าน" class="form-control text-center font-weight-bold text-info" readonly>'+
           '</div>'+
-          <div class="col-3 nopd-8">
-            <input id="name-'+count+'" value="'+$('#name').val()+'" class="form-control text-center" rel="popover" data-img="'+img+'" readonly>
-            '+(is_bundle_item ? '<div class="text-center"><span class="badge-bundle-tag"><i class="fas fa-boxes mr-1"></i>สินค้าชุด / คู่</span></div>' : '')+'
-          </div>
+          '<div class="col-3 nopd-8">'+
+            '<input id="name-'+count+'" value="'+$('#name').val()+'" class="form-control text-center" rel="popover" data-img="'+img+'" readonly>'+
+            (is_bundle_item ? '<div class="text-center mt-1"><a href="web_bundle.html" class="badge-bundle-tag text-decoration-none" title="คลิกเพื่อเปิดศูนย์จัดการสูตรสินค้าชุด (Bundle)"><i class="fas fa-layer-group mr-1"></i>สินค้าชุด (คลิกผูกสูตร)</a></div>' : '')+
+          '</div>'+
           '<div class="col-1 nopd-8">'+
             '<input id="amount-'+count+'" value="'+$('#amount').val()+'" type="number" class="form-control text-center no-spin" min="1" readonly>'+
           '</div>'+
@@ -923,10 +949,10 @@
           '<div class="col-1 nopd-8">'+
             '<input id="wholee" type="number" value="'+$('#whole').val()+'" class="form-control text-center no-spin" min="0" readonly>'+
           '</div>'+
-          <div class="col-1 nopd-8">
-            <input id="retaill-'+count+'" type="number" value="'+$('#retail').val()+'" class="form-control text-center no-spin font-weight-bold '+(is_loss ? 'text-danger' : '')+'" min="0" readonly>
-            '+(is_loss ? '<div id="loss-badge-'+count+'"><button type="button" class="badge-auto-fix-btn" onclick="quickFixRetail('+count+', '+safe_floor+');" title="ขายขาดทุน! คลิกเพื่อปรับราคาเป็น ฿'+safe_floor+' ทันที"><i class="fas fa-bolt mr-1"></i>ปรับ ฿'+safe_floor+'</button></div>' : '')+'
-          </div>
+          '<div class="col-1 nopd-8">'+
+            '<input id="retaill-'+count+'" type="number" value="'+$('#retail').val()+'" class="form-control text-center no-spin font-weight-bold '+(is_loss ? 'text-danger' : '')+'" min="0" readonly>'+
+            (is_loss ? '<div id="loss-badge-'+count+'"><button type="button" class="badge-auto-fix-btn" onclick="quickFixRetail('+count+', '+safe_floor+');" title="ขายขาดทุน! คลิกเพื่อปรับราคาเป็น ฿'+safe_floor+' ทันที"><i class="fas fa-bolt mr-1"></i>ปรับ ฿'+safe_floor+'</button></div>' : '')+
+          '</div>'+
           '<div class="col-1 nopd text-center">'+
           '<button id="btn-edit-'+count+'" class="btn btn-sm btn-primary mgr-5" onclick="edit('+count+');"> <i class="fas fa-pencil-alt"></i></button>'+
           '<button id="btn-save-'+count+'" class="btn btn-sm btn-success mgr-5" onclick="save('+count+');" hidden> <i class="fa fa-check"></i></button>'+
@@ -1316,7 +1342,7 @@
 						try {
 							var ele = document.getElementById('show_qr').innerHTML;
 							if (WinPrint && !WinPrint.closed) {
-								WinPrint.document.write("<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'>
+								WinPrint.document.write(`<html><head><meta charset='utf-8'><link href='https://fonts.googleapis.com/css?family=Maitree' rel='stylesheet'>
   <style>
     /* DD Accessories - Auto Loss Defense Highlight Styling */
     .row-loss-warning {
@@ -1363,7 +1389,7 @@
     }
   </style>
 
-</head><body>");
+</head><body>`);
 								WinPrint.document.write("<style>@media print {body {-webkit-print-color-adjust: exact;}} @page {size: auto; margin: 0mm;} .name{line-height: 1.2; font-size: 0.9em; word-wrap:break-word; height: 3.5em; margin-top: 0%;}.ctn{width: 10.1cm; height: 3.79cm; margin-top: -2.1mm; margin-left: 0mm;} .left{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .right{float: left; width: 5.05cm; height: 3.97cm; text-align: center;} .qr-r{width: 15mm; height: 15mm; margin-right: 2%; float: right; background-color: black; color: white;} .code-r{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-r{margin-top: 8%;font-size: 1em;} .qr-l{width: 15mm; height: 15mm; margin-right: 2%; float: left; background-color: black; color: white;} .code-l{margin-right: 8%; margin-top: 3%;font-size: 0.7em} .price-l{margin-top: 8%;font-size: 1em;} </style>" + ele);
 								WinPrint.document.write("<script>" +
 									"window.onload = function() { window.focus(); setTimeout(function() { window.print(); }, 250); };" +
@@ -1548,8 +1574,8 @@
       					<div class="col-md-3 col-sm-6 mb-2 mb-md-0">
       						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.9rem;"><i class="fas fa-warehouse text-warning mr-1"></i> สถานที่รับเข้า <span class="text-danger">*</span></label>
       						<div id="select-ware" class="dropdown">
-      							<button id="btn-b" class="btn btn-secondary dropdown-toggle w-100 text-truncate font-weight-bold" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #495057;">เลือกโกดัง/หน้าร้าน</button>
-      							<div id="b" class="dropdown-menu shadow" aria-labelledby="dropdownMenuButton"></div>
+      							<button id="btn-b" class="btn btn-secondary dropdown-toggle w-100 text-truncate font-weight-bold" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #495057;">เลือกโกดัง/หน้าร้าน</button>
+      							<div id="b" class="dropdown-menu shadow w-100" style="max-height: 350px; overflow-y: auto; z-index: 1060;" aria-labelledby="btn-b"></div>
       						</div>
       					</div>
 
@@ -1652,6 +1678,7 @@
 					<button id="btn-add" class="btn btn-md btn-success" style="margin-right: 8px;" onclick="add();"><i class="fas fa-plus mr-1"></i> เพิ่มสินค้า (F2)</button>
 					<button id="btn-folder" class="select_folder btn btn-md btn-primary" style="margin-right: 8px;" onclick="selectfolder();"><i class="fas fa-folder-open mr-1"></i> เลือกสินค้า (F7)</button>
 					<button id="btn-def" class="btn btn-md btn-danger" onclick="set_default()"><i class="fas fa-redo-alt mr-1"></i> ค่าเริ่มต้น (F4)</button>
+					<a href="web_bundle.html" class="btn btn-md font-weight-bold text-white" style="margin-left: 8px; background: #4f46e5; border-color: #4338ca;"><i class="fas fa-layer-group mr-1"></i> จับคู่สินค้าชุด (Bundle)</a>
 				</div>
 			</div>
 		</div>

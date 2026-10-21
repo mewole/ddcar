@@ -32,7 +32,8 @@
                 { label: 'รายงานสินค้าเข้าโกดัง', icon: 'fa fa-warehouse', href: 'web_mng_import_warehouse.html' },
                 { label: 'รายงานสินค้าออกโกดัง (เดิม)', icon: 'fa fa-dolly-flatbed', href: 'web_mng_export.html' },
                 { label: 'รายงานสรุปยอดขาย', icon: 'fa fa-chart-line', href: 'web_mng_sale.html', ownerOnly: true },
-                { label: 'รายงานเครดิตลูกค้า', icon: 'fa fa-credit-card', href: 'web_credit.html' }
+                { label: 'รายงานเครดิตลูกค้า', icon: 'fa fa-credit-card', href: 'web_credit.html' },
+                { label: 'ตามบิลภาษีซื้อ (Pending VAT)', icon: 'fa fa-file-invoice-dollar', href: 'web_pending_vat.html' }
             ]
         },
         {
@@ -62,9 +63,11 @@
             case 'web_customer.html': return 'จัดการข้อมูลลูกค้า';
             case 'web_warehouse.html': return 'จัดการหน้าร้านและโกดัง';
             case 'web_admin_user.html': return 'จัดการผู้ใช้งานและสิทธิ์';
+            case 'web_bundle.html': return 'จับคู่สินค้าชุด (Bundle & BOM)';
             case 'web_qrprint.html': return 'พิมพ์คิวอาร์โค้ดสินค้า';
             case 'web_mng_bill.html': return 'รายงานบิล';
             case 'web_credit.html': return 'รายงานเครดิตลูกค้า';
+            case 'web_pending_vat.html': return 'ติดตามใบกำกับภาษีซื้อ (Pending VAT)';
             case 'web_mng_sale.html': return 'รายงานสรุปยอดขาย';
             case 'web_mng_import.html': return 'รายงานสินค้าเข้าหน้าร้าน';
             case 'web_mng_adjust.html': return 'รายงานประวัติการปรับ/ตัดสต๊อก';

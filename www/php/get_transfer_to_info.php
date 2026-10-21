@@ -29,8 +29,8 @@ $query = "SELECT
           FROM transfer_record t 
           LEFT JOIN warehouse_detail w ON t.branch_id = w.ware_id 
           LEFT JOIN shop_detail s ON t.shop_id = s.shop_id 
-          INNER JOIN transfer_record_item i ON t.tf_id = i.tf_id 
-          INNER JOIN product p ON i.prod_id = p.prod_id 
+          LEFT JOIN transfer_record_item i ON t.tf_id = i.tf_id 
+          LEFT JOIN product p ON i.prod_id = p.prod_id 
           LEFT JOIN user u ON t.user = u.user_id 
           WHERE t.tf_id = '$imp_id'
           ORDER BY i.item_id ASC";

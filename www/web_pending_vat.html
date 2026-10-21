@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>ติดตามใบกำกับภาษีซื้อ (Pending VAT) - DD ACCESSORIES</title>
+
+  <!-- Bootstrap 4 -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.1/css/all.css">
+
+  <!-- jQuery Confirm -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
+
+  <!-- Loading Overlay -->
+  <link rel="stylesheet" href="css/easy-loading.css">
+  <script src="js/easy-loading.js"></script>
+
+  <!-- Prompt Font & Unified CSS -->
+  <link href="https://fonts.googleapis.com/css?family=Prompt:300,400,500,600,700" rel="stylesheet">
+  <link href="css/untitled.css?v=2.1" rel="stylesheet">
+  <script type="text/javascript" src="js/config.js"></script>
+
+  <style>
+    body {
+      background-color: #f4f6f9;
+      color: #333333;
+      font-family: 'Prompt', sans-serif;
+    }
+    .vat-header-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .deadline-banner {
+      background: linear-gradient(90deg, #fffbeb, #fef3c7);
+      border: 1px solid #fde68a;
+      border-left: 5px solid #f59e0b;
+      border-radius: 10px;
+      padding: 14px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .kpi-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+      display: flex;
+      align-items: center;
+    }
+    .kpi-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-right: 16px;
+    }
+    .supplier-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 15px;
+      transition: all 0.2s;
+    }
+    .supplier-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      border-color: #cbd5e1;
+    }
+    .badge-pending-vat {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .badge-cleared-vat {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .badge-platform {
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .table-container {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .btn-clear-vat {
+      background: #10b981;
+      color: #ffffff;
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-clear-vat:hover {
+      background: #059669;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .btn-copy-line {
+      background: #06c755;
+      color: #ffffff;
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-copy-line:hover {
+      background: #05a847;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <!-- Central Unified Navbar Mount Point -->
+  <div id="ddcar-nav-mount"></div>
+
+  <div class="container-fluid py-4" style="max-width: 1400px;">
+    
+    <!-- Header -->
+    <div class="vat-header-card d-flex flex-wrap justify-content-between align-items-center">
+      <div>
+        <h4 class="font-weight-bold mb-1"><i class="fas fa-file-invoice-dollar text-warning mr-2"></i> ศูนย์ติดตามใบกำกับภาษีซื้อ (Pending Input VAT Tracking)</h4>
+        <p class="text-muted mb-0 font-weight-normal" style="font-size: 0.95rem;">
+          ติดตามสินค้าขายออนไลน์ (Shopee / Lazada / TikTok) ที่ส่งสต็อกไม่มี VAT ไปก่อน เพื่อรวบรวมขอใบกำกับภาษีซื้อมาหักกลบภาษีขายก่อนปิดรอบ <strong>ภ.พ.30</strong>
+        </p>
+      </div>
+      <div class="mt-2 mt-md-0">
+        <button type="button" class="btn btn-outline-success btn-sm font-weight-bold mr-2" onclick="openAddVatModal();">
+          <i class="fas fa-plus mr-1"></i> + เพิ่มรายการตามบิล
+        </button>
+        <button type="button" class="btn btn-primary btn-sm font-weight-bold" onclick="loadPendingVatData();">
+          <i class="fas fa-sync-alt mr-1"></i> รีเฟรชข้อมูล
+        </button>
+      </div>
+    </div>
+
+    <!-- Deadline Banner -->
+    <div class="deadline-banner">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle text-warning fa-2x mr-3"></i>
+        <div>
+          <strong class="d-block text-dark" style="font-size: 1rem;">กำหนดเวลายื่นแบบภาษีมูลค่าเพิ่ม (ภ.พ.30) ประจำงวด:</strong>
+          <span class="text-muted small">ต้องส่งใบกำกับภาษีซื้อให้สำนักงานบัญชีภายในวันที่ <strong id="txt-deadline-date" class="text-dark">15 ของเดือนถัดไป</strong> เพื่อไม่ให้เสียสิทธิ์การหักลดหย่อนภาษีขายออนไลน์</span>
+        </div>
+      </div>
+      <div class="text-right pl-3">
+        <span class="badge badge-warning text-dark font-weight-bold p-2" style="font-size: 0.95rem;">
+          <i class="far fa-clock mr-1"></i> เหลืออีก <strong id="txt-countdown-days" class="text-danger">0</strong> วัน
+        </span>
+      </div>
+    </div>
+
+    <!-- KPI Summary -->
+    <div class="row">
+      <div class="col-md-3 col-sm-6">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-danger">
+            <i class="fas fa-hand-holding-usd"></i>
+          </div>
+          <div>
+            <div class="text-muted small">ภาษีซื้อรอเคลียร์ (7%)</div>
+            <div id="kpi-vat" class="h4 font-weight-bold text-danger mb-0">฿0.00</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-primary">
+            <i class="fas fa-coins"></i>
+          </div>
+          <div>
+            <div class="text-muted small">มูลค่าต้นทุนสินค้ารอเคลียร์</div>
+            <div id="kpi-cost" class="h4 font-weight-bold text-primary mb-0">฿0.00</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-warning">
+            <i class="fas fa-receipt"></i>
+          </div>
+          <div>
+            <div class="text-muted small">จำนวนรายการรอใบกำกับ</div>
+            <div id="kpi-count" class="h4 font-weight-bold text-warning mb-0">0 รายการ</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-info">
+            <i class="fas fa-store"></i>
+          </div>
+          <div>
+            <div class="text-muted small">ร้านค้าคู่ค้าที่ต้องตามบิล</div>
+            <div id="kpi-suppliers" class="h4 font-weight-bold text-info mb-0">0 ร้าน</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Supplier Quick Groups (Copy to LINE) -->
+    <div class="mb-4">
+      <h6 class="font-weight-bold mb-3"><i class="fas fa-comments text-success mr-2"></i> สรุปยอดค้างขอใบกำกับภาษีแยกตามซัพพลายเออร์ (คัดลอกส่ง LINE ได้ทันที):</h6>
+      <div id="supplier-cards-container" class="row">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Filter & Table -->
+    <div class="table-container mb-4">
+      <div class="row align-items-center mb-3">
+        <div class="col-md-6 col-sm-12 mb-2 mb-md-0">
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+            </div>
+            <input id="txt-search" type="text" class="form-control" placeholder="ค้นหาชื่อสินค้า, SKU, ซัพพลายเออร์..." oninput="filterTable();">
+          </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-2 mb-md-0">
+          <select id="sel-filter-status" class="form-control" onchange="filterTable();">
+            <option value="all">แสดงทั้งหมด</option>
+            <option value="pending" selected>🟠 แสดงเฉพาะที่รอใบกำกับ (Pending Queue)</option>
+            <option value="cleared">🟢 แสดงเฉพาะที่เคลียร์ใบกำกับแล้ว</option>
+          </select>
+        </div>
+        <div class="col-md-2 col-sm-6 text-right">
+          <span id="txt-row-count" class="text-muted small font-weight-bold">พบ 0 รายการ</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="thead-light">
+            <tr>
+              <th style="width: 130px;">สถานะ</th>
+              <th style="width: 120px;">วันที่ทำรายการ</th>
+              <th style="width: 110px;">ช่องทาง</th>
+              <th style="width: 150px;">รหัสสินค้า (SKU)</th>
+              <th>ชื่อสินค้า</th>
+              <th style="width: 80px;" class="text-center">จำนวน</th>
+              <th style="width: 160px;">ซัพพลายเออร์</th>
+              <th style="width: 120px;" class="text-right">ทุนรวม</th>
+              <th style="width: 120px;" class="text-right">ภาษีซื้อ 7%</th>
+              <th style="width: 130px;" class="text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-vat-body">
+            <tr>
+              <td colspan="10" class="text-center py-4 text-muted">กำลังโหลดรายการติดตามภาษีซื้อ...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal: Clear Tax Invoice -->
+  <div class="modal fade" id="modalClearVat" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title font-weight-bold"><i class="fas fa-check-circle mr-2"></i> บันทึกได้รับใบกำกับภาษีซื้อแล้ว</h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" id="clear-item-id">
+          
+          <div class="alert alert-light border mb-3">
+            <div class="small text-muted">สินค้า:</div>
+            <strong id="clear-prod-name" class="text-dark d-block mb-1">-</strong>
+            <div class="small text-muted">ซัพพลายเออร์: <span id="clear-sup-name" class="font-weight-bold text-primary">-</span></div>
+            <div class="small text-muted">ยอดภาษีซื้อ 7%: <strong id="clear-vat-amount" class="text-danger font-weight-bold">฿0.00</strong></div>
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold small text-secondary">เลขที่ใบกำกับภาษีซื้อที่ได้รับ <span class="text-danger">*</span></label>
+            <input type="text" id="clear-invoice-no" class="form-control font-weight-bold" placeholder="เช่น TAX-2026/10-0982">
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold small text-secondary">หมายเหตุ / ข้อมูลเพิ่มเติม</label>
+            <input type="text" id="clear-notes" class="form-control" placeholder="เช่น ได้รับเอกสารตัวจริงทางไปรษณีย์แล้ว">
+          </div>
+
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-success font-weight-bold px-4" onclick="submitClearVat();">
+            <i class="fas fa-save mr-1"></i> บันทึกเคลียร์รายการ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add New Pending VAT Item -->
+  <div class="modal fade" id="modalAddVat" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title font-weight-bold"><i class="fas fa-plus mr-2 text-warning"></i> เพิ่มรายการตามใบกำกับภาษีซื้อ</h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body p-4">
+          
+          <div class="form-group">
+            <label class="font-weight-bold small text-secondary">ร้านค้า / ซัพพลายเออร์ <span class="text-danger">*</span></label>
+            <input type="text" id="add-supplier" class="form-control" placeholder="เช่น BKK อะไหล่ยนต์ หรือ LEDA">
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold small text-secondary">ชื่อสินค้า <span class="text-danger">*</span></label>
+            <input type="text" id="add-prod-name" class="form-control" placeholder="เช่น ไฟหน้า vigo champ โคมดำ">
+          </div>
+
+          <div class="row">
+            <div class="col-6 form-group">
+              <label class="font-weight-bold small text-secondary">รหัสสินค้า (SKU)</label>
+              <input type="text" id="add-prod-code" class="form-control font-weight-bold" placeholder="เช่น TY-VG-01">
+            </div>
+            <div class="col-6 form-group">
+              <label class="font-weight-bold small text-secondary">ช่องทางขาย</label>
+              <select id="add-platform" class="form-control">
+                <option value="Shopee">Shopee</option>
+                <option value="Lazada">Lazada</option>
+                <option value="TikTok Shop">TikTok Shop</option>
+                <option value="หน้าร้าน">หน้าร้าน</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-6 form-group">
+              <label class="font-weight-bold small text-secondary">จำนวน (ชิ้น)</label>
+              <input type="number" id="add-qty" class="form-control text-center" min="1" value="1">
+            </div>
+            <div class="col-6 form-group">
+              <label class="font-weight-bold small text-secondary">ยอดทุนรวม (บาท) <span class="text-danger">*</span></label>
+              <input type="number" id="add-cost" class="form-control text-right font-weight-bold" placeholder="0.00" oninput="calcVat();">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold small text-secondary">ยอดภาษีซื้อ 7% (คำนวณอัตโนมัติ)</label>
+            <input type="text" id="add-vat" class="form-control text-right text-danger font-weight-bold" readonly value="฿0.00">
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold small text-secondary">หมายเหตุ</label>
+            <input type="text" id="add-notes" class="form-control" placeholder="เช่น ส่งของ Shopee วันที่ 21/10 รอใบกำกับภาษี">
+          </div>
+
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary font-weight-bold px-4" onclick="submitAddVat();">
+            <i class="fas fa-plus mr-1"></i> บันทึกเข้าคิวติดตาม
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var allVatItems = [];
+    var allSuppliers = [];
+
+    $(document).ready(function() {
+      loadPendingVatData();
+    });
+
+    function loadPendingVatData() {
+      EasyLoading.show({ text: 'กำลังโหลดรายการติดตามภาษีซื้อ...' });
+      $.ajax({
+        url: 'php/get_pending_vat.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res.success) {
+            allVatItems = res.items || [];
+            allSuppliers = res.suppliers || [];
+            updateKpis(res);
+            renderSupplierCards(allSuppliers);
+            renderTable(allVatItems);
+          } else {
+            $.alert('เกิดข้อผิดพลาด: ' + (res.message || 'ไม่สามารถโหลดข้อมูลได้'));
+          }
+        },
+        error: function(xhr, status, err) {
+          EasyLoading.hide();
+          $.alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + err);
+        }
+      });
+    }
+
+    function updateKpis(res) {
+      $('#kpi-vat').text('฿' + (res.pending_vat_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      $('#kpi-cost').text('฿' + (res.total_cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      $('#kpi-count').text((res.total_count || 0) + ' รายการ');
+      $('#kpi-suppliers').text((res.suppliers ? res.suppliers.length : 0) + ' ร้าน');
+
+      $('#txt-deadline-date').text(res.deadline_date || '15 ของเดือนถัดไป');
+      $('#txt-countdown-days').text(res.days_to_deadline !== undefined ? res.days_to_deadline : '-');
+    }
+
+    function renderSupplierCards(suppliers) {
+      var container = $('#supplier-cards-container');
+      container.empty();
+
+      if (!suppliers || suppliers.length === 0) {
+        container.append('<div class="col-12 text-muted small py-2">ไม่มีรายการซัพพลายเออร์ที่ค้างใบกำกับภาษีซื้อ</div>');
+        return;
+      }
+
+      suppliers.forEach(function(sup, idx) {
+        var vatFormatted = '฿' + sup.total_vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        var costFormatted = '฿' + sup.total_cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        var cardHtml = '<div class="col-md-6 col-lg-4">' +
+          '<div class="supplier-card">' +
+            '<div class="d-flex justify-content-between align-items-start mb-2">' +
+              '<div>' +
+                '<strong class="text-dark font-weight-bold" style="font-size: 1rem;"><i class="fas fa-store text-primary mr-1"></i> ' + escapeHtml(sup.supplier_name) + '</strong>' +
+                '<div class="text-muted small">ค้าง ' + sup.count + ' รายการ (ทุน ' + costFormatted + ')</div>' +
+              '</div>' +
+              '<span class="badge badge-warning text-dark font-weight-bold p-1">' + vatFormatted + '</span>' +
+            '</div>' +
+            '<div class="text-right mt-3">' +
+              '<button type="button" class="btn-copy-line" onclick="copyLineText(' + idx + ');">' +
+                '<i class="fab fa-line mr-1"></i> คัดลอกข้อความส่ง LINE' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+        container.append(cardHtml);
+      });
+    }
+
+    function copyLineText(supIndex) {
+      var sup = allSuppliers[supIndex];
+      if (!sup) return;
+
+      var text = 'เรียน ร้าน ' + sup.supplier_name + '\n' +
+        'ทางร้าน DD Accessories ขอรบกวนขอใบกำกับภาษีซื้อ สำหรับรายการสินค้าที่สั่งซื้อ ดังนี้ครับ:\n\n';
+
+      sup.items.forEach(function(it, i) {
+        text += (i + 1) + '. ' + it.prod_name + ' (จำนวน ' + it.qty + ' ชิ้น) ยอดเงิน ฿' + it.cost.toLocaleString() + '\n';
+      });
+
+      text += '\nรวมยอดซื้อทั้งสิ้น: ฿' + sup.total_cost.toLocaleString() + '\n' +
+        'ยอดภาษีมูลค่าเพิ่ม 7%: ฿' + sup.total_vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\n\n' +
+        'รบกวนออกใบกำกับภาษีในนาม ร้าน DD Accessories เพื่อใช้ยื่นแบบ ภ.พ.30 ด้วยนะครับ\nขอบคุณมากครับ 🙏';
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+          $.alert({
+            title: 'คัดลอกข้อความสำเร็จ!',
+            content: 'คัดลอกข้อความสรุปรายการของ <strong>' + sup.supplier_name + '</strong> เรียบร้อยแล้ว สามารถเปิด LINE แล้วกด Paste (Ctrl + V) ส่งได้ทันทีครับ',
+            type: 'green'
+          });
+        });
+      } else {
+        // Fallback
+        var tempInput = document.createElement('textarea');
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        $.alert('คัดลอกข้อความเรียบร้อย สามารถนำไปวางใน LINE ได้เลยครับ');
+      }
+    }
+
+    function renderTable(items) {
+      var tbody = $('#tbl-vat-body');
+      tbody.empty();
+
+      if (!items || items.length === 0) {
+        tbody.append('<tr><td colspan="10" class="text-center py-4 text-muted">ไม่พบรายการตามเงื่อนไข</td></tr>');
+        $('#txt-row-count').text('พบ 0 รายการ');
+        return;
+      }
+
+      $('#txt-row-count').text('พบ ' + items.length.toLocaleString() + ' รายการ');
+
+      items.forEach(function(item) {
+        var statusBadge = item.status === 'cleared'
+          ? '<span class="badge-cleared-vat"><i class="fas fa-check-circle mr-1"></i> เคลียร์แล้ว</span>'
+          : '<span class="badge-pending-vat"><i class="fas fa-clock mr-1"></i> รอใบกำกับ</span>';
+
+        var platformBadge = '<span class="badge-platform">' + (escapeHtml(item.platform) || 'Online') + '</span>';
+
+        var costStr = '฿' + item.cost_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        var vatStr = '<strong class="text-danger">฿' + item.pending_vat_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</strong>';
+
+        var actionBtn = item.status === 'cleared'
+          ? '<span class="text-muted small"><i class="fas fa-check mr-1 text-success"></i>' + (escapeHtml(item.tax_invoice_no) || 'เรียบร้อย') + '</span>'
+          : '<button class="btn-clear-vat" onclick="openClearModal(' + item.id + ', \'' + escapeHtml(item.prod_name) + '\', \'' + escapeHtml(item.supplier_name) + '\', ' + item.pending_vat_amount + ');"><i class="fas fa-check mr-1"></i> ได้รับบิลแล้ว</button>';
+
+        var tr = $('<tr></tr>');
+        tr.append('<td>' + statusBadge + '</td>');
+        tr.append('<td class="small text-muted">' + (item.order_date || '-') + '</td>');
+        tr.append('<td>' + platformBadge + '</td>');
+        tr.append('<td><strong class="text-primary font-weight-bold">' + (escapeHtml(item.prod_code) || '-') + '</strong></td>');
+        tr.append('<td>' + escapeHtml(item.prod_name) + (item.notes ? '<div class="small text-muted">' + escapeHtml(item.notes) + '</div>' : '') + '</td>');
+        tr.append('<td class="text-center font-weight-bold">' + item.qty + '</td>');
+        tr.append('<td><i class="fas fa-store text-muted mr-1"></i> ' + (escapeHtml(item.supplier_name) || '-') + '</td>');
+        tr.append('<td class="text-right font-weight-bold">' + costStr + '</td>');
+        tr.append('<td class="text-right">' + vatStr + '</td>');
+        tr.append('<td class="text-center">' + actionBtn + '</td>');
+
+        tbody.append(tr);
+      });
+    }
+
+    function filterTable() {
+      var query = ($('#txt-search').val() || '').trim().toLowerCase();
+      var statusFilter = $('#sel-filter-status').val();
+
+      var filtered = allVatItems.filter(function(item) {
+        var matchText = (item.prod_code && item.prod_code.toLowerCase().indexOf(query) !== -1) ||
+                        (item.prod_name && item.prod_name.toLowerCase().indexOf(query) !== -1) ||
+                        (item.supplier_name && item.supplier_name.toLowerCase().indexOf(query) !== -1) ||
+                        (item.platform && item.platform.toLowerCase().indexOf(query) !== -1);
+        
+        if (!matchText) return false;
+
+        if (statusFilter === 'pending') return item.status === 'pending_invoice';
+        if (statusFilter === 'cleared') return item.status === 'cleared';
+        return true;
+      });
+
+      renderTable(filtered);
+    }
+
+    function openClearModal(id, prodName, supName, vatAmount) {
+      $('#clear-item-id').val(id);
+      $('#clear-prod-name').text(prodName);
+      $('#clear-sup-name').text(supName);
+      $('#clear-vat-amount').text('฿' + vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      $('#clear-invoice-no').val('');
+      $('#clear-notes').val('');
+      $('#modalClearVat').modal('show');
+    }
+
+    function submitClearVat() {
+      var id = $('#clear-item-id').val();
+      var invoiceNo = $('#clear-invoice-no').val().trim();
+      var notes = $('#clear-notes').val().trim();
+
+      if (!invoiceNo) {
+        $.alert('กรุณากรอกเลขที่ใบกำกับภาษีที่ได้รับ');
+        return;
+      }
+
+      EasyLoading.show({ text: 'กำลังบันทึกเคลียร์รายการ...' });
+
+      $.ajax({
+        url: 'php/clear_pending_vat.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          id: id,
+          tax_invoice_no: invoiceNo,
+          notes: notes
+        }),
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res.success) {
+            $('#modalClearVat').modal('hide');
+            $.alert({
+              title: 'สำเร็จ',
+              content: 'บันทึกเคลียร์ใบกำกับภาษีเรียบร้อย',
+              type: 'green',
+              buttons: {
+                ok: function() {
+                  loadPendingVatData();
+                }
+              }
+            });
+          } else {
+            $.alert('บันทึกไม่สำเร็จ: ' + res.message);
+          }
+        },
+        error: function(xhr, status, err) {
+          EasyLoading.hide();
+          $.alert('เกิดข้อผิดพลาด: ' + err);
+        }
+      });
+    }
+
+    function openAddVatModal() {
+      $('#add-supplier').val('');
+      $('#add-prod-name').val('');
+      $('#add-prod-code').val('');
+      $('#add-qty').val(1);
+      $('#add-cost').val('');
+      $('#add-vat').val('฿0.00');
+      $('#add-notes').val('');
+      $('#modalAddVat').modal('show');
+    }
+
+    function calcVat() {
+      var cost = parseFloat($('#add-cost').val()) || 0;
+      var vat = cost * 0.07;
+      $('#add-vat').val('฿' + vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    }
+
+    function submitAddVat() {
+      var sup = $('#add-supplier').val().trim();
+      var prod = $('#add-prod-name').val().trim();
+      var code = $('#add-prod-code').val().trim();
+      var platform = $('#add-platform').val();
+      var qty = parseInt($('#add-qty').val(), 10) || 1;
+      var cost = parseFloat($('#add-cost').val()) || 0;
+      var notes = $('#add-notes').val().trim();
+
+      if (!sup || !prod || cost <= 0) {
+        $.alert('กรุณากรอกชื่อซัพพลายเออร์, ชื่อสินค้า และยอดต้นทุนให้ครบถ้วน');
+        return;
+      }
+
+      EasyLoading.show({ text: 'กำลังบันทึกรายการ...' });
+
+      $.ajax({
+        url: 'php/add_pending_vat.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          supplier_name: sup,
+          prod_name: prod,
+          prod_code: code,
+          platform: platform,
+          qty: qty,
+          cost_amount: cost,
+          pending_vat_amount: cost * 0.07,
+          notes: notes
+        }),
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res.success) {
+            $('#modalAddVat').modal('hide');
+            $.alert({
+              title: 'สำเร็จ',
+              content: 'เพิ่มรายการเข้าคิวติดตามใบกำกับภาษีเรียบร้อย',
+              type: 'green',
+              buttons: {
+                ok: function() {
+                  loadPendingVatData();
+                }
+              }
+            });
+          } else {
+            $.alert('บันทึกไม่สำเร็จ: ' + res.message);
+          }
+        },
+        error: function(xhr, status, err) {
+          EasyLoading.hide();
+          $.alert('เกิดข้อผิดพลาด: ' + err);
+        }
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+  </script>
+
+  <!-- Central Unified Navbar Script -->
+  <script src="js/navbar.js?v=2.3"></script>
+</body>
+</html>

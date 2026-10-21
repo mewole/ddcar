@@ -131,7 +131,14 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
-    if ($conn) @mysqli_rollback($conn);
+    if ($conn) {
+        @mysqli_rollback($conn);
+        // MyISAM failsafe: delete orphaned header and any inserted items if an error occurs
+        if (isset($tf_id) && $tf_id > 0) {
+            @mysqli_query($conn, "DELETE FROM transfer_record_item WHERE tf_id = '$tf_id'");
+            @mysqli_query($conn, "DELETE FROM transfer_record WHERE tf_id = '$tf_id'");
+        }
+    }
     echo json_encode(["status" => "error", "message" => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 }
 
