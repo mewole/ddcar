@@ -28,8 +28,8 @@ function get_top_products($conn, $from_dt, $to_dt, $txt_cancel, $cus_id = null, 
                 COALESCE(NULLIF(TRIM(p.prod_name), ''), 'สินค้าไม่มีชื่อ') AS prod_name,
                 SUM(COALESCE(soi.prod_amount, 0)) AS total_qty,
                 SUM(COALESCE(soi.prod_amount, 0) * COALESCE(soi.prod_price, 0)) AS total_revenue
-              FROM sale_order_item soi
-              INNER JOIN sale_order s ON soi.order_id = s.order_id
+              FROM sale_order s
+              STRAIGHT_JOIN sale_order_item soi ON s.order_id = soi.order_id
               INNER JOIN product p ON soi.prod_id = p.prod_id
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
@@ -84,43 +84,50 @@ function get_payment_breakdown($conn, $from_dt, $to_dt, $txt_cancel, $cus_id = n
 }
 
 function get_hourly_breakdown($conn, $from_dt, $to_dt, $txt_cancel) {
-    $query = "SELECT 
+    $q_sales = "SELECT 
                 HOUR(s.date_time) AS sale_hour,
                 COUNT(s.order_id) AS bill_count,
-                SUM(s.total_price) AS hour_sales,
-                SUM(COALESCE(cost_data.total_cost, 0)) AS hour_cost
+                SUM(s.total_price) AS hour_sales
               FROM sale_order s
-              LEFT JOIN (
-                  SELECT soi.order_id, SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS total_cost
-                  FROM sale_order_item soi
-                  INNER JOIN product pr ON soi.prod_id = pr.prod_id
-                  WHERE soi.order_id IN (
-                      SELECT order_id FROM sale_order 
-                      WHERE date_time BETWEEN '$from_dt' AND '$to_dt' 
-                        AND order_number NOT LIKE '%$txt_cancel%'
-                  )
-                  GROUP BY soi.order_id
-              ) cost_data ON s.order_id = cost_data.order_id
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
               GROUP BY HOUR(s.date_time)
               ORDER BY sale_hour ASC";
-    $res = mysqli_query($conn, $query);
+    $res = mysqli_query($conn, $q_sales);
     $map = array();
     if ($res && mysqli_num_rows($res) > 0) {
         while ($row = mysqli_fetch_assoc($res)) {
             $h = intval($row['sale_hour']);
             $sales = floatval($row['hour_sales']);
-            $cost = floatval($row['hour_cost']);
-            $profit = round($sales - $cost, 2);
             $map[$h] = array(
                 'hour' => $h,
                 'hour_label' => sprintf('%02d:00', $h),
                 'bill_count' => intval($row['bill_count']),
                 'sales' => round($sales, 2),
-                'cost' => round($cost, 2),
-                'profit' => $profit
+                'cost' => 0,
+                'profit' => round($sales, 2)
             );
+        }
+    }
+
+    $q_cost = "SELECT 
+                HOUR(s.date_time) AS sale_hour,
+                SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS hour_cost
+              FROM sale_order s
+              STRAIGHT_JOIN sale_order_item soi ON s.order_id = soi.order_id
+              INNER JOIN product pr ON soi.prod_id = pr.prod_id
+              WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
+                AND s.order_number NOT LIKE '%$txt_cancel%'
+              GROUP BY HOUR(s.date_time)";
+    $res_c = mysqli_query($conn, $q_cost);
+    if ($res_c && mysqli_num_rows($res_c) > 0) {
+        while ($row = mysqli_fetch_assoc($res_c)) {
+            $h = intval($row['sale_hour']);
+            $cost = floatval($row['hour_cost']);
+            if (isset($map[$h])) {
+                $map[$h]['cost'] = round($cost, 2);
+                $map[$h]['profit'] = round($map[$h]['sales'] - $cost, 2);
+            }
         }
     }
 
@@ -166,8 +173,8 @@ if ($action === 'get_customers') {
 
 // 2. Daily Summary & Bills
 if ($action === 'daily') {
-    $date_from = isset($_POST['date_from']) ? mysqli_real_escape_string($conn, trim($_POST['date_from'])) : date('Y-m-d');
-    $date_to = isset($_POST['date_to']) ? mysqli_real_escape_string($conn, trim($_POST['date_to'])) : $date_from;
+    $date_from = isset($_REQUEST['date_from']) ? mysqli_real_escape_string($conn, trim($_REQUEST['date_from'])) : (isset($_REQUEST['date']) ? mysqli_real_escape_string($conn, trim($_REQUEST['date'])) : date('Y-m-d'));
+    $date_to = isset($_REQUEST['date_to']) ? mysqli_real_escape_string($conn, trim($_REQUEST['date_to'])) : $date_from;
     if (empty($date_from)) $date_from = date('Y-m-d');
     if (empty($date_to)) $date_to = $date_from;
 
@@ -342,7 +349,10 @@ if ($action === 'daily') {
 
 // 3. Monthly Summary (Breakdown by Day in selected month)
 if ($action === 'monthly') {
-    $year_month = isset($_POST['year_month']) ? mysqli_real_escape_string($conn, trim($_POST['year_month'])) : date('Y-m');
+    $year_month = isset($_REQUEST['year_month']) ? mysqli_real_escape_string($conn, trim($_REQUEST['year_month'])) : '';
+    if (empty($year_month) && isset($_REQUEST['year']) && isset($_REQUEST['month'])) {
+        $year_month = sprintf('%04d-%02d', intval($_REQUEST['year']), intval($_REQUEST['month']));
+    }
     if (empty($year_month) || strlen($year_month) < 7) {
         $year_month = date('Y-m');
     }
@@ -357,34 +367,40 @@ if ($action === 'monthly') {
     $from_dt = $start_date . ' 00:00:00';
     $to_dt = $end_date . ' 23:59:59';
 
-    $query = "SELECT 
+    $q_sales = "SELECT 
                 DATE(s.date_time) AS sale_date,
                 COUNT(s.order_id) AS bill_count,
-                SUM(s.total_price) AS day_sales,
-                SUM(COALESCE(cost_data.total_cost, 0)) AS day_cost
+                SUM(s.total_price) AS day_sales
               FROM sale_order s
-              LEFT JOIN (
-                  SELECT soi.order_id, SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS total_cost
-                  FROM sale_order_item soi
-                  INNER JOIN product pr ON soi.prod_id = pr.prod_id
-                  WHERE soi.order_id IN (
-                      SELECT order_id FROM sale_order 
-                      WHERE date_time BETWEEN '$from_dt' AND '$to_dt' 
-                        AND order_number NOT LIKE '%$txt_cancel%'
-                  )
-                  GROUP BY soi.order_id
-              ) cost_data ON s.order_id = cost_data.order_id
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
               GROUP BY DATE(s.date_time)
               ORDER BY sale_date ASC";
-
-    $result = mysqli_query($conn, $query);
+    $res_sales = mysqli_query($conn, $q_sales);
     $db_days = array();
 
-    if ($result && mysqli_num_rows($result) > 0) {
-        while ($row = mysqli_fetch_assoc($result)) {
+    if ($res_sales && mysqli_num_rows($res_sales) > 0) {
+        while ($row = mysqli_fetch_assoc($res_sales)) {
+            $row['day_cost'] = 0;
             $db_days[$row['sale_date']] = $row;
+        }
+    }
+
+    $q_cost = "SELECT 
+                DATE(s.date_time) AS sale_date,
+                SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS day_cost
+              FROM sale_order s
+              STRAIGHT_JOIN sale_order_item soi ON s.order_id = soi.order_id
+              INNER JOIN product pr ON soi.prod_id = pr.prod_id
+              WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
+                AND s.order_number NOT LIKE '%$txt_cancel%'
+              GROUP BY DATE(s.date_time)";
+    $res_cost = mysqli_query($conn, $q_cost);
+    if ($res_cost && mysqli_num_rows($res_cost) > 0) {
+        while ($row = mysqli_fetch_assoc($res_cost)) {
+            if (isset($db_days[$row['sale_date']])) {
+                $db_days[$row['sale_date']]['day_cost'] = floatval($row['day_cost']);
+            }
         }
     }
 
@@ -475,40 +491,47 @@ if ($action === 'monthly') {
 
 // 4. Yearly Summary (Breakdown by 12 Months)
 if ($action === 'yearly') {
-    $year = isset($_POST['year']) ? intval($_POST['year']) : intval(date('Y'));
+    $year = isset($_REQUEST['year']) ? intval($_REQUEST['year']) : intval(date('Y'));
     if ($year < 2000 || $year > 2100) $year = intval(date('Y'));
 
     $from_dt = "$year-01-01 00:00:00";
     $to_dt = "$year-12-31 23:59:59";
 
-    $query = "SELECT 
+    $q_sales = "SELECT 
                 MONTH(s.date_time) AS sale_month,
                 COUNT(s.order_id) AS bill_count,
-                SUM(s.total_price) AS month_sales,
-                SUM(COALESCE(cost_data.total_cost, 0)) AS month_cost
+                SUM(s.total_price) AS month_sales
               FROM sale_order s
-              LEFT JOIN (
-                  SELECT soi.order_id, SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS total_cost
-                  FROM sale_order_item soi
-                  INNER JOIN product pr ON soi.prod_id = pr.prod_id
-                  WHERE soi.order_id IN (
-                      SELECT order_id FROM sale_order 
-                      WHERE date_time BETWEEN '$from_dt' AND '$to_dt' 
-                        AND order_number NOT LIKE '%$txt_cancel%'
-                  )
-                  GROUP BY soi.order_id
-              ) cost_data ON s.order_id = cost_data.order_id
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
               GROUP BY MONTH(s.date_time)
               ORDER BY sale_month ASC";
-
-    $result = mysqli_query($conn, $query);
+    $res_sales = mysqli_query($conn, $q_sales);
     $db_months = array();
 
-    if ($result && mysqli_num_rows($result) > 0) {
-        while ($row = mysqli_fetch_assoc($result)) {
+    if ($res_sales && mysqli_num_rows($res_sales) > 0) {
+        while ($row = mysqli_fetch_assoc($res_sales)) {
+            $row['month_cost'] = 0;
             $db_months[intval($row['sale_month'])] = $row;
+        }
+    }
+
+    $q_cost = "SELECT 
+                MONTH(s.date_time) AS sale_month,
+                SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS month_cost
+              FROM sale_order s
+              STRAIGHT_JOIN sale_order_item soi ON s.order_id = soi.order_id
+              INNER JOIN product pr ON soi.prod_id = pr.prod_id
+              WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
+                AND s.order_number NOT LIKE '%$txt_cancel%'
+              GROUP BY MONTH(s.date_time)";
+    $res_cost = mysqli_query($conn, $q_cost);
+    if ($res_cost && mysqli_num_rows($res_cost) > 0) {
+        while ($row = mysqli_fetch_assoc($res_cost)) {
+            $m = intval($row['sale_month']);
+            if (isset($db_months[$m])) {
+                $db_months[$m]['month_cost'] = floatval($row['month_cost']);
+            }
         }
     }
 
@@ -592,9 +615,9 @@ if ($action === 'yearly') {
 
 // 5. Customer Summary (All Customers Ranking OR Specific Customer Bills)
 if ($action === 'customer') {
-    $cus_id = isset($_POST['cus_id']) && $_POST['cus_id'] !== '' ? mysqli_real_escape_string($conn, trim($_POST['cus_id'])) : '';
-    $date_from = isset($_POST['date_from']) ? mysqli_real_escape_string($conn, trim($_POST['date_from'])) : '';
-    $date_to = isset($_POST['date_to']) ? mysqli_real_escape_string($conn, trim($_POST['date_to'])) : '';
+    $cus_id = isset($_REQUEST['cus_id']) && $_REQUEST['cus_id'] !== '' ? mysqli_real_escape_string($conn, trim($_REQUEST['cus_id'])) : '';
+    $date_from = isset($_REQUEST['date_from']) ? mysqli_real_escape_string($conn, trim($_REQUEST['date_from'])) : '';
+    $date_to = isset($_REQUEST['date_to']) ? mysqli_real_escape_string($conn, trim($_REQUEST['date_to'])) : '';
 
     $where_date_s = "";
     $where_date_plain = "";
@@ -710,6 +733,7 @@ if ($action === 'customer') {
         ));
     } else {
         // All Customers Ranking View
+        // 1. Fetch sales and bill count by customer
         $query = "SELECT 
                     s.customer_id,
                     COALESCE(c.cus_name, 'ลูกค้าทั่วไป (ไม่ระบุ)') AS cus_name,
@@ -717,23 +741,12 @@ if ($action === 'customer') {
                     COALESCE(c.cus_type, 'ทั่วไป') AS cus_type,
                     COUNT(s.order_id) AS bill_count,
                     SUM(s.total_price) AS total_sales,
-                    SUM(COALESCE(cost_data.total_cost, 0)) AS total_cost,
                     MAX(s.date_time) AS last_order_date
                   FROM sale_order s
                   LEFT JOIN customer c ON s.customer_id = c.cus_id
-                  LEFT JOIN (
-                      SELECT soi.order_id, SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS total_cost
-                      FROM sale_order_item soi
-                      INNER JOIN product pr ON soi.prod_id = pr.prod_id
-                      WHERE soi.order_id IN (
-                          SELECT order_id FROM sale_order 
-                          WHERE order_number NOT LIKE '%$txt_cancel%' $where_date_plain
-                      )
-                      GROUP BY soi.order_id
-                  ) cost_data ON s.order_id = cost_data.order_id
                   WHERE s.order_number NOT LIKE '%$txt_cancel%'
                     $where_date_s
-                  GROUP BY s.customer_id, c.cus_name, c.cus_tel, c.cus_type
+                  GROUP BY s.customer_id
                   ORDER BY total_sales DESC";
 
         $result = mysqli_query($conn, $query);
@@ -745,6 +758,25 @@ if ($action === 'customer') {
             mysqli_close($conn);
             exit;
         }
+
+        // 2. Fetch total cost per customer via indexed STRAIGHT_JOIN
+        $cost_map = array();
+        $q_cost = "SELECT 
+                    s.customer_id,
+                    SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS total_cost
+                  FROM sale_order s
+                  STRAIGHT_JOIN sale_order_item soi ON s.order_id = soi.order_id
+                  INNER JOIN product pr ON soi.prod_id = pr.prod_id
+                  WHERE s.order_number NOT LIKE '%$txt_cancel%'
+                    $where_date_s
+                  GROUP BY s.customer_id";
+        $res_cost = mysqli_query($conn, $q_cost);
+        if ($res_cost && mysqli_num_rows($res_cost) > 0) {
+            while ($cr = mysqli_fetch_assoc($res_cost)) {
+                $cost_map[$cr['customer_id']] = floatval($cr['total_cost']);
+            }
+        }
+
         $customers = array();
         $total_sales = 0;
         $total_cost = 0;
@@ -756,7 +788,7 @@ if ($action === 'customer') {
             $rank = 1;
             while ($row = mysqli_fetch_assoc($result)) {
                 $sales = floatval($row['total_sales']);
-                $cost = floatval($row['total_cost']);
+                $cost = isset($cost_map[$row['customer_id']]) ? $cost_map[$row['customer_id']] : 0;
                 $profit = round($sales - $cost, 2);
                 $b_count = intval($row['bill_count']);
 

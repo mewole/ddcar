@@ -26,8 +26,8 @@ if ($action === 'top_sellers') {
                 soi.prod_id,
                 SUM(soi.prod_amount) AS total_qty,
                 SUM(soi.prod_amount * soi.prod_price) AS total_revenue
-            FROM sale_order_item soi
-            INNER JOIN sale_order s ON soi.order_id = s.order_id
+            FROM sale_order s
+            STRAIGHT_JOIN sale_order_item soi ON s.order_id = soi.order_id
             WHERE s.date_time >= '$date_cutoff'
               AND s.order_number NOT LIKE '%$txt_cancel%'
             GROUP BY soi.prod_id
@@ -135,8 +135,8 @@ if ($action === 'top_sellers') {
 } else if ($action === 'dead_stock') {
     // 1. Gather all product IDs that were sold since cutoff date
     $sold_res = mysqli_query($conn, "SELECT DISTINCT soi.prod_id 
-        FROM sale_order_item soi 
-        INNER JOIN sale_order so ON soi.order_id = so.order_id 
+        FROM sale_order so 
+        STRAIGHT_JOIN sale_order_item soi ON so.order_id = soi.order_id 
         WHERE so.date_time >= '$date_cutoff' AND so.order_number NOT LIKE '%$txt_cancel%'");
     $sold_map = array();
     if ($sold_res) {

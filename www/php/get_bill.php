@@ -5,10 +5,21 @@
     $txt = "(cancel)";
 
     if(isset($_POST['date'])){
-        $date = mysqli_real_escape_string($conn, $_POST['date']);
-        $date_to = mysqli_real_escape_string($conn, $_POST['date_to']);
-        $query = "SELECT s.order_id,s.order_number,c.cus_name,s.date_time FROM sale_order s INNER JOIN customer c
-        ON s.customer_id = c.cus_id WHERE date_time BETWEEN '$date' AND '$date_to' AND s.order_number NOT LIKE '%$txt%' LIMIT $start,30";
+        $date = mysqli_real_escape_string($conn, trim($_POST['date']));
+        $date_to = mysqli_real_escape_string($conn, trim($_POST['date_to']));
+        if (strlen($date) <= 10 && !empty($date)) {
+            $date .= ' 00:00:00';
+        }
+        if (strlen($date_to) <= 10 && !empty($date_to)) {
+            $date_to .= ' 23:59:59';
+        }
+        $query = "SELECT s.order_id, s.order_number, c.cus_name, s.date_time 
+                  FROM sale_order s 
+                  INNER JOIN customer c ON s.customer_id = c.cus_id 
+                  WHERE s.date_time BETWEEN '$date' AND '$date_to' 
+                    AND s.order_number NOT LIKE '%$txt%' 
+                  ORDER BY s.order_id DESC 
+                  LIMIT $start, 30";
     }else{
         $bill_prod = isset($_POST['bill_prod']) ? trim(mysqli_real_escape_string($conn, $_POST['bill_prod'])) : '';
         $cus_name = isset($_POST['cus_name']) ? trim(mysqli_real_escape_string($conn, $_POST['cus_name'])) : '';
