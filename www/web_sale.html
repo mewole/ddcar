@@ -1247,7 +1247,7 @@
 				var dataString =  "JSON=" + json_string + "&JSOND=" + json_detail + "&ware_id=" + b_id + "&date=" + datetime + "&type=" + type
 			+ "&cus_id=" + cus_id + "&pay=" + $("#btn-p").text() + "&net=0" + "&dis=0" +
 			"&total=0"  + "&get_price=0"  + "&chng=0"  + "&user_id=" + localStorage.user_id
-			+ "&comment=" + $('#comment').val() + "&ware_id_to=0";
+			+ "&comment=" + $('#comment').val() + "&ware_id_to=0" + "&vat_type=" + (vat == "vat" ? "vat" : "no_vat");
 			}else{
 				var dataString =  "JSON=" + json_string + "&JSOND=" + json_detail + "&ware_id=" + b_id + "&date=" + datetime + "&type=" + type
 			+ "&cus_id=" + cus_id + "&pay=" + $("#btn-p").text() + "&net=" + $('#net-price').val() + "&dis=" + dis
@@ -1981,9 +1981,9 @@
 	      <div class="modal-body">
 	        <div class="col-12 text-center">
 	          <label class="radio-inline">
-	            <input type="radio" name="pay-radio" value="no vat" checked>ไม่รวม vat</label>
+	            <input type="radio" name="pay-radio" value="no vat" checked> <strong class="text-secondary">📄 บิลเงินสดทั่วไป (ไม่มี VAT)</strong></label>
 	          <label class="radio-inline">
-	            <input type="radio" name="pay-radio" value="vat">รวม vat</label>	         
+	            <input type="radio" name="pay-radio" value="vat"> <strong class="text-success">🏛️ ใบกำกับภาษีเต็มรูป (VAT 7%)</strong></label>	         
 	        </div>	       
 	        <br>
 	        <!-- Modal footer -->

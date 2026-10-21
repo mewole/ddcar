@@ -565,9 +565,47 @@
 			$('#fileSelect[rel=popover]').popover('dispose');
 			$("#name-prod").val(name || "");
 			$("#code-prod").val(code || "");
+
+			// Reset SKU & VAT fields
+			$('#edit-shopee-sku').val('');
+			$('#edit-lazada-sku').val('');
+			$('#edit-tiktok-sku').val('');
+			$('#edit-vat-stock').val('0');
+			$('#edit-non-vat-stock').val('0');
+			$('#edit-total-stock-label').text('กำลังโหลด...');
+			$('#edit-bundle-tag').empty();
+			$('#edit-bundle-action-wrap').hide();
+
+			// Fetch SKU & VAT mappings
+			$.ajax({
+				url: 'php/get_product_sku_vat.php',
+				type: 'GET',
+				data: { prod_id: prod_id },
+				dataType: 'json',
+				success: function(res) {
+					if (res && res.success && res.data) {
+						$('#edit-shopee-sku').val(res.data.shopee_sku || '');
+						$('#edit-lazada-sku').val(res.data.lazada_sku || '');
+						$('#edit-tiktok-sku').val(res.data.tiktok_sku || '');
+						$('#edit-vat-stock').val(res.data.vat_stock);
+						$('#edit-non-vat-stock').val(res.data.non_vat_stock);
+						$('#edit-total-stock-label').text(res.data.total_stock);
+
+						if (res.data.is_bundle) {
+							$('#edit-bundle-tag').html('<span class="badge badge-info p-1"><i class="fas fa-layer-group mr-1"></i>สินค้าชุด (' + res.data.bundle_components + ' ชิ้นส่วน)</span>');
+							$('#btn-goto-bundle').attr('href', 'web_bundle.html');
+							$('#edit-bundle-action-wrap').show();
+						} else {
+							$('#edit-bundle-tag').html('<span class="badge badge-light border text-muted p-1">สินค้าเดี่ยว</span>');
+						}
+					}
+				}
+			});
+
 			$("#save-edit").off('click').on('click', function() {
 				save_edit(prod_id);
 			});
+		});
 		}
 
 		function delete_prod(prod_id, name){
@@ -660,7 +698,22 @@
 			setTimeout(function() {
 				$.ajax({
 					type: "POST",
-					url:"php/rename_prod_web.php",
+					// Save Platform SKUs and Dual Tax Buckets
+							$.ajax({
+								url: 'php/save_platform_sku.php',
+								type: 'POST',
+								contentType: 'application/json',
+								data: JSON.stringify({
+									prod_id: prod_id,
+									prod_code: $("#code-prod").val().trim(),
+									shopee_sku: ($('#edit-shopee-sku').val() || '').trim(),
+									lazada_sku: ($('#edit-lazada-sku').val() || '').trim(),
+									tiktok_sku: ($('#edit-tiktok-sku').val() || '').trim(),
+									vat_stock: parseInt($('#edit-vat-stock').val()) || 0,
+									non_vat_stock: parseInt($('#edit-non-vat-stock').val()) || 0
+								})
+							});
+							url: "php/rename_prod_web.php",
 					data: {'prod_id' : prod_id,
 						'name_prod' : name,
 						'code' : code,
@@ -1018,9 +1071,60 @@
   
 			<!-- Modal body -->
 			<div class="modal-body">
-			  <div class="row">			
-				  <input id="code-prod" type="text" class="form-control col-4 text-center" style="margin-right: 5px; margin-left: 4%;">				
-				  <input id="name-prod" type="text" class="form-control col-7 text-center">
+			  <div class="row mb-2">			
+				  <div class="col-4">
+				      <label class="small text-muted font-weight-bold mb-1">รหัสสินค้า (SKU ร้าน) *</label>
+				      <input id="code-prod" type="text" class="form-control text-center font-weight-bold text-primary">
+				  </div>
+				  <div class="col-8">
+				      <label class="small text-muted font-weight-bold mb-1">ชื่อสินค้า *</label>
+				      <input id="name-prod" type="text" class="form-control font-weight-bold">
+				  </div>
+			  </div>
+
+			  <!-- Platform SKU Mapping -->
+			  <div class="p-2 my-2 rounded bg-light border">
+			      <h6 class="font-weight-bold text-primary mb-2" style="font-size: 0.9rem;"><i class="fas fa-link mr-1"></i> จับคู่รหัส SKU แพลตฟอร์มออนไลน์</h6>
+			      <div class="row">
+			          <div class="col-md-4 mb-2 mb-md-0">
+			              <label class="small text-muted font-weight-bold mb-1"><i class="fas fa-shopping-bag text-warning mr-1"></i> Shopee SKU</label>
+			              <input type="text" id="edit-shopee-sku" class="form-control form-control-sm font-weight-bold" placeholder="รหัสบน Shopee">
+			          </div>
+			          <div class="col-md-4 mb-2 mb-md-0">
+			              <label class="small text-muted font-weight-bold mb-1"><i class="fas fa-heart text-danger mr-1"></i> Lazada SKU</label>
+			              <input type="text" id="edit-lazada-sku" class="form-control form-control-sm font-weight-bold" placeholder="รหัสบน Lazada">
+			          </div>
+			          <div class="col-md-4">
+			              <label class="small text-muted font-weight-bold mb-1"><i class="fab fa-tiktok text-dark mr-1"></i> TikTok SKU</label>
+			              <input type="text" id="edit-tiktok-sku" class="form-control form-control-sm font-weight-bold" placeholder="รหัสบน TikTok">
+			          </div>
+			      </div>
+			  </div>
+
+			  <!-- Dual VAT Buckets -->
+			  <div class="p-2 my-2 rounded bg-light border">
+			      <div class="d-flex justify-content-between align-items-center mb-1">
+			          <h6 class="font-weight-bold text-secondary mb-0" style="font-size: 0.9rem;"><i class="fas fa-receipt mr-1"></i> ถังภาษีสต็อก (Dual VAT Buckets)</h6>
+			          <span id="edit-bundle-tag"></span>
+			      </div>
+			      <div class="row pt-1">
+			          <div class="col-6">
+			              <label class="small text-success font-weight-bold mb-1"><i class="fas fa-check-circle mr-1"></i> สต็อกมี VAT 7% (ชิ้น)</label>
+			              <input type="number" id="edit-vat-stock" class="form-control form-control-sm text-center font-weight-bold text-success" min="0" value="0">
+			          </div>
+			          <div class="col-6">
+			              <label class="small text-warning font-weight-bold mb-1"><i class="fas fa-file-invoice mr-1"></i> สต็อกบิลเงินสด (ชิ้น)</label>
+			              <input type="number" id="edit-non-vat-stock" class="form-control form-control-sm text-center font-weight-bold text-warning" min="0" value="0">
+			          </div>
+			          <div class="col-12 mt-2 text-right">
+			              <small class="text-muted font-weight-bold">สต็อกรวมในร้าน/โกดัง: <span id="edit-total-stock-label" class="text-primary font-weight-bold">-</span> ชิ้น</small>
+			          </div>
+			      </div>
+			      <div id="edit-bundle-action-wrap" class="mt-2 text-center" style="display: none;">
+			          <a id="btn-goto-bundle" href="web_bundle.html" target="_blank" class="btn btn-outline-primary btn-sm font-weight-bold">
+			              <i class="fas fa-layer-group mr-1"></i> ดู/แก้ไขสูตรส่วนประกอบในศูนย์สินค้าชุด (Bundle Hub)
+			          </a>
+			      </div>
 			  </div>
 			  <div class="col-12 text-center" style="margin-top: 20px; margin-left: 5%;">
 				<form id="imageUploadForm" method="post" enctype="multipart/form-data">
