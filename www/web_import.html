@@ -94,6 +94,7 @@
 				$("#fund").prop('hidden', true);				
             }
 			get_header();		
+			load_suppliers_datalist();
 			setTimeout(function() {$("#name").focus();}, 100);
 
 			if(localStorage.ware_id_im){
@@ -383,7 +384,7 @@
                 $.ajax({
                     type: "POST",
                     url:"php/get_prod.php",    
-                    data:{'prod_id' : id, 'ware_id' : localStorage.ware_id_im, 'type' : localStorage.type_im},
+                    data:{'prod_id' : id, 'ware_id' : localStorage.ware_id_im, 'type' : localStorage.type_im, 'supplier_name' : $('#header_supplier').val().trim()},
                     //async: false,                       
                     beforeSend: function(){
 						EasyLoading.show({                           
@@ -409,7 +410,13 @@
                                 $('#whole').val(obj[i].prod_pricesend);
                                 $('#retail').val(obj[i].prod_price);                     
 								flag = 1;
-                            }                        
+                            }
+                            if(obj[i].supplier_sku){
+                                $('#supplier_sku').val(obj[i].supplier_sku);
+                            }
+                            if(obj[i].supplier_last_cost && parseFloat(obj[i].supplier_last_cost) > 0){
+                                $('#fund').val(obj[i].supplier_last_cost);
+                            }
 						});  
 						get_place();                                                           
 						get_supplier_history(prod_id, $('#name').val());
@@ -481,6 +488,36 @@
 					}
 				}               
 			}); 	
+		}
+
+		function load_suppliers_datalist(){
+			$.ajax({
+				url: "php/get_suppliers.php",
+				type: "GET",
+				dataType: "json",
+				success: function(list){
+					if (!list || !Array.isArray(list)) return;
+					var dl = $('#header_supplier_datalist');
+					dl.empty();
+					$.each(list, function(i, name){
+						dl.append('<option value="' + name + '">');
+					});
+				}
+			});
+
+			if (localStorage.header_supplier) {
+				$('#header_supplier').val(localStorage.header_supplier);
+			}
+			if (localStorage.header_ref_no) {
+				$('#header_ref_no').val(localStorage.header_ref_no);
+			}
+
+			$('#header_supplier').on('input change', function(){
+				localStorage.header_supplier = $(this).val();
+			});
+			$('#header_ref_no').on('input change', function(){
+				localStorage.header_ref_no = $(this).val();
+			});
 		}
 
 		
@@ -588,7 +625,7 @@
 			}, 2500);
 		}
 
-		$(document).on('input change', '#at, #from_shop, #name, #amount, #fund, #whole, #retail', function() {
+		$(document).on('input change', '#at, #supplier_sku, #header_supplier, #header_ref_no, #name, #amount, #fund, #whole, #retail', function() {
 			$(this).removeClass('border-danger is-invalid').css('border-color', '');
 		});
 
@@ -662,20 +699,20 @@
 				return 0;
 			}
 
-			// 4. ตรวจสอบร้านค้า (จาก / #from_shop)
-			var from_val = $('#from_shop').val().trim();
-			if(from_val == ""){
-				highlightError('#from_shop');
+			// 4. ตรวจสอบร้านค้า/ผู้จำหน่ายที่หัวบิล (#header_supplier)
+			var supplier_name = $('#header_supplier').val().trim();
+			if(supplier_name == ""){
+				highlightError('#header_supplier');
 				$.confirm({
-					title: 'ยังไม่ได้ระบุร้านค้า (จาก)',
-					content: 'กรุณากรอก <b>"จาก (ร้านค้า)"</b> ที่สั่งสินค้านี้มา (เช่น BKK, TJM หรือชื่อร้าน)<br><small class="text-muted">(เพื่อกันไม่ให้ลืมลงรายละเอียด และจะได้รู้ว่าสินค้าสั่งมาจากร้านไหน)</small>',
+					title: 'ยังไม่ได้ระบุร้านค้า/ผู้จำหน่าย',
+					content: 'กรุณากรอกหรือเลือก <b>"ร้านค้า / ผู้จำหน่าย (จาก)"</b> ที่หัวบิลก่อนทำรายการ',
 					backgroundDismiss: true,
 					buttons: {
 						formSubmit: {
 							text: 'ตกลง',
 							btnClass: 'btn-danger',
 							action: function () {
-								$('#from_shop').focus();
+								$('#header_supplier').focus();
 							}
 						}
 					}
@@ -851,7 +888,7 @@
             '<input id="at-'+count+'" type="text" value="'+$('#at').val()+'" placeholder="'+$('#at').attr('placeholder')+'" class="form-control text-center" readonly>'+
           '</div>'+
           '<div class="col-1 nopd-8">'+
-            '<input id="from-'+count+'" type="text" value="'+$('#from_shop').val()+'" placeholder="ร้าน" class="form-control text-center font-weight-bold text-primary" readonly>'+
+            '<input id="sku-'+count+'" type="text" value="'+($('#supplier_sku').val().trim() || '-')+'" placeholder="SKU ร้าน" class="form-control text-center font-weight-bold text-info" readonly>'+
           '</div>'+
           '<div class="col-3 nopd-8">'+
             '<input id="name-'+count+'" value="'+$('#name').val()+'" class="form-control text-center" rel="popover" data-img="'+img+'" readonly>'+
@@ -892,7 +929,8 @@
 			item ["cost"] =  $('#fund').val();               
 			item ["amt"] =  $('#amount').val();			
 			item ["addr"] = $('#at').val();  
-			item ["from"] = $('#from_shop').val();  
+			item ["supplier_sku"] = $('#supplier_sku').val().trim();  
+			item ["from"] = $('#header_supplier').val().trim();  
 			item ["price_s"] = $('#whole').val();
 			item ["price"] = $('#retail').val();   
 			item ["img"] = img;   
@@ -902,6 +940,7 @@
 			arr_data.push(item);	
 			localStorage.setItem('arr_prod', JSON.stringify(arr_data));	
 			$("#btn-b").attr('disabled',true);
+			$("#header_supplier").attr('readonly',true);
 			count++;					
 		}
 			$('#at').attr("placeholder","");
@@ -912,7 +951,7 @@
 			$('#retail').val("");
 			$('#amount').val("1");
 			$('#at').val("");
-			$('#from_shop').val("");
+			$('#supplier_sku').val("");
 			$('#best-price-badge').hide();
 			if(is_show == 1){
 					show_avg(); 
@@ -961,7 +1000,7 @@
 					'<input id="at-'+arr_data[i].count+'" type="text" value="'+arr_data[i].addr+'" placeholder="'+arr_data[i].plholder+'" class="form-control text-center" readonly>'+
 				'</div>'+
 				'<div class="col-1 nopd-8">'+
-					'<input id="from-'+arr_data[i].count+'" type="text" value="'+(arr_data[i].from || '')+'" placeholder="ร้าน" class="form-control text-center font-weight-bold text-primary" readonly>'+
+					'<input id="sku-'+arr_data[i].count+'" type="text" value="'+(arr_data[i].supplier_sku || '-')+'" placeholder="SKU ร้าน" class="form-control text-center font-weight-bold text-info" readonly>'+
 				'</div>'+
 				'<div class="col-3 nopd-8">'+
 					'<input id="name-'+arr_data[i].count+'" value="'+arr_data[i].name+'" class="form-control text-center" rel="popover" data-img="'+arr_data[i].img+'" readonly>'+
@@ -996,6 +1035,7 @@
 
 				// count++;			
 				$("#btn-b").attr('disabled',true);	
+				$("#header_supplier").attr('readonly',true);
 			}
 		
 		}
@@ -1009,14 +1049,14 @@
 			$('#retail').val("");
 			$('#amount').val("1");
 			$('#at').val("");
-			$('#from_shop').val("");
+			$('#supplier_sku').val("");
 			$('#best-price-badge').hide().empty();
 			current_supplier_data = null;
 			$('#name').focus(); 
 			//print();
 		}
 
-  		function edit(arg){
+   		function edit(arg){
 			stop = false;
 			for(i = 0; i < count; i++){
 				if($("#btn-save-" + i).is(":visible")){
@@ -1028,7 +1068,7 @@
 			}			   
 				$("#amount-" + arg).prop('readonly', false);
 				$("#at-" + arg).prop('readonly', false);         
-				$("#from-" + arg).prop('readonly', false);         
+				$("#sku-" + arg).prop('readonly', false);         
 
 				//change btn-edit to save
 				$("#btn-edit-"+arg).prop('hidden', true);
@@ -1042,7 +1082,7 @@
 		function save(arg){
 			var newAmt = $("#amount-"+arg).val().trim();
 			var newAddr = $("#at-"+arg).val().trim();
-			var newFrom = $("#from-"+arg).val().trim();
+			var newSku = $("#sku-"+arg).val().trim();
 
 			if(newAmt === "" || isNaN(parseInt(newAmt)) || parseInt(newAmt) <= 0){
 				highlightError("#amount-"+arg);
@@ -1066,25 +1106,14 @@
 				return 0;
 			}
 
-			if(newFrom === ""){
-				highlightError("#from-"+arg);
-				$.confirm({
-					title: 'ยังไม่ได้ระบุร้านค้า (จาก)',
-					content: 'กรุณากรอกร้านค้า (จาก) ให้ครบถ้วน',
-					backgroundDismiss: true,
-					buttons: { formSubmit: { text: 'ตกลง', btnClass: 'btn-danger' } }
-				});
-				return 0;
-			}
-
 			arr_data[arg].amt = newAmt;
 			arr_data[arg].addr = newAddr;
-			arr_data[arg].from = newFrom;
+			arr_data[arg].supplier_sku = (newSku === '-' ? '' : newSku);
 			localStorage.setItem('arr_prod', JSON.stringify(arr_data));
 
 			$("#amount-" + arg).prop('readonly', true).removeClass('border-danger is-invalid');
 			$("#at-" + arg).prop('readonly', true).removeClass('border-danger is-invalid');
-			$("#from-" + arg).prop('readonly', true).removeClass('border-danger is-invalid');
+			$("#sku-" + arg).prop('readonly', true).removeClass('border-danger is-invalid');
 
 			$("#btn-edit-"+arg).prop('hidden', false);
 			$("#btn-trash-"+arg).prop('hidden', false);
@@ -1108,6 +1137,7 @@
 								$("#amount-" + i).prop('id', 'amount-' + (i - 1));
 								$("#name-" + i).prop('id', 'name-' + (i - 1));
 								$("#at-" + i).prop('id', 'at-' + (i - 1));							
+								$("#sku-" + i).prop('id', 'sku-' + (i - 1));							
 								$("#add-" + i).prop('id', 'add-' + (i - 1));                 
 								$("#btn-trash-" + i).attr('onclick', "remove(" + (i - 1) + ")");
 								$("#btn-trash-" + i).prop('id', 'btn-trash-' + (i - 1));
@@ -1122,6 +1152,7 @@
 							count--;
 							if(arr_data.length == 0){
 								$("#btn-b").attr('disabled',false);
+								$("#header_supplier").removeAttr('readonly');
 								localStorage.arr_prod = "";
 							}
 						}
@@ -1143,19 +1174,22 @@
 				return 0;
 			}
 
+			var supplier_val = $('#header_supplier').val().trim();
+			if(!supplier_val){
+				highlightError('#header_supplier');
+				$.confirm({
+					title: 'ยังไม่ได้ระบุร้านค้า/ผู้จำหน่าย',
+					content: 'กรุณากรอกหรือเลือก <b>"ร้านค้า / ผู้จำหน่าย (จาก)"</b> ที่หัวบิลก่อนทำการบันทึก',
+					backgroundDismiss: true,
+					buttons: { formSubmit: { text: 'ตกลง', btnClass: 'btn-danger' } }
+				});
+				return 0;
+			}
+
 			// ตรวจสอบความครบถ้วนของทุกรายการในบิลก่อนบันทึกจริง
 			for(var k = 0; k < arr_data.length; k++){
 				var itm = arr_data[k];
 				var num = k + 1;
-				if(!itm.from || itm.from.trim() === ""){
-					$.confirm({
-						title: 'พบข้อมูลไม่ครบถ้วน',
-						content: 'รายการที่ <b>#' + num + ' (' + itm.name + ')</b> ยังไม่ได้ระบุ <b>"ร้านค้า (จาก)"</b><br><span class="text-danger font-weight-bold">กรุณากดปุ่มแก้ไข (รูปดินสอ) เพื่อใส่ชื่อร้านค้าให้ครบถ้วน</span>',
-						backgroundDismiss: true,
-						buttons: { formSubmit: { text: 'ตกลง', btnClass: 'btn-danger' } }
-					});
-					return 0;
-				}
 				if(!itm.addr || itm.addr.trim() === ""){
 					$.confirm({
 						title: 'พบข้อมูลไม่ครบถ้วน',
@@ -1236,7 +1270,9 @@
 					date: datetime,
 					sum: sum,
 					user_id: localStorage.user_id,
-					type: localStorage.type_im
+					type: localStorage.type_im,
+					supplier_name: supplier_val,
+					ref_invoice: $('#header_ref_no').val().trim()
 				},               
 				beforeSend: function(){
 					EasyLoading.show({                           
@@ -1375,6 +1411,8 @@
 			localStorage.ware_name_im = "";
 			localStorage.ware_id_im = "";
 			localStorage.type_im = "";
+			localStorage.header_supplier = "";
+			localStorage.header_ref_no = "";
 			location.reload();
 		}
 
@@ -1426,39 +1464,46 @@
             </div>
         </nav>
 
-      	<div class="container-fullwidth">
-      		<div id="head" class="row mgb-5" style="padding-left: 5%; padding-right: 5%;">
-      		  <div class="col-3"></div>
-      		  <div class="col-2 text-center" style="color: #666;">เลือกโกดัง</div>
-      		  <div class="col-2 text-center" style="color: #666;">วันที่</div>
-      		  <div class="col-2 text-center" style="color: #666;">ผู้ทำรายการ</div>
-      		  <div class="col-3"></div>
-      		</div>
-      	</div>
+      	<div class="container-fullwidth" style="padding: 10px 4% 5px 4%;">
+      		<div class="card shadow-sm border-0" style="background-color: #f8f9fa; border-radius: 8px;">
+      			<div class="card-body py-2 px-3">
+      				<div class="row align-items-center">
+      					<div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.9rem;"><i class="fas fa-warehouse text-warning mr-1"></i> สถานที่รับเข้า <span class="text-danger">*</span></label>
+      						<div id="select-ware" class="dropdown">
+      							<button id="btn-b" class="btn btn-secondary dropdown-toggle w-100 text-truncate font-weight-bold" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #495057;">เลือกโกดัง/หน้าร้าน</button>
+      							<div id="b" class="dropdown-menu shadow" aria-labelledby="dropdownMenuButton"></div>
+      						</div>
+      					</div>
 
-      	<div class="container-fullwidth">
-      		<div class="row" style="padding-left: 5%; padding-right: 5%;">
-      			<div class="col-3"></div>
-      			<div class="col-2 text-center">
-      				<div id="select-ware" class="dropdown">
-						<button id="btn-b" class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #666; width: 111px;">เลือกโกดัง/หน้าร้าน</button>
-      				  <div id="b" class="dropdown-menu" aria-labelledby="dropdownMenuButton">      				    
-						
-      				  </div>
+      					<div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.9rem;"><i class="fas fa-store text-primary mr-1"></i> ร้านค้า / ผู้จำหน่าย (จาก) <span class="text-danger">*</span></label>
+      						<input id="header_supplier" type="text" class="form-control font-weight-bold text-primary" placeholder="* พิมพ์หรือเลือกร้านค้า" list="header_supplier_datalist" autocomplete="off">
+      						<datalist id="header_supplier_datalist"></datalist>
+      					</div>
+
+      					<div class="col-md-3 col-sm-6 mb-2 mb-md-0">
+      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.9rem;"><i class="fas fa-file-invoice text-success mr-1"></i> เลขที่บิลร้าน / ใบส่งของ</label>
+      						<input id="header_ref_no" type="text" class="form-control" placeholder="เลขที่บิลอ้างอิง (ถ้ามี)" autocomplete="off">
+      					</div>
+
+      					<div class="col-md-3 col-sm-6 mb-2 mb-md-0 text-md-right text-left">
+      						<div style="font-size: 0.88rem; color: #6c757d;">
+      							<div><i class="far fa-calendar-alt mr-1"></i> วันที่: <strong id="date" class="text-dark">-</strong></div>
+      							<div><i class="far fa-user mr-1"></i> ผู้ทำรายการ: <strong id="user" class="text-dark">-</strong></div>
+      						</div>
+      					</div>
       				</div>
       			</div>
-      			<div id="date" class="col-2 text-center" style="margin-top: 5px; color: #666;">12/5/2018</div>
-      			<div id="user" class="col-2 text-center nopd" style="margin-top: 5px; color: #666;">ชายเมืองสิงค์</div>
-      			<!--<div class="col-3"><button id="btn-folder" onclick="selectfolder()" class="select_folder">เลือกสินค้า</button></div>-->
       		</div>
-      	</div><hr style="width: 85%;">
+      	</div><hr style="width: 92%; margin-top: 10px; margin-bottom: 12px;">
       	
       	<div class="container-fullwidth nopd">
       		<div id="head" class="row mgb-5">
        		  <div class="col-2 text-center nopd">บาร์โค้ด</div>
        		  <div class="col-1 text-center nopd-8 font-weight-bold">ที่วาง <span class="text-danger">*</span></div>
-       		  <div class="col-1 text-center nopd-8 font-weight-bold">จาก (ร้าน) <span class="text-danger">*</span></div>
-       		  <div class="col-3 text-center nopd">ชื่อสินค้า</div>
+       		  <div class="col-1 text-center nopd-8 font-weight-bold text-info">SKU ร้าน</div>
+       		  <div class="col-3 text-center nopd font-weight-bold">ชื่อสินค้า <span class="text-danger">*</span></div>
        		  <div class="col-1 text-center nopd-8 font-weight-bold">จำนวน <span class="text-danger">*</span></div>
        		  <div class="col-1 text-center nopd-8 font-weight-bold">ทุน <span class="text-danger">*</span></div>
        		  <div class="col-1 text-center nopd-8 font-weight-bold">ราคาส่ง <span class="text-danger">*</span></div>
@@ -1484,8 +1529,7 @@
 			    <input id='at' type='text' class='form-control text-center' placeholder="* ที่วาง/ชั้น" data-index="6">
 			  </div>
 			  <div class='col-1 nopd-8'>
-			    <input id='from_shop' type='text' class='form-control text-center font-weight-bold text-primary' placeholder="* ตัวย่อร้าน (จำเป็น)" list="supplier-datalist" data-index="7">
-			    <datalist id="supplier-datalist"></datalist>
+			    <input id='supplier_sku' type='text' class='form-control text-center font-weight-bold text-info' placeholder="SKU ร้าน (ถ้ามี)" data-index="7">
 			  </div>
 			  <div class='col-3 nopd-8'>
 			    <input id="name" class="form-control text-center" rel="popover" data-img="" data-index="1" autofocus>
@@ -1594,7 +1638,7 @@
 						$.ajax({
 							type: "POST",
 							url:"php/get_prod.php",    
-							data:{'qr' : name, 'ware_id' : localStorage.ware_id_im, 'type' : localStorage.type_im},
+							data:{'qr' : name, 'ware_id' : localStorage.ware_id_im, 'type' : localStorage.type_im, 'supplier_name' : $('#header_supplier').val().trim()},
 							//async: false,                       
 							beforeSend: function(){
 								EasyLoading.show({                           
@@ -1621,7 +1665,13 @@
 										$('#whole').val(obj[i].prod_pricesend);
 										$('#retail').val(obj[i].prod_price);                     
 										flag = 1;
-									}                        
+									}
+									if(obj[i].supplier_sku){
+										$('#supplier_sku').val(obj[i].supplier_sku);
+									}
+									if(obj[i].supplier_last_cost && parseFloat(obj[i].supplier_last_cost) > 0){
+										$('#fund').val(obj[i].supplier_last_cost);
+									}
 								});  
 								get_place();
 								if(prod_id){
@@ -1684,6 +1734,22 @@
 					current_supplier_data = data;
 					renderSupplierBadge(data);
 					populateSupplierDatalist(data);
+					// หากมี Supplier SKU ผูกกับร้านค้าที่หัวบิล ให้ auto-fill ลงในช่อง #supplier_sku ทันที
+					var curSup = ($('#header_supplier').val() || '').trim().toLowerCase();
+					if (curSup && data.supplier_skus && data.supplier_skus.length > 0) {
+						for (var sk = 0; sk < data.supplier_skus.length; sk++) {
+							var sObj = data.supplier_skus[sk];
+							if ((sObj.supplier_name || '').toLowerCase() === curSup) {
+								if ($('#supplier_sku').val() === '') {
+									$('#supplier_sku').val(sObj.supplier_sku);
+								}
+								if (sObj.last_cost && parseFloat(sObj.last_cost) > 0 && ($('#fund').val() === '' || $('#fund').val() == '0')) {
+									$('#fund').val(sObj.last_cost);
+								}
+								break;
+							}
+						}
+					}
 				},
 				error: function() {
 					$('#best-price-badge').hide().empty();
@@ -1727,7 +1793,7 @@
 				html += '    <i class="fas fa-tag"></i> ทุนเดิม: <b>' + costTxt + '</b>';
 				html += '  </span>';
 				html += '  <span class="badge badge-warning text-dark p-1" style="cursor: pointer; font-size: 0.85em;" onclick="openSupplierModal()" title="คลิกเพื่อดูวิธีบันทึกร้าน">';
-				html += '    <i class="fas fa-lightbulb"></i> ใส่ตัวย่อร้านที่ช่อง <b>[จาก]</b>';
+				html += '    <i class="fas fa-lightbulb"></i> ระบุร้านค้าที่ <b>หัวบิล</b>';
 				html += '  </span>';
 				html += '  <a href="javascript:void(0)" onclick="openSupplierModal()" class="text-primary font-weight-bold ml-1" style="font-size: 0.88em; text-decoration: underline;" title="ดูประวัติการซื้อย้อนหลัง">';
 				html += '    <i class="fas fa-history"></i> ประวัติ';
@@ -1871,9 +1937,21 @@
 		}
 
 		function selectSupplierChoice(supplier, cost) {
-			$('#from_shop').val(supplier);
+			if (supplier && supplier.trim() !== '') {
+				$('#header_supplier').val(supplier);
+				localStorage.header_supplier = supplier;
+			}
 			if (cost) {
 				$('#fund').val(cost);
+			}
+			if (current_supplier_data && current_supplier_data.supplier_skus) {
+				for (var sk = 0; sk < current_supplier_data.supplier_skus.length; sk++) {
+					var sObj = current_supplier_data.supplier_skus[sk];
+					if ((sObj.supplier_name || '').toLowerCase() === (supplier || '').toLowerCase()) {
+						$('#supplier_sku').val(sObj.supplier_sku);
+						break;
+					}
+				}
 			}
 			$('#supplierModal').modal('hide');
 			$('#at').focus();
@@ -1884,7 +1962,8 @@
 				$('#fund').val(cost);
 			}
 			if (supplier && supplier.trim() !== '') {
-				$('#from_shop').val(supplier.trim());
+				$('#header_supplier').val(supplier.trim());
+				localStorage.header_supplier = supplier.trim();
 			}
 			$('#supplierModal').modal('hide');
 			$('#amount').focus();

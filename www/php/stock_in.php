@@ -11,6 +11,8 @@
     $sum = isset($_POST['sum']) ? floatval($_POST['sum']) : 0; 
     $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
     $type = isset($_POST['type']) ? trim($_POST['type']) : '';
+    $supplier_name = isset($_POST['supplier_name']) ? mysqli_real_escape_string($conn, trim($_POST['supplier_name'])) : '';
+    $ref_invoice = isset($_POST['ref_invoice']) ? mysqli_real_escape_string($conn, trim($_POST['ref_invoice'])) : '';
     $last_id = "";
     $i = 0;
 
@@ -35,8 +37,8 @@
                 }
             }
             $stock_number = "IMP" . $year_cur . "-" . str_pad($count, 5, "0", STR_PAD_LEFT);
-            $sql2 = "INSERT INTO stock_in (stock_number,date_time,ware_id,user_id,total_stock,count) 
-                     VALUES ('$stock_number','$dt','$ware_id','$user_id','$sum','$count')"; 
+            $sql2 = "INSERT INTO stock_in (stock_number,date_time,ware_id,user_id,supplier_name,ref_invoice,total_stock,count) 
+                     VALUES ('$stock_number','$dt','$ware_id','$user_id','$supplier_name','$ref_invoice','$sum','$count')"; 
             $result2 = mysqli_query($conn, $sql2);
             if(!$result2){
                 throw new Exception("ไม่สามารถบันทึกข้อมูลใบรับเข้าคลังได้: " . mysqli_error($conn));
@@ -50,18 +52,25 @@
                 $cost = floatval(str_replace(',', '', $data['cost']));    
                 $amt = intval($data['amt']);  
                 $addr = isset($data['addr']) ? mysqli_real_escape_string($conn, trim($data['addr'])) : ''; 
-                $from = isset($data['from']) ? mysqli_real_escape_string($conn, trim($data['from'])) : '';
+                // หากไม่ได้ระบุ from ในรายการ ให้ใช้ supplier_name จากหัวบิลอัตโนมัติ
+                $from = (isset($data['from']) && trim($data['from']) !== '') ? mysqli_real_escape_string($conn, trim($data['from'])) : $supplier_name;
+                $supplier_sku = isset($data['supplier_sku']) ? mysqli_real_escape_string($conn, trim($data['supplier_sku'])) : '';
                 $amount = 0;
 
-                if (!empty($from)) {
-                    $sql_item = "INSERT INTO stock_in_item (stock_id,item_id,prod_id,stock_cost,amount,source_from) VALUES ('$last_id','$item','$prod_id','$cost','$amt','$from')"; 
-                } else {
-                    $sql_item = "INSERT INTO stock_in_item (stock_id,item_id,prod_id,stock_cost,amount) VALUES ('$last_id','$item','$prod_id','$cost','$amt')"; 
-                }
+                $sql_item = "INSERT INTO stock_in_item (stock_id,item_id,prod_id,stock_cost,amount,source_from,supplier_sku) 
+                             VALUES ('$last_id','$item','$prod_id','$cost','$amt','$from','$supplier_sku')"; 
                 $result_item = mysqli_query($conn, $sql_item);
                 if(!$result_item){
                     throw new Exception("ไม่สามารถบันทึกรายการสินค้าเข้าคลังได้: " . mysqli_error($conn));
                 } 
+
+                // บันทึก / อัปเดตการจับคู่ Supplier SKU ใน product_supplier_sku อัตโนมัติ
+                if(!empty($supplier_sku) && !empty($from)){
+                    $sql_map = "INSERT INTO product_supplier_sku (prod_id, supplier_name, supplier_sku, last_cost) 
+                                VALUES ('$prod_id', '$from', '$supplier_sku', '$cost')
+                                ON DUPLICATE KEY UPDATE prod_id = VALUES(prod_id), last_cost = VALUES(last_cost)";
+                    @mysqli_query($conn, $sql_map);
+                }
 
                 $status = 'normal';
                 $min = 0;
@@ -140,8 +149,8 @@
                 }
             }
             $stock_number = "TRA" . $year_cur . "-" . str_pad($count, 5, "0", STR_PAD_LEFT);
-            $sql2 = "INSERT INTO transfer_in (tran_number,date_time,shop_id,user_id,total_tran,count) 
-                     VALUES ('$stock_number','$dt','$ware_id','$user_id','$sum','$count')"; 
+            $sql2 = "INSERT INTO transfer_in (tran_number,date_time,shop_id,user_id,supplier_name,ref_invoice,total_tran,count) 
+                     VALUES ('$stock_number','$dt','$ware_id','$user_id','$supplier_name','$ref_invoice','$sum','$count')"; 
             $result2 = mysqli_query($conn, $sql2);
             if(!$result2){
                 throw new Exception("ไม่สามารถบันทึกข้อมูลใบรับเข้าหน้าร้านได้: " . mysqli_error($conn));
@@ -155,18 +164,24 @@
                 $cost = floatval(str_replace(',', '', $data['cost']));    
                 $amt = intval($data['amt']);  
                 $addr = isset($data['addr']) ? mysqli_real_escape_string($conn, trim($data['addr'])) : ''; 
-                $from = isset($data['from']) ? mysqli_real_escape_string($conn, trim($data['from'])) : '';
+                $from = (isset($data['from']) && trim($data['from']) !== '') ? mysqli_real_escape_string($conn, trim($data['from'])) : $supplier_name;
+                $supplier_sku = isset($data['supplier_sku']) ? mysqli_real_escape_string($conn, trim($data['supplier_sku'])) : '';
                 $amount = 0;
 
-                if (!empty($from)) {
-                    $sql_item = "INSERT INTO transfer_in_item (tran_id,item_id,prod_id,tran_cost,amount,source_from) VALUES ('$last_id','$item','$prod_id','$cost','$amt','$from')"; 
-                } else {
-                    $sql_item = "INSERT INTO transfer_in_item (tran_id,item_id,prod_id,tran_cost,amount) VALUES ('$last_id','$item','$prod_id','$cost','$amt')"; 
-                }
+                $sql_item = "INSERT INTO transfer_in_item (tran_id,item_id,prod_id,tran_cost,amount,source_from,supplier_sku) 
+                             VALUES ('$last_id','$item','$prod_id','$cost','$amt','$from','$supplier_sku')"; 
                 $result_item = mysqli_query($conn, $sql_item);
                 if(!$result_item){
                     throw new Exception("ไม่สามารถบันทึกรายการสินค้าหน้าร้านได้: " . mysqli_error($conn));
                 } 
+
+                // บันทึก / อัปเดตการจับคู่ Supplier SKU ใน product_supplier_sku อัตโนมัติ
+                if(!empty($supplier_sku) && !empty($from)){
+                    $sql_map = "INSERT INTO product_supplier_sku (prod_id, supplier_name, supplier_sku, last_cost) 
+                                VALUES ('$prod_id', '$from', '$supplier_sku', '$cost')
+                                ON DUPLICATE KEY UPDATE prod_id = VALUES(prod_id), last_cost = VALUES(last_cost)";
+                    @mysqli_query($conn, $sql_map);
+                }
 
                 $status = 'normal';
                 $min = 0;

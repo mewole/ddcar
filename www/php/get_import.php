@@ -13,7 +13,7 @@
         if (strlen($date_to) <= 10 && !empty($date_to)) {
             $date_to .= ' 23:59:59';
         }
-        $query = "SELECT s.stock_id, s.stock_number, w.ware_name, s.date_time 
+        $query = "SELECT s.stock_id, s.stock_number, w.ware_name, s.date_time, s.supplier_name, s.ref_invoice 
                   FROM stock_in s 
                   INNER JOIN warehouse_detail w ON s.ware_id = w.ware_id 
                   WHERE s.date_time BETWEEN '$date' AND '$date_to' 
@@ -22,17 +22,19 @@
                   LIMIT $start, 30";
     }else if(isset($_POST['value'])){
         $val = mysqli_real_escape_string($conn, $_POST['value']);     
-        $query = "SELECT DISTINCT s.stock_id, s.stock_number, w.ware_name, s.date_time 
+        $query = "SELECT DISTINCT s.stock_id, s.stock_number, w.ware_name, s.date_time, s.supplier_name, s.ref_invoice 
                   FROM stock_in s 
                   INNER JOIN warehouse_detail w ON s.ware_id = w.ware_id 
                   INNER JOIN stock_in_item i ON s.stock_id = i.stock_id 
                   INNER JOIN product p ON i.prod_id = p.prod_id 
-                  WHERE (s.stock_number LIKE '%$val%' OR w.ware_name LIKE '%$val%' OR p.prod_name LIKE '%$val%' OR i.source_from LIKE '%$val%') 
+                  WHERE (s.stock_number LIKE '%$val%' OR w.ware_name LIKE '%$val%' OR p.prod_name LIKE '%$val%' 
+                         OR s.supplier_name LIKE '%$val%' OR s.ref_invoice LIKE '%$val%' 
+                         OR i.source_from LIKE '%$val%' OR i.supplier_sku LIKE '%$val%') 
                     AND s.stock_number NOT LIKE '%$txt%' 
                   ORDER BY s.stock_id DESC 
                   LIMIT $start, 30";
     }else{
-        $query = "SELECT s.stock_id, s.stock_number, w.ware_name, s.date_time 
+        $query = "SELECT s.stock_id, s.stock_number, w.ware_name, s.date_time, s.supplier_name, s.ref_invoice 
                   FROM stock_in s 
                   INNER JOIN warehouse_detail w ON s.ware_id = w.ware_id 
                   WHERE s.stock_number NOT LIKE '%$txt%' 
@@ -50,12 +52,15 @@
         $rows = array();
         $ids = array();
         while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){      
-            $row['source_from'] = null;
+            // กำหนด source_from เริ่มต้นจาก supplier_name ของบิล
+            $row['source_from'] = !empty($row['supplier_name']) ? $row['supplier_name'] : null;
             $rows[] = $row;
-            $ids[] = intval($row['stock_id']);
+            if(empty($row['source_from'])){
+                $ids[] = intval($row['stock_id']);
+            }
         }
 
-        // ดึง source_from เฉพาะของ 30 บิลนี้ใน 1 query รวดเร็ว แม่นยำ
+        // ดึง source_from สำหรับบิลเก่าที่ยังไม่มี supplier_name ในหัวบิล
         if(!empty($ids)){
             $idList = implode(',', $ids);
             $chkCol = mysqli_query($conn, "SHOW COLUMNS FROM stock_in_item LIKE 'source_from'");
@@ -73,7 +78,7 @@
                         $srcMap[$sr['stock_id']] = $sr['src'];
                     }
                     foreach($rows as &$rw){
-                        if(isset($srcMap[$rw['stock_id']])){
+                        if(empty($rw['source_from']) && isset($srcMap[$rw['stock_id']])){
                             $rw['source_from'] = $srcMap[$rw['stock_id']];
                         }
                     }

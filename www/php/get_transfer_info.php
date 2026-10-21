@@ -4,7 +4,8 @@
     $output = array();
 
     $query = "SELECT s.tran_number, s.shop_id, w.shop_name, s.date_time, s.total_tran,
-                     i.item_id, i.prod_id, p.prod_name, i.tran_cost, i.amount, i.source_from,
+                     s.supplier_name, s.ref_invoice,
+                     i.item_id, i.prod_id, p.prod_name, i.tran_cost, i.amount, i.source_from, i.supplier_sku,
                      u.user_name, p.prod_code, p.prod_price
               FROM transfer_in s 
               INNER JOIN shop_detail w ON s.shop_id = w.shop_id 

@@ -4,7 +4,8 @@
     $output = array();
 
     $query = "SELECT s.stock_number, s.ware_id, w.ware_name, s.date_time, s.total_stock,
-                     i.item_id, i.prod_id, p.prod_name, i.stock_cost, i.amount, i.source_from,
+                     s.supplier_name, s.ref_invoice,
+                     i.item_id, i.prod_id, p.prod_name, i.stock_cost, i.amount, i.source_from, i.supplier_sku,
                      u.user_name, p.prod_code, p.prod_price 
               FROM stock_in s 
               INNER JOIN warehouse_detail w ON s.ware_id = w.ware_id 

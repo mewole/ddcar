@@ -131,9 +131,13 @@
                   tempdate = date
                   no = 1
               }
-              var sourceTxt = field.source_from && field.source_from.trim() !== ''
-                ? '<span class="badge badge-primary font-weight-bold px-2 py-1" style="font-size: 0.88rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>'
+              var supName = field.supplier_name || field.source_from;
+              var sourceTxt = supName && supName.trim() !== ''
+                ? '<span class="badge badge-primary font-weight-bold px-2 py-1" style="font-size: 0.88rem;"><i class="fas fa-store mr-1"></i>' + supName + '</span>'
                 : '<span class="text-muted" style="font-size: 0.88rem;">-</span>';
+              if (field.ref_invoice && field.ref_invoice.trim() !== '') {
+                sourceTxt += '<div class="text-muted font-weight-normal mt-1" style="font-size: 0.8rem;"><i class="fas fa-file-invoice mr-1 text-success"></i>' + field.ref_invoice + '</div>';
+              }
 
               $('#myUL').append('<li id="ipt-'+field.stock_id+'">' +
               '<div class="row justify-content-center ipt-even align-items-center" data-toggle="collapse" href="#detail-'+field.stock_id+'" role="button" aria-expanded="false" aria-controls="detail-'+field.stock_id+'" onclick="appendCollapse('+field.stock_id+');">'+
@@ -193,9 +197,13 @@
                   tempdate = date
                   no = 1
               }
-              var sourceTxt = field.source_from && field.source_from.trim() !== ''
-                ? '<span class="badge badge-primary font-weight-bold px-2 py-1" style="font-size: 0.88rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>'
+              var supName = field.supplier_name || field.source_from;
+              var sourceTxt = supName && supName.trim() !== ''
+                ? '<span class="badge badge-primary font-weight-bold px-2 py-1" style="font-size: 0.88rem;"><i class="fas fa-store mr-1"></i>' + supName + '</span>'
                 : '<span class="text-muted" style="font-size: 0.88rem;">-</span>';
+              if (field.ref_invoice && field.ref_invoice.trim() !== '') {
+                sourceTxt += '<div class="text-muted font-weight-normal mt-1" style="font-size: 0.8rem;"><i class="fas fa-file-invoice mr-1 text-success"></i>' + field.ref_invoice + '</div>';
+              }
 
               $('#myS').append('<li id="ipts-'+field.stock_id+'">' +
               '<div class="row justify-content-center ipt-even align-items-center" data-toggle="collapse" href="#details-'+field.stock_id+'" role="button" aria-expanded="false" aria-controls="details-'+field.stock_id+'" onclick="appendCollapses('+field.stock_id+');">'+
@@ -281,20 +289,25 @@
             success: function(data){  
               EasyLoading.hide();
               var obj = jQuery.parseJSON(data); 
+              var supHeader = (obj[0].supplier_name || obj[0].source_from || '-');
+              var refHeader = obj[0].ref_invoice ? (' | บิลร้าน: <b class="text-success">' + obj[0].ref_invoice + '</b>') : '';
               text = text + '<div class="collapse" id="detail-'+index+'">'+
                 '<div class="card card-body">'+
-                  '<div class="row justify-content-center">'+
-                      '<h3 style="text-decoration: underline;">รายการ</h3>'+
+                  '<div class="row justify-content-center mb-2">'+
+                      '<h5 class="text-secondary"><i class="fas fa-store text-primary mr-1"></i> ร้านค้า: <strong class="text-dark">' + supHeader + '</strong>' + refHeader + '</h5>'+
                   '</div>'             
               $.each(obj, function(i, field){
                 cost = ""
                 if(localStorage.user_role != "พนักงาน"){
                   cost = field.stock_cost
                 }
+                var skuBadge = field.supplier_sku && field.supplier_sku.trim() !== ''
+                  ? ' <span class="badge badge-light border text-info ml-1" style="font-size: 0.76rem;"><i class="fas fa-tag mr-1"></i>SKU: ' + field.supplier_sku + '</span>'
+                  : '';
                 text = text + '<div id="item-'+field.item_id+'" class="row justify-content-center">'+
                   '<div class="col-1 text-center items">'+(i+1)+'</div>'+
                   '<div class="col-1 text-center items">'+field.amount+'</div>'+
-                  '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span>'+(field.source_from && field.source_from.trim() !== '' ? ' <span class="badge badge-info ml-1 font-weight-bold" style="font-size: 0.78rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>' : '')+'</div>'+
+                  '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span>' + skuBadge + '</div>'+
                   '<div class="col-2 text-center items">'+cost+'</div>'+
                   '<div class="col-2 text-center items">'+field.amount*field.stock_cost+'</div>'+
                 '</div>'
@@ -354,20 +367,25 @@
             success: function(data){  
               EasyLoading.hide();
               var obj = jQuery.parseJSON(data); 
+              var supHeader = (obj[0].supplier_name || obj[0].source_from || '-');
+              var refHeader = obj[0].ref_invoice ? (' | บิลร้าน: <b class="text-success">' + obj[0].ref_invoice + '</b>') : '';
               text = text + '<div class="collapse" id="details-'+index+'">'+
                 '<div class="card card-body">'+
-                  '<div class="row justify-content-center">'+
-                      '<h3 style="text-decoration: underline;">รายการ</h3>'+
+                  '<div class="row justify-content-center mb-2">'+
+                      '<h5 class="text-secondary"><i class="fas fa-store text-primary mr-1"></i> ร้านค้า: <strong class="text-dark">' + supHeader + '</strong>' + refHeader + '</h5>'+
                   '</div>'             
               $.each(obj, function(i, field){
                 cost = ""
                 if(localStorage.user_role != "พนักงาน"){
                   cost = field.stock_cost
                 }
-                text = text + '<div id="item-'+field.item_id+'"" class="row justify-content-center">'+
+                var skuBadge = field.supplier_sku && field.supplier_sku.trim() !== ''
+                  ? ' <span class="badge badge-light border text-info ml-1" style="font-size: 0.76rem;"><i class="fas fa-tag mr-1"></i>SKU: ' + field.supplier_sku + '</span>'
+                  : '';
+                text = text + '<div id="item-'+field.item_id+'" class="row justify-content-center">'+
                   '<div class="col-1 text-center items">'+(i+1)+'</div>'+
                   '<div class="col-1 text-center items">'+field.amount+'</div>'+
-                  '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span>'+(field.source_from && field.source_from.trim() !== '' ? ' <span class="badge badge-info ml-1 font-weight-bold" style="font-size: 0.78rem;"><i class="fas fa-store mr-1"></i>' + field.source_from + '</span>' : '')+'</div>'+
+                  '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span>' + skuBadge + '</div>'+
                   '<div class="col-2 text-center items">'+cost+'</div>'+
                   '<div class="col-2 text-center items">'+field.amount*field.stock_cost+'</div>'+
                 '</div>'

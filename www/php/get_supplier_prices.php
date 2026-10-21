@@ -107,15 +107,35 @@
         }
     }
 
-    // 6. ดึงรายชื่อตัวย่อร้านทั้งหมดที่เคยมีในระบบ (สำหรับทำ Autocomplete)
+    // 6. ดึงข้อมูล SKU ที่เคยผูกกับร้านค้าต่างๆ สำหรับสินค้านี้
+    $supplier_skus = array();
+    $res_skus = mysqli_query($conn, "SELECT supplier_name, supplier_sku, last_cost, updated_at FROM product_supplier_sku WHERE prod_id = '$prod_id' ORDER BY updated_at DESC");
+    if ($res_skus) {
+        while ($rsk = mysqli_fetch_assoc($res_skus)) {
+            $supplier_skus[] = $rsk;
+        }
+    }
+
+    // 7. ดึงรายชื่อร้านทั้งหมดที่เคยมีในระบบ (สำหรับทำ Autocomplete)
     $all_suppliers = array();
-    $res_supp = mysqli_query($conn, "SELECT DISTINCT source_from FROM stock_in_item WHERE source_from IS NOT NULL AND TRIM(source_from) != '' 
-                                     UNION 
-                                     SELECT DISTINCT source_from FROM transfer_in_item WHERE source_from IS NOT NULL AND TRIM(source_from) != '' 
-                                     ORDER BY source_from ASC");
+    $sql_all_sup = "SELECT DISTINCT name FROM (
+                        SELECT supplier_name AS name FROM stock_in WHERE supplier_name IS NOT NULL AND TRIM(supplier_name) != ''
+                        UNION
+                        SELECT supplier_name AS name FROM transfer_in WHERE supplier_name IS NOT NULL AND TRIM(supplier_name) != ''
+                        UNION
+                        SELECT supplier_name AS name FROM product_supplier_sku WHERE supplier_name IS NOT NULL AND TRIM(supplier_name) != ''
+                        UNION
+                        SELECT source_from AS name FROM stock_in_item WHERE source_from IS NOT NULL AND TRIM(source_from) != '' 
+                        UNION 
+                        SELECT source_from AS name FROM transfer_in_item WHERE source_from IS NOT NULL AND TRIM(source_from) != '' 
+                    ) AS u_sup ORDER BY name ASC";
+    $res_supp = mysqli_query($conn, $sql_all_sup);
     if ($res_supp) {
         while ($rs = mysqli_fetch_assoc($res_supp)) {
-            $all_suppliers[] = $rs['source_from'];
+            $sname = trim($rs['name']);
+            if (!empty($sname) && !in_array($sname, $all_suppliers)) {
+                $all_suppliers[] = $sname;
+            }
         }
     }
 
@@ -126,6 +146,7 @@
         'prod_code' => $prod_code,
         'current_cost' => $current_cost,
         'history' => $history,
+        'supplier_skus' => $supplier_skus,
         'recent_orders' => $recent_orders,
         'recent_transfers' => $recent_transfers,
         'all_suppliers' => $all_suppliers
