@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $output = array();
     $day = date("d");   
     $month = date("m"); 

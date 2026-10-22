@@ -31,7 +31,6 @@
                 { label: 'รายงานการโอนย้ายสินค้า', icon: 'fa fa-exchange-alt', href: 'web_mng_transfer.html' },
                 { label: 'รายงานการปรับ/ตัดสต๊อก', icon: 'fa fa-clipboard-check', href: 'web_mng_adjust.html' },
                 { label: 'รายงานสินค้าเข้าโกดัง', icon: 'fa fa-warehouse', href: 'web_mng_import_warehouse.html' },
-                { label: 'รายงานสินค้าออกโกดัง (เดิม)', icon: 'fa fa-dolly-flatbed', href: 'web_mng_export.html' },
                 { label: 'รายงานสรุปยอดขาย', icon: 'fa fa-chart-line', href: 'web_mng_sale.html', ownerOnly: true },
                 { label: 'รายงานเครดิตลูกค้า', icon: 'fa fa-credit-card', href: 'web_credit.html' },
                 { label: 'ตามบิลภาษีซื้อ (Pending VAT)', icon: 'fa fa-file-invoice-dollar', href: 'web_pending_vat.html', ownerOnly: true }

@@ -5,6 +5,8 @@
  */
 header('Content-Type: application/json; charset=utf-8');
 include "db.php";
+include_once "auth_guard.php";
+require_login();
 
 $suppliers = [];
 

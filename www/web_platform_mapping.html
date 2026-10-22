@@ -228,6 +228,82 @@
     .platform-hover-title:hover .hover-hint-icon {
       color: #0284c7 !important;
     }
+
+    /* TikTok Assistant Visual Cards */
+    .tt-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .tt-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+    }
+    .tt-card.is-done {
+      background: #f8fafc;
+      opacity: 0.65;
+      border-color: #86efac;
+    }
+    .tt-img-wrap {
+      width: 82px;
+      height: 82px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1.5px solid #e2e8f0;
+      background: #f1f5f9;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .tt-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.2s;
+    }
+    .tt-img-wrap:hover img {
+      transform: scale(1.08);
+    }
+    .tt-suggestion-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-top: 6px;
+    }
+    .btn-tt-copy {
+      background: #2563eb;
+      color: #ffffff;
+      font-weight: 700;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-tt-copy:hover {
+      background: #1d4ed8;
+      color: #ffffff;
+    }
+    .btn-tt-copy.copied {
+      background: #16a34a !important;
+      color: #ffffff !important;
+    }
+    .btn-tt-open {
+      background: #000000;
+      color: #ffffff;
+      border: none;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-tt-open:hover {
+      background: #27272a;
+      color: #ffffff;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
@@ -248,17 +324,23 @@
         </p>
       </div>
       <div class="mt-2 mt-md-0 d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-dark btn-sm mr-2 font-weight-bold shadow-sm" style="background:#000000; border-color:#000000; color:#ffffff;" onclick="openTikTokAssistantModal();">
+          <i class="fab fa-tiktok text-danger mr-1"></i> 🎬 ผู้ช่วยใส่ SKU บน TikTok (<span id="txt-hdr-tt-unmapped">90</span>)
+        </button>
+        <button type="button" class="btn btn-outline-success btn-sm mr-2 font-weight-bold" onclick="exportTikTokExcel();" title="ส่งออกไฟล์ Excel สำหรับนำเข้าแก้ไขสินค้าเป็นชุดบน TikTok Shop">
+          <i class="fas fa-file-excel mr-1 text-success"></i> Excel (TikTok)
+        </button>
         <button type="button" class="btn btn-outline-primary btn-sm mr-2 font-weight-bold" onclick="openExtensionGuideModal();">
-          <i class="fas fa-puzzle-piece mr-1"></i> ส่วนขยาย Chrome Extension (ดึงออเดอร์อัตโนมัติ)
+          <i class="fas fa-puzzle-piece mr-1"></i> Extension
         </button>
         <button type="button" class="btn btn-outline-secondary btn-sm mr-2 font-weight-bold" onclick="openChannelModal();">
-          <i class="fas fa-store-alt mr-1"></i> จัดการร้านค้า / เพิ่มร้าน
+          <i class="fas fa-store-alt mr-1"></i> ร้านค้า
         </button>
         <button type="button" class="btn btn-outline-info btn-sm mr-2 font-weight-bold" onclick="openImportModal();">
-          <i class="fas fa-file-import mr-1"></i> นำเข้ารายการ (Excel/Text)
+          <i class="fas fa-file-import mr-1"></i> นำเข้า
         </button>
         <button type="button" class="btn btn-primary btn-sm font-weight-bold" onclick="openAddModal();">
-          <i class="fas fa-plus mr-1"></i> เพิ่มสินค้าแพลตฟอร์ม
+          <i class="fas fa-plus mr-1"></i> เพิ่มสินค้า
         </button>
       </div>
     </div>
@@ -268,6 +350,33 @@
       <div class="d-flex flex-wrap align-items-center" id="channel-pill-container">
         <!-- Injected via loadChannels() -->
         <span class="text-muted small">กำลังโหลดรายชื่อร้านค้า...</span>
+      </div>
+    </div>
+
+    <!-- Dedicated TikTok Helper Alert Banner -->
+    <div id="tt-channel-helper-banner" class="alert alert-dark p-3 mb-3 border-0 rounded-lg shadow-sm" style="background: linear-gradient(135deg, #09090b 0%, #18181b 100%); color: #ffffff; border-left: 4px solid #ef4444 !important; display: none;">
+      <div class="d-flex flex-wrap justify-content-between align-items-center">
+        <div class="d-flex align-items-center mb-2 mb-md-0">
+          <div class="mr-3" style="font-size: 1.8rem; color: #ef4444;">
+            <i class="fab fa-tiktok"></i>
+          </div>
+          <div>
+            <h6 class="font-weight-bold mb-1 text-white">
+              ผู้ช่วยจัดทำ Seller SKU สำหรับ TikTok Shop (<span id="txt-banner-tt-cnt" class="text-warning font-weight-bold">90</span> รายการรอลงรหัส)
+            </h6>
+            <div class="small" style="color: #cbd5e1;">
+              ไม่ต้องทนปวดตากับ Excel ดิบ! ดูภาพสินค้าชัดเจน พร้อมปุ่มก๊อปปี้ SKU ในคลิกเดียว แล้วเปิดหน้าแก้ไขบน TikTok วางได้ทันที
+            </div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center" style="gap: 8px;">
+          <button type="button" class="btn btn-danger btn-sm font-weight-bold shadow" onclick="openTikTokAssistantModal();">
+            <i class="fas fa-magic mr-1"></i> 🎬 เปิดผู้ช่วยใส่ SKU บน TikTok
+          </button>
+          <button type="button" class="btn btn-outline-light btn-sm font-weight-bold" onclick="exportTikTokExcel();">
+            <i class="fas fa-file-excel mr-1"></i> ดาวน์โหลด Excel (TikTok)
+          </button>
+        </div>
       </div>
     </div>
 
@@ -736,8 +845,122 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
     </div>
   </div>
 
+  <!-- Modal: TikTok SKU Visual Card Assistant -->
+  <div class="modal fade" id="modalTikTokAssistant" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 14px; overflow: hidden;">
+        <div class="modal-header bg-dark text-white py-3" style="background: #000000 !important;">
+          <div class="d-flex align-items-center">
+            <span class="mr-3" style="font-size: 1.6rem; color: #ef4444;"><i class="fab fa-tiktok"></i></span>
+            <div>
+              <h5 class="modal-title font-weight-bold mb-0 text-white">
+                🎬 ผู้ช่วยใส่ SKU บน TikTok Shop (Visual Card Assistant)
+              </h5>
+              <small class="text-white-50">เห็นรูปสินค้าชัดเจน คัดลอก SKU ในคลิกเดียว แล้วเปิดหน้าแก้ไขบน TikTok วางได้ทันที (ไม่ต้องทนปวดตากับ Excel)</small>
+            </div>
+          </div>
+          <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body p-4" style="background: #f8fafc;">
+          <!-- 3-Step Quick Guide Banner -->
+          <div class="bg-white p-3 rounded-lg border mb-3 shadow-xs">
+            <div class="row text-center">
+              <div class="col-md-4 mb-2 mb-md-0">
+                <div class="d-flex align-items-center justify-content-center">
+                  <span class="badge badge-pill badge-primary mr-2" style="width:24px; height:24px; line-height:16px;">1</span>
+                  <strong class="text-dark small">ดูภาพ & ตัวเลือกสินค้า</strong>
+                </div>
+                <div class="text-muted" style="font-size: 0.75rem;">เช็คสี ข้าง (ซ้าย/ขวา) หรือรุ่นที่ระบุในบัตร</div>
+              </div>
+              <div class="col-md-4 mb-2 mb-md-0">
+                <div class="d-flex align-items-center justify-content-center">
+                  <span class="badge badge-pill badge-info mr-2" style="width:24px; height:24px; line-height:16px;">2</span>
+                  <strong class="text-dark small">กด [📋 คัดลอก SKU]</strong>
+                </div>
+                <div class="text-muted" style="font-size: 0.75rem;">ระบบจะก๊อปปี้รหัส DDCar เข้าคลิปบอร์ดให้ทันที</div>
+              </div>
+              <div class="col-md-4">
+                <div class="d-flex align-items-center justify-content-center">
+                  <span class="badge badge-pill badge-success mr-2" style="width:24px; height:24px; line-height:16px;">3</span>
+                  <strong class="text-dark small">กด [↗ เปิดหน้าแก้ไขบน TikTok]</strong>
+                </div>
+                <div class="text-muted" style="font-size: 0.75rem;">วางรหัส (Ctrl+V) ในช่อง Seller SKU บน TikTok แล้วบันทึก</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls & Stats Row -->
+          <div class="card border-0 shadow-sm p-3 mb-3 bg-white" style="border-radius: 10px;">
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
+              <!-- Status Pill Tabs -->
+              <div class="d-flex align-items-center mb-2 mb-lg-0" style="gap: 6px;">
+                <button type="button" class="btn btn-sm btn-outline-danger font-weight-bold active" id="btn-tt-filter-unmapped" onclick="setTTStatusFilter('unmapped');">
+                  🔴 ยังไม่ได้ลง SKU (<span id="tt-cnt-unmapped">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-success font-weight-bold" id="btn-tt-filter-mapped" onclick="setTTStatusFilter('mapped');">
+                  🟢 ลง SKU เรียบร้อย (<span id="tt-cnt-mapped">0</span>)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary font-weight-bold" id="btn-tt-filter-all" onclick="setTTStatusFilter('all');">
+                  ทั้งหมด (<span id="tt-cnt-total">0</span>)
+                </button>
+              </div>
+
+              <!-- Search & Export -->
+              <div class="d-flex align-items-center" style="gap: 8px;">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                  </div>
+                  <input type="text" id="tt-txt-search" class="form-control" placeholder="ค้นหาชื่อสินค้า / SKU..." oninput="debounceTTSearch();">
+                </div>
+
+                <button type="button" class="btn btn-sm btn-outline-success font-weight-bold" onclick="exportTikTokExcel();" title="ดาวน์โหลดไฟล์สำหรับนำเข้าแบบชุดบน TikTok Shop">
+                  <i class="fas fa-file-excel mr-1"></i> ส่งออก Excel (TikTok)
+                </button>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-2 pt-2 border-top">
+              <div class="d-flex justify-content-between small text-muted font-weight-bold mb-1">
+                <span>ความคืบหน้าการลง Seller SKU บน TikTok:</span>
+                <span id="tt-progress-text" class="text-primary font-weight-bold">0%</span>
+              </div>
+              <div class="progress" style="height: 8px; border-radius: 4px; background: #e2e8f0;">
+                <div id="tt-progress-bar" class="progress-bar bg-success" style="width: 0%; transition: width 0.4s ease;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cards Grid Container -->
+          <div id="tt-cards-container">
+            <!-- Dynamic cards injected via renderTikTokCards() -->
+          </div>
+
+          <!-- Pagination -->
+          <div class="d-flex justify-content-between align-items-center mt-3" id="tt-pagination-row">
+            <span class="small text-muted" id="tt-txt-page-info">หน้า 1 จาก 1</span>
+            <div>
+              <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-tt-prev-page" onclick="prevTTPage();" disabled>
+                <i class="fas fa-chevron-left mr-1"></i> ก่อนหน้า
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-sm ml-1" id="btn-tt-next-page" onclick="nextTTPage();" disabled>
+                ถัดไป <i class="fas fa-chevron-right ml-1"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light py-2">
+          <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">ปิดหน้าต่าง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Central Unified Navbar Script -->
-  <script type="text/javascript" src="js/navbar.js"></script>
+  <script type="text/javascript" src="js/navbar.js?v=3.0"></script>
 
   <script>
     var currentChannel = 'all';
@@ -811,6 +1034,13 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
         $('#kpi-unmapped').text(summary.unmapped);
         $('#kpi-mapped').text(summary.mapped);
       }
+
+      // Update TikTok counter badges
+      var ttChan = channels.find(function(c) { return c.channel_code === 'tiktok_main'; });
+      if (ttChan) {
+        $('#txt-hdr-tt-unmapped').text(ttChan.unmapped_items || 0);
+        $('#txt-banner-tt-cnt').text(ttChan.unmapped_items || 0);
+      }
     }
 
     function renderChannelSelects(channels) {
@@ -833,6 +1063,11 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
     function selectChannel(code) {
       currentChannel = code;
       currentPage = 1;
+      if (code === 'tiktok_main') {
+        $('#tt-channel-helper-banner').slideDown(200);
+      } else {
+        $('#tt-channel-helper-banner').slideUp(200);
+      }
       loadChannels();
       loadMappings();
       loadReconciliation();
@@ -2064,7 +2299,8 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
           platform_name: platformName,
           mapping_type: 'single',
           prod_id: prodId,
-          target_sku: targetSku
+          target_sku: targetSku,
+          mapping_source: mappingSource
         }),
         dataType: 'json',
         success: function(res) {
@@ -2165,6 +2401,447 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       $('html, body').animate({
         scrollTop: $('#txt-search').offset().top - 80
       }, 300);
+    }
+
+    // ----------------------------------------------------
+    // TIKTOK SKU VISUAL CARD ASSISTANT & 1-CLICK COPY
+    // ----------------------------------------------------
+    var ttCurrentStatus = 'unmapped';
+    var ttCurrentPage = 1;
+    var ttPageSize = 25;
+    var ttSearchTimer = null;
+    var ttItemsData = [];
+
+    function openTikTokAssistantModal() {
+      $('#modalTikTokAssistant').modal('show');
+      ttCurrentPage = 1;
+      loadTikTokAssistantItems();
+    }
+
+    function setTTStatusFilter(status) {
+      ttCurrentStatus = status;
+      ttCurrentPage = 1;
+      $('#btn-tt-filter-unmapped, #btn-tt-filter-mapped, #btn-tt-filter-all').removeClass('active');
+      if (status === 'unmapped') $('#btn-tt-filter-unmapped').addClass('active');
+      else if (status === 'mapped') $('#btn-tt-filter-mapped').addClass('active');
+      else $('#btn-tt-filter-all').addClass('active');
+      loadTikTokAssistantItems();
+    }
+
+    function debounceTTSearch() {
+      clearTimeout(ttSearchTimer);
+      ttSearchTimer = setTimeout(function() {
+        ttCurrentPage = 1;
+        loadTikTokAssistantItems();
+      }, 300);
+    }
+
+    function loadTikTokAssistantItems() {
+      var search = ($('#tt-txt-search').val() || '').trim();
+      $('#tt-cards-container').html(
+        '<div class="text-center py-5 text-muted">' +
+        '<i class="fas fa-spinner fa-spin fa-2x mb-2 text-danger"></i>' +
+        '<div>กำลังโหลดรายการสินค้า TikTok...</div></div>'
+      );
+
+      $.ajax({
+        url: 'php/get_tiktok_assistant_items.php',
+        type: 'GET',
+        cache: false,
+        data: {
+          status: ttCurrentStatus,
+          search: search,
+          page: ttCurrentPage,
+          limit: ttPageSize,
+          _t: Date.now()
+        },
+        dataType: 'json',
+        success: function(res) {
+          if (res && res.success) {
+            ttItemsData = res.items || [];
+            updateTTKpis(res.kpi);
+            renderTikTokCards(ttItemsData);
+            renderTTPagination(res.total_filtered, res.page, res.limit);
+          } else {
+            $('#tt-cards-container').html('<div class="alert alert-warning">ไม่สามารถโหลดข้อมูลสินค้า TikTok ได้</div>');
+          }
+        },
+        error: function() {
+          $('#tt-cards-container').html('<div class="alert alert-danger">เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</div>');
+        }
+      });
+    }
+
+    function updateTTKpis(kpi) {
+      if (!kpi) return;
+      $('#tt-cnt-unmapped').text(kpi.unmapped || 0);
+      $('#tt-cnt-mapped').text(kpi.mapped || 0);
+      $('#tt-cnt-total').text(kpi.total || 0);
+      $('#txt-hdr-tt-unmapped').text(kpi.unmapped || 0);
+      $('#txt-banner-tt-cnt').text(kpi.unmapped || 0);
+
+      var pct = kpi.percent || 0;
+      $('#tt-progress-text').text(kpi.mapped + ' / ' + kpi.total + ' รายการ (' + pct + '%)');
+      $('#tt-progress-bar').css('width', pct + '%');
+    }
+
+    function renderTikTokCards(items) {
+      if (!items || items.length === 0) {
+        var emptyMsg = (ttCurrentStatus === 'unmapped')
+          ? '🎉 ยอดเยี่ยมมาก! ลง Seller SKU บน TikTok ครบทุกรายการแล้ว'
+          : 'ไม่พบรายการสินค้าที่ค้นหา';
+        $('#tt-cards-container').html(
+          '<div class="text-center py-5 text-muted bg-white rounded border">' +
+          '<i class="fas fa-check-circle fa-3x mb-3 text-success"></i>' +
+          '<h5 class="font-weight-bold text-dark">' + emptyMsg + '</h5>' +
+          '<p class="small text-muted mb-0">สามารถสลับดูแท็บ "ลง SKU เรียบร้อย" หรือกดส่งออก Excel ได้</p>' +
+          '</div>'
+        );
+        $('#tt-pagination-row').hide();
+        return;
+      }
+
+      $('#tt-pagination-row').show();
+      var html = '';
+
+      items.forEach(function(item) {
+        var isMapped = (item.status === 'mapped');
+        var imgSrc = item.image_url || item.current_img || '';
+
+        html += '<div class="tt-card ' + (isMapped ? 'is-done' : '') + '" id="tt-card-' + item.id + '">';
+        html += '  <div class="row align-items-center">';
+
+        // Col 1: Photo & Product Info
+        html += '    <div class="col-md-5 col-12 mb-3 mb-md-0">';
+        html += '      <div class="d-flex align-items-start">';
+
+        if (imgSrc) {
+          html += '      <div class="tt-img-wrap mr-3" onclick="previewImageModal(\'' + escapeQuotes(imgSrc) + '\', \'' + escapeQuotes(item.platform_name) + '\');" title="คลิกดูภาพขยายใหญ่">';
+          html += '        <img src="' + escapeHtml(imgSrc) + '" alt="" onerror="this.onerror=null; this.src=\'img/logo.jpg\';">';
+          html += '      </div>';
+        } else {
+          html += '      <div class="tt-img-wrap mr-3 d-flex align-items-center justify-content-center text-muted" title="ยังไม่มีรูป">';
+          html += '        <i class="fas fa-image fa-2x opacity-40"></i>';
+          html += '      </div>';
+        }
+
+        html += '        <div class="flex-grow-1" style="min-width: 0;">';
+        html += '          <div class="d-flex align-items-center mb-1">';
+        html += '            <span class="badge badge-dark mr-1" style="background:#000; font-size:0.7rem;"><i class="fab fa-tiktok text-danger mr-1"></i>TikTok Shop</span>';
+        if (item.tiktok_id) {
+          html += '          <span class="badge badge-light border text-muted" style="font-size:0.7rem;"><i class="fas fa-fingerprint mr-1"></i>ID ' + escapeHtml(item.tiktok_id) + '</span>';
+        }
+        if (item.mapping_source && item.mapping_source !== 'manual') {
+          html += '          <span class="badge badge-info ml-1" style="font-size:0.7rem;"><i class="fas fa-magic mr-1"></i>' + escapeHtml(item.mapping_source) + '</span>';
+        }
+        html += '          </div>';
+
+        html += '          <div class="font-weight-bold text-dark mb-1" style="font-size: 0.95rem; line-height: 1.4;">' + escapeHtml(item.base_name || item.platform_name) + '</div>';
+
+        if (item.var_text) {
+          var varParts = item.var_text.split(/[,/]/).map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+          if (varParts.length === 0) varParts = [item.var_text];
+          html += '        <div class="d-flex flex-wrap align-items-center mb-1" style="gap: 4px;">';
+          varParts.forEach(function(vp) {
+            html += '        <span class="badge badge-warning text-dark font-weight-bold px-2 py-1 shadow-xs" style="background:#fef3c7; border:1px solid #f59e0b; font-size:0.78rem;">';
+            html += '          <i class="fas fa-tag mr-1"></i>' + escapeHtml(vp);
+            html += '        </span>';
+          });
+          html += '        </div>';
+        }
+
+        html += '        </div>';
+        html += '      </div>';
+        html += '    </div>';
+
+        // Col 2: Matched or Suggested Candidates
+        html += '    <div class="col-md-4 col-12 mb-3 mb-md-0">';
+        html += '      <div class="tt-suggestion-box">';
+        var activeSku = item.target_sku || '';
+        var activeName = item.current_prod_name || '';
+        var activeStock = item.current_stock || 0;
+
+        html += '        <div class="d-flex justify-content-between align-items-center mb-1">';
+        html += '          <span class="small font-weight-bold text-dark"><i class="fas fa-barcode text-primary mr-1"></i> รหัสสินค้า DDCar:</span>';
+        if (activeStock > 0) {
+          html += '        <span class="badge badge-success px-2 py-1" id="tt-stock-badge-' + item.id + '"><i class="fas fa-boxes mr-1"></i>สต็อก: ' + activeStock + ' ชิ้น</span>';
+        } else {
+          html += '        <span class="badge badge-secondary px-2 py-1" id="tt-stock-badge-' + item.id + '"><i class="fas fa-boxes mr-1"></i>สต็อก: 0 ชิ้น</span>';
+        }
+        html += '        </div>';
+
+        // Autocomplete Input
+        html += '        <div class="autocomplete-wrap">';
+        html += '          <div class="input-group input-group-sm">';
+        html += '            <div class="input-group-prepend">';
+        html += '              <span class="input-group-text bg-white font-weight-bold text-primary"><i class="fas fa-tag"></i></span>';
+        html += '            </div>';
+        html += '            <input type="text" id="tt-input-sku-' + item.id + '" data-source="' + (item.mapping_source || 'manual') + '" class="form-control font-weight-bold text-primary" placeholder="พิมพ์ค้นหาหรือเลือกตัวแนะนำด้านล่าง..." value="' + escapeHtml(activeSku) + '" oninput="handleTTSkuSearch(this, ' + item.id + ');" onfocus="handleTTSkuSearch(this, ' + item.id + ');">';
+        html += '          </div>';
+        html += '          <div class="autocomplete-dropdown" id="tt-dropdown-' + item.id + '"></div>';
+        html += '        </div>';
+
+        // Verified Cross-channel Badge
+        if (!item.target_sku && item.suggestion && item.suggestion.confidence === 'cross_channel_verified') {
+          html += '        <div class="alert alert-success py-1 px-2 mt-1 mb-1 d-flex align-items-center justify-content-between font-weight-bold small">';
+          html += '          <span><i class="fas fa-check-double text-success mr-1"></i> ตรงกับ Shopee/Lazada: ' + escapeHtml(item.suggestion.prod_code) + '</span>';
+          html += '          <button type="button" class="btn btn-xs btn-success py-0 px-2" onclick="applyCandidate(' + item.id + ', \'' + escapeQuotes(item.suggestion.prod_code) + '\', \'cross_channel_verified\', \'' + escapeQuotes(item.suggestion.prod_name) + '\');">ใช้รหัสนี้</button>';
+          html += '        </div>';
+        }
+
+        // Top 3 Candidates Box
+        if (!item.target_sku && item.candidates && item.candidates.length > 0) {
+          html += '        <div class="mt-2 p-2 border rounded" id="candidate-box-' + item.id + '" style="background:#f8fafc; border-color:#e2e8f0;">';
+          html += '          <div class="small font-weight-bold text-secondary mb-1 d-flex align-items-center justify-content-between">';
+          html += '            <span><i class="fas fa-search text-warning mr-1"></i> สินค้าที่ใกล้เคียง (เทียบรูปก่อนเลือก):</span>';
+          html += '            <span class="badge badge-light border text-muted">' + item.candidates.length + ' ตัวเลือก</span>';
+          html += '          </div>';
+
+          item.candidates.forEach(function(c) {
+            var cImg = c.prod_img || 'img/logo.jpg';
+            html += '        <div class="d-flex align-items-center justify-content-between p-1 mb-1 bg-white border rounded shadow-xs">';
+            html += '          <div class="d-flex align-items-center" style="gap:8px; min-width:0;">';
+            html += '            <img src="' + escapeHtml(cImg) + '" style="width:36px; height:36px; object-fit:cover; border-radius:4px; border:1px solid #e2e8f0; cursor:pointer;" onerror="this.src=\'img/logo.jpg\';" onclick="previewImageModal(\'' + escapeQuotes(cImg) + '\', \'' + escapeQuotes(c.prod_name) + '\');" title="คลิกดูรูปขยาย">';
+            html += '            <div style="min-width:0;">';
+            html += '              <div class="font-weight-bold text-dark small text-truncate" style="max-width:160px;">' + escapeHtml(c.prod_code) + ' <span class="badge badge-info" style="font-size:0.7rem;">' + c.score + '%</span></div>';
+            html += '              <div class="text-truncate text-muted" style="max-width:160px; font-size:0.72rem;" title="' + escapeQuotes(c.prod_name) + '">' + escapeHtml(c.prod_name) + '</div>';
+            html += '            </div>';
+            html += '          </div>';
+            html += '          <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 font-weight-bold ml-1" onclick="applyCandidate(' + item.id + ', \'' + escapeQuotes(c.prod_code) + '\', \'assistant_candidate\', \'' + escapeQuotes(c.prod_name) + '\');">เลือก</button>';
+            html += '        </div>';
+          });
+          html += '        </div>';
+        }
+
+        // Preview Title Underneath
+        if (activeName) {
+          html += '        <div class="small text-muted text-truncate mt-1" id="tt-name-preview-' + item.id + '">' + escapeHtml(activeName) + '</div>';
+        } else {
+          html += '        <div class="small text-muted mt-1" id="tt-name-preview-' + item.id + '">(พิมพ์รหัสเพื่อค้นหา หรือเลือกจากตัวแนะนำ)</div>';
+        }
+
+        html += '      </div>';
+        html += '    </div>';
+
+        // Col 3: Action Buttons
+        html += '    <div class="col-md-3 col-12 text-md-right">';
+        html += '      <div class="d-flex flex-column gap-2" style="gap: 6px;">';
+        
+        // Button 1: Copy SKU
+        html += '        <button type="button" class="btn btn-tt-copy btn-sm py-2 shadow-xs" onclick="copyTTSku($(\'#tt-input-sku-' + item.id + '\').val().trim(), this);" title="คลิกเพื่อคัดลอกรหัสนี้เข้าคลิปบอร์ด">';
+        html += '          <i class="fas fa-copy mr-1"></i> 1. คัดลอก SKU';
+        html += '        </button>';
+
+        // Button 2: Direct Edit Link
+        var editUrl = item.direct_edit_url || ('https://seller-th.tiktok.com/product/edit/' + item.tiktok_id);
+        html += '        <a href="' + escapeHtml(editUrl) + '" target="_blank" rel="noopener noreferrer" class="btn btn-tt-open btn-sm py-2 shadow-xs" title="เปิดหน้าแก้ไขสินค้านี้บน TikTok Seller Center">';
+        html += '          <i class="fas fa-external-link-alt mr-1 text-danger"></i> 2. เปิดแก้บน TikTok ↗';
+        html += '        </a>';
+
+        // Button 3: Mark as Done
+        if (isMapped) {
+          html += '      <button type="button" class="btn btn-sm btn-light border text-success font-weight-bold py-1" onclick="markTTCompleted(' + item.id + ');">';
+          html += '        <i class="fas fa-check-double mr-1"></i> จับคู่เรียบร้อย (บันทึกซ้ำ)';
+          html += '      </button>';
+        } else {
+          html += '      <button type="button" class="btn btn-tt-done btn-sm py-2 shadow-xs font-weight-bold" onclick="markTTCompleted(' + item.id + ');">';
+          html += '        <i class="fas fa-check mr-1"></i> 3. ยืนยันจับคู่เสร็จสิ้น';
+          html += '      </button>';
+        }
+
+        html += '      </div>';
+        html += '    </div>';
+
+        html += '  </div>';
+        html += '</div>';
+      });
+
+      $('#tt-cards-container').html(html);
+    }
+
+    function applyCandidate(id, sku, source, name) {
+      $('#tt-input-sku-' + id).val(sku).attr('data-source', source);
+      $('#tt-name-preview-' + id).html('<span class="text-success font-weight-bold"><i class="fas fa-check-circle mr-1"></i>เลือกแล้ว: ' + escapeHtml(name || sku) + '</span>');
+      $('#candidate-box-' + id).fadeOut(200);
+    }
+
+    function copyTTSku(sku, btn) {
+      if (!sku) {
+        $.alert({ title: 'แจ้งเตือน', content: 'ยังไม่มีรหัส SKU ให้คัดลอก กรุณาเลือกรหัสสินค้าในช่องก่อน', type: 'orange' });
+        return;
+      }
+
+      function showCopiedFeedback() {
+        var $btn = $(btn);
+        var origHtml = $btn.html();
+        $btn.addClass('copied').html('<i class="fas fa-check mr-1"></i> คัดลอกแล้ว!');
+        setTimeout(function() {
+          $btn.removeClass('copied').html(origHtml);
+        }, 1600);
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(sku).then(function() {
+          showCopiedFeedback();
+        }).catch(function() {
+          copyFallback(sku);
+          showCopiedFeedback();
+        });
+      } else {
+        copyFallback(sku);
+        showCopiedFeedback();
+      }
+    }
+
+    function copyFallback(text) {
+      var $temp = $('<textarea>');
+      $('body').append($temp);
+      $temp.val(text).select();
+      document.execCommand('copy');
+      $temp.remove();
+    }
+
+    function markTTCompleted(id) {
+      var targetSku = ($('#tt-input-sku-' + id).val() || '').trim();
+      var mappingSource = $('#tt-input-sku-' + id).attr('data-source') || 'manual';
+      if (!targetSku) {
+        $.alert({ title: 'แจ้งเตือน', content: 'กรุณาระบุรหัสสินค้า DDCar ก่อนบันทึก', type: 'orange' });
+        return;
+      }
+
+      var item = ttItemsData.find(function(x) { return x.id === id; });
+      if (!item) return;
+
+      EasyLoading.show({ text: "กำลังบันทึก..." });
+      $.ajax({
+        url: 'php/save_platform_mapping.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          id: id,
+          channel_code: 'tiktok_main',
+          platform_sku: item.platform_sku,
+          platform_name: item.platform_name,
+          mapping_type: 'single',
+          target_sku: targetSku
+        }),
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res && res.success) {
+            item.status = 'mapped';
+            item.target_sku = targetSku;
+
+            if (ttCurrentStatus === 'unmapped') {
+              $('#tt-card-' + id).slideUp(300, function() {
+                $(this).remove();
+                var curUn = parseInt($('#tt-cnt-unmapped').text()) || 0;
+                if (curUn > 0) {
+                  $('#tt-cnt-unmapped').text(curUn - 1);
+                  $('#txt-hdr-tt-unmapped').text(curUn - 1);
+                  $('#txt-banner-tt-cnt').text(curUn - 1);
+                }
+                var curMap = parseInt($('#tt-cnt-mapped').text()) || 0;
+                $('#tt-cnt-mapped').text(curMap + 1);
+
+                if ($('#tt-cards-container .tt-card').length === 0) {
+                  loadTikTokAssistantItems();
+                }
+              });
+            } else {
+              $('#tt-card-' + id).addClass('is-done');
+            }
+
+            loadChannels();
+            loadMappings();
+          } else {
+            $.alert({ title: 'ผิดพลาด', content: res.message || 'บันทึกไม่สำเร็จ', type: 'red' });
+          }
+        },
+        error: function() {
+          EasyLoading.hide();
+          $.alert({ title: 'ผิดพลาด', content: 'เกิดข้อผิดพลาดในการเชื่อมต่อ', type: 'red' });
+        }
+      });
+    }
+
+    var ttAcTimer = null;
+    function handleTTSkuSearch(input, rowId) {
+      var term = $(input).val().trim();
+      var dropdown = $('#tt-dropdown-' + rowId);
+
+      if (term.length < 1) {
+        dropdown.hide();
+        return;
+      }
+
+      clearTimeout(ttAcTimer);
+      ttAcTimer = setTimeout(function() {
+        $.ajax({
+          url: 'php/search_stock_autocomplete.php',
+          type: 'GET',
+          data: { term: term, limit: 10 },
+          dataType: 'json',
+          success: function(items) {
+            if (!items || items.length === 0) {
+              dropdown.html('<div class="p-2 text-muted small">ไม่พบสินค้าในสต็อก</div>').show();
+              return;
+            }
+            var dHtml = '';
+            items.forEach(function(p) {
+              dHtml += '<div class="autocomplete-item" onclick="selectTTSkuItem(' + rowId + ', \'' + escapeQuotes(p.code) + '\', \'' + escapeQuotes(p.name) + '\', ' + p.total_stock + ');">';
+              dHtml += '  <div class="flex-grow-1">';
+              dHtml += '    <strong>' + escapeHtml(p.code) + '</strong> - <span class="text-muted small">' + escapeHtml(p.name) + '</span>';
+              dHtml += '  </div>';
+              dHtml += '  <span class="stock-chip ' + (p.total_stock > 0 ? 'stock-chip-ok' : 'stock-chip-low') + ' ml-2">';
+              dHtml += '    ' + p.total_stock + ' ชิ้น';
+              dHtml += '  </span>';
+              dHtml += '</div>';
+            });
+            dropdown.html(dHtml).show();
+          }
+        });
+      }, 250);
+    }
+
+    function selectTTSkuItem(rowId, sku, name, stock) {
+      $('#tt-input-sku-' + rowId).val(sku);
+      $('#tt-name-preview-' + rowId).text(name);
+      $('#tt-stock-badge-' + rowId).html('<i class="fas fa-boxes mr-1"></i>สต็อก: ' + stock + ' ชิ้น')
+        .removeClass('badge-secondary badge-success').addClass(stock > 0 ? 'badge-success' : 'badge-secondary');
+      $('#tt-dropdown-' + rowId).hide();
+    }
+
+    function renderTTPagination(total, page, limit) {
+      var totalPages = Math.ceil(total / limit) || 1;
+      $('#tt-txt-page-info').text('หน้า ' + page + ' จาก ' + totalPages + ' (ทั้งหมด ' + total + ' รายการ)');
+      $('#btn-tt-prev-page').prop('disabled', page <= 1);
+      $('#btn-tt-next-page').prop('disabled', page >= totalPages);
+    }
+
+    function prevTTPage() {
+      if (ttCurrentPage > 1) {
+        ttCurrentPage--;
+        loadTikTokAssistantItems();
+      }
+    }
+
+    function nextTTPage() {
+      ttCurrentPage++;
+      loadTikTokAssistantItems();
+    }
+
+    function exportTikTokExcel() {
+      window.location.href = 'php/export_tiktok_skus.php?status=' + ttCurrentStatus;
+    }
+
+    function previewImageModal(src, title) {
+      if (!src) return;
+      $.dialog({
+        title: title || 'รูปภาพสินค้า',
+        content: '<div class="text-center p-2"><img src="' + escapeHtml(src) + '" class="img-fluid rounded shadow" style="max-height: 480px;"></div>',
+        columnClass: 'medium'
+      });
     }
   </script>
 </body>

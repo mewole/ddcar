@@ -579,7 +579,7 @@
 				$('#edit-prod-cost').val('');
 			} else {
 				$('#col-edit-cost').show();
-				$('#wrap-sync-history').show();
+				if (localStorage.user_role === 'เจ้าของร้าน') { $('#wrap-sync-history').show(); } else { $('#wrap-sync-history').hide(); }
 				$('#chk-sync-history').prop('checked', false);
 			}
 			$('#edit-prod-pricesend').val('');
@@ -684,6 +684,32 @@
 				return;
 			}
 
+			// Step 3 Data Quality Guards:
+			var price_val = parseFloat($('#edit-prod-price').val()) || 0;
+			var pricesend_val = parseFloat($('#edit-prod-pricesend').val()) || 0;
+
+			if (price_val <= 0) {
+				$.alert({
+					title: '⚠️ ราคาขายปลีกไม่ถูกต้อง',
+					content: 'ราคาขายปลีกต้องมากกว่า 0 บาทเสมอ เพื่อป้องกันการขายผิดพลาด',
+					type: 'red'
+				});
+				$('#edit-prod-price').focus().addClass('is-invalid');
+				return;
+			}
+			$('#edit-prod-price').removeClass('is-invalid');
+
+			if (pricesend_val > 0 && pricesend_val > price_val) {
+				$.alert({
+					title: '⚠️ ราคาส่งสูงกว่าราคาปลีก',
+					content: 'ราคาส่ง (฿' + pricesend_val.toLocaleString() + ') ต้องไม่สูงกว่าราคาขายปลีก (฿' + price_val.toLocaleString() + ')',
+					type: 'red'
+				});
+				$('#edit-prod-pricesend').focus().addClass('is-invalid');
+				return;
+			}
+			$('#edit-prod-pricesend').removeClass('is-invalid');
+
 			var input = document.getElementById("fileSelect");
 			var file = (input && input.files && input.files[0]) ? input.files[0] : null;
 
@@ -773,9 +799,18 @@
 								});
 							}
 						}else{
+							var errMsg = 'ไม่สามารถบันทึกได้ (' + data + ')';
+							if (data === 'error_price_zero') {
+								errMsg = 'ราคาขายปลีกต้องมากกว่า 0 บาทเสมอ เพื่อป้องกันการขายผิดพลาด';
+							} else if (data === 'error_wholesale_higher') {
+								errMsg = 'ราคาส่งต้องไม่สูงกว่าราคาขายปลีก';
+							} else if (data === 'invalid_sku') {
+								errMsg = 'รูปแบบรหัส SKU ไม่ถูกต้อง (ใช้เฉพาะ A-Z, 0-9 และขีดกลาง)';
+							}
 							$.confirm({
-								title: 'พบข้อผิดพลาด',
-								content: 'ไม่สามารถบันทึกได้ (' + data + ')',
+								title: '⚠️ พบข้อผิดพลาด',
+								content: errMsg,
+								type: 'red',
 								backgroundDismiss: true,
 								buttons: {
 									formSubmit: {
@@ -2045,6 +2080,6 @@
 
 </script>
     <!-- Central Navbar Script -->
-    <script src="js/navbar.js?v=2.5"></script>
+    <script src="js/navbar.js?v=3.0"></script>
 </body>
 </html>

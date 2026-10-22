@@ -1,5 +1,7 @@
 <?php 
-    include "db.php"; 
+    include "db.php";
+include_once "auth_guard.php";
+require_login(); 
     $input  = $_POST['JSON'];
     $obj = json_decode($input,true);
     $shop_id  = $_POST['shop_id'];

@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $output = array();   
 
     $query = "SELECT shop_id,shop_name FROM shop_detail ORDER BY shop_id ASC";

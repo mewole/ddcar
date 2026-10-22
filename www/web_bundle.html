@@ -220,6 +220,24 @@
 
     <!-- Filter & Search -->
     <div class="table-container mb-4">
+      <!-- Mode Switcher: Active Online Bundles vs All Warehouse Candidates -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-3 border-bottom">
+        <div class="d-flex align-items-center">
+          <span class="font-weight-bold text-dark mr-2"><i class="fas fa-layer-group text-primary mr-1"></i> โหมดแสดงผล:</span>
+          <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-primary font-weight-bold" id="btn-mode-online" onclick="switchBundleMode('online_active');">
+              <i class="fas fa-check-circle mr-1"></i> เฉพาะชุดที่ขายออนไลน์ & มีสูตรแล้ว (แนะนำ)
+            </button>
+            <button type="button" class="btn btn-outline-secondary font-weight-bold" id="btn-mode-all" onclick="switchBundleMode('all_candidates');">
+              <i class="fas fa-boxes mr-1"></i> ดูสินค้าทั้งหมดในคลัง (394 รายการ)
+            </button>
+          </div>
+        </div>
+        <div class="small text-muted mt-2 mt-md-0">
+          💡 <span id="txt-mode-hint">แสดงเฉพาะสินค้าชุดที่ผูกขายบน Shopee / Lazada / TikTok และมีสูตรตัดสต็อกจริง</span>
+        </div>
+      </div>
+
       <div class="row align-items-center mb-3">
         <div class="col-md-6 col-sm-12 mb-2 mb-md-0">
           <div class="input-group">
@@ -231,9 +249,9 @@
         </div>
         <div class="col-md-4 col-sm-6 mb-2 mb-md-0">
           <select id="sel-filter-status" class="form-control" onchange="filterTable();">
-            <option value="all">แสดงทั้งหมด</option>
-            <option value="pending" selected>🟠 แสดงเฉพาะรอดำเนินการ (Queue)</option>
+            <option value="all" selected>แสดงทั้งหมด</option>
             <option value="mapped">🟢 แสดงเฉพาะที่ผูกสูตรแล้ว</option>
+            <option value="pending">🟠 แสดงเฉพาะรอดำเนินการ (Queue)</option>
           </select>
         </div>
         <div class="col-md-2 col-sm-6 text-right">
@@ -333,6 +351,7 @@
     var allItems = [];
     var currentEditingSku = '';
     var currentEditingName = '';
+    var currentBundleMode = 'online_active';
 
     $(document).ready(function() {
       if (!localStorage.user_id) {
@@ -346,11 +365,25 @@
       loadBundleData();
     });
 
+    function switchBundleMode(mode) {
+      currentBundleMode = mode;
+      $('#btn-mode-online, #btn-mode-all').removeClass('btn-primary').addClass('btn-outline-secondary');
+      if (mode === 'online_active') {
+        $('#btn-mode-online').removeClass('btn-outline-secondary').addClass('btn-primary');
+        $('#txt-mode-hint').text('แสดงเฉพาะสินค้าชุดที่ผูกขายบน Shopee / Lazada / TikTok และมีสูตรตัดสต็อกจริง');
+      } else {
+        $('#btn-mode-all').removeClass('btn-outline-secondary').addClass('btn-primary');
+        $('#txt-mode-hint').text('แสดงสินค้าทั้งหมดในคลังที่มีคำว่า ชุด/คู่/SET (ค้นหาเพิ่มเติม)');
+      }
+      loadBundleData();
+    }
+
     function loadBundleData() {
       EasyLoading.show({ text: 'กำลังโหลดรายการสินค้าชุด...' });
       $.ajax({
         url: 'php/get_bundle_recipes.php',
         type: 'GET',
+        data: { mode: currentBundleMode },
         dataType: 'json',
         success: function(res) {
           EasyLoading.hide();
@@ -561,6 +594,6 @@
   </script>
 
   <!-- Central Unified Navbar Script -->
-  <script src="js/navbar.js?v=2.3"></script>
+  <script src="js/navbar.js?v=3.0"></script>
 </body>
 </html>

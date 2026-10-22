@@ -2,6 +2,8 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type");
 require_once "db.php";
+include_once "auth_guard.php";
+require_login();
 header("Content-Type: application/json; charset=utf-8");
 
 // Ensure Tables Exist with matching collation

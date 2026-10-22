@@ -1,0 +1,975 @@
+[
+  {
+    "file": "add_cus.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "add_folder.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "add_pending_vat.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "add_performance_indexes.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "add_prod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "add_ware_shop.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "auth_guard.php",
+    "statusCode": 200,
+    "isProtected": false,
+    "isPublicWhitelisted": true,
+    "preview": ""
+  },
+  {
+    "file": "backup_db.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "back_folder.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "check_amt_prod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "check_version.php",
+    "statusCode": 200,
+    "isProtected": false,
+    "isPublicWhitelisted": true,
+    "preview": "{\"v\":\"5.5.68-MariaDB\"}"
+  },
+  {
+    "file": "clear_pending_vat.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "confirm_transfer.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "count_prod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "create_transfer.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "db.php",
+    "statusCode": 200,
+    "isProtected": false,
+    "isPublicWhitelisted": true,
+    "preview": ""
+  },
+  {
+    "file": "debug_status.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_bill.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_cus.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_export.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_folder.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_import.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_place.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_platform_mapping.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_prod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_threshold.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_transfer.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_transfer_to.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_user.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "delete_ware_shop.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "export_tiktok_skus.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "fix_channel_names.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "folder_helper.php",
+    "statusCode": 200,
+    "isProtected": false,
+    "isPublicWhitelisted": true,
+    "preview": ""
+  },
+  {
+    "file": "get_allamtstock.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_allprod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_all_cost.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_all_cost_byprd.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_amt_prod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_autoprod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_bell.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_bill.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_bill_info.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_bill_info4print.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_bundle_recipes.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_credit.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_credit_info.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_cus.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_daily_reconciliation.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_detail_cus.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_export.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_export_info.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_folder.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_folder_web BK.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_folder_web.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_import.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_import_info.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_lastV.php",
+    "statusCode": 200,
+    "isProtected": false,
+    "isPublicWhitelisted": true,
+    "preview": "[{\"0\":\"http:\\/\\/ddaccessory.trueddns.com:24330\\/dd-shop\\/ddcar-latest.apk\",\"url\""
+  },
+  {
+    "file": "get_low_stock.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_online_shop.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_pending_transfers.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_pending_vat.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_place.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_platform_channels.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_platform_mappings.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_prod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_product_sku_vat.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_sale.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_sales_analytics.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_sales_summary.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_shift_bill.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_shift_bill_web.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_shop.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_status_prod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_stock_adjustments.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_suppliers.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_supplier_prices.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_threshold.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_tiktok_assistant_items.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_transfer.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_transfer_info.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_transfer_to.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_transfer_to_info.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_user.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_ware.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "get_ware_shop.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "img_helper.php",
+    "statusCode": 200,
+    "isProtected": false,
+    "isPublicWhitelisted": true,
+    "preview": ""
+  },
+  {
+    "file": "import_platform_skus.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "kill_zombies.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "login.php",
+    "statusCode": 200,
+    "isProtected": false,
+    "isPublicWhitelisted": true,
+    "preview": "fail"
+  },
+  {
+    "file": "logout.php",
+    "statusCode": 200,
+    "isProtected": false,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":true,\"message\":\"\\u0e2d\\u0e2d\\u0e01\\u0e08\\u0e32\\u0e01\\u0e23\\u0e30\\u0e1"
+  },
+  {
+    "file": "migrate_adjustment.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "migrate_images.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "migrate_supplier_sku.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "pay_credit.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "platform_mapping_init.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "register.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "reject_transfer.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_bill.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_cus.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_export.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_folder.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_import.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_place.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_prod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_prod_web.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_transfer.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_user.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "rename_ware_shop.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "restore_product.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "save_bundle_recipe.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "save_credit.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "save_order.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "save_platform_channel.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "save_platform_mapping.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "save_platform_sku.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "save_stock_adjustment.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "search_amount.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "search_cus.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "search_cusprice.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "search_img.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "search_prod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "search_prod_full.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "search_sale.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "search_stock_autocomplete.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "setup_status_ext.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "set_lastV.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "stock_in.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "stock_out.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "stock_out_web.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "sync_platform_catalog.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "sync_platform_orders.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "T001.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "transfer_in.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "update_bell.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "update_bell_status.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "update_credit_auto.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "update_platform_product_name.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "update_prod.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  },
+  {
+    "file": "update_threshold.php",
+    "statusCode": 401,
+    "isProtected": true,
+    "isPublicWhitelisted": false,
+    "preview": "{\"success\":false,\"error\":\"Unauthorized: \\u0e01\\u0e23\\u0e38\\u0e13\\u0e32\\u0e40\\u0e"
+  }
+]

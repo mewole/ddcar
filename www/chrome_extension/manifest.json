@@ -26,6 +26,9 @@
     "*://*.lazada.co.th/*",
     "*://*.tiktok.com/*",
     "http://100.77.57.16:8083/*",
+    "http://100.77.57.16/*",
+    "http://ddaccessory.trueddns.com:24330/*",
+    "*://*.trueddns.com/*",
     "http://localhost:8083/*",
     "http://localhost/*"
   ],

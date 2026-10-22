@@ -4,6 +4,8 @@
  * Ensure stock_adjustment table exists in ddcar database
  */
 include "db.php";
+include_once "auth_guard.php";
+require_login();
 
 $sql = "CREATE TABLE IF NOT EXISTS stock_adjustment (
     adj_id INT AUTO_INCREMENT PRIMARY KEY,

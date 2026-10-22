@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     header("Content-Type: application/json; charset=UTF-8");
 
     $version = isset($_REQUEST['version']) ? trim($_REQUEST['version']) : '';

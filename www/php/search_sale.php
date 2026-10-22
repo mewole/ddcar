@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $data = $_POST['phrase'];
     $cus_id = $_GET['cus_id'];
     $ware_id = $_GET['ware_id'];

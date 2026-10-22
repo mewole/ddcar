@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $credit_id = $_POST['credit_id'];
     $txt = "(cancel)";
     

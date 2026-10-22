@@ -1,6 +1,8 @@
 <?php
     ini_set('memory_limit', '512M');
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     
     // 1. รับค่าและตัดเว้นวรรค
     $parent      = isset($_POST['parent']) ? trim(mysqli_real_escape_string($conn, $_POST['parent'])) : 'car';

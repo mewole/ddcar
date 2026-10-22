@@ -1,5 +1,7 @@
 <?php
 require_once "db.php";
+include_once "auth_guard.php";
+require_login();
 mysqli_query($conn, "SET NAMES utf8");
 mysqli_query($conn, "SET CHARACTER SET utf8");
 

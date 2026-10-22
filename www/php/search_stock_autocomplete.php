@@ -1,5 +1,7 @@
 <?php
 require_once "db.php";
+include_once "auth_guard.php";
+require_login();
 
 $term = isset($_GET['term']) ? trim(mysqli_real_escape_string($conn, $_GET['term'])) : '';
 if (empty($term) && isset($_POST['term'])) {

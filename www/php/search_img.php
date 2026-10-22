@@ -1,5 +1,7 @@
 <?php
-include "db.php"; 
+include "db.php";
+include_once "auth_guard.php";
+require_login(); 
 $prod_id = isset($_POST['prod_id']) ? intval($_POST['prod_id']) : 0;  
 $output = array(); 
 

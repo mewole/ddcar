@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $output = array();   
     $date = isset($_POST['date']) ? mysqli_real_escape_string($conn, trim($_POST['date'])) : date('Y-m-d');
     $date_from = $date.' 00:00:00';

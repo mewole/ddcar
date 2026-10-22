@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $bill_id = $_POST['bill_id'];
 
     $query = "SELECT s.order_number,c.cus_name,s.date_time,s.payment_type,s.branch_id,s.type,s.sum_price,

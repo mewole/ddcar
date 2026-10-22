@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $key = $_POST['keyword'];
     $cost = 0;
 

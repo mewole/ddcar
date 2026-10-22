@@ -1,5 +1,7 @@
 <?php
-    include "db.php";   
+    include "db.php";
+include_once "auth_guard.php";
+require_login();   
     include_once "img_helper.php";
     
     // 1. รับค่า + ตัดเว้นวรรค + กรองข้อมูลเพื่อความปลอดภัยจาก SQL Injection

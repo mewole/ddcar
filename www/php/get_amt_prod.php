@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $prod_id = $_POST['prod'];   
 
     $query = "SELECT amount FROM warehouse WHERE prod_id = '$prod_id'";

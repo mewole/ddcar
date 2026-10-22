@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     header("Content-Type: application/json; charset=UTF-8");
 
     $prod_id = isset($_POST['prod_id']) ? mysqli_real_escape_string($conn, trim($_POST['prod_id'])) : '';

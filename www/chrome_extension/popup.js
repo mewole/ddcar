@@ -226,6 +226,9 @@ document.addEventListener("DOMContentLoaded", () => {
               // Retry sending message after injection
               setTimeout(() => {
                 chrome.tabs.sendMessage(tabInfo.id, { action: "START_AUTO_SYNC", source: "popup_button" }, (retryRes) => {
+                  if (chrome.runtime.lastError) {
+                    console.log("Retry message handled:", chrome.runtime.lastError.message);
+                  }
                   btnSyncNow.disabled = false;
                   handleSyncResponse(retryRes, tabInfo);
                 });

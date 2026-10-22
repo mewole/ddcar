@@ -1,5 +1,7 @@
 <?php  
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $id  = $_POST['id'];
     $type  = $_POST['type'];
     $name = $_POST['name'];    

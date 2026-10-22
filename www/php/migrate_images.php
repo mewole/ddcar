@@ -3,6 +3,8 @@ ini_set('memory_limit', '512M');
 set_time_limit(180);
 
 include "db.php";
+include_once "auth_guard.php";
+require_login();
 include_once "img_helper.php";
 
 $chunk = isset($_GET['chunk']) ? intval($_GET['chunk']) : 250;

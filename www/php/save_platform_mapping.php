@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_login();
 require_once "db.php";
 @mysqli_report(MYSQLI_REPORT_OFF);
 header("Content-Type: application/json; charset=utf-8");
@@ -23,6 +25,7 @@ foreach ($items as $entry) {
     $platform_name = isset($entry['platform_name']) ? mysqli_real_escape_string($conn, trim($entry['platform_name'])) : '';
     $mapping_type = (isset($entry['mapping_type']) && $entry['mapping_type'] === 'bundle') ? 'bundle' : 'single';
     $vat_type = (isset($entry['vat_type']) && $entry['vat_type'] === 'vat') ? 'vat' : 'no_vat';
+    $mapping_source = isset($entry['mapping_source']) ? mysqli_real_escape_string($conn, trim($entry['mapping_source'])) : 'manual';
 
     if (empty($channel_code) || empty($platform_sku)) {
         continue;
@@ -108,13 +111,14 @@ foreach ($items as $entry) {
                 target_sku = '$target_sku',
                 bundle_json = $bundle_sql_val,
                 vat_type = '$vat_type',
-                status = '$status'
+                status = '$status',
+                mapping_source = '$mapping_source'
                 WHERE id = $id";
     } else {
         $sql = "INSERT INTO platform_sku_mapping 
-                (channel_code, platform_sku, platform_name, mapping_type, prod_id, target_sku, bundle_json, vat_type, status)
+                (channel_code, platform_sku, platform_name, mapping_type, prod_id, target_sku, bundle_json, vat_type, status, mapping_source)
                 VALUES 
-                ('$channel_code', '$platform_sku', '$platform_name', '$mapping_type', $prod_id, '$target_sku', $bundle_sql_val, '$vat_type', '$status')
+                ('$channel_code', '$platform_sku', '$platform_name', '$mapping_type', $prod_id, '$target_sku', $bundle_sql_val, '$vat_type', '$status', '$mapping_source')
                 ON DUPLICATE KEY UPDATE 
                 platform_name = '$platform_name',
                 mapping_type = '$mapping_type',
@@ -122,7 +126,8 @@ foreach ($items as $entry) {
                 target_sku = '$target_sku',
                 bundle_json = $bundle_sql_val,
                 vat_type = '$vat_type',
-                status = '$status'";
+                status = '$status',
+                mapping_source = '$mapping_source'";
     }
 
     if (mysqli_query($conn, $sql)) {

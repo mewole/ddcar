@@ -7,6 +7,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 require_once "db.php";
+include_once "auth_guard.php";
+require_login();
 header("Content-Type: application/json; charset=utf-8");
 
 $raw = file_get_contents("php://input");

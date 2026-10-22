@@ -69,10 +69,10 @@ function triggerActiveTabSync(source) {
         tabs.forEach((tab) => {
           chrome.tabs.sendMessage(tab.id, { action: "START_AUTO_SYNC", source: source }, (response) => {
             if (chrome.runtime.lastError) {
-              console.warn("Could not message tab:", pattern, chrome.runtime.lastError.message);
-            } else {
-              console.log("Sync Response from:", pattern, response);
+              // Tab is not ready or not on active seller order page yet - ignore silently
+              return;
             }
+            console.log("Sync Response from:", pattern, response);
           });
         });
       }

@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $imp_id = isset($_POST['imp_id']) ? mysqli_real_escape_string($conn, $_POST['imp_id']) : '';
     $output = array();
 

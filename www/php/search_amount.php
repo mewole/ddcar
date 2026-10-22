@@ -1,5 +1,7 @@
 <?php
-include "db.php";    
+include "db.php";
+include_once "auth_guard.php";
+require_login();    
 $ware_id = isset($_POST['ware_id']) ? mysqli_real_escape_string($conn, $_POST['ware_id']) : '';
 $type = isset($_POST['type']) ? $_POST['type'] : '';
 $prod_id = isset($_POST['prod_id']) ? intval($_POST['prod_id']) : 0;

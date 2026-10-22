@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     
     $phrase = mysqli_real_escape_string($conn, $_POST['phrase'] ?? '');
     $output = array();

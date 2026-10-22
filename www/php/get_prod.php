@@ -1,5 +1,7 @@
 <?php
-    include "db.php";    
+    include "db.php";
+include_once "auth_guard.php";
+require_login();    
 
     $output = array();
     $supplier_name = isset($_POST['supplier_name']) ? mysqli_real_escape_string($conn, trim($_POST['supplier_name'])) : '';

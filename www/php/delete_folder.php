@@ -1,5 +1,7 @@
 <?php  
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     
     $title = isset($_POST['title']) ? trim(mysqli_real_escape_string($conn, $_POST['title'])) : '';
 

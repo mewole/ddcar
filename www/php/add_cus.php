@@ -1,5 +1,7 @@
 <?php
-    include "db.php";    
+    include "db.php";
+include_once "auth_guard.php";
+require_login();    
     $name  = $_POST['cus_name'];   
     $phone  = $_POST['phone'];   
     $addr  = $_POST['addr'];  

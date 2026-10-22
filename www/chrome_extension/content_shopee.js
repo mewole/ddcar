@@ -442,6 +442,9 @@
         chrome.runtime.sendMessage(
           { action: "SEND_ORDERS_TO_DDCAR", payload: payload },
           (response) => {
+            if (chrome.runtime.lastError) {
+              console.log("DDCar Sync message error:", chrome.runtime.lastError.message);
+            }
             isSyncing = false;
             if (btn) {
               btn.disabled = false;
@@ -613,6 +616,9 @@
         chrome.runtime.sendMessage(
           { action: "SEND_CATALOG_TO_DDCAR", payload: payload },
           (response) => {
+            if (chrome.runtime.lastError) {
+              console.log("DDCar Sync message error:", chrome.runtime.lastError.message);
+            }
             if (btn) {
               btn.disabled = false;
               btn.textContent = "📦 ซิงค์แคตตาล็อกสินค้า Shopee (เรียบร้อย)";

@@ -7,6 +7,8 @@
 
 header("Content-Type: application/json; charset=UTF-8");
 include "db.php";
+include_once "auth_guard.php";
+require_login();
 
 $prod_id    = isset($_POST['prod_id']) ? intval($_POST['prod_id']) : 0;
 $place_type = isset($_POST['place_type']) ? trim($_POST['place_type']) : '';

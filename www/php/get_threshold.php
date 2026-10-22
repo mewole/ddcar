@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $output = array();   
 
     $query = "SELECT prod_name,prod_id,min_amount,day_transport,prod_code FROM product 

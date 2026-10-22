@@ -310,257 +310,78 @@
         return;
       }
       $.confirm({
-        title: 'ลบรายการ',
-        content: 'ต้องการลบบิลนี้หรือไม่?'+
-                '<form action="" class="formName">' +
-                '<div class="form-group">' +
-                '<label>*หมายเหตุในการลบ</label>' +
-                '<input type="text" placeholder="หมายเหตุ" class="remark form-control" required />' +
-                '</div>' +
-                '</form>',
+        title: '🚫 ยกเลิกบิลขาย (Soft Delete)',
+        content: '<div class="text-left">' +
+                 '<p class="mb-2 text-danger font-weight-bold"><i class="fas fa-exclamation-triangle mr-1"></i> ยืนยันการยกเลิกบิลนี้หรือไม่?</p>' +
+                 '<p class="small text-muted mb-3">ระบบจะคืนสต็อกสินค้ากลับคลังและบันทึกสถานะยกเลิก โดยไม่ทำลายประวัติการขาย</p>' +
+                 '<div class="form-group mb-0">' +
+                 '<label class="font-weight-bold text-dark">*ระบุเหตุผลในการยกเลิกบิล (จำเป็นต้องกรอก):</label>' +
+                 '<input type="text" placeholder="เช่น ลูกค้าขอเปลี่ยนสินค้า / บันทึกผิด / คืนเงิน..." class="remark form-control" required autofocus />' +
+                 '</div>' +
+                 '</div>',
         backgroundDismiss: true,
         buttons: { 
           formSubmit: {
-            text: 'ตกลง',
-            btnClass: 'btn-danger',
+            text: 'ยืนยันยกเลิกบิล',
+            btnClass: 'btn-danger font-weight-bold',
             action: function () {
-              // delete bill
-              var remark = this.$content.find('.remark').val();
+              var remark = (this.$content.find('.remark').val() || '').trim();
+              if (!remark) {
+                $.alert({
+                  title: '⚠️ กรุณาระบุเหตุผล',
+                  content: 'ต้องระบุเหตุผลในการยกเลิกบิลทุกครั้งเพื่อเป็นหลักฐานตรวจสอบความถูกต้อง',
+                  type: 'orange'
+                });
+                return false;
+              }
+
               $.ajax({
                 type: "POST",
                 url:"php/delete_bill.php",         
                 data:{'bill_id' : bill_id , 'b_id' : b_id , 'type' : type , 'pay' : pay , 'total' : total , 'credit_id': c_id , 'remark': remark , 'u_id' : localStorage.user_id},
                 beforeSend: function(){
                   EasyLoading.show({                           
-                    text: "กำลังโหลด"
+                    text: "กำลังดำเนินการยกเลิกบิล..."
                   });
                 },                       
                 success: function(data){ 
                   EasyLoading.hide();
                   if(data == "success"){                    
-                    $('#bill-'+bill_id).remove()
-                    $('#bills-'+bill_id).remove()
+                    $('#bill-'+bill_id).remove();
+                    $('#bills-'+bill_id).remove();
+                    $.alert({
+                      title: 'ยกเลิกบิลสำเร็จ',
+                      content: 'คืนสต็อกและบันทึกประวัติการยกเลิกบิลเรียบร้อยแล้ว',
+                      type: 'green'
+                    });
                   }else{
                     $.confirm({
                       title: 'พบข้อผิดพลาด',
-                      content: 'ลองอีกครั้ง',
+                      content: 'ไม่สามารถยกเลิกบิลได้ กรุณาลองใหม่อีกครั้ง (' + data + ')',
+                      type: 'red',
                       backgroundDismiss: true,
                       buttons: {
                         formSubmit: {
-                        text: 'ตกลง',
-                        btnClass: 'btn-regis',
-                        action: function () {
-                        }
+                          text: 'ตกลง',
+                          btnClass: 'btn-regis',
+                          action: function () {}
                         }
                       }
                     });
                   }                         
-                }               
+                },
+                error: function(xhr, status, err) {
+                  EasyLoading.hide();
+                  $.alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + err);
+                }              
               });      
             }
-          },ยกเลิก: function () {}, 
+          },
+          ยกเลิก: function () {}, 
         }  
-    });
-    }
-    
-    var last_collapse_index = 0;
-
-    function appendCollapse(index){
-      if($("#detail-"+index).length){
-        if(last_collapse_index){          
-          $("div").closest("#detail-"+last_collapse_index).collapse('hide');
-        }
-
-        $("#btn-a4").attr('onclick', 'printA4('+index+')');
-        $("#btn-recep").attr('onclick', 'printRecep('+index+')');        
-
-        if(last_collapse_index != index){
-          last_collapse_index = index;
-        }
-      }else{
-        
-        if(last_collapse_index){
-          $("div").closest("#detail-"+last_collapse_index).collapse('hide');
-        }
-        var text = ""        
-        $.ajax({
-          type: "POST",
-          url:"php/get_bill_info4print.php",    
-          data:{'bill_id' : index},
-          async:false,                            
-          beforeSend: function(){
-            EasyLoading.show({                           
-              text: "กำลังโหลด"
-            });
-          },             
-          success: function(data){  
-            EasyLoading.hide();
-            var obj = jQuery.parseJSON(data);
-            text = text + '<div class="collapse" id="detail-'+index+'">'+
-            '<div class="card card-body">'+
-              '<div class="row justify-content-center">'+
-                  '<h3 style="text-decoration: underline;">รายการ</h3>'+
-              '</div>'            
-            $.each(obj, function(i, field){
-              sum = field.prod_price*field.prod_amount
-              text = text + 
-              '<div id="item-'+field.prod_id+'" class="row justify-content-center">'+
-                '<div class="col-1 text-center items">'+(i+1)+'</div>'+
-                '<div id="amt-'+field.prod_id+'" class="col-1 text-center items">'+field.prod_amount+'</div>'+
-                '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span></div>'+
-                '<div class="col-1 text-center items">'+field.prod_price+'</div>'+
-                '<div id="itemsum-'+field.prod_id+'" class="col-1 text-center items">'+sum+'</div>'+
-                '<div class="col-2 text-center items">'+
-                  '<button onclick="init_restore('+index+','+field.prod_id+','+field.prod_price+','+field.prod_amount+','+obj[0].branch_id+',\''+obj[0].type+'\',\''+obj[0].payment_type+'\','+obj[0].credit_id+','+field.prod_price+')" class="btn btn-info" data-toggle="modal" data-target="#reModal" style="color: white;">คืนสินค้า</button>'+
-                '</div>'+
-              '</div>'
-            });
-            text = text + 
-            '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
-            '<div class="row" style="margin-top: 1em;">'+
-                '<div class="col-4 text-right"><h5>หมายเหตุ</h5></div>'+
-                '<div class="col-4 text-right">'+obj[0].comment+'<h6></h6></div>'+
-            '</div>'+
-            '<div class="row">'+
-                '<div class="col-4 text-right"><h4>รวม</h4></div>'+
-                '<div class="col-4 text-right"><h4 id="sum-'+index+'">'+obj[0].sum_price+'</h4></div>'+
-            '</div>'+
-            '<div class="row">'+
-                '<div class="col-4 text-right"><h4>ลด</h4></div>'+
-                '<div class="col-4 text-right"><h4>'+obj[0].total_discount+'</h4></div>'+
-            '</div>'+
-            '<div class="row">'+
-                '<div class="col-4 text-right"><h4>สุทธิ</h4></div>'+
-                '<div class="col-4 text-right"><h4 id="total-'+index+'">'+obj[0].total_price+'</h4></div>'+
-            '</div>'+
-            '<div class="row">'+
-                '<div class="col-4 text-right"><h4>รับ / ทอน</h4></div>'+
-                '<div class="col-4 text-right"><h4>'+obj[0].get_price+'</h4></div>'+
-                '<div class="col-4 text-center"><h4>'+obj[0].chng+'</h4></div>'+
-            '</div>'+
-            '<div class="row justify-content-center" style="margin-top: 1em;">'+
-                '<div class="col-4 text-right">'+
-                  '<button class="btn btn-lg btn-warning" data-toggle="modal" data-target="#printModal" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
-                '</div>'+
-                ((localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน") ? '<div class="col-4 text-left"><button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+',\''+obj[0].type+'\',\''+obj[0].payment_type+'\','+obj[0].total_price+','+obj[0].credit_id+')">ลบรายการ <i class="fas fa-trash"></i></button></div>' : '')+
-            '</div>'+
-          '</div>'+
-        '</div>';
-        }               
-        });       
-       
-        $("#bill-"+index).append(text);
-        $("#btn-a4").attr('onclick', 'printA4('+index+')');
-        $("#btn-recep").attr('onclick', 'printRecep('+index+')');       
-
-        if(last_collapse_index != index){
-          last_collapse_index = index;
-        } 
-      }
-      $('html, body').animate({
-            scrollTop: $("#bill-"+index).offset().top
-        }, 1100);
+      });
     }
 
-    var last_collapse_indexs = 0;
-
-    function appendCollapses(index){
-      if($("#details-"+index).length){
-        if(last_collapse_indexs){
-          $("div").closest("#details-"+last_collapse_indexs).collapse('hide');
-        }
-
-        $("#btn-a4").attr('onclick', 'printA4('+index+")");
-        $("#btn-recep").attr('onclick', 'printRecep('+index+")");
-
-        if(last_collapse_indexs != index){
-          last_collapse_indexs = index;
-        }
-      }else{
-
-        if(last_collapse_indexs){
-          $("div").closest("#details-"+last_collapse_indexs).collapse('hide');
-        }
-        var text = ""
-        $.ajax({
-          type: "POST",
-          url:"php/get_bill_info4print.php",    
-          data:{'bill_id' : index},
-          async:false,                            
-          beforeSend: function(){
-            EasyLoading.show({                           
-              text: "กำลังโหลด"
-            });
-          },             
-          success: function(data){  
-            EasyLoading.hide();
-            var obj = jQuery.parseJSON(data); 
-            text = text + '<div class="collapse" id="details-'+index+'">'+
-            '<div class="card card-body">'+
-              '<div class="row justify-content-center">'+
-                  '<h3 style="text-decoration: underline;">รายการ</h3>'+
-              '</div>'
-            $.each(obj, function(i, field){
-              sum = field.prod_price*field.prod_amount
-              text = text + 
-              '<div id="item-'+field.prod_id+'" class="row justify-content-center">'+
-                '<div class="col-1 text-center items">'+(i+1)+'</div>'+
-                '<div id="amt-'+field.prod_id+'" class="col-1 text-center items">'+field.prod_amount+'</div>'+
-                '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span></div>'+
-                '<div class="col-1 text-center items">'+field.prod_price+'</div>'+
-                '<div id="itemsum-'+field.prod_id+'" class="col-1 text-center items">'+sum+'</div>'+
-                '<div class="col-2 text-center items">'+
-                  '<button onclick="init_restore('+index+','+field.prod_id+','+field.prod_price+','+field.prod_amount+','+obj[0].branch_id+',\''+obj[0].type+'\',\''+obj[0].payment_type+'\','+obj[0].credit_id+','+field.prod_price+')" class="btn btn-info" data-toggle="modal" data-target="#reModal" style="color: white;">คืนสินค้า</button>'+
-                '</div>'+
-              '</div>'
-            });
-            text = text + 
-            '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
-            '<div class="row" style="margin-top: 1em;">'+
-                '<div class="col-4 text-right"><h5>หมายเหตุ</h5></div>'+
-                '<div class="col-4 text-right">'+obj[0].comment+'<h6></h6></div>'+
-            '</div>'+
-            '<div class="row">'+
-                '<div class="col-4 text-right"><h4>รวม</h4></div>'+
-                '<div class="col-4 text-right"><h4 id="sum-'+index+'">'+obj[0].sum_price+'</h4></div>'+
-            '</div>'+
-            '<div class="row">'+
-                '<div class="col-4 text-right"><h4>ลด</h4></div>'+
-                '<div class="col-4 text-right"><h4>'+obj[0].total_discount+'</h4></div>'+
-            '</div>'+
-            '<div class="row">'+
-                '<div class="col-4 text-right"><h4>สุทธิ</h4></div>'+
-                '<div class="col-4 text-right"><h4 id="total-'+index+'">'+obj[0].total_price+'</h4></div>'+
-            '</div>'+
-            '<div class="row">'+
-                '<div class="col-4 text-right"><h4>รับ / ทอน</h4></div>'+
-                '<div class="col-4 text-right"><h4>'+obj[0].get_price+'</h4></div>'+
-                '<div class="col-4 text-center"><h4>'+obj[0].chng+'</h4></div>'+
-            '</div>'+
-            '<div class="row justify-content-center" style="margin-top: 1em;">'+
-                '<div class="col-4 text-right">'+
-                  '<button class="btn btn-lg btn-warning" data-toggle="modal" data-target="#printModal" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
-                '</div>'+
-                ((localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน") ? '<div class="col-4 text-left"><button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+',\''+obj[0].type+'\',\''+obj[0].payment_type+'\','+obj[0].total_price+','+obj[0].credit_id+')">ลบรายการ <i class="fas fa-trash"></i></button></div>' : '')+               
-            '</div>'+
-          '</div>'+
-        '</div>';
-        }               
-        });      
-      
-        $("#bills-"+index).append(text);
-        $("#btn-a4").attr('onclick', 'printA4('+index+")");
-        $("#btn-recep").attr('onclick', 'printRecep('+index+")");
-
-        if(last_collapse_indexs != index){
-          last_collapse_indexs = index;
-        } 
-      }
-      $('html, body').animate({
-            scrollTop: $("#bills-"+index).offset().top
-        }, 1100);
-    }
-    
     function printA4(index){
       arr_a4 = [];		 
       var text = ""     
@@ -1203,6 +1024,6 @@
       </div>
     </div>
     <!-- Central Navbar Script -->
-    <script src="js/navbar.js?v=2.2"></script>
+    <script src="js/navbar.js?v=3.0"></script>
 </body>
 </html>

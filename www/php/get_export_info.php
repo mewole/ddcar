@@ -1,5 +1,7 @@
 <?php
     include "db.php";
+include_once "auth_guard.php";
+require_login();
     $exp_id = $_POST['exp_id'];
 
     $query = "SELECT s.stock_out_number,s.ware_id,w.ware_name,s.date_time,i.item_id,i.prod_id,p.prod_name,p.prod_code,i.stock_out_cost,i.amount,u.user_name 
