@@ -23,19 +23,23 @@ if (empty($prod_code)) {
     $prod_code = $p ? $p['prod_code'] : '';
 }
 
-$sql = "INSERT INTO product_platform_sku 
-        (prod_id, prod_code, shopee_sku, lazada_sku, tiktok_sku, vat_stock, non_vat_stock) 
-        VALUES 
-        ($prod_id, '$prod_code', '$shopee_sku', '$lazada_sku', '$tiktok_sku', $vat_stock, $non_vat_stock)
-        ON DUPLICATE KEY UPDATE 
-        shopee_sku = '$shopee_sku', 
-        lazada_sku = '$lazada_sku', 
-        tiktok_sku = '$tiktok_sku', 
-        vat_stock = $vat_stock, 
-        non_vat_stock = $non_vat_stock";
+// Check if existing record exists
+$exist_q = mysqli_query($conn, "SELECT prod_id FROM product_platform_sku WHERE prod_id = $prod_id");
+if ($exist_q && mysqli_num_rows($exist_q) > 0) {
+    $updates = ["vat_stock = $vat_stock", "non_vat_stock = $non_vat_stock"];
+    if (isset($data['shopee_sku'])) $updates[] = "shopee_sku = '$shopee_sku'";
+    if (isset($data['lazada_sku'])) $updates[] = "lazada_sku = '$lazada_sku'";
+    if (isset($data['tiktok_sku'])) $updates[] = "tiktok_sku = '$tiktok_sku'";
+    $sql = "UPDATE product_platform_sku SET " . implode(", ", $updates) . " WHERE prod_id = $prod_id";
+} else {
+    $sql = "INSERT INTO product_platform_sku 
+            (prod_id, prod_code, shopee_sku, lazada_sku, tiktok_sku, vat_stock, non_vat_stock) 
+            VALUES 
+            ($prod_id, '$prod_code', '$shopee_sku', '$lazada_sku', '$tiktok_sku', $vat_stock, $non_vat_stock)";
+}
 
 if (mysqli_query($conn, $sql)) {
-    echo json_encode(["success" => true, "message" => "บันทึกรหัส SKU และถังภาษีเรียบร้อย"]);
+    echo json_encode(["success" => true, "message" => "บันทึกข้อมูลเรียบร้อย"]);
 } else {
     echo json_encode(["success" => false, "message" => "เกิดข้อผิดพลาด: " . mysqli_error($conn)]);
 }

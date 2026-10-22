@@ -570,17 +570,14 @@
 			$("#name-prod").val(name || "");
 			$("#code-prod").val(code || "");
 
-			// Reset SKU & VAT fields
-			$('#edit-shopee-sku').val('');
-			$('#edit-lazada-sku').val('');
-			$('#edit-tiktok-sku').val('');
+			// Reset VAT fields
 			$('#edit-vat-stock').val('0');
 			$('#edit-non-vat-stock').val('0');
 			$('#edit-total-stock-label').text('กำลังโหลด...');
 			$('#edit-bundle-tag').empty();
 			$('#edit-bundle-action-wrap').hide();
 
-			// Fetch SKU & VAT mappings
+			// Fetch VAT & Stock details
 			$.ajax({
 				url: 'php/get_product_sku_vat.php',
 				type: 'GET',
@@ -588,9 +585,6 @@
 				dataType: 'json',
 				success: function(res) {
 					if (res && res.success && res.data) {
-						$('#edit-shopee-sku').val(res.data.shopee_sku || '');
-						$('#edit-lazada-sku').val(res.data.lazada_sku || '');
-						$('#edit-tiktok-sku').val(res.data.tiktok_sku || '');
 						$('#edit-vat-stock').val(res.data.vat_stock);
 						$('#edit-non-vat-stock').val(res.data.non_vat_stock);
 						$('#edit-total-stock-label').text(res.data.total_stock);
@@ -699,7 +693,7 @@
 				};			
 			}
 			setTimeout(function() {
-				// Save Platform SKUs and Dual Tax Buckets
+				// Save Dual Tax Buckets
 				$.ajax({
 					url: 'php/save_platform_sku.php',
 					type: 'POST',
@@ -707,9 +701,6 @@
 					data: JSON.stringify({
 						prod_id: prod_id,
 						prod_code: $("#code-prod").val().trim(),
-						shopee_sku: ($('#edit-shopee-sku').val() || '').trim(),
-						lazada_sku: ($('#edit-lazada-sku').val() || '').trim(),
-						tiktok_sku: ($('#edit-tiktok-sku').val() || '').trim(),
 						vat_stock: parseInt($('#edit-vat-stock').val()) || 0,
 						non_vat_stock: parseInt($('#edit-non-vat-stock').val()) || 0
 					})
@@ -1085,24 +1076,12 @@
 				      <input id="name-prod" type="text" class="form-control font-weight-bold">
 				  </div>
 			  </div>
-
-			  <!-- Platform SKU Mapping -->
-			  <div class="p-2 my-2 rounded bg-light border">
-			      <h6 class="font-weight-bold text-primary mb-2" style="font-size: 0.9rem;"><i class="fas fa-link mr-1"></i> จับคู่รหัส SKU แพลตฟอร์มออนไลน์</h6>
-			      <div class="row">
-			          <div class="col-md-4 mb-2 mb-md-0">
-			              <label class="small text-muted font-weight-bold mb-1"><i class="fas fa-shopping-bag text-warning mr-1"></i> Shopee SKU</label>
-			              <input type="text" id="edit-shopee-sku" class="form-control form-control-sm font-weight-bold" placeholder="รหัสบน Shopee">
-			          </div>
-			          <div class="col-md-4 mb-2 mb-md-0">
-			              <label class="small text-muted font-weight-bold mb-1"><i class="fas fa-heart text-danger mr-1"></i> Lazada SKU</label>
-			              <input type="text" id="edit-lazada-sku" class="form-control form-control-sm font-weight-bold" placeholder="รหัสบน Lazada">
-			          </div>
-			          <div class="col-md-4">
-			              <label class="small text-muted font-weight-bold mb-1"><i class="fab fa-tiktok text-dark mr-1"></i> TikTok SKU</label>
-			              <input type="text" id="edit-tiktok-sku" class="form-control form-control-sm font-weight-bold" placeholder="รหัสบน TikTok">
-			          </div>
-			      </div>
+			  <!-- Platform SKU Mapping Link -->
+			  <div class="p-2 my-2 rounded bg-light border text-center">
+			      <a href="web_platform_mapping.html" target="_blank" class="btn btn-outline-primary btn-sm font-weight-bold">
+			          <i class="fas fa-link mr-1"></i> จัดการจับคู่สินค้าออนไลน์ & สินค้าชุด (Platform Mapping)
+			      </a>
+			      <div class="small text-muted mt-1">ตั้งค่ารหัส Shopee, Lazada, TikTok และสินค้าชุดแยกตามร้านค้า</div>
 			  </div>
 
 			  <!-- Dual VAT Buckets -->

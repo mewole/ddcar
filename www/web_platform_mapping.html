@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>ศูนย์จับคู่สินค้าออนไลน์ & สต็อกหลังบ้าน (Platform SKU & Bundle Mapping) - DD ACCESSORIES</title>
+
+  <!-- Bootstrap 4 & FontAwesome -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css">
+
+  <!-- jQuery Confirm -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
+
+  <!-- Easy Loading -->
+  <link rel="stylesheet" href="css/easy-loading.css">
+  <script src="js/easy-loading.js"></script>
+
+  <!-- Fonts & Unified Styles -->
+  <link href="https://fonts.googleapis.com/css?family=Prompt:300,400,500,600,700" rel="stylesheet">
+  <link href="css/untitled.css?v=2.2" rel="stylesheet">
+  <script type="text/javascript" src="js/config.js"></script>
+
+  <style>
+    body {
+      background-color: #f4f6f9;
+      color: #1e293b;
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .header-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .channel-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      border-radius: 24px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: 2px solid transparent;
+      background: #ffffff;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .channel-pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+      color: #0f172a;
+    }
+    .channel-pill.active {
+      background: #1e293b;
+      color: #ffffff;
+      border-color: #0f172a;
+    }
+    .channel-badge-count {
+      background: #ef4444;
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-left: 8px;
+    }
+    .kpi-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      display: flex;
+      align-items: center;
+    }
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-right: 16px;
+    }
+    .mapping-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      transition: all 0.2s ease;
+    }
+    .mapping-card:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      border-color: #cbd5e1;
+    }
+    .mapping-card.is-unmapped {
+      border-left: 5px solid #ef4444;
+    }
+    .mapping-card.is-mapped {
+      border-left: 5px solid #10b981;
+    }
+    .mode-switch-btn {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 6px;
+    }
+    .autocomplete-wrap {
+      position: relative;
+    }
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 1050;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      display: none;
+    }
+    .autocomplete-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+    }
+    .autocomplete-item:hover {
+      background-color: #f8fafc;
+    }
+    .stock-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .stock-chip-ok {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    .stock-chip-low {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    .bundle-child-row {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Central Unified Navbar Mount Point -->
+  <div id="ddcar-nav-mount"></div>
+
+  <div class="container-fluid py-4" style="max-width: 1440px;">
+
+    <!-- Top Header -->
+    <div class="header-card d-flex flex-wrap justify-content-between align-items-center">
+      <div>
+        <h4 class="font-weight-bold mb-1">
+          <i class="fas fa-link text-primary mr-2"></i> ศูนย์จับคู่สินค้าออนไลน์ & สต็อกหลังบ้าน (Platform SKU & Bundle Mapping)
+        </h4>
+        <p class="text-muted mb-0 font-weight-normal" style="font-size: 0.95rem;">
+          จับคู่สินค้า Shopee (KingKong / แต่งระเบิด), Lazada, TikTok กับรหัสคลัง DDCAR รองรับทั้ง <strong>ชิ้นเดี่ยว</strong> และ <strong>สินค้าชุด (Bundle)</strong> ตัดสต็อกแยกตามร้านค้า ไม่ทับซ้อนกัน 100%
+        </p>
+      </div>
+      <div class="mt-2 mt-md-0 d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm mr-2 font-weight-bold" onclick="openChannelModal();">
+          <i class="fas fa-store-alt mr-1"></i> จัดการร้านค้า / เพิ่มร้าน
+        </button>
+        <button type="button" class="btn btn-outline-info btn-sm mr-2 font-weight-bold" onclick="openImportModal();">
+          <i class="fas fa-file-import mr-1"></i> นำเข้ารายการ (Excel/Text)
+        </button>
+        <button type="button" class="btn btn-primary btn-sm font-weight-bold" onclick="openAddModal();">
+          <i class="fas fa-plus mr-1"></i> เพิ่มสินค้าแพลตฟอร์ม
+        </button>
+      </div>
+    </div>
+
+    <!-- Store Channel Switcher -->
+    <div class="mb-3">
+      <div class="d-flex flex-wrap align-items-center" id="channel-pill-container">
+        <!-- Injected via loadChannels() -->
+        <span class="text-muted small">กำลังโหลดรายชื่อร้านค้า...</span>
+      </div>
+    </div>
+
+    <!-- KPI Summary Row -->
+    <div class="row">
+      <div class="col-md-3 col-6">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-primary">
+            <i class="fas fa-boxes"></i>
+          </div>
+          <div>
+            <div class="text-muted small font-weight-bold">สินค้าออนไลน์ทั้งหมด</div>
+            <div id="kpi-total" class="h4 font-weight-bold mb-0">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-danger">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div>
+            <div class="text-muted small font-weight-bold">🔴 ยังไม่จับคู่ (Queue)</div>
+            <div id="kpi-unmapped" class="h4 font-weight-bold text-danger mb-0">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-success">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div>
+            <div class="text-muted small font-weight-bold">🟢 จับคู่เรียบร้อยแล้ว</div>
+            <div id="kpi-mapped" class="h4 font-weight-bold text-success mb-0">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="kpi-card">
+          <div class="kpi-icon bg-light text-warning">
+            <i class="fas fa-layer-group"></i>
+          </div>
+          <div>
+            <div class="text-muted small font-weight-bold">📦 สินค้าชุด (Bundle)</div>
+            <div id="kpi-bundle" class="h4 font-weight-bold text-warning mb-0">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="bg-white p-3 rounded mb-3 border d-flex flex-wrap justify-content-between align-items-center">
+      <div class="d-flex flex-wrap align-items-center mb-2 mb-md-0" style="gap: 10px;">
+        <!-- Status Tabs -->
+        <div class="btn-group btn-group-sm" role="group">
+          <button type="button" class="btn btn-outline-danger font-weight-bold active" id="btn-status-unmapped" onclick="setStatusFilter('unmapped');">
+            🔴 ยังไม่จับคู่ (Queue)
+          </button>
+          <button type="button" class="btn btn-outline-success font-weight-bold" id="btn-status-mapped" onclick="setStatusFilter('mapped');">
+            🟢 จับคู่แล้ว
+          </button>
+          <button type="button" class="btn btn-outline-secondary font-weight-bold" id="btn-status-all" onclick="setStatusFilter('all');">
+            ทั้งหมด
+          </button>
+        </div>
+
+        <!-- Search Box -->
+        <div class="input-group input-group-sm" style="min-width: 280px; max-width: 360px;">
+          <div class="input-group-prepend">
+            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+          </div>
+          <input type="text" id="txt-search" class="form-control" placeholder="ค้นหา SKU หรือชื่อสินค้า..." oninput="debounceSearch();">
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center">
+        <span id="txt-found-count" class="text-muted small font-weight-bold mr-3">พบ 0 รายการ</span>
+        <button type="button" class="btn btn-success btn-sm font-weight-bold" onclick="saveAllChanges();">
+          <i class="fas fa-save mr-1"></i> บันทึกรายการทั้งหมดที่แก้ไข
+        </button>
+      </div>
+    </div>
+
+    <!-- Mapping Items List Container -->
+    <div id="mapping-list-container">
+      <div class="text-center py-5 text-muted">
+        <i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>
+        <div>กำลังโหลดรายการจับคู่สินค้า...</div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <div class="text-muted small" id="txt-page-info">หน้า 1 จาก 1</div>
+      <div>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-prev-page" onclick="prevPage();" disabled>
+          <i class="fas fa-chevron-left mr-1"></i> ก่อนหน้า
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm ml-1" id="btn-next-page" onclick="nextPage();" disabled>
+          ถัดไป <i class="fas fa-chevron-right ml-1"></i>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal: Quick Add Platform Item -->
+  <div class="modal fade" id="modalAdd" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title font-weight-bold"><i class="fas fa-plus-circle text-primary mr-2"></i> เพิ่มสินค้าแพลตฟอร์ม</h5>
+          <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="form-group">
+            <label class="small text-muted font-weight-bold mb-1">เลือกร้านค้า / ช่องทาง *</label>
+            <select id="add-channel-sel" class="form-control font-weight-bold"></select>
+          </div>
+          <div class="form-group">
+            <label class="small text-muted font-weight-bold mb-1">รหัสสินค้าบนแพลตฟอร์ม (Platform SKU) *</label>
+            <input type="text" id="add-platform-sku" class="form-control font-weight-bold" placeholder="เช่น KK-DMAX-MIRROR หรือ SP-001">
+          </div>
+          <div class="form-group">
+            <label class="small text-muted font-weight-bold mb-1">ชื่อสินค้าบนแพลตฟอร์ม (ไม่บังคับ)</label>
+            <input type="text" id="add-platform-name" class="form-control" placeholder="ชื่อที่แสดงบน Shopee / Lazada / TikTok">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary font-weight-bold" onclick="submitQuickAdd();">เพิ่มเข้ารายการ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Batch Import SKUs -->
+  <div class="modal fade" id="modalImport" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title font-weight-bold"><i class="fas fa-file-import text-info mr-2"></i> นำเข้ารายการสินค้าออนไลน์ (วางจาก Excel / Text)</h5>
+          <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="form-group">
+            <label class="small text-muted font-weight-bold mb-1">เลือกร้านค้าที่นำเข้า *</label>
+            <select id="import-channel-sel" class="form-control font-weight-bold"></select>
+          </div>
+          <div class="form-group">
+            <label class="small text-muted font-weight-bold mb-1">
+              วางข้อมูลรหัสสินค้า (1 บรรทัดต่อ 1 รายการ) รูปแบบ: <code>รหัส SKU [แท็บ หรือ คอมม่า] ชื่อสินค้า</code>
+            </label>
+            <textarea id="import-raw-text" class="form-control font-monospace" rows="8" placeholder="KK-MIRROR-01	กระจกมองข้าง D-Max ซ้าย
+KK-MIRROR-02	กระจกมองข้าง D-Max ขวา
+KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></textarea>
+          </div>
+          <div class="small text-muted">
+            <i class="fas fa-info-circle mr-1 text-info"></i> ระบบจะตรวจสอบอัตโนมัติ หากรหัส SKU ตรงกับรหัสคลัง DDCAR ระบบจะจับคู่ให้ทันที
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-info font-weight-bold" onclick="submitBatchImport();">เริ่มนำเข้า</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Channel Management -->
+  <div class="modal fade" id="modalChannel" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title font-weight-bold"><i class="fas fa-store-alt text-warning mr-2"></i> จัดการร้านค้าและช่องทางออนไลน์</h5>
+          <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="table-responsive mb-3">
+            <table class="table table-bordered table-sm">
+              <thead class="thead-light">
+                <tr>
+                  <th>ชื่อร้านค้า</th>
+                  <th>แพลตฟอร์ม</th>
+                  <th>ชื่อลูกค้าในระบบสต็อก DDCAR</th>
+                  <th>รหัสช่องทาง (Code)</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-channel-list"></tbody>
+            </table>
+          </div>
+
+          <h6 class="font-weight-bold text-primary mt-4 mb-2"><i class="fas fa-plus mr-1"></i> เพิ่มร้านค้าใหม่ (รองรับสินค้าหมวดอื่นในอนาคต)</h6>
+          <div class="row">
+            <div class="col-md-3 mb-2">
+              <label class="small text-muted mb-1">รหัสช่องทาง (ภาษาอังกฤษ)</label>
+              <input type="text" id="new-channel-code" class="form-control form-control-sm" placeholder="เช่น lazada_shop2">
+            </div>
+            <div class="col-md-3 mb-2">
+              <label class="small text-muted mb-1">ชื่อร้านค้าที่แสดง</label>
+              <input type="text" id="new-channel-name" class="form-control form-control-sm" placeholder="เช่น Lazada (ร้านทั่วไป)">
+            </div>
+            <div class="col-md-2 mb-2">
+              <label class="small text-muted mb-1">แพลตฟอร์ม</label>
+              <select id="new-channel-type" class="form-control form-control-sm">
+                <option value="shopee">Shopee</option>
+                <option value="lazada">Lazada</option>
+                <option value="tiktok">TikTok</option>
+                <option value="other">อื่นๆ</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-2">
+              <label class="small text-muted mb-1">ชื่อลูกค้าตัดขายใน DDCAR</label>
+              <input type="text" id="new-channel-customer" class="form-control form-control-sm" placeholder="เช่น lazada 2">
+            </div>
+          </div>
+          <div class="text-right mt-2">
+            <button type="button" class="btn btn-primary btn-sm font-weight-bold" onclick="submitNewChannel();">
+              <i class="fas fa-save mr-1"></i> บันทึกร้านค้าใหม่
+            </button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">ปิดหน้าต่าง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Central Unified Navbar Script -->
+  <script type="text/javascript" src="js/navbar.js"></script>
+
+  <script>
+    var currentChannel = 'all';
+    var currentStatus = 'unmapped';
+    var currentPage = 1;
+    var pageSize = 50;
+    var searchTimer = null;
+    var allChannels = [];
+    var mappingData = [];
+    var changedRows = new Set();
+
+    $(document).ready(function() {
+      loadChannels();
+      loadMappings();
+    });
+
+    // 1. Load Channels
+    function loadChannels() {
+      $.ajax({
+        url: 'php/get_platform_channels.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (res && res.success) {
+            allChannels = res.channels || [];
+            renderChannelPills(res.summary, allChannels);
+            renderChannelSelects(allChannels);
+          }
+        }
+      });
+    }
+
+    function renderChannelPills(summary, channels) {
+      var html = '';
+      
+      // All channels pill
+      var allActive = (currentChannel === 'all') ? 'active' : '';
+      var allUnmapped = summary ? summary.unmapped : 0;
+      html += '<button type="button" class="channel-pill ' + allActive + '" onclick="selectChannel(\'all\');">';
+      html += '<i class="fas fa-layer-group mr-2"></i> รวมทุกร้าน';
+      if (allUnmapped > 0) {
+        html += '<span class="channel-badge-count">' + allUnmapped + '</span>';
+      }
+      html += '</button>';
+
+      // Individual store pills
+      channels.forEach(function(c) {
+        var active = (currentChannel === c.channel_code) ? 'active' : '';
+        var icon = 'fa-store';
+        if (c.platform_type === 'shopee') icon = 'fa-shopping-bag text-warning';
+        else if (c.platform_type === 'lazada') icon = 'fa-heart text-danger';
+        else if (c.platform_type === 'tiktok') icon = 'fa-music text-dark';
+
+        html += '<button type="button" class="channel-pill ' + active + '" onclick="selectChannel(\'' + c.channel_code + '\');">';
+        html += '<i class="fas ' + icon + ' mr-2"></i> ' + escapeHtml(c.channel_name);
+        if (c.customer_name) {
+          html += ' <span class="small text-muted ml-1">(' + escapeHtml(c.customer_name) + ')</span>';
+        }
+        if (c.unmapped_items > 0) {
+          html += '<span class="channel-badge-count">' + c.unmapped_items + '</span>';
+        }
+        html += '</button>';
+      });
+
+      $('#channel-pill-container').html(html);
+
+      // Update KPI
+      if (summary) {
+        $('#kpi-total').text(summary.total);
+        $('#kpi-unmapped').text(summary.unmapped);
+        $('#kpi-mapped').text(summary.mapped);
+      }
+    }
+
+    function renderChannelSelects(channels) {
+      var opts = '';
+      var tblRows = '';
+      channels.forEach(function(c) {
+        opts += '<option value="' + c.channel_code + '">' + escapeHtml(c.channel_name) + ' (' + escapeHtml(c.customer_name || '-') + ')</option>';
+        tblRows += '<tr>';
+        tblRows += '<td><strong>' + escapeHtml(c.channel_name) + '</strong></td>';
+        tblRows += '<td><span class="badge badge-light border text-capitalize">' + escapeHtml(c.platform_type) + '</span></td>';
+        tblRows += '<td><span class="badge badge-info">' + escapeHtml(c.customer_name || 'ไม่ได้ระบุ') + '</span></td>';
+        tblRows += '<td><code>' + escapeHtml(c.channel_code) + '</code></td>';
+        tblRows += '</tr>';
+      });
+      $('#add-channel-sel').html(opts);
+      $('#import-channel-sel').html(opts);
+      $('#tbl-channel-list').html(tblRows);
+    }
+
+    function selectChannel(code) {
+      currentChannel = code;
+      currentPage = 1;
+      loadChannels();
+      loadMappings();
+    }
+
+    function setStatusFilter(status) {
+      currentStatus = status;
+      currentPage = 1;
+      $('#btn-status-unmapped, #btn-status-mapped, #btn-status-all').removeClass('active');
+      if (status === 'unmapped') $('#btn-status-unmapped').addClass('active');
+      else if (status === 'mapped') $('#btn-status-mapped').addClass('active');
+      else $('#btn-status-all').addClass('active');
+      loadMappings();
+    }
+
+    function debounceSearch() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function() {
+        currentPage = 1;
+        loadMappings();
+      }, 350);
+    }
+
+    // 2. Load Mappings
+    function loadMappings() {
+      var search = $('#txt-search').val().trim();
+      $('#mapping-list-container').html(
+        '<div class="text-center py-5 text-muted">' +
+        '<i class="fas fa-spinner fa-spin fa-2x mb-2 text-primary"></i>' +
+        '<div>กำลังโหลดข้อมูล...</div></div>'
+      );
+
+      $.ajax({
+        url: 'php/get_platform_mappings.php',
+        type: 'GET',
+        data: {
+          channel: currentChannel,
+          status: currentStatus,
+          search: search,
+          page: currentPage,
+          limit: pageSize
+        },
+        dataType: 'json',
+        success: function(res) {
+          if (res && res.success) {
+            mappingData = res.items || [];
+            renderMappingCards(mappingData);
+            renderPagination(res.total, res.page, res.limit);
+            
+            // Count bundles in current view
+            var bundleCount = mappingData.filter(function(i){ return i.mapping_type === 'bundle'; }).length;
+            $('#kpi-bundle').text(bundleCount);
+          } else {
+            $('#mapping-list-container').html('<div class="alert alert-warning">ไม่สามารถโหลดข้อมูลได้</div>');
+          }
+        },
+        error: function() {
+          $('#mapping-list-container').html('<div class="alert alert-danger">เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</div>');
+        }
+      });
+    }
+
+    function renderMappingCards(items) {
+      if (items.length === 0) {
+        var msg = (currentStatus === 'unmapped') 
+          ? '🎉 ยอดเยี่ยม! ไม่มีสินค้าค้างรอจับคู่ในหน้านี้' 
+          : 'ไม่พบรายการสินค้าที่ค้นหา';
+        $('#mapping-list-container').html(
+          '<div class="text-center py-5 text-muted bg-white rounded border">' +
+          '<i class="fas fa-box-open fa-3x mb-3 text-secondary"></i>' +
+          '<h5 class="font-weight-bold text-dark">' + msg + '</h5>' +
+          '<p class="small mb-0">สามารถเพิ่มสินค้าใหม่ หรือสลับดูแท็บอื่นได้</p>' +
+          '</div>'
+        );
+        $('#txt-found-count').text('พบ 0 รายการ');
+        return;
+      }
+
+      $('#txt-found-count').text('พบ ' + items.length + ' รายการในหน้านี้');
+      var html = '';
+
+      items.forEach(function(item, idx) {
+        var isUnmapped = (item.status === 'unmapped');
+        var cardClass = isUnmapped ? 'is-unmapped' : 'is-mapped';
+        var isBundle = (item.mapping_type === 'bundle');
+
+        html += '<div class="mapping-card ' + cardClass + '" id="card-row-' + item.id + '" data-id="' + item.id + '">';
+        html += '<div class="row align-items-center">';
+
+        // Col 1: Platform Info
+        html += '<div class="col-lg-4 col-md-5 mb-2 mb-md-0">';
+        html += '  <div class="d-flex align-items-start">';
+        html += '    <div class="mr-2">';
+        html += '      <span class="badge" style="background-color: ' + item.badge_color + '; color: #fff; font-size: 0.75rem;">';
+        html += '        ' + escapeHtml(item.channel_name);
+        html += '      </span>';
+        if (item.channel_customer) {
+          html += '    <div class="text-muted" style="font-size: 0.7rem;">ลูกค้า: ' + escapeHtml(item.channel_customer) + '</div>';
+        }
+        html += '    </div>';
+        html += '    <div class="flex-grow-1">';
+        html += '      <div class="font-weight-bold text-dark" style="font-size: 0.95rem;">' + escapeHtml(item.platform_sku) + '</div>';
+        html += '      <div class="text-muted small" style="line-height: 1.3;">' + escapeHtml(item.platform_name || '(ไม่มีชื่อสินค้า)') + '</div>';
+        html += '    </div>';
+        html += '  </div>';
+        html += '</div>';
+
+        // Col 2: Type Switcher (Single vs Bundle) & Mapping Inputs
+        html += '<div class="col-lg-5 col-md-5 mb-2 mb-md-0">';
+        html += '  <div class="d-flex align-items-center justify-content-between mb-2">';
+        html += '    <div class="btn-group btn-group-sm" role="group">';
+        html += '      <button type="button" class="btn ' + (!isBundle ? 'btn-primary' : 'btn-outline-secondary') + ' mode-switch-btn" onclick="switchRowMode(' + item.id + ', \'single\');">';
+        html += '        <i class="fas fa-cube mr-1"></i> ชิ้นเดี่ยว (Single)';
+        html += '      </button>';
+        html += '      <button type="button" class="btn ' + (isBundle ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-secondary') + ' mode-switch-btn" onclick="switchRowMode(' + item.id + ', \'bundle\');">';
+        html += '        <i class="fas fa-layer-group mr-1"></i> สินค้าชุด (Bundle)';
+        html += '      </button>';
+        html += '    </div>';
+
+        // Tax Bucket selector
+        var isVat = (item.vat_type === 'vat');
+        html += '    <div class="small">';
+        html += '      <label class="mr-2 mb-0 font-weight-bold ' + (isVat ? 'text-success' : 'text-muted') + '">';
+        html += '        <input type="radio" name="vat_' + item.id + '" value="vat" ' + (isVat ? 'checked' : '') + ' onchange="markChanged(' + item.id + ');"> VAT';
+        html += '      </label>';
+        html += '      <label class="mb-0 font-weight-bold ' + (!isVat ? 'text-warning' : 'text-muted') + '">';
+        html += '        <input type="radio" name="vat_' + item.id + '" value="no_vat" ' + (!isVat ? 'checked' : '') + ' onchange="markChanged(' + item.id + ');"> บิลเงินสด';
+        html += '      </label>';
+        html += '    </div>';
+        html += '  </div>';
+
+        // Single Mode Container
+        html += '  <div id="wrap-single-' + item.id + '" style="' + (isBundle ? 'display:none;' : '') + '">';
+        html += '    <div class="autocomplete-wrap">';
+        html += '      <div class="input-group input-group-sm">';
+        html += '        <div class="input-group-prepend">';
+        html += '          <span class="input-group-text bg-white"><i class="fas fa-boxes text-primary"></i></span>';
+        html += '        </div>';
+        html += '        <input type="text" id="input-sku-' + item.id + '" class="form-control font-weight-bold text-primary" placeholder="พิมพ์รหัสหรือชื่อสินค้าในคลัง DDCAR..." value="' + escapeHtml(item.target_sku || '') + '" oninput="handleSkuSearch(this, ' + item.id + ');" onfocus="handleSkuSearch(this, ' + item.id + ');">';
+        html += '      </div>';
+        html += '      <div class="autocomplete-dropdown" id="dropdown-' + item.id + '"></div>';
+        html += '    </div>';
+
+        // Matched details preview
+        if (item.matched_prod_name) {
+          html += '    <div class="d-flex align-items-center justify-content-between mt-1 px-1">';
+          html += '      <div class="small text-truncate text-muted" style="max-width: 250px;">' + escapeHtml(item.matched_prod_name) + '</div>';
+          var stockClass = item.total_stock > 0 ? 'stock-chip-ok' : 'stock-chip-low';
+          html += '      <span class="stock-chip ' + stockClass + '">สต็อก: ' + item.total_stock + ' ชิ้น</span>';
+          html += '    </div>';
+        }
+        html += '  </div>';
+
+        // Bundle Mode Container
+        html += '  <div id="wrap-bundle-' + item.id + '" style="' + (!isBundle ? 'display:none;' : '') + '">';
+        html += '    <div class="d-flex justify-content-between align-items-center mb-1">';
+        html += '      <span class="small font-weight-bold text-secondary"><i class="fas fa-cogs mr-1"></i> ส่วนประกอบที่ต้องตัดสต็อก:</span>';
+        html += '      <button type="button" class="btn btn-outline-success btn-xs py-0 px-2 font-weight-bold" onclick="addBundleComponentRow(' + item.id + ');">';
+        html += '        <i class="fas fa-plus mr-1"></i> เพิ่มชิ้นส่วน';
+        html += '      </button>';
+        html += '    </div>';
+        html += '    <div id="bundle-rows-' + item.id + '">';
+        if (item.bundle_components && item.bundle_components.length > 0) {
+          item.bundle_components.forEach(function(comp, cIdx) {
+            html += renderBundleChildRowHtml(item.id, cIdx, comp.sku, comp.name, comp.qty, comp.stock);
+          });
+        } else {
+          // Default empty row
+          html += renderBundleChildRowHtml(item.id, 0, '', '', 1, 0);
+        }
+        html += '    </div>';
+        if (item.bundle_available_stock !== null) {
+          var bClass = item.bundle_available_stock > 0 ? 'text-success' : 'text-danger';
+          html += '    <div class="small font-weight-bold ' + bClass + ' mt-1 text-right">';
+          html += '      <i class="fas fa-calculator mr-1"></i> ประกอบเป็นชุดพร้อมขายได้: ' + item.bundle_available_stock + ' ชุด';
+          html += '    </div>';
+        }
+        html += '  </div>';
+
+        html += '</div>';
+
+        // Col 3: Actions & Status
+        html += '<div class="col-lg-3 col-md-2 text-right">';
+        if (isUnmapped) {
+          html += '  <span class="badge badge-danger mb-2 d-inline-block px-2 py-1"><i class="fas fa-exclamation-triangle mr-1"></i> ยังไม่จับคู่</span><br>';
+        } else {
+          html += '  <span class="badge badge-success mb-2 d-inline-block px-2 py-1"><i class="fas fa-check-circle mr-1"></i> จับคู่แล้ว</span><br>';
+        }
+        html += '  <button type="button" class="btn btn-primary btn-sm font-weight-bold mr-1" onclick="saveSingleRow(' + item.id + ');">';
+        html += '    <i class="fas fa-save mr-1"></i> บันทึก';
+        html += '  </button>';
+        html += '  <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteMapping(' + item.id + ');" title="ลบรายการ">';
+        html += '    <i class="fas fa-trash-alt"></i>';
+        html += '  </button>';
+        html += '</div>';
+
+        html += '</div>'; // row
+        html += '</div>'; // mapping-card
+      });
+
+      $('#mapping-list-container').html(html);
+    }
+
+    function renderBundleChildRowHtml(rowId, childIdx, sku, name, qty, stock) {
+      var h = '';
+      h += '<div class="bundle-child-row d-flex align-items-center" id="b-child-' + rowId + '-' + childIdx + '">';
+      h += '  <div class="autocomplete-wrap flex-grow-1 mr-2">';
+      h += '    <input type="text" class="form-control form-control-sm font-weight-bold bundle-child-sku" placeholder="ค้นหา SKU ชิ้นส่วน..." value="' + escapeHtml(sku || '') + '" oninput="handleBundleChildSearch(this, ' + rowId + ', ' + childIdx + ');" onfocus="handleBundleChildSearch(this, ' + rowId + ', ' + childIdx + ');">';
+      h += '    <div class="autocomplete-dropdown" id="dropdown-b-' + rowId + '-' + childIdx + '"></div>';
+      h += '    <div class="small text-muted text-truncate bundle-child-name" style="max-width: 200px;">' + escapeHtml(name || '') + '</div>';
+      h += '  </div>';
+      h += '  <div class="mr-2 text-center" style="width: 75px;">';
+      h += '    <span class="small text-muted d-block" style="font-size: 0.65rem;">จำนวน/ชุด</span>';
+      h += '    <input type="number" class="form-control form-control-sm text-center font-weight-bold bundle-child-qty" min="1" value="' + (qty || 1) + '" onchange="markChanged(' + rowId + ');">';
+      h += '  </div>';
+      h += '  <button type="button" class="btn btn-outline-danger btn-xs py-1 px-2" onclick="removeBundleChildRow(' + rowId + ', ' + childIdx + ');">';
+      h += '    <i class="fas fa-times"></i>';
+      h += '  </button>';
+      h += '</div>';
+      return h;
+    }
+
+    function addBundleComponentRow(rowId) {
+      var childIdx = new Date().getTime();
+      var h = renderBundleChildRowHtml(rowId, childIdx, '', '', 1, 0);
+      $('#bundle-rows-' + rowId).append(h);
+      markChanged(rowId);
+    }
+
+    function removeBundleChildRow(rowId, childIdx) {
+      $('#b-child-' + rowId + '-' + childIdx).remove();
+      markChanged(rowId);
+    }
+
+    function switchRowMode(rowId, mode) {
+      var card = $('#card-row-' + rowId);
+      card.data('mode', mode);
+      if (mode === 'single') {
+        $('#wrap-single-' + rowId).show();
+        $('#wrap-bundle-' + rowId).hide();
+      } else {
+        $('#wrap-single-' + rowId).hide();
+        $('#wrap-bundle-' + rowId).show();
+      }
+      markChanged(rowId);
+    }
+
+    function markChanged(rowId) {
+      changedRows.add(rowId);
+      $('#card-row-' + rowId).css('border-color', '#f59e0b');
+    }
+
+    // 3. Autocomplete Search Handlers
+    var acTimer = null;
+    function handleSkuSearch(input, rowId) {
+      var term = $(input).val().trim();
+      var dropdown = $('#dropdown-' + rowId);
+      markChanged(rowId);
+
+      if (term.length < 1) {
+        dropdown.hide();
+        return;
+      }
+
+      clearTimeout(acTimer);
+      acTimer = setTimeout(function() {
+        $.ajax({
+          url: 'php/search_stock_autocomplete.php',
+          type: 'GET',
+          data: { term: term, limit: 12 },
+          dataType: 'json',
+          success: function(items) {
+            if (!items || items.length === 0) {
+              dropdown.html('<div class="p-2 text-muted small">ไม่พบสินค้าในสต็อก</div>').show();
+              return;
+            }
+            var dHtml = '';
+            items.forEach(function(p) {
+              dHtml += '<div class="autocomplete-item" onclick="selectSkuItem(' + rowId + ', \'' + escapeQuotes(p.code) + '\', \'' + escapeQuotes(p.name) + '\', ' + p.total_stock + ');">';
+              dHtml += '  <div class="flex-grow-1">';
+              dHtml += '    <strong>' + escapeHtml(p.code) + '</strong> - <span class="text-muted small">' + escapeHtml(p.name) + '</span>';
+              dHtml += '  </div>';
+              dHtml += '  <span class="stock-chip ' + (p.total_stock > 0 ? 'stock-chip-ok' : 'stock-chip-low') + ' ml-2">';
+              dHtml += '    ' + p.total_stock + ' ชิ้น';
+              dHtml += '  </span>';
+              dHtml += '</div>';
+            });
+            dropdown.html(dHtml).show();
+          }
+        });
+      }, 250);
+    }
+
+    function selectSkuItem(rowId, sku, name, stock) {
+      $('#input-sku-' + rowId).val(sku);
+      $('#dropdown-' + rowId).hide();
+      markChanged(rowId);
+    }
+
+    function handleBundleChildSearch(input, rowId, childIdx) {
+      var term = $(input).val().trim();
+      var dropdown = $('#dropdown-b-' + rowId + '-' + childIdx);
+      markChanged(rowId);
+
+      if (term.length < 1) {
+        dropdown.hide();
+        return;
+      }
+
+      clearTimeout(acTimer);
+      acTimer = setTimeout(function() {
+        $.ajax({
+          url: 'php/search_stock_autocomplete.php',
+          type: 'GET',
+          data: { term: term, limit: 10 },
+          dataType: 'json',
+          success: function(items) {
+            if (!items || items.length === 0) {
+              dropdown.html('<div class="p-2 text-muted small">ไม่พบสินค้า</div>').show();
+              return;
+            }
+            var dHtml = '';
+            items.forEach(function(p) {
+              dHtml += '<div class="autocomplete-item" onclick="selectBundleChildItem(' + rowId + ', ' + childIdx + ', \'' + escapeQuotes(p.code) + '\', \'' + escapeQuotes(p.name) + '\', ' + p.total_stock + ');">';
+              dHtml += '  <div class="flex-grow-1">';
+              dHtml += '    <strong>' + escapeHtml(p.code) + '</strong> - <span class="text-muted small">' + escapeHtml(p.name) + '</span>';
+              dHtml += '  </div>';
+              dHtml += '  <span class="stock-chip ' + (p.total_stock > 0 ? 'stock-chip-ok' : 'stock-chip-low') + ' ml-2">' + p.total_stock + '</span>';
+              dHtml += '</div>';
+            });
+            dropdown.html(dHtml).show();
+          }
+        });
+      }, 250);
+    }
+
+    function selectBundleChildItem(rowId, childIdx, sku, name, stock) {
+      var row = $('#b-child-' + rowId + '-' + childIdx);
+      row.find('.bundle-child-sku').val(sku);
+      row.find('.bundle-child-name').text(name);
+      $('#dropdown-b-' + rowId + '-' + childIdx).hide();
+      markChanged(rowId);
+    }
+
+    $(document).on('click', function(e) {
+      if (!$(e.target).closest('.autocomplete-wrap').length) {
+        $('.autocomplete-dropdown').hide();
+      }
+    });
+
+    // 4. Save Operations
+    function collectRowData(rowId) {
+      var orig = mappingData.find(function(m){ return m.id === rowId; }) || {};
+      var card = $('#card-row-' + rowId);
+      var mode = card.data('mode') || orig.mapping_type || 'single';
+      var vatType = $('input[name="vat_' + rowId + '"]:checked').val() || 'no_vat';
+
+      var data = {
+        id: rowId,
+        channel_code: orig.channel_code,
+        platform_sku: orig.platform_sku,
+        platform_name: orig.platform_name,
+        mapping_type: mode,
+        vat_type: vatType
+      };
+
+      if (mode === 'single') {
+        data.target_sku = $('#input-sku-' + rowId).val().trim();
+      } else {
+        var comps = [];
+        $('#bundle-rows-' + rowId + ' .bundle-child-row').each(function() {
+          var s = $(this).find('.bundle-child-sku').val().trim();
+          var q = parseInt($(this).find('.bundle-child-qty').val()) || 1;
+          var n = $(this).find('.bundle-child-name').text().trim();
+          if (s) {
+            comps.push({ sku: s, qty: q, name: n });
+          }
+        });
+        data.bundle_components = comps;
+      }
+
+      return data;
+    }
+
+    function saveSingleRow(rowId) {
+      var payload = collectRowData(rowId);
+      EasyLoading.show({ text: "กำลังบันทึก..." });
+
+      $.ajax({
+        url: 'php/save_platform_mapping.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res && res.success) {
+            changedRows.delete(rowId);
+            loadChannels();
+            loadMappings();
+          } else {
+            $.alert({
+              title: 'ข้อผิดพลาด',
+              content: res.message || 'ไม่สามารถบันทึกได้',
+              type: 'red'
+            });
+          }
+        },
+        error: function() {
+          EasyLoading.hide();
+          $.alert({ title: 'ข้อผิดพลาด', content: 'เกิดข้อผิดพลาดในการเชื่อมต่อ', type: 'red' });
+        }
+      });
+    }
+
+    function saveAllChanges() {
+      if (changedRows.size === 0) {
+        $.alert({ title: 'แจ้งเตือน', content: 'ไม่มีรายการที่แก้ไขเพื่อบันทึก', type: 'blue' });
+        return;
+      }
+
+      var items = [];
+      changedRows.forEach(function(rowId) {
+        items.push(collectRowData(rowId));
+      });
+
+      EasyLoading.show({ text: "กำลังบันทึก " + items.length + " รายการ..." });
+
+      $.ajax({
+        url: 'php/save_platform_mapping.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ items: items }),
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res && res.success) {
+            changedRows.clear();
+            loadChannels();
+            loadMappings();
+            $.alert({
+              title: 'สำเร็จ',
+              content: 'บันทึกการจับคู่เรียบร้อยทั้งหมด ' + res.saved_count + ' รายการ',
+              type: 'green'
+            });
+          } else {
+            $.alert({ title: 'ข้อผิดพลาด', content: res.message || 'บันทึกไม่สำเร็จ', type: 'red' });
+          }
+        },
+        error: function() {
+          EasyLoading.hide();
+          $.alert({ title: 'ข้อผิดพลาด', content: 'เกิดข้อผิดพลาดในการเชื่อมต่อ', type: 'red' });
+        }
+      });
+    }
+
+    function deleteMapping(rowId) {
+      $.confirm({
+        title: 'ยืนยันการลบ',
+        content: 'ต้องการลบรายการจับคู่นี้ออกจากระบบใช่หรือไม่?',
+        type: 'red',
+        buttons: {
+          confirm: {
+            text: 'ลบรายการ',
+            btnClass: 'btn-danger',
+            action: function() {
+              $.ajax({
+                url: 'php/delete_platform_mapping.php',
+                type: 'POST',
+                data: { id: rowId },
+                dataType: 'json',
+                success: function(res) {
+                  if (res && res.success) {
+                    changedRows.delete(rowId);
+                    loadChannels();
+                    loadMappings();
+                  } else {
+                    $.alert({ title: 'ผิดพลาด', content: res.message || 'ลบไม่สำเร็จ' });
+                  }
+                }
+              });
+            }
+          },
+          cancel: { text: 'ยกเลิก' }
+        }
+      });
+    }
+
+    // 5. Modals & Actions
+    function openAddModal() {
+      $('#add-platform-sku').val('');
+      $('#add-platform-name').val('');
+      if (currentChannel !== 'all') {
+        $('#add-channel-sel').val(currentChannel);
+      }
+      $('#modalAdd').modal('show');
+    }
+
+    function submitQuickAdd() {
+      var channel = $('#add-channel-sel').val();
+      var sku = $('#add-platform-sku').val().trim();
+      var name = $('#add-platform-name').val().trim();
+
+      if (!sku) {
+        $.alert({ title: 'แจ้งเตือน', content: 'กรุณากรอกรหัส Platform SKU', type: 'orange' });
+        return;
+      }
+
+      EasyLoading.show({ text: "กำลังเพิ่มรายการ..." });
+      $.ajax({
+        url: 'php/save_platform_mapping.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          channel_code: channel,
+          platform_sku: sku,
+          platform_name: name,
+          mapping_type: 'single'
+        }),
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          $('#modalAdd').modal('hide');
+          loadChannels();
+          loadMappings();
+        },
+        error: function() {
+          EasyLoading.hide();
+          $.alert({ title: 'ผิดพลาด', content: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+        }
+      });
+    }
+
+    function openImportModal() {
+      $('#import-raw-text').val('');
+      if (currentChannel !== 'all') {
+        $('#import-channel-sel').val(currentChannel);
+      }
+      $('#modalImport').modal('show');
+    }
+
+    function submitBatchImport() {
+      var channel = $('#import-channel-sel').val();
+      var raw = $('#import-raw-text').val().trim();
+
+      if (!raw) {
+        $.alert({ title: 'แจ้งเตือน', content: 'กรุณาวางข้อมูล SKU อย่างน้อย 1 บรรทัด', type: 'orange' });
+        return;
+      }
+
+      EasyLoading.show({ text: "กำลังนำเข้าข้อมูล..." });
+      $.ajax({
+        url: 'php/import_platform_skus.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          channel_code: channel,
+          raw_text: raw
+        }),
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          $('#modalImport').modal('hide');
+          loadChannels();
+          loadMappings();
+          $.alert({
+            title: 'นำเข้าสำเร็จ',
+            content: res.message,
+            type: 'green'
+          });
+        },
+        error: function() {
+          EasyLoading.hide();
+          $.alert({ title: 'ผิดพลาด', content: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+        }
+      });
+    }
+
+    function openChannelModal() {
+      $('#modalChannel').modal('show');
+    }
+
+    function submitNewChannel() {
+      var code = $('#new-channel-code').val().trim();
+      var name = $('#new-channel-name').val().trim();
+      var type = $('#new-channel-type').val();
+      var customer = $('#new-channel-customer').val().trim();
+
+      if (!code || !name) {
+        $.alert({ title: 'แจ้งเตือน', content: 'กรุณาระบุรหัสและชื่อร้านค้า', type: 'orange' });
+        return;
+      }
+
+      EasyLoading.show({ text: "กำลังบันทึกร้านค้าใหม่..." });
+      $.ajax({
+        url: 'php/save_platform_channel.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          channel_code: code,
+          channel_name: name,
+          platform_type: type,
+          customer_name: customer
+        }),
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res && res.success) {
+            $('#new-channel-code').val('');
+            $('#new-channel-name').val('');
+            $('#new-channel-customer').val('');
+            loadChannels();
+            $.alert({ title: 'สำเร็จ', content: 'เพิ่มร้านค้าใหม่เรียบร้อย', type: 'green' });
+          } else {
+            $.alert({ title: 'ผิดพลาด', content: res.message || 'บันทึกไม่สำเร็จ' });
+          }
+        },
+        error: function() {
+          EasyLoading.hide();
+          $.alert({ title: 'ผิดพลาด', content: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+        }
+      });
+    }
+
+    // 6. Pagination
+    function renderPagination(total, page, limit) {
+      var totalPages = Math.ceil(total / limit) || 1;
+      $('#txt-page-info').text('หน้า ' + page + ' จาก ' + totalPages + ' (ทั้งหมด ' + total + ' รายการ)');
+      $('#btn-prev-page').prop('disabled', page <= 1);
+      $('#btn-next-page').prop('disabled', page >= totalPages);
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        loadMappings();
+      }
+    }
+
+    function nextPage() {
+      currentPage++;
+      loadMappings();
+    }
+
+    // Utilities
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, function(m) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+      });
+    }
+
+    function escapeQuotes(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

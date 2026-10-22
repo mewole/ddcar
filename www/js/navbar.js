@@ -45,7 +45,9 @@
             subItems: [
                 { label: 'จัดการผู้ใช้', icon: 'fa fa-user-cog', href: 'web_admin_user.html' },
                 { label: 'จัดการลูกค้า', icon: 'fa fa-user-edit', href: 'web_customer.html' },
-                { label: 'จัดการหน้าร้าน/โกดัง', icon: 'fa fa-store-alt', href: 'web_warehouse.html' }
+                { label: 'จัดการหน้าร้าน/โกดัง', icon: 'fa fa-store-alt', href: 'web_warehouse.html' },
+                { label: 'จับคู่สินค้าชุด (Bundle & BOM)', icon: 'fa fa-layer-group', href: 'web_bundle.html' },
+                { label: 'จับคู่สินค้าออนไลน์ (Platform Mapping)', icon: 'fa fa-link', href: 'web_platform_mapping.html' }
             ]
         },
         { id: 'nav-qrprint', label: 'พิมพ์คิวอาร์', icon: 'fa fa-qrcode', href: 'web_qrprint.html', roles: ['all'] }
@@ -64,6 +66,7 @@
             case 'web_warehouse.html': return 'จัดการหน้าร้านและโกดัง';
             case 'web_admin_user.html': return 'จัดการผู้ใช้งานและสิทธิ์';
             case 'web_bundle.html': return 'จับคู่สินค้าชุด (Bundle & BOM)';
+            case 'web_platform_mapping.html': return 'ศูนย์จับคู่สินค้าออนไลน์ & สต็อกหลังบ้าน';
             case 'web_qrprint.html': return 'พิมพ์คิวอาร์โค้ดสินค้า';
             case 'web_mng_bill.html': return 'รายงานบิล';
             case 'web_credit.html': return 'รายงานเครดิตลูกค้า';
