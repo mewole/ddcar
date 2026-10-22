@@ -1,21 +1,25 @@
 <?php
-    include "db.php";
-    header("Content-Type: application/json; charset=UTF-8");
-    $output = array();    
+/**
+ * get_user.php
+ * ดึงรายชื่อผู้ใช้งานในระบบ (เฉพาะเจ้าของร้านและแอดมิน)
+ * ป้องกันความปลอดภัย: ไม่ส่งรหัสผ่าน Hash ออกไปสู่เครือข่ายเด็ดขาด
+ */
+include "db.php";
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
 
-    $query = "SELECT user_id,user_name,pass,phone,user_role FROM user ORDER BY user_id ASC";
-    $result = mysqli_query($conn, $query);
+header("Content-Type: application/json; charset=UTF-8");
+$output = array();    
 
-    if($result && mysqli_num_rows($result) > 0){    
-      while($row = mysqli_fetch_assoc($result)){      
+$query = "SELECT user_id, user_name, phone, user_role FROM user ORDER BY user_id ASC";
+$result = mysqli_query($conn, $query);
+
+if ($result && mysqli_num_rows($result) > 0) {    
+    while ($row = mysqli_fetch_assoc($result)) {      
         $output[] = $row;  
-      }   
-    }
+    }   
+}
 
-    if($result){
-        echo json_encode($output, JSON_UNESCAPED_UNICODE);		   
-    }else{
-        echo json_encode(array());
-    }
-	mysqli_close($conn);
+echo json_encode($output, JSON_UNESCAPED_UNICODE);
+mysqli_close($conn);
 ?>

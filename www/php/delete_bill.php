@@ -1,5 +1,8 @@
 <?php  
-    include "db.php"; 
+    include "db.php";
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('HTTP/1.1 405 Method Not Allowed'); exit; } 
     $bill_id  = $_POST['bill_id'];
     $branch_id  = $_POST['b_id'];
     $type  = $_POST['type'];
@@ -7,7 +10,7 @@
     $total  = $_POST['total'];
     $credit_id  = $_POST['credit_id'];
     $remark = $_POST['remark'];
-    $user_id = $_POST['u_id'];
+    $user_id = $_SESSION['user_id'];
     $txt = "(cancel)";
     date_default_timezone_set("Asia/Bangkok");
     $datetime = date("Y-m-d H:i:s");

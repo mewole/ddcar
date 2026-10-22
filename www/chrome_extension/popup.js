@@ -2,12 +2,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const selChannel = document.getElementById("sel-channel");
   const txtServer = document.getElementById("txt-server");
   const btnSyncNow = document.getElementById("btn-sync-now");
+  const btnSyncCatalog = document.getElementById("btn-sync-catalog");
   const btnGotoOrders = document.getElementById("btn-goto-orders");
   const statusText = document.getElementById("status-text");
   const btnOpenDDCar = document.getElementById("btn-open-ddcar");
   const activePlatformName = document.getElementById("active-platform-name");
 
-  let currentTabInfo = null; // { id, platform: 'lazada'|'tiktok'|'shopee', script: 'content_lazada.js'..., orderUrl: '...' }
+  let currentTabInfo = null;
 
   // 1. Detect active tab platform
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -21,7 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
           platform: "Lazada",
           code: "lazada_main",
           script: "content_lazada.js",
-          orderUrl: "https://sellercenter.lazada.co.th/order/query"
+          orderUrl: "https://sellercenter.lazada.co.th/order/query",
+          catalogUrl: "https://sellercenter.lazada.co.th/apps/product/list"
         };
         activePlatformName.innerHTML = `<span style="color:#0284c7;">🔵 Lazada</span>`;
         selChannel.value = "lazada_main";
@@ -32,7 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
           platform: "TikTok Shop",
           code: "tiktok_main",
           script: "content_tiktok.js",
-          orderUrl: "https://seller-th.tiktok.com/order"
+          orderUrl: "https://seller-th.tiktok.com/order",
+          catalogUrl: "https://seller-th.tiktok.com/product/manage"
         };
         activePlatformName.innerHTML = `<span style="color:#e11d48;">⚫ TikTok Shop</span>`;
         selChannel.value = "tiktok_main";
@@ -43,7 +46,8 @@ document.addEventListener("DOMContentLoaded", () => {
           platform: "Shopee",
           code: "shopee_kingkong",
           script: "content_shopee.js",
-          orderUrl: "https://seller.shopee.co.th/portal/sale/order"
+          orderUrl: "https://seller.shopee.co.th/portal/sale/order",
+          catalogUrl: "https://seller.shopee.co.th/portal/product/list/all"
         };
         activePlatformName.innerHTML = `<span style="color:#ea580c;">🟠 Shopee</span>`;
         showStatus("พร้อมดึงข้อมูลจาก Shopee", "#ea580c");
@@ -135,6 +139,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
     executeSyncOnTab(currentTabInfo);
   });
+
+  // 3. Trigger Catalog Sync
+  btnSyncCatalog.addEventListener("click", () => {
+    btnGotoOrders.style.display = "none";
+
+    if (!currentTabInfo) {
+      const selectedChannel = selChannel.value;
+      let targetPattern = "*://seller.shopee.co.th/*";
+      let pName = "Shopee";
+      let script = "content_shopee.js";
+      let catUrl = "https://seller.shopee.co.th/portal/product/list/all";
+
+      if (selectedChannel === "lazada_main") {
+        targetPattern = "*://sellercenter.lazada.co.th/*";
+        pName = "Lazada";
+        script = "content_lazada.js";
+        catUrl = "https://sellercenter.lazada.co.th/apps/product/list";
+      } else if (selectedChannel === "tiktok_main") {
+        targetPattern = "*://seller-th.tiktok.com/*";
+        pName = "TikTok Shop";
+        script = "content_tiktok.js";
+        catUrl = "https://seller-th.tiktok.com/product/manage";
+      }
+
+      chrome.tabs.query({ url: targetPattern }, (foundTabs) => {
+        if (foundTabs && foundTabs.length > 0) {
+          executeCatalogSyncOnTab({
+            id: foundTabs[0].id,
+            platform: pName,
+            script: script,
+            catalogUrl: catUrl
+          });
+        } else {
+          showStatus(`⚠️ กรุณาเปิดแท็บ ${pName} ก่อนซิงค์แคตตาล็อก`, "#d97706");
+        }
+      });
+      return;
+    }
+
+    executeCatalogSyncOnTab(currentTabInfo);
+  });
+
+  function executeCatalogSyncOnTab(tabInfo) {
+    btnSyncCatalog.disabled = true;
+    showStatus(`⏳ กำลังดึงแคตตาล็อกสินค้าจาก ${tabInfo.platform}...`, "#0284c7");
+
+    chrome.tabs.sendMessage(tabInfo.id, { action: "START_CATALOG_SYNC", source: "popup_button" }, (response) => {
+      btnSyncCatalog.disabled = false;
+      if (chrome.runtime.lastError) {
+        showStatus(`⚠️ กรุณารีเฟรช (F5) หน้า ${tabInfo.platform} ก่อนซิงค์แคตตาล็อก`, "#d97706");
+      } else if (response && response.success) {
+        showStatus(`✅ ${response.message || "ซิงค์แคตตาล็อกสำเร็จ!"}`, "#15803d");
+      } else {
+        showStatus(`⚠️ ${response && response.message ? response.message : "ไม่พบตารางสินค้า"}`, "#b45309");
+        if (tabInfo.catalogUrl) {
+          btnGotoOrders.style.display = "block";
+          btnGotoOrders.textContent = `👉 ไปที่หน้าจัดการสินค้า (Product List) ${tabInfo.platform}`;
+          btnGotoOrders.onclick = () => {
+            chrome.tabs.update(tabInfo.id, { url: tabInfo.catalogUrl }, () => window.close());
+          };
+        }
+      }
+    });
+  }
 
   function executeSyncOnTab(tabInfo) {
     currentTabInfo = tabInfo;

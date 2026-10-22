@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_login();
 /**
  * get_stock_adjustments.php
  * Retrieve audit history of stock adjustments / write-offs

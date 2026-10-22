@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_login();
     include "db.php";
     $output = array();   
     $dt = date('Y-m-d');

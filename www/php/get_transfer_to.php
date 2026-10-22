@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_login();
 include "db.php";
 
 $start = isset($_POST['start']) ? intval($_POST['start']) : 0;

@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_login();
     include "db.php";
     include_once "img_helper.php";
     header("Content-Type: application/json; charset=UTF-8");

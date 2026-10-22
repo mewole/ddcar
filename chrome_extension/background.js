@@ -87,6 +87,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .then((res) => sendResponse({ success: true, data: res }))
       .catch((err) => sendResponse({ success: false, error: err.toString() }));
     return true; // async
+  } else if (request.action === "SEND_CATALOG_TO_DDCAR") {
+    sendCatalogToDDCar(request.payload)
+      .then((res) => sendResponse({ success: true, data: res }))
+      .catch((err) => sendResponse({ success: false, error: err.toString() }));
+    return true; // async
   }
 });
 
@@ -99,7 +104,34 @@ async function sendOrdersToDDCar(payload) {
   const channelCode = payload.channel_code || storage.channelCode || "shopee_kingkong";
   payload.channel_code = channelCode;
 
-  console.log("Posting to DDCar:", targetUrl, payload);
+  console.log("Posting orders to DDCar:", targetUrl, payload);
+
+  const response = await fetch(targetUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  return result;
+}
+
+async function sendCatalogToDDCar(payload) {
+  const storage = await chrome.storage.local.get(["serverUrl", "channelCode"]);
+  let baseUrl = storage.serverUrl || DEFAULT_SERVER_URL;
+  if (!baseUrl.endsWith("/")) baseUrl += "/";
+  const targetUrl = baseUrl + "php/sync_platform_catalog.php";
+
+  const channelCode = payload.channel_code || storage.channelCode || "shopee_kingkong";
+  payload.channel_code = channelCode;
+
+  console.log("Posting catalog to DDCar:", targetUrl, payload);
 
   const response = await fetch(targetUrl, {
     method: "POST",

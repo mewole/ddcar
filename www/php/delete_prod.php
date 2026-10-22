@@ -1,4 +1,7 @@
-<?php  
+<?php
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('HTTP/1.1 405 Method Not Allowed'); exit; }  
     include "db.php"; 
     
     // 1. รับค่า + trim ตัดเว้นวรรค + กรองป้องกัน SQL Injection

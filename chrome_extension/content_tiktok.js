@@ -14,9 +14,17 @@
     return href.includes("/order") || href.includes("order_id");
   }
 
+  function isTikTokProductPage() {
+    const href = window.location.href.toLowerCase();
+    return href.includes("/product/manage") || href.includes("/product/list") || href.includes("/product");
+  }
+
   // 1. Inject Floating Widget UI on TikTok
   function injectFloatingWidget() {
     if (document.getElementById("ddcar-sync-widget-tiktok")) return;
+
+    const onProdPage = isTikTokProductPage();
+    const onOrdPage = isTikTokOrderPage();
 
     const widget = document.createElement("div");
     widget.id = "ddcar-sync-widget-tiktok";
@@ -30,10 +38,32 @@
           ⚫ ร้านค้า: TikTok Shop
         </div>
         <div id="ddcar-page-hint-tt" style="font-size: 11px; margin-bottom: 8px;">
-          ${isTikTokOrderPage() 
-            ? '<span style="color:#15803d; font-weight:600;">✓ อยู่ที่หน้ารายการคำสั่งซื้อแล้ว</span>' 
-            : '<span style="color:#b45309; font-weight:600;">⚠️ อยู่ที่หน้าภาพรวม (Homepage)</span>'}
+          ${onProdPage 
+            ? '<span style="color:#e11d48; font-weight:700;">📦 อยู่ที่หน้าจัดการสินค้า (Manage Products)</span>' 
+            : onOrdPage 
+              ? '<span style="color:#15803d; font-weight:600;">✓ อยู่ที่หน้ารายการคำสั่งซื้อแล้ว</span>' 
+              : '<span style="color:#b45309; font-weight:600;">⚠️ อยู่ที่หน้าภาพรวม (Homepage)</span>'}
         </div>
+
+        <!-- Sync Products Button (Catalog) -->
+        <button id="ddcar-sync-catalog-tt" style="
+          width: 100%;
+          background: #e11d48;
+          color: #fff;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 6px;
+          font-weight: 700;
+          font-size: 12px;
+          cursor: pointer;
+          margin-bottom: 6px;
+          display: ${onProdPage ? 'block' : 'none'};
+          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        ">
+          📦 ซิงค์แคตตาล็อกสินค้า TikTok (รูป + ลิงก์ตรง + ชื่อเต็ม)
+        </button>
+
+        <!-- Sync Orders Button -->
         <button id="ddcar-sync-btn-tt" style="
           width: 100%;
           background: #e11d48;
@@ -45,24 +75,44 @@
           font-size: 12px;
           cursor: pointer;
           transition: background 0.2s;
+          display: ${onProdPage ? 'none' : 'block'};
         ">
           🔄 ซิงค์ออเดอร์ TikTok เข้า DDCar
         </button>
-        <button id="ddcar-goto-orders-tt" style="
+
+        <!-- Navigation Buttons -->
+        <button id="ddcar-goto-catalog-tt" style="
           width: 100%;
-          background: #f8fafc;
+          background: #fff1f2;
           color: #be123c;
           border: 1px solid #fecdd3;
-          padding: 7px 10px;
+          padding: 6px 10px;
           border-radius: 6px;
           font-weight: 600;
           font-size: 11px;
           cursor: pointer;
           margin-top: 6px;
-          display: ${isTikTokOrderPage() ? 'none' : 'block'};
+          display: ${onProdPage ? 'none' : 'block'};
         ">
-          👉 ไปที่หน้ารายการคำสั่งซื้อ TikTok
+          📦 ไปที่หน้าจัดการสินค้า (Manage Products)
         </button>
+
+        <button id="ddcar-goto-orders-tt" style="
+          width: 100%;
+          background: #f8fafc;
+          color: #334155;
+          border: 1px solid #cbd5e1;
+          padding: 6px 10px;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 11px;
+          cursor: pointer;
+          margin-top: 6px;
+          display: ${onOrdPage ? 'none' : 'block'};
+        ">
+          👉 ไปที่หน้ารายการคำสั่งซื้อ (Orders)
+        </button>
+
         <div id="ddcar-sync-status-tt" style="font-size: 10px; color: #64748b; margin-top: 6px; text-align: center;">
           พร้อมทำงาน
         </div>
@@ -81,14 +131,14 @@
         border-radius: 10px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.18);
         border: 1px solid #cbd5e1;
-        width: 260px;
+        width: 275px;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         overflow: hidden;
       }
-      #ddcar-sync-btn-tt:hover {
+      #ddcar-sync-btn-tt:hover, #ddcar-sync-catalog-tt:hover {
         background: #be123c !important;
       }
-      #ddcar-sync-btn-tt:disabled {
+      #ddcar-sync-btn-tt:disabled, #ddcar-sync-catalog-tt:disabled {
         background: #94a3b8 !important;
         cursor: not-allowed;
       }
@@ -108,13 +158,22 @@
       }
     });
 
+    // Navigation buttons
     document.getElementById("ddcar-goto-orders-tt").addEventListener("click", () => {
       window.location.href = "https://seller-th.tiktok.com/order";
     });
 
-    // Sync button
+    document.getElementById("ddcar-goto-catalog-tt").addEventListener("click", () => {
+      window.location.href = "https://seller-th.tiktok.com/product/manage";
+    });
+
+    // Sync buttons
     document.getElementById("ddcar-sync-btn-tt").addEventListener("click", () => {
       performSync("manual_button");
+    });
+
+    document.getElementById("ddcar-sync-catalog-tt").addEventListener("click", () => {
+      performTikTokCatalogSync("manual_button");
     });
   }
 
@@ -420,6 +479,172 @@
     });
   }
 
+  // 3. Parse Product Catalog from TikTok Shop Seller Center
+  function parseTikTokProducts() {
+    const products = [];
+    const seen = new Set();
+
+    const rows = document.querySelectorAll(".arco-table-tr, tr[data-row-key], table tbody tr, [class*='product-item']");
+
+    rows.forEach((row) => {
+      // 1. Image
+      let img = "";
+      const imgEl = row.querySelector("img[src*='ibyteimg.com'], img.arco-image-img, img");
+      if (imgEl && imgEl.src) {
+        let src = imgEl.src;
+        if (src.startsWith("//")) src = "https:" + src;
+        if (src.includes("ibyteimg.com")) img = src;
+      }
+
+      // 2. Title & ID
+      let title = "";
+      let productUrl = "";
+      let itemId = "";
+
+      const linkEl = row.querySelector("a[href*='/product/edit/'], [class*='product-title'], [class*='product-name'] a, a[title]");
+      if (linkEl) {
+        title = linkEl.getAttribute("title") || linkEl.innerText.trim();
+        const href = linkEl.getAttribute("href") || "";
+        const m = href.match(/\/product\/edit\/(\d{15,22})/);
+        if (m) {
+          itemId = m[1];
+          productUrl = "https://seller-th.tiktok.com/product/edit/" + itemId;
+        }
+      }
+
+      if (!title) {
+        const titleEl = row.querySelector("[class*='product-title'], [class*='product-name'], .title");
+        if (titleEl) {
+          title = titleEl.getAttribute("title") || titleEl.innerText.trim();
+        }
+      }
+
+      if (!title) return;
+
+      title = title.replace(/\s{2,}/g, " ").trim();
+
+      // Check if itemId is in row text
+      if (!itemId) {
+        const rowText = row.innerText || "";
+        const m = rowText.match(/\b(17\d{17})\b/);
+        if (m) {
+          itemId = m[1];
+          productUrl = "https://seller-th.tiktok.com/product/edit/" + itemId;
+        }
+      }
+
+      // 3. Find Seller SKU & Variations
+      const foundSkus = [];
+      row.querySelectorAll("*").forEach((el) => {
+        const txt = el.innerText ? el.innerText.trim() : "";
+        if (txt.startsWith("Seller SKU:") || txt.startsWith("SKU:")) {
+          const parts = txt.split(/:\s*/);
+          if (parts[1] && parts[1].length > 1) foundSkus.push(parts[1].trim());
+        }
+      });
+
+      if (foundSkus.length === 0) {
+        const rowText = row.innerText || "";
+        const lines = rowText.split("\n").map((l) => l.trim()).filter(Boolean);
+        for (const line of lines) {
+          if (line.match(/^[A-Z0-9\-_]{4,25}$/i) && !line.includes("THB") && !line.includes("TikTok")) {
+            foundSkus.push(line);
+            break;
+          }
+        }
+      }
+
+      if (foundSkus.length === 0 && itemId) {
+        foundSkus.push("(ไม่พบ Seller SKU) ID " + itemId);
+      }
+
+      if (!productUrl && title) {
+        productUrl = "https://seller-th.tiktok.com/product/manage?keyword=" + encodeURIComponent(title.substring(0, 35));
+      }
+
+      if (foundSkus.length === 0) {
+        foundSkus.push("");
+      }
+
+      foundSkus.forEach((sku) => {
+        const key = sku + "|" + title;
+        if (!seen.has(key)) {
+          seen.add(key);
+          products.push({
+            channel_code: "tiktok_main",
+            platform_sku: sku,
+            platform_name: title,
+            image_url: img,
+            product_url: productUrl,
+            item_id: itemId
+          });
+        }
+      });
+    });
+
+    return products;
+  }
+
+  function performTikTokCatalogSync(triggerSource) {
+    return new Promise((resolve) => {
+      const btn = document.getElementById("ddcar-sync-catalog-tt");
+      const status = document.getElementById("ddcar-sync-status-tt");
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⏳ กำลังดึงแคตตาล็อกสินค้า...";
+      }
+      if (status) status.textContent = "กำลังรวบรวมข้อมูลสินค้าและรูปภาพจากตาราง...";
+
+      const products = parseTikTokProducts();
+
+      if (products.length === 0) {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "📦 ซิงค์แคตตาล็อกสินค้า TikTok";
+        }
+        if (status) {
+          status.innerHTML = `<span style="color:#eab308;">⚠️ ยังไม่พบตารางสินค้าในหน้านี้ (กรุณารอโหลดตารางเสร็จ)</span>`;
+        }
+        resolve({ success: false, message: "ไม่พบตารางสินค้าในหน้านี้" });
+        return;
+      }
+
+      if (status) status.textContent = `พบ ${products.length} รายการ กำลังอัพเดทเข้า DDCar...`;
+
+      const payload = {
+        channel_code: "tiktok_main",
+        source: triggerSource || "tiktok_catalog_page",
+        products: products
+      };
+
+      chrome.runtime.sendMessage(
+        { action: "SEND_CATALOG_TO_DDCAR", payload: payload },
+        (response) => {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "📦 ซิงค์แคตตาล็อกสินค้า TikTok (เรียบร้อย)";
+          }
+
+          if (response && response.success) {
+            const data = response.data || {};
+            const msg = `✅ ซิงค์แคตตาล็อก TikTok สำเร็จ ${data.total_processed || products.length} รายการ (อัพเดท ${data.updated_count || 0} / เพิ่มใหม่ ${data.inserted_count || 0})!`;
+            if (status) {
+              status.innerHTML = `<span style="color:#10b981; font-weight:700;">${msg}</span>`;
+            }
+            resolve({ success: true, message: msg, count: products.length });
+          } else {
+            const err = (response && response.error) || "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ DDCar ได้";
+            if (status) {
+              status.innerHTML = `<span style="color:#ef4444;">❌ ล้มเหลว: ${err}</span>`;
+            }
+            resolve({ success: false, message: err });
+          }
+        }
+      );
+    });
+  }
+
   // 4. Listen for background & popup auto-sync signals (ASYNC WITH return true!)
   if (chrome && chrome.runtime && chrome.runtime.onMessage) {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -429,8 +654,18 @@
           .then((res) => sendResponse(res))
           .catch((err) => sendResponse({ success: false, platform: "TikTok Shop", message: err.message }));
         return true;
+      } else if (request.action === "START_CATALOG_SYNC") {
+        console.log("DDCar: Received START_CATALOG_SYNC for TikTok", request.source);
+        performTikTokCatalogSync(request.source)
+          .then((res) => sendResponse(res))
+          .catch((err) => sendResponse({ success: false, platform: "TikTok Shop", message: err.message }));
+        return true;
       } else if (request.action === "NAVIGATE_TO_ORDERS") {
         window.location.href = "https://seller-th.tiktok.com/order";
+        sendResponse({ success: true });
+        return true;
+      } else if (request.action === "NAVIGATE_TO_CATALOG") {
+        window.location.href = "https://seller-th.tiktok.com/product/manage";
         sendResponse({ success: true });
         return true;
       }

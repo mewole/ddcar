@@ -904,24 +904,22 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       var ch = (item.channel_code || '').toLowerCase();
       var sku = item.platform_sku || '';
       var name = item.platform_name || '';
-      var cleanSku = sku.replace(/^\(ไม่พบ Seller SKU\)\s*/i, '').trim();
+      var cleanSku = sku.replace(/^\(ไม่พบ Seller SKU\)\s*/i, '').replace(/^\(ไม่มี SKU\)\s*/i, '').trim();
       var idMatch = cleanSku.match(/ID\s*([0-9]{15,22})/i) || sku.match(/\b([0-9]{15,22})\b/);
+
+      // Clean search query from product base name
+      var baseName = name.replace(/\[.*?\]/g, ' ').replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
+      var searchWord = baseName.split(' ').slice(0, 5).join(' ') || baseName.substring(0, 35);
 
       if (ch.indexOf('tiktok') !== -1) {
         if (idMatch) {
           return 'https://seller-th.tiktok.com/product/edit/' + idMatch[1];
         }
-        return 'https://seller-th.tiktok.com/product/manage?keyword=' + encodeURIComponent(cleanSku || name.substring(0, 30));
+        return 'https://seller-th.tiktok.com/product/manage?keyword=' + encodeURIComponent(searchWord);
       } else if (ch.indexOf('shopee') !== -1) {
-        if (cleanSku && cleanSku.indexOf('ไม่มี SKU') === -1) {
-          return 'https://seller.shopee.co.th/portal/product/list/all?keyword=' + encodeURIComponent(cleanSku);
-        }
-        return 'https://seller.shopee.co.th/portal/product/list/all?keyword=' + encodeURIComponent(name.substring(0, 30));
+        return 'https://shopee.co.th/search?keyword=' + encodeURIComponent(searchWord);
       } else if (ch.indexOf('lazada') !== -1) {
-        if (cleanSku && cleanSku.indexOf('SKU อัตโนมัติ') === -1) {
-          return 'https://sellercenter.lazada.co.th/apps/product/list?keyword=' + encodeURIComponent(cleanSku);
-        }
-        return 'https://sellercenter.lazada.co.th/apps/product/list?keyword=' + encodeURIComponent(name.substring(0, 30));
+        return 'https://www.lazada.co.th/catalog/?q=' + encodeURIComponent(searchWord);
       }
       return '';
     }

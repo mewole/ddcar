@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 include "db.php";

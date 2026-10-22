@@ -1,4 +1,7 @@
 <?php
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('HTTP/1.1 405 Method Not Allowed'); exit; }
 require_once "db.php";
 header("Content-Type: application/json; charset=utf-8");
 

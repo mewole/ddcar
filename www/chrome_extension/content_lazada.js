@@ -15,9 +15,18 @@
     return href.includes("/order") || hash.includes("order") || href.includes("tradeorderid");
   }
 
+  function isLazadaProductPage() {
+    const href = window.location.href.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    return href.includes("/product/list") || href.includes("/apps/product") || hash.includes("product");
+  }
+
   // 1. Inject Floating Widget UI on Lazada
   function injectFloatingWidget() {
     if (document.getElementById("ddcar-sync-widget-lazada")) return;
+
+    const onProdPage = isLazadaProductPage();
+    const onOrdPage = isLazadaOrderPage();
 
     const widget = document.createElement("div");
     widget.id = "ddcar-sync-widget-lazada";
@@ -31,10 +40,32 @@
           🔵 ร้านค้า: Lazada Main (Lazada Mig)
         </div>
         <div id="ddcar-page-hint-laz" style="font-size: 11px; margin-bottom: 8px;">
-          ${isLazadaOrderPage() 
-            ? '<span style="color:#15803d; font-weight:600;">✓ อยู่ที่หน้ารายการคำสั่งซื้อแล้ว</span>' 
-            : '<span style="color:#b45309; font-weight:600;">⚠️ อยู่ที่หน้าภาพรวม (Dashboard)</span>'}
+          ${onProdPage 
+            ? '<span style="color:#0284c7; font-weight:700;">📦 อยู่ที่หน้ารายการสินค้า (Product List)</span>' 
+            : onOrdPage 
+              ? '<span style="color:#15803d; font-weight:600;">✓ อยู่ที่หน้ารายการคำสั่งซื้อแล้ว</span>' 
+              : '<span style="color:#b45309; font-weight:600;">⚠️ อยู่ที่หน้าภาพรวม (Dashboard)</span>'}
         </div>
+
+        <!-- Sync Products Button (Catalog) -->
+        <button id="ddcar-sync-catalog-laz" style="
+          width: 100%;
+          background: #0284c7;
+          color: #fff;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 6px;
+          font-weight: 700;
+          font-size: 12px;
+          cursor: pointer;
+          margin-bottom: 6px;
+          display: ${onProdPage ? 'block' : 'none'};
+          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        ">
+          📦 ซิงค์แคตตาล็อกสินค้า Lazada (รูป + ลิงก์ตรง + ชื่อเต็ม)
+        </button>
+
+        <!-- Sync Orders Button -->
         <button id="ddcar-sync-btn-laz" style="
           width: 100%;
           background: #0284c7;
@@ -46,24 +77,44 @@
           font-size: 12px;
           cursor: pointer;
           transition: background 0.2s;
+          display: ${onProdPage ? 'none' : 'block'};
         ">
           🔄 ซิงค์ออเดอร์ Lazada เข้า DDCar
         </button>
-        <button id="ddcar-goto-orders-laz" style="
+
+        <!-- Navigation Buttons -->
+        <button id="ddcar-goto-catalog-laz" style="
           width: 100%;
-          background: #f8fafc;
+          background: #f0f9ff;
           color: #0369a1;
           border: 1px solid #bae6fd;
-          padding: 7px 10px;
+          padding: 6px 10px;
           border-radius: 6px;
           font-weight: 600;
           font-size: 11px;
           cursor: pointer;
           margin-top: 6px;
-          display: ${isLazadaOrderPage() ? 'none' : 'block'};
+          display: ${onProdPage ? 'none' : 'block'};
         ">
-          👉 ไปที่หน้ารายการคำสั่งซื้อ (Order List)
+          📦 ไปที่หน้าจัดการสินค้า (Product List)
         </button>
+
+        <button id="ddcar-goto-orders-laz" style="
+          width: 100%;
+          background: #f8fafc;
+          color: #334155;
+          border: 1px solid #cbd5e1;
+          padding: 6px 10px;
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 11px;
+          cursor: pointer;
+          margin-top: 6px;
+          display: ${onOrdPage ? 'none' : 'block'};
+        ">
+          👉 ไปที่หน้ารายการคำสั่งซื้อ (Orders)
+        </button>
+
         <div id="ddcar-sync-status-laz" style="font-size: 10px; color: #64748b; margin-top: 6px; text-align: center;">
           พร้อมทำงาน
         </div>
@@ -82,14 +133,14 @@
         border-radius: 10px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.18);
         border: 1px solid #cbd5e1;
-        width: 260px;
+        width: 275px;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         overflow: hidden;
       }
-      #ddcar-sync-btn-laz:hover {
+      #ddcar-sync-btn-laz:hover, #ddcar-sync-catalog-laz:hover {
         background: #0369a1 !important;
       }
-      #ddcar-sync-btn-laz:disabled {
+      #ddcar-sync-btn-laz:disabled, #ddcar-sync-catalog-laz:disabled {
         background: #94a3b8 !important;
         cursor: not-allowed;
       }
@@ -109,14 +160,22 @@
       }
     });
 
-    // Go to order page button
+    // Navigation buttons
     document.getElementById("ddcar-goto-orders-laz").addEventListener("click", () => {
       window.location.href = "https://sellercenter.lazada.co.th/order/query";
     });
 
-    // Sync button
+    document.getElementById("ddcar-goto-catalog-laz").addEventListener("click", () => {
+      window.location.href = "https://sellercenter.lazada.co.th/apps/product/list";
+    });
+
+    // Sync buttons
     document.getElementById("ddcar-sync-btn-laz").addEventListener("click", () => {
       performSync("manual_button");
+    });
+
+    document.getElementById("ddcar-sync-catalog-laz").addEventListener("click", () => {
+      performLazadaCatalogSync("manual_button");
     });
   }
 
@@ -406,6 +465,161 @@
     });
   }
 
+  // 3. Parse Product Catalog from Lazada Seller Center
+  function parseLazadaProducts() {
+    const products = [];
+    const seen = new Set();
+
+    const rows = document.querySelectorAll(".next-table-row, tbody tr, [class*='table-row']");
+
+    rows.forEach((row) => {
+      // 1. Image
+      let img = "";
+      const imgEl = row.querySelector("img[src*='slatic.net'], img");
+      if (imgEl && imgEl.src) {
+        let src = imgEl.src;
+        if (src.startsWith("//")) src = "https:" + src;
+        src = src.replace(/_\d+x\d+[^.]*\./, ".");
+        if (src.includes("slatic.net")) img = src;
+      }
+
+      // 2. Title & Direct URL
+      let title = "";
+      let productUrl = "";
+      let itemId = "";
+
+      const linkEl = row.querySelector("a[href*='lazada.co.th/products/'], a.product-title, [class*='product-title'] a, a[title]");
+      if (linkEl) {
+        title = linkEl.getAttribute("title") || linkEl.innerText.trim();
+        productUrl = linkEl.href || "";
+        const mId = productUrl.match(/i([0-9]{8,15})/);
+        if (mId) itemId = mId[1];
+      }
+
+      if (!title) {
+        const titleEl = row.querySelector("[class*='product-name'], [class*='product-title'], .title");
+        if (titleEl) {
+          title = titleEl.getAttribute("title") || titleEl.innerText.trim();
+        }
+      }
+
+      if (!title) return;
+
+      // Clean variation or brackets in title
+      title = title.replace(/\s{2,}/g, " ").trim();
+
+      // 3. Find Seller SKU & Variations
+      const foundSkus = [];
+      row.querySelectorAll("*").forEach((el) => {
+        const txt = el.innerText ? el.innerText.trim() : "";
+        if (txt.startsWith("Seller SKU:") || txt.startsWith("SKU:")) {
+          const parts = txt.split(/:\s*/);
+          if (parts[1] && parts[1].length > 1) foundSkus.push(parts[1].trim());
+        }
+      });
+
+      if (foundSkus.length === 0) {
+        const rowText = row.innerText || "";
+        const lines = rowText.split("\n").map((l) => l.trim()).filter(Boolean);
+        for (const line of lines) {
+          if (line.match(/^[A-Z0-9\-_]{4,25}$/i) && !line.includes("THB") && !line.includes("Lazada")) {
+            foundSkus.push(line);
+            break;
+          }
+        }
+      }
+
+      if (foundSkus.length === 0 && itemId) {
+        foundSkus.push("(ไม่พบ Seller SKU) ID " + itemId);
+      }
+
+      if (!productUrl && title) {
+        productUrl = "https://www.lazada.co.th/catalog/?q=" + encodeURIComponent(title.substring(0, 35));
+      }
+
+      if (foundSkus.length === 0) {
+        foundSkus.push("");
+      }
+
+      foundSkus.forEach((sku) => {
+        const key = sku + "|" + title;
+        if (!seen.has(key)) {
+          seen.add(key);
+          products.push({
+            channel_code: "lazada_main",
+            platform_sku: sku,
+            platform_name: title,
+            image_url: img,
+            product_url: productUrl,
+            item_id: itemId
+          });
+        }
+      });
+    });
+
+    return products;
+  }
+
+  function performLazadaCatalogSync(triggerSource) {
+    return new Promise((resolve) => {
+      const btn = document.getElementById("ddcar-sync-catalog-laz");
+      const status = document.getElementById("ddcar-sync-status-laz");
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⏳ กำลังดึงแคตตาล็อกสินค้า...";
+      }
+      if (status) status.textContent = "กำลังรวบรวมข้อมูลสินค้าและรูปภาพจากตาราง...";
+
+      const products = parseLazadaProducts();
+
+      if (products.length === 0) {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "📦 ซิงค์แคตตาล็อกสินค้า Lazada";
+        }
+        if (status) {
+          status.innerHTML = `<span style="color:#eab308;">⚠️ ยังไม่พบตารางสินค้าในหน้านี้ (กรุณารอโหลดตารางเสร็จ)</span>`;
+        }
+        resolve({ success: false, message: "ไม่พบตารางสินค้าในหน้านี้" });
+        return;
+      }
+
+      if (status) status.textContent = `พบ ${products.length} รายการ กำลังอัพเดทเข้า DDCar...`;
+
+      const payload = {
+        channel_code: "lazada_main",
+        source: triggerSource || "lazada_catalog_page",
+        products: products
+      };
+
+      chrome.runtime.sendMessage(
+        { action: "SEND_CATALOG_TO_DDCAR", payload: payload },
+        (response) => {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "📦 ซิงค์แคตตาล็อกสินค้า Lazada (เรียบร้อย)";
+          }
+
+          if (response && response.success) {
+            const data = response.data || {};
+            const msg = `✅ ซิงค์แคตตาล็อกสำเร็จ ${data.total_processed || products.length} รายการ (อัพเดท ${data.updated_count || 0} / เพิ่มใหม่ ${data.inserted_count || 0})!`;
+            if (status) {
+              status.innerHTML = `<span style="color:#10b981; font-weight:700;">${msg}</span>`;
+            }
+            resolve({ success: true, message: msg, count: products.length });
+          } else {
+            const err = (response && response.error) || "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ DDCar ได้";
+            if (status) {
+              status.innerHTML = `<span style="color:#ef4444;">❌ ล้มเหลว: ${err}</span>`;
+            }
+            resolve({ success: false, message: err });
+          }
+        }
+      );
+    });
+  }
+
   // 4. Listen for background & popup auto-sync signals (ASYNC WITH return true!)
   if (chrome && chrome.runtime && chrome.runtime.onMessage) {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -414,9 +628,19 @@
         performSync(request.source)
           .then((res) => sendResponse(res))
           .catch((err) => sendResponse({ success: false, platform: "Lazada", message: err.message }));
-        return true; // Keep channel open for async response!
+        return true;
+      } else if (request.action === "START_CATALOG_SYNC") {
+        console.log("DDCar: Received START_CATALOG_SYNC for Lazada", request.source);
+        performLazadaCatalogSync(request.source)
+          .then((res) => sendResponse(res))
+          .catch((err) => sendResponse({ success: false, platform: "Lazada", message: err.message }));
+        return true;
       } else if (request.action === "NAVIGATE_TO_ORDERS") {
         window.location.href = "https://sellercenter.lazada.co.th/order/query";
+        sendResponse({ success: true });
+        return true;
+      } else if (request.action === "NAVIGATE_TO_CATALOG") {
+        window.location.href = "https://sellercenter.lazada.co.th/apps/product/list";
         sendResponse({ success: true });
         return true;
       }

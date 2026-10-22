@@ -181,6 +181,21 @@
                                     }
                                 }
                             });
+                        } else if(typeof data === 'string' && data.startsWith('locked:')){
+                            var mins = data.split(':')[1] || '15';
+                            $.confirm({
+                                title: 'ระงับการเข้าสู่ระบบชั่วคราว',
+                                content: 'คุณกรอกรหัสผ่านผิดเกิน 5 ครั้ง เพื่อความปลอดภัยระบบได้ระงับการเข้าสู่ระบบไว้ชั่วคราว กรุณารออีกประมาณ <b>' + mins + ' นาที</b> แล้วลองใหม่อีกครั้ง',
+                                type: 'orange',
+                                backgroundDismiss: true,
+                                buttons: {
+                                    formSubmit: {
+                                        text: 'ตกลง',
+                                        btnClass: 'btn-warning',
+                                        action: function () {}
+                                    }
+                                }
+                            });
                         } else {
                             var obj = (typeof data === 'object') ? data : (typeof data === 'string' ? JSON.parse(data) : data);
                             $.each(obj, function(i, field){
