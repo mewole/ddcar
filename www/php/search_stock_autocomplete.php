@@ -1,6 +1,5 @@
 <?php
-header("Content-Type: application/json; charset=utf-8");
-include "db.php";
+require_once "db.php";
 
 $term = isset($_GET['term']) ? trim(mysqli_real_escape_string($conn, $_GET['term'])) : '';
 if (empty($term) && isset($_POST['term'])) {
@@ -8,6 +7,7 @@ if (empty($term) && isset($_POST['term'])) {
 }
 
 if (empty($term)) {
+    header("Content-Type: application/json; charset=utf-8");
     echo json_encode([]);
     exit;
 }
@@ -18,7 +18,7 @@ $sql = "SELECT p.prod_id, p.prod_code, p.prod_name, p.prod_cost, p.prod_price,
                CASE WHEN p.img LIKE 'img/%' THEN p.img WHEN LENGTH(p.img) < 200 THEN p.img ELSE '' END as img,
                (SELECT COALESCE(SUM(amount), 0) FROM warehouse WHERE prod_id = p.prod_id) as ware_amount,
                (SELECT COALESCE(SUM(amount), 0) FROM shop WHERE prod_id = p.prod_id) as shop_amount,
-               (SELECT COUNT(*) FROM bundle_recipes WHERE bundle_sku = p.prod_code) as bundle_component_count
+               (SELECT COUNT(*) FROM bundle_recipes WHERE bundle_sku COLLATE utf8_unicode_ci = p.prod_code) as bundle_component_count
         FROM product p
         WHERE p.prod_code LIKE '%$term%' OR p.prod_name LIKE '%$term%'
         LIMIT $limit";
@@ -44,5 +44,6 @@ if ($res) {
     }
 }
 
+header("Content-Type: application/json; charset=utf-8");
 echo json_encode($results, JSON_UNESCAPED_UNICODE);
 ?>

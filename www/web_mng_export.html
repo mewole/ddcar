@@ -278,16 +278,15 @@
                       '<h3 style="text-decoration: underline;">รายการ</h3>'+
                   '</div>'             
               $.each(obj, function(i, field){
-                cost = ""
-                if(localStorage.user_role != "พนักงาน"){
-                  cost = field.stock_out_cost
-                } 
+                var canViewCost = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
+                var cost = canViewCost ? field.stock_out_cost : "-";
+                var itemTotalCost = canViewCost ? (field.amount * field.stock_out_cost) : "-"; 
                 text = text + '<div id="item-'+field.item_id+'" class="row justify-content-center">'+
                   '<div class="col-1 text-center items">'+(i+1)+'</div>'+
                   '<div class="col-1 text-center items">'+field.amount+'</div>'+
                   '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span></div>'+
                   '<div class="col-2 text-center items">'+cost+'</div>'+
-                  '<div class="col-2 text-center items">'+field.amount*field.stock_out_cost+'</div>'+
+                  '<div class="col-2 text-center items">'+itemTotalCost+'</div>'+
                 '</div>'
 
                 item = {}
@@ -311,9 +310,7 @@
                   '<div class="col-4 text-right">'+                   
                     '<button onclick="print.apply(this,arr_data)" class="btn btn-lg btn-warning" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
                   '</div>'+
-                  '<div class="col-4 text-left">'+
-                    '<button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].ware_id+')">ลบรายการ <i class="fas fa-trash"></i></button>'+
-                  '</div>'+        
+                  (canViewCost ? '<div class="col-4 text-left"><button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].ware_id+')">ลบรายการ <i class="fas fa-trash"></i></button></div>' : '')+        
                 '</div>'+  
                   '</div>'+
                 '</div>';                   
@@ -353,16 +350,15 @@
                       '<h3 style="text-decoration: underline;">รายการ</h3>'+
                   '</div>'             
               $.each(obj, function(i, field){
-                cost = ""
-                if(localStorage.user_role != "พนักงาน"){
-                  cost = field.stock_out_cost
-                }
+                var canViewCost = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
+                var cost = canViewCost ? field.stock_out_cost : "-";
+                var itemTotalCost = canViewCost ? (field.amount * field.stock_out_cost) : "-";
                 text = text + '<div id="item-'+field.item_id+'"" class="row justify-content-center">'+
                   '<div class="col-1 text-center items">'+(i+1)+'</div>'+
                   '<div class="col-1 text-center items">'+field.amount+'</div>'+
                   '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span></div>'+
                   '<div class="col-2 text-center items">'+cost+'</div>'+
-                  '<div class="col-2 text-center items">'+field.amount*field.stock_out_cost+'</div>'+
+                  '<div class="col-2 text-center items">'+itemTotalCost+'</div>'+
                 '</div>'
 
                 item = {}
@@ -385,9 +381,7 @@
                   '<div class="col-4 text-right">'+                   
                     '<button onclick="print.apply(this,arr_data)" class="btn btn-lg btn-warning" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
                   '</div>'+
-                  '<div class="col-4 text-left">'+
-                    '<button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].ware_id+')">ลบรายการ <i class="fas fa-trash"></i></button>'+
-                  '</div>'+         
+                  (canViewCost ? '<div class="col-4 text-left"><button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].ware_id+')">ลบรายการ <i class="fas fa-trash"></i></button></div>' : '')+         
                 '</div>'+         
                 '</div>'+
               '</div>';                   

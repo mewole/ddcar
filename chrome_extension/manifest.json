@@ -1,0 +1,62 @@
+{
+  "manifest_version": 3,
+  "name": "DDCar Sync Assistant",
+  "version": "1.0.0",
+  "description": "ระบบเชื่อมต่อดึงข้อมูลคำสั่งซื้อ Shopee / Lazada / TikTok เข้าสู่สต๊อก DDCar อัตโนมัติ (ปลอดภัย 100% ไม่เสี่ยงโดนแบน)",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DDCar Sync Assistant"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*.shopee.co.th/*",
+    "*://*.lazada.co.th/*",
+    "*://*.tiktok.com/*",
+    "http://100.77.57.16:8083/*",
+    "http://localhost:8083/*",
+    "http://localhost/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://seller.shopee.co.th/*"
+      ],
+      "js": [
+        "content_shopee.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://sellercenter.lazada.co.th/*"
+      ],
+      "js": [
+        "content_lazada.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://seller-th.tiktok.com/*",
+        "https://seller.tiktok.com/*"
+      ],
+      "js": [
+        "content_tiktok.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

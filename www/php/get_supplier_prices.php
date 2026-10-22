@@ -4,6 +4,12 @@
 
     $prod_id = isset($_POST['prod_id']) ? mysqli_real_escape_string($conn, trim($_POST['prod_id'])) : '';
 
+    $role = isset($_POST['role']) ? trim($_POST['role']) : '';
+    if (!empty($role) && $role !== 'แอดมิน' && $role !== 'เจ้าของร้าน') {
+        echo json_encode(['status' => 'forbidden', 'message' => 'ไม่มีสิทธิ์เข้าถึงข้อมูลราคาทุน'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     if (empty($prod_id)) {
         echo json_encode([
             'status' => 'empty',

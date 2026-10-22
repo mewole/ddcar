@@ -304,7 +304,11 @@
       });
     }
 
-    function delete_bill(bill_id,b_id,type,pay,total,c_id){
+    function delete_bill(bill_id, b_id, type, pay, total, c_id){
+      if(localStorage.user_role !== "แอดมิน" && localStorage.user_role !== "เจ้าของร้าน"){
+        alert("คุณไม่มีสิทธิ์ยกเลิกบิล (เฉพาะแอดมินและเจ้าของร้านเท่านั้น)");
+        return;
+      }
       $.confirm({
         title: 'ลบรายการ',
         content: 'ต้องการลบบิลนี้หรือไม่?'+
@@ -438,9 +442,7 @@
                 '<div class="col-4 text-right">'+
                   '<button class="btn btn-lg btn-warning" data-toggle="modal" data-target="#printModal" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
                 '</div>'+
-                '<div class="col-4 text-left">'+
-                  '<button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+',\''+obj[0].type+'\',\''+obj[0].payment_type+'\','+obj[0].total_price+','+obj[0].credit_id+',)">ลบรายการ <i class="fas fa-trash"></i></button>'+
-                '</div>'+
+                ((localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน") ? '<div class="col-4 text-left"><button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+',\''+obj[0].type+'\',\''+obj[0].payment_type+'\','+obj[0].total_price+','+obj[0].credit_id+')">ลบรายการ <i class="fas fa-trash"></i></button></div>' : '')+
             '</div>'+
           '</div>'+
         '</div>';
@@ -539,9 +541,7 @@
                 '<div class="col-4 text-right">'+
                   '<button class="btn btn-lg btn-warning" data-toggle="modal" data-target="#printModal" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
                 '</div>'+
-                '<div class="col-4 text-left">'+
-                  '<button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+',\''+obj[0].type+'\',\''+obj[0].payment_type+'\','+obj[0].total_price+','+obj[0].credit_id+')">ลบรายการ <i class="fas fa-trash"></i></button>'+
-                '</div>'+               
+                ((localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน") ? '<div class="col-4 text-left"><button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+',\''+obj[0].type+'\',\''+obj[0].payment_type+'\','+obj[0].total_price+','+obj[0].credit_id+')">ลบรายการ <i class="fas fa-trash"></i></button></div>' : '')+               
             '</div>'+
           '</div>'+
         '</div>';

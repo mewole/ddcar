@@ -37,6 +37,13 @@
     <script>      
         var prod_id,folder;
         $(document).ready(function () { 
+            if (!localStorage.user_id) {
+                window.location = 'web_login.html';
+                return;
+            }
+            if (localStorage.user_role !== 'แอดมิน' && localStorage.user_role !== 'เจ้าของร้าน') {
+                $('#cost').closest('.col-4').hide();
+            }
             url = new URL(window.location.href);
             folder = url.searchParams.get("folder");
             prod_id = url.searchParams.get("prod_id");           

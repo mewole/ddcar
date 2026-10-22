@@ -1,5 +1,6 @@
 <?php
     include "db.php";
+    @mysqli_report(MYSQLI_REPORT_OFF);
 
     $input = isset($_POST['JSON']) ? trim($_POST['JSON']) : '';
     $obj = json_decode($input, true);  	
@@ -22,11 +23,18 @@
         exit;
     }
 
-    if($type == "โกดัง" || $type == "ware" || $type == "warehouse"){
-        try {
-            
-    // DD Accessories - Auto Migration for VAT & Bundle Tables
-    @mysqli_query($conn, "ALTER TABLE stock_in ADD COLUMN bill_vat_type VARCHAR(20) DEFAULT 'vat_7'");
+    // ตรวจสอบการมีอยู่ของ column bill_vat_type ป้องกัน Error 1060 Duplicate column
+    $has_col_stock = false;
+    $res_c1 = @mysqli_query($conn, "SHOW COLUMNS FROM `stock_in` LIKE 'bill_vat_type'");
+    if ($res_c1 && mysqli_num_rows($res_c1) > 0) {
+        $has_col_stock = true;
+    }
+
+    $has_col_tran = false;
+    $res_c2 = @mysqli_query($conn, "SHOW COLUMNS FROM `transfer_in` LIKE 'bill_vat_type'");
+    if ($res_c2 && mysqli_num_rows($res_c2) > 0) {
+        $has_col_tran = true;
+    }
     @mysqli_query($conn, "CREATE TABLE IF NOT EXISTS bundle_recipes (
         id INT AUTO_INCREMENT PRIMARY KEY,
         bundle_sku VARCHAR(100) NOT NULL,
@@ -62,39 +70,61 @@
         INDEX (prod_code)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+    if($type == "โกดัง" || $type == "ware" || $type == "warehouse"){
+        try {
             mysqli_begin_transaction($conn);
-            $sql = "SELECT stock_number,count FROM stock_in ORDER BY stock_id DESC LIMIT 1"; 
+
+            // ค้นหาเลขที่ล่าสุดของปีปัจจุบันแบบเจาะจง prefix IMPyy เพื่อป้องกันการนับเลขวนซ้ำหรือชนกัน
+            $year_cur = date("y");
+            $sql = "SELECT stock_number, count FROM stock_in WHERE stock_number LIKE 'IMP$year_cur-%' ORDER BY stock_id DESC LIMIT 1"; 
             $result = mysqli_query($conn, $sql);   
             $count = 1;
-            $year_cur = date("y");
             if($result && mysqli_num_rows($result) > 0){    
                 $row = mysqli_fetch_array($result);
                 $number = $row['stock_number'];
-                $year_old = substr($number, 3, 2);
-                if($year_cur == $year_old){
+                if (!empty($number) && preg_match('/^IMP(\d{2})-(\d+)/', $number, $m)) {
+                    if ($m[1] == $year_cur) {
+                        $count = max(intval($m[2]) + 1, intval($row['count'] ?? 0) + 1);
+                    }
+                } else if (!empty($row['count'])) {
                     $count = intval($row['count']) + 1;
                 }
             }
             $stock_number = "IMP" . $year_cur . "-" . str_pad($count, 5, "0", STR_PAD_LEFT);
-            $sql2 = "INSERT INTO stock_in (stock_number,date_time,ware_id,user_id,supplier_name,ref_invoice,total_stock,count,bill_vat_type) 
-                     VALUES ('$stock_number','$dt','$ware_id','$user_id','$supplier_name','$ref_invoice','$sum','$count','$bill_vat_type')"; 
+            if ($has_col_stock) {
+                $sql2 = "INSERT INTO stock_in (stock_number,date_time,ware_id,user_id,supplier_name,ref_invoice,total_stock,count,bill_vat_type) 
+                         VALUES ('$stock_number','$dt','$ware_id','$user_id','$supplier_name','$ref_invoice','$sum','$count','$bill_vat_type')"; 
+            } else {
+                $sql2 = "INSERT INTO stock_in (stock_number,date_time,ware_id,user_id,supplier_name,ref_invoice,total_stock,count) 
+                         VALUES ('$stock_number','$dt','$ware_id','$user_id','$supplier_name','$ref_invoice','$sum','$count')";
+            }
             $result2 = mysqli_query($conn, $sql2);
             if(!$result2){
                 throw new Exception("ไม่สามารถบันทึกข้อมูลใบรับเข้าคลังได้: " . mysqli_error($conn));
             }
             $last_id = mysqli_insert_id($conn);	
 
+            $calc_total = 0;
             foreach ($obj as $data) {
                 $i++;
                 $item = $i;
                 $prod_id = mysqli_real_escape_string($conn, $data['prod_id']);
-                $cost = floatval(str_replace(',', '', $data['cost']));    
-                $amt = intval($data['amt']);  
+                $cost = floatval(str_replace(',', '', $data['cost'] ?? '0'));    
+                $amt = intval($data['amt'] ?? 0);  
                 $addr = isset($data['addr']) ? mysqli_real_escape_string($conn, trim($data['addr'])) : ''; 
                 // หากไม่ได้ระบุ from ในรายการ ให้ใช้ supplier_name จากหัวบิลอัตโนมัติ
                 $from = (isset($data['from']) && trim($data['from']) !== '') ? mysqli_real_escape_string($conn, trim($data['from'])) : $supplier_name;
                 $supplier_sku = isset($data['supplier_sku']) ? mysqli_real_escape_string($conn, trim($data['supplier_sku'])) : '';
                 $amount = 0;
+
+                // หากพนักงานไม่เห็นราคาทุนหรือไม่ได้ส่งทุนมา ให้ดึงราคาทุนปัจจุบันในระบบมาใช้ เพื่อป้องกันต้นทุนกลายเป็น 0
+                if ($cost <= 0) {
+                    $q_c = mysqli_query($conn, "SELECT prod_cost FROM product WHERE prod_id = '$prod_id'");
+                    if ($q_c && ($r_c = mysqli_fetch_assoc($q_c))) {
+                        $cost = floatval($r_c['prod_cost']);
+                    }
+                }
+                $calc_total += ($cost * $amt);
 
                 $sql_item = "INSERT INTO stock_in_item (stock_id,item_id,prod_id,stock_cost,amount,source_from,supplier_sku) 
                              VALUES ('$last_id','$item','$prod_id','$cost','$amt','$from','$supplier_sku')"; 
@@ -103,11 +133,12 @@
                     throw new Exception("ไม่สามารถบันทึกรายการสินค้าเข้าคลังได้: " . mysqli_error($conn));
                 } 
 
-                // บันทึก / อัปเดตการจับคู่ Supplier SKU ใน product_supplier_sku อัตโนมัติ
+                // บันทึก / อัปเดตการจับคู่ Supplier SKU ใน product_supplier_sku อัตโนมัติ (เฉพาะเมื่อมีทุน > 0)
                 if(!empty($supplier_sku) && !empty($from)){
+                    $cost_update = ($cost > 0) ? ", last_cost = VALUES(last_cost)" : "";
                     $sql_map = "INSERT INTO product_supplier_sku (prod_id, supplier_name, supplier_sku, last_cost) 
                                 VALUES ('$prod_id', '$from', '$supplier_sku', '$cost')
-                                ON DUPLICATE KEY UPDATE prod_id = VALUES(prod_id), last_cost = VALUES(last_cost)";
+                                ON DUPLICATE KEY UPDATE prod_id = VALUES(prod_id) $cost_update";
                     @mysqli_query($conn, $sql_map);
                 }
 
@@ -164,6 +195,12 @@
                 }
                 @mysqli_query($conn, "UPDATE product_status_ext SET is_ordered = 0 WHERE prod_id = '$prod_id'");
             }
+
+            // หากยอดรวมที่ส่งมาเป็น 0 หรือไม่ถูกต้อง ให้อัปเดตยอดรวมจากสินค้าจริง
+            if($sum <= 0 && $calc_total > 0){
+                @mysqli_query($conn, "UPDATE stock_in SET total_stock = '$calc_total' WHERE stock_id = '$last_id'");
+            }
+
             mysqli_commit($conn); 
             echo "success"; 
         } catch (Throwable $e) {
@@ -175,37 +212,57 @@
     } else if($type == "หน้าร้าน" || $type == "shop"){
         try {
             mysqli_begin_transaction($conn);
-            $sql = "SELECT tran_number,count FROM transfer_in ORDER BY tran_id DESC LIMIT 1"; 
+
+            // ค้นหาเลขที่ล่าสุดของปีปัจจุบันแบบเจาะจง prefix TRAyy เพื่อป้องกันเลขชนกันหรือนับผิดพลาด
+            $year_cur = date("y");
+            $sql = "SELECT tran_number, count FROM transfer_in WHERE tran_number LIKE 'TRA$year_cur-%' ORDER BY tran_id DESC LIMIT 1"; 
             $result = mysqli_query($conn, $sql);   
             $count = 1;
-            $year_cur = date("y");
             if($result && mysqli_num_rows($result) > 0){    
                 $row = mysqli_fetch_array($result);
                 $number = $row['tran_number'];
-                $year_old = substr($number, 3, 2);
-                if($year_cur == $year_old){
+                if (!empty($number) && preg_match('/^TRA(\d{2})-(\d+)/', $number, $m)) {
+                    if ($m[1] == $year_cur) {
+                        $count = max(intval($m[2]) + 1, intval($row['count'] ?? 0) + 1);
+                    }
+                } else if (!empty($row['count'])) {
                     $count = intval($row['count']) + 1;
                 }
             }
             $stock_number = "TRA" . $year_cur . "-" . str_pad($count, 5, "0", STR_PAD_LEFT);
-            $sql2 = "INSERT INTO transfer_in (tran_number,date_time,shop_id,user_id,supplier_name,ref_invoice,total_tran,count) 
-                     VALUES ('$stock_number','$dt','$ware_id','$user_id','$supplier_name','$ref_invoice','$sum','$count')"; 
+            if ($has_col_tran) {
+                $sql2 = "INSERT INTO transfer_in (tran_number,date_time,shop_id,user_id,supplier_name,ref_invoice,total_tran,count,bill_vat_type) 
+                         VALUES ('$stock_number','$dt','$ware_id','$user_id','$supplier_name','$ref_invoice','$sum','$count','$bill_vat_type')"; 
+            } else {
+                $sql2 = "INSERT INTO transfer_in (tran_number,date_time,shop_id,user_id,supplier_name,ref_invoice,total_tran,count) 
+                         VALUES ('$stock_number','$dt','$ware_id','$user_id','$supplier_name','$ref_invoice','$sum','$count')";
+            }
             $result2 = mysqli_query($conn, $sql2);
             if(!$result2){
                 throw new Exception("ไม่สามารถบันทึกข้อมูลใบรับเข้าหน้าร้านได้: " . mysqli_error($conn));
             }
             $last_id = mysqli_insert_id($conn);	
 
+            $calc_total = 0;
             foreach ($obj as $data) {
                 $i++;
                 $item = $i;
                 $prod_id = mysqli_real_escape_string($conn, $data['prod_id']);
-                $cost = floatval(str_replace(',', '', $data['cost']));    
-                $amt = intval($data['amt']);  
+                $cost = floatval(str_replace(',', '', $data['cost'] ?? '0'));    
+                $amt = intval($data['amt'] ?? 0);  
                 $addr = isset($data['addr']) ? mysqli_real_escape_string($conn, trim($data['addr'])) : ''; 
                 $from = (isset($data['from']) && trim($data['from']) !== '') ? mysqli_real_escape_string($conn, trim($data['from'])) : $supplier_name;
                 $supplier_sku = isset($data['supplier_sku']) ? mysqli_real_escape_string($conn, trim($data['supplier_sku'])) : '';
                 $amount = 0;
+
+                // หากพนักงานไม่เห็นราคาทุนหรือไม่ได้ส่งทุนมา ให้ดึงราคาทุนปัจจุบันในระบบมาใช้ เพื่อป้องกันต้นทุนกลายเป็น 0
+                if ($cost <= 0) {
+                    $q_c = mysqli_query($conn, "SELECT prod_cost FROM product WHERE prod_id = '$prod_id'");
+                    if ($q_c && ($r_c = mysqli_fetch_assoc($q_c))) {
+                        $cost = floatval($r_c['prod_cost']);
+                    }
+                }
+                $calc_total += ($cost * $amt);
 
                 $sql_item = "INSERT INTO transfer_in_item (tran_id,item_id,prod_id,tran_cost,amount,source_from,supplier_sku) 
                              VALUES ('$last_id','$item','$prod_id','$cost','$amt','$from','$supplier_sku')"; 
@@ -214,11 +271,12 @@
                     throw new Exception("ไม่สามารถบันทึกรายการสินค้าหน้าร้านได้: " . mysqli_error($conn));
                 } 
 
-                // บันทึก / อัปเดตการจับคู่ Supplier SKU ใน product_supplier_sku อัตโนมัติ
+                // บันทึก / อัปเดตการจับคู่ Supplier SKU ใน product_supplier_sku อัตโนมัติ (เฉพาะเมื่อมีทุน > 0)
                 if(!empty($supplier_sku) && !empty($from)){
+                    $cost_update = ($cost > 0) ? ", last_cost = VALUES(last_cost)" : "";
                     $sql_map = "INSERT INTO product_supplier_sku (prod_id, supplier_name, supplier_sku, last_cost) 
                                 VALUES ('$prod_id', '$from', '$supplier_sku', '$cost')
-                                ON DUPLICATE KEY UPDATE prod_id = VALUES(prod_id), last_cost = VALUES(last_cost)";
+                                ON DUPLICATE KEY UPDATE prod_id = VALUES(prod_id) $cost_update";
                     @mysqli_query($conn, $sql_map);
                 }
 
@@ -275,6 +333,12 @@
                 }
                 @mysqli_query($conn, "UPDATE product_status_ext SET is_ordered = 0 WHERE prod_id = '$prod_id'");
             }
+
+            // หากยอดรวมที่ส่งมาเป็น 0 หรือไม่ถูกต้อง ให้อัปเดตยอดรวมจากสินค้าจริง
+            if($sum <= 0 && $calc_total > 0){
+                @mysqli_query($conn, "UPDATE transfer_in SET total_tran = '$calc_total' WHERE tran_id = '$last_id'");
+            }
+
             mysqli_commit($conn); 
             echo "success"; 
         } catch (Throwable $e) {

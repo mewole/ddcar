@@ -16,6 +16,7 @@
         { id: 'nav-sale', label: 'ขายสินค้า', icon: 'fa fa-shopping-cart', href: 'web_sale.html', roles: ['all'] },
         { id: 'nav-import', label: 'นำสินค้าเข้า', icon: 'fa fa-arrow-down', href: 'web_import.html', roles: ['all'] },
         { id: 'nav-stock', label: 'เช็คสต๊อก', icon: 'fa fa-boxes', href: 'web_stock.html', roles: ['all'] },
+        { id: 'nav-platform', label: 'จับคู่สินค้าออนไลน์', icon: 'fa fa-link', href: 'web_platform_mapping.html', roles: ['all'] },
         { id: 'nav-transfer', label: 'โอนย้ายสินค้า', icon: 'fa fa-exchange-alt', href: 'web_transfer_in.html', roles: ['all'] },
         { id: 'nav-bell', label: 'เช็คสถานะสินค้า', icon: 'fa fa-bell', href: 'web_mng_bell.html', roles: ['all'] },
         {
@@ -33,7 +34,9 @@
                 { label: 'รายงานสินค้าออกโกดัง (เดิม)', icon: 'fa fa-dolly-flatbed', href: 'web_mng_export.html' },
                 { label: 'รายงานสรุปยอดขาย', icon: 'fa fa-chart-line', href: 'web_mng_sale.html', ownerOnly: true },
                 { label: 'รายงานเครดิตลูกค้า', icon: 'fa fa-credit-card', href: 'web_credit.html' },
-                { label: 'ตามบิลภาษีซื้อ (Pending VAT)', icon: 'fa fa-file-invoice-dollar', href: 'web_pending_vat.html' }
+                { label: 'ตามบิลภาษีซื้อ (Pending VAT)', icon: 'fa fa-file-invoice-dollar', href: 'web_pending_vat.html', ownerOnly: true },
+                { label: 'จับคู่สินค้าออนไลน์ (Platform Mapping)', icon: 'fa fa-link', href: 'web_platform_mapping.html' },
+                { label: 'จับคู่สินค้าชุด (Bundle & BOM)', icon: 'fa fa-layer-group', href: 'web_bundle.html' }
             ]
         },
         {

@@ -6,7 +6,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>นำสินค้าเข้า</title>
+  <title>นำสินค้าเข้า (โกดัง / หน้าร้าน)</title>
 
   <!-- Bootstrap Import -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
@@ -74,6 +74,25 @@
 		border-color: #dc3545 !important;
 		background-color: #fff5f5 !important;
 	}
+	#b.show {
+		display: block !important;
+		position: absolute !important;
+		top: 100% !important;
+		left: 0 !important;
+		transform: none !important;
+	}
+	#quick-btn-shop.active {
+		background-color: #007bff !important;
+		color: #fff !important;
+		border-color: #007bff !important;
+		box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+	}
+	#quick-btn-ware.active {
+		background-color: #ffc107 !important;
+		color: #212529 !important;
+		border-color: #ffc107 !important;
+		box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.35);
+	}
   </style>
 
   <script>
@@ -113,15 +132,18 @@
 			if(!localStorage.user_id){
 				window.location = 'web_login.html';
 			}
-			if(localStorage.user_role == "พนักงาน"){
-				$("#fund").prop('hidden', true);				
-            }
+			var canViewCost = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
+			if(!canViewCost){
+				$("#fund").prop('hidden', true);
+			}
 			get_header();		
 			load_suppliers_datalist();
 			setTimeout(function() {$("#name").focus();}, 100);
 
-			if(localStorage.ware_id_im){
-                $('#btn-b').text(localStorage.ware_name_im);
+			if(localStorage.ware_id_im && localStorage.type_im){
+                setware(localStorage.ware_id_im, localStorage.ware_name_im || '', localStorage.type_im);
+            } else if(localStorage.ware_id_im){
+                $('#btn-b').text(localStorage.ware_name_im || 'เลือกโกดัง/หน้าร้าน');
             }
 
 			if(localStorage.arr_prod){     
@@ -205,7 +227,7 @@
 					onSelect: function (suggestion) {
 						typed_into = false; // ป้องกันไม่ให้ event change ยิง get_prod.php ซ้ำเมื่อโฟกัสเปลี่ยน
 						$('#name').val(suggestion.value);
-						if($('#btn-b').text() == "เลือกโกดัง/หน้าร้าน"){
+						if(!localStorage.ware_id_im || !localStorage.type_im || $('#btn-b').text().indexOf("เลือกโกดัง/หน้าร้าน") !== -1){
 							$.confirm({
 								title: 'พบข้อผิดพลาด',
 								content: 'กรุณาเลือกโกดัง/หน้าร้านก่อนทำรายการ',
@@ -505,35 +527,75 @@
 				url: "php/get_ware_shop.php",
 				timeout: 8000,
 				dataType: "json",
-				success: function(obj){  
+				success: function(rawObj){  
+					var obj = rawObj;
+					if (typeof obj === 'string') {
+						try { obj = JSON.parse(obj); } catch(e) {}
+					}
+					var $b = $('#b');
+					$b.empty();
+
+					var shops = [];
+					var warehouses = [];
+
 					if(obj && Array.isArray(obj)){
-						var $b = $('#b');
-						$b.empty();
+						$.each(obj, function(i, field){
+							var type = field[2] || '';
+							var isShop = (type === "หน้าร้าน" || field.shop_id);
+							var isWare = (type === "โกดัง" || (field.ware_id && !field.shop_id));
 
-						// Header โกดัง
-						$b.append('<h6 class="dropdown-header font-weight-bold text-dark px-3 py-1 mb-0" style="background:#f1f3f5;"><i class="fas fa-warehouse text-warning mr-1"></i> โกดัง</h6>');
-						$.each(obj, function(i, field){							
-							if(field[2] == "โกดัง" || (field.ware_id && !field.shop_id)){  						
-								var wId = field.ware_id || field[0];
-								var wName = field.ware_name || field[1];
-								$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(' + wId + ',\'' + wName.replace(/'/g, "\\'") + '\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>' + wName + '</a>');
-							}										
+							if (isShop) {
+								shops.push({
+									id: field.shop_id || field[0] || 6,
+									name: field.shop_name || field[1] || 'หน้าร้าน',
+									type: 'หน้าร้าน'
+								});
+							} else if (isWare) {
+								warehouses.push({
+									id: field.ware_id || field[0],
+									name: field.ware_name || field[1],
+									type: 'โกดัง'
+								});
+							}
 						});
+					}
 
-						// Header หน้าร้าน
-						$b.append('<div class="dropdown-divider my-1"></div>');
-						$b.append('<h6 class="dropdown-header font-weight-bold text-dark px-3 py-1 mb-0" style="background:#f1f3f5;"><i class="fas fa-store text-primary mr-1"></i> หน้าร้าน</h6>');
-						$.each(obj, function(i, field){							
-							if(field[2] == "หน้าร้าน" || field.shop_id){						
-								var sId = field.shop_id || field[0];
-								var sName = field.shop_name || field[1];
-								$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(' + sId + ',\'' + sName.replace(/'/g, "\\'") + '\',\'หน้าร้าน\')"><i class="fas fa-store-alt text-primary mr-2"></i>' + sName + '</a>');
-							}										
-						}); 
+					// Fallback guarantee: ensure Shop ID 6 "หน้าร้าน" is ALWAYS present!
+					if (shops.length === 0) {
+						shops.push({ id: 6, name: 'หน้าร้าน', type: 'หน้าร้าน' });
+					}
+
+					// 1. Render หน้าร้าน FIRST at the top!
+					$b.append('<h6 class="dropdown-header font-weight-bold text-primary px-3 py-1 mb-0" style="background:#e8f4fd;"><i class="fas fa-store mr-1"></i> หน้าร้าน (Storefront)</h6>');
+					$.each(shops, function(i, s){
+						$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold text-primary" href="javascript:void(0)" onclick="setware(' + s.id + ',\'' + s.name.replace(/'/g, "\\'") + '\',\'หน้าร้าน\')"><i class="fas fa-store-alt text-primary mr-2"></i>' + s.name + '<span class="badge badge-primary float-right ml-2">จุดขาย</span></a>');
+					});
+
+					// 2. Render โกดัง SECOND
+					$b.append('<div class="dropdown-divider my-1"></div>');
+					$b.append('<h6 class="dropdown-header font-weight-bold text-dark px-3 py-1 mb-0" style="background:#fef7e0;"><i class="fas fa-warehouse text-warning mr-1"></i> โกดัง (Warehouses)</h6>');
+					$.each(warehouses, function(i, w){
+						$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(' + w.id + ',\'' + w.name.replace(/'/g, "\\'") + '\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>' + w.name + '</a>');
+					});
+
+					// Restore saved selection
+					if (localStorage.ware_id_im && localStorage.type_im) {
+						setware(localStorage.ware_id_im, localStorage.ware_name_im || '', localStorage.type_im);
 					}
 				},
 				error: function(xhr, status, err){
 					console.error("Failed to load warehouses/shops:", status, err);
+					var $b = $('#b');
+					$b.empty();
+					$b.append('<h6 class="dropdown-header font-weight-bold text-primary px-3 py-1 mb-0" style="background:#e8f4fd;"><i class="fas fa-store mr-1"></i> หน้าร้าน</h6>');
+					$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold text-primary" href="javascript:void(0)" onclick="setware(6,\'หน้าร้าน\',\'หน้าร้าน\')"><i class="fas fa-store-alt text-primary mr-2"></i>หน้าร้าน <span class="badge badge-primary float-right">จุดขาย</span></a>');
+					$b.append('<div class="dropdown-divider my-1"></div>');
+					$b.append('<h6 class="dropdown-header font-weight-bold text-dark px-3 py-1 mb-0" style="background:#fef7e0;"><i class="fas fa-warehouse text-warning mr-1"></i> โกดัง</h6>');
+					$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(1,\'โกดังA\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>โกดังA</a>');
+					$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(2,\'โกดังB\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>โกดังB</a>');
+					$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(3,\'โกดังC\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>โกดังC</a>');
+					$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(4,\'โกดังD\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>โกดังD</a>');
+					$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(5,\'พระราม 5\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>พระราม 5</a>');
 				}               
 			}); 	
 		}
@@ -608,24 +670,45 @@
 			localStorage.ware_id_im = arg;			
 			localStorage.ware_name_im = arg2;
 			localStorage.type_im = arg3;
-			$('#btn-b').text(arg2).removeClass('border-danger is-invalid');
+
+			if(arg3 == "หน้าร้าน"){
+				$('#btn-b').html('<i class="fas fa-store mr-1 text-white"></i> ' + (arg2 || 'หน้าร้าน'))
+					.removeClass('btn-secondary btn-warning text-dark border-danger is-invalid')
+					.addClass('btn-primary text-white')
+					.css('background-color', '#007bff');
+				$('#quick-btn-shop').addClass('active');
+				$('#quick-btn-ware').removeClass('active');
+				$('#target-location-badge').html('<span class="text-primary font-weight-bold"><i class="fas fa-check-circle mr-1"></i>หน้าร้าน</span>');
+			} else {
+				$('#btn-b').html('<i class="fas fa-warehouse mr-1 text-dark"></i> ' + (arg2 || 'โกดัง'))
+					.removeClass('btn-secondary btn-primary text-white border-danger is-invalid')
+					.addClass('btn-warning text-dark')
+					.css('background-color', '#ffc107');
+				$('#quick-btn-ware').addClass('active');
+				$('#quick-btn-shop').removeClass('active');
+				$('#target-location-badge').html('<span class="text-warning font-weight-bold"><i class="fas fa-check-circle mr-1"></i>' + arg2 + '</span>');
+			}
+
 			$('#select-ware').removeClass('show');
 			$('#b').removeClass('show');
 			$('#btn-b').attr('aria-expanded', 'false');
 			get_place();
 		}
 
-		$(document).on('click', '#btn-b', function(e) {
-			e.preventDefault();
-			if ($(this).is(':disabled')) return;
+		function toggleWareDropdown(e) {
+			if (e) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+			if ($('#btn-b').is(':disabled')) return;
 			$('#select-ware').toggleClass('show');
 			$('#b').toggleClass('show');
 			var isOpen = $('#b').hasClass('show');
-			$(this).attr('aria-expanded', isOpen ? 'true' : 'false');
-		});
+			$('#btn-b').attr('aria-expanded', isOpen ? 'true' : 'false');
+		}
 
 		$(document).on('click', function(e) {
-			if (!$(e.target).closest('#select-ware').length) {
+			if (!$(e.target).closest('#select-ware, #quick-btn-ware').length) {
 				$('#select-ware').removeClass('show');
 				$('#b').removeClass('show');
 				$('#btn-b').attr('aria-expanded', 'false');
@@ -696,7 +779,7 @@
 
 		function add(){
 			// 1. ตรวจสอบโกดัง / หน้าร้าน
-			if($('#btn-b').text() == "เลือกโกดัง/หน้าร้าน" || !localStorage.ware_id_im){
+			if(!localStorage.ware_id_im || !localStorage.type_im || $('#btn-b').text().indexOf("เลือกโกดัง/หน้าร้าน") !== -1){
 				highlightError('#btn-b');
 				$.confirm({
 					title: 'ยังไม่ได้เลือกสถานที่รับเข้า',
@@ -808,7 +891,8 @@
 
 			// 6. ตรวจสอบราคาทุน (#fund) (หากไม่ใช่ระดับพนักงาน)
 			var cost_val = $('#fund').val().trim();
-			if(localStorage.user_role != "พนักงาน"){
+			var canViewCost = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
+			if(canViewCost){
 				if(cost_val == "" || isNaN(parseFloat(cost_val)) || parseFloat(cost_val) < 0){
 					highlightError('#fund');
 					$.confirm({
@@ -909,8 +993,9 @@
 				$("#cnt-add").css('max-height', $("#cnt-add").height());
 				$("#cnt-add").animate({scrollTop: $('#cnt-add').prop('scrollHeight')});
 			}
+			var canViewCost = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
 			msg = "";
-			if(localStorage.user_role != "พนักงาน"){
+			if(canViewCost){
 				msg = '<input id="fundd" type="number" value="'+$('#fund').val()+'" class="form-control text-center no-spin" min="0" readonly>';
 			}
 
@@ -1064,7 +1149,7 @@
 					'<input id="amount-'+arr_data[i].count+'" value="'+arr_data[i].amt+'" type="number" class="form-control text-center no-spin" min="1" readonly>'+
 				'</div>'+
 				'<div class="col-1 nopd-8">'+
-					'<input id="fundd" type="number" value="'+arr_data[i].cost+'" class="form-control text-center no-spin" min="0" readonly>'+
+					((localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน') ? '<input id="fundd" type="number" value="'+arr_data[i].cost+'" class="form-control text-center no-spin" min="0" readonly>' : '')+
 				'</div>'+          
 				'<div class="col-1 nopd-8">'+
 					'<input id="wholee" type="number" value="'+arr_data[i].price_s+'" class="form-control text-center no-spin" min="0" readonly>'+
@@ -1520,7 +1605,7 @@
 		}
 
 		function selectfolder() {
-			if($('#btn-b').text() == "เลือกโกดัง/หน้าร้าน"){
+			if(!localStorage.ware_id_im || !localStorage.type_im || $('#btn-b').text().indexOf("เลือกโกดัง/หน้าร้าน") !== -1){
 				$.confirm({
 					title: 'พบข้อผิดพลาด',
 					content: 'กรุณาเลือกโกดัง/หน้าร้านก่อนทำรายการ',
@@ -1546,7 +1631,7 @@
 		<nav class="navbar navbar-expand-lg navbar-dark navbar-ddcar">
             <a class="navbar-brand d-flex align-items-center" href="web_select.html">
                 <i class="fa fa-arrow-down mr-2 text-warning"></i>
-                <span id="nav-title">นำสินค้าเข้าโกดัง</span>
+                <span id="nav-title">นำสินค้าเข้า (โกดัง / หน้าร้าน)</span>
             </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarDDCar"
                 aria-controls="navbarDDCar" aria-expanded="false" aria-label="Toggle navigation">
@@ -1571,35 +1656,48 @@
       		<div class="card shadow-sm border-0" style="background-color: #f8f9fa; border-radius: 8px;">
       			<div class="card-body py-2 px-3">
       				<div class="row align-items-center">
-      					<div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.9rem;"><i class="fas fa-warehouse text-warning mr-1"></i> สถานที่รับเข้า <span class="text-danger">*</span></label>
-      						<div id="select-ware" class="dropdown">
-      							<button id="btn-b" class="btn btn-secondary dropdown-toggle w-100 text-truncate font-weight-bold" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #495057;">เลือกโกดัง/หน้าร้าน</button>
-      							<div id="b" class="dropdown-menu shadow w-100" style="max-height: 350px; overflow-y: auto; z-index: 1060;" aria-labelledby="btn-b"></div>
+      					<div class="col-lg-3 col-md-4 col-sm-6 mb-2 mb-lg-0">
+      						<div class="d-flex justify-content-between align-items-center mb-1">
+      							<label class="font-weight-bold text-secondary mb-0" style="font-size: 0.88rem;">
+      								<i class="fas fa-map-marker-alt text-primary mr-1"></i> สถานที่รับเข้า <span class="text-danger">*</span>
+      							</label>
+      							<span id="target-location-badge" class="badge badge-light border" style="font-size: 0.72rem;">ยังไม่เลือก</span>
+      						</div>
+      						<div class="btn-group btn-group-sm w-100 mb-1 shadow-sm" role="group">
+      							<button type="button" id="quick-btn-shop" class="btn btn-outline-primary font-weight-bold py-1" onclick="setware(6, 'หน้าร้าน', 'หน้าร้าน')" title="คลิกเลือกรับเข้าหน้าร้านทันที">
+      								<i class="fas fa-store mr-1"></i> หน้าร้าน
+      							</button>
+      							<button type="button" id="quick-btn-ware" class="btn btn-outline-secondary font-weight-bold py-1" onclick="toggleWareDropdown(event)" title="เลือกโกดังเก็บสินค้า">
+      								<i class="fas fa-warehouse mr-1"></i> โกดัง ▾
+      							</button>
+      						</div>
+      						<div id="select-ware" class="dropdown position-relative">
+      							<button id="btn-b" class="btn btn-secondary dropdown-toggle w-100 text-truncate font-weight-bold btn-sm" type="button" onclick="toggleWareDropdown(event)" aria-haspopup="true" aria-expanded="false" style="background-color: #495057;">เลือกโกดัง/หน้าร้าน</button>
+      							<div id="b" class="dropdown-menu shadow w-100 py-1" style="max-height: 480px; overflow-y: auto; z-index: 1060;" aria-labelledby="btn-b"></div>
       						</div>
       					</div>
 
-      					<div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.9rem;"><i class="fas fa-store text-primary mr-1"></i> ร้านค้า / ผู้จำหน่าย (จาก) <span class="text-danger">*</span></label>
-      						<input id="header_supplier" type="text" class="form-control font-weight-bold text-primary" placeholder="* พิมพ์หรือเลือกร้านค้า" list="header_supplier_datalist" autocomplete="off">
+      					<div class="col-lg-3 col-md-4 col-sm-6 mb-2 mb-lg-0">
+      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.88rem;"><i class="fas fa-store text-primary mr-1"></i> ร้านค้า / ผู้จำหน่าย (จาก) <span class="text-danger">*</span></label>
+      						<input id="header_supplier" type="text" class="form-control form-control-sm font-weight-bold text-primary" placeholder="* พิมพ์หรือเลือกร้านค้า" list="header_supplier_datalist" autocomplete="off">
       						<datalist id="header_supplier_datalist"></datalist>
       					</div>
 
-      					<div class="col-md-3 col-sm-6 mb-2 mb-md-0">
-      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.9rem;"><i class="fas fa-file-invoice text-success mr-1"></i> เลขที่บิลร้าน / ใบส่งของ</label>
-      						<input id="header_ref_no" type="text" class="form-control" placeholder="เลขที่บิลอ้างอิง (ถ้ามี)" autocomplete="off">
+      					<div class="col-lg-2 col-md-4 col-sm-6 mb-2 mb-lg-0">
+      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.88rem;"><i class="fas fa-file-invoice text-success mr-1"></i> เลขที่บิล / ใบส่งของ</label>
+      						<input id="header_ref_no" type="text" class="form-control form-control-sm" placeholder="เลขที่บิลอ้างอิง" autocomplete="off">
       					</div>
 
-      					<div class="col-md-2 col-sm-6 mb-2 mb-md-0">
-      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.9rem;"><i class="fas fa-receipt text-danger mr-1"></i> ประเภทภาษีบิล</label>
-      						<select id="header_vat_type" class="form-control font-weight-bold">
+      					<div class="col-lg-2 col-md-6 col-sm-6 mb-2 mb-lg-0">
+      						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.88rem;"><i class="fas fa-receipt text-danger mr-1"></i> ประเภทภาษีบิล</label>
+      						<select id="header_vat_type" class="form-control form-control-sm font-weight-bold">
       							<option value="vat_7" selected>🟢 บิลมี VAT 7%</option>
       							<option value="non_vat_0">🟠 บิลเงินสด (ไม่มี VAT)</option>
       						</select>
       					</div>
 
-      					<div class="col-md-3 col-sm-6 mb-2 mb-md-0 text-md-right text-left">
-      						<div style="font-size: 0.88rem; color: #6c757d;">
+      					<div class="col-lg-2 col-md-6 col-sm-12 mb-2 mb-lg-0 text-lg-right text-left">
+      						<div style="font-size: 0.85rem; color: #6c757d;">
       							<div><i class="far fa-calendar-alt mr-1"></i> วันที่: <strong id="date" class="text-dark">-</strong></div>
       							<div><i class="far fa-user mr-1"></i> ผู้ทำรายการ: <strong id="user" class="text-dark">-</strong></div>
       						</div>
@@ -1716,7 +1814,7 @@
 					if (prod_id && $('#barcode').val() && $('#name').val() === name) {
 						return 0;
 					}
-					if($('#btn-b').text() == "เลือกโกดัง/หน้าร้าน"){
+					if(!localStorage.ware_id_im || !localStorage.type_im || $('#btn-b').text().indexOf("เลือกโกดัง/หน้าร้าน") !== -1){
 						$.confirm({
 							title: 'พบข้อผิดพลาด',
 							content: 'กรุณาเลือกโกดัง/หน้าร้านก่อนทำรายการ',
@@ -1901,7 +1999,12 @@
 			});
 		}
 
-		function renderSupplierBadge(data) {
+		function renderSupplierBadge(data){
+			var canViewCost = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
+			if (!canViewCost) {
+				$('#best-price-badge').empty().hide();
+				return;
+			}
 			var badgeEl = $('#best-price-badge');
 			var history = data.history || [];
 			var currentCost = data.current_cost || parseFloat($('#fund').val()) || 0;
@@ -1967,7 +2070,12 @@
 			}
 		}
 
-		function openSupplierModal() {
+		function openSupplierModal(){
+			var canViewCost = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
+			if (!canViewCost) {
+				alert('เฉพาะแอดมินและเจ้าของร้านเท่านั้นที่สามารถดูประวัติราคาและเปรียบเทียบร้านค้าได้');
+				return;
+			}
 			if (!current_supplier_data) {
 				var pname = $('#name').val() || 'สินค้า';
 				$('#modal-supplier-prod-name').html('<i class="fas fa-box text-primary mr-1"></i> ' + pname + ' (รหัส: ' + ($('#barcode').val() || '-') + ')');

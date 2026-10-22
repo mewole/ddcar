@@ -249,7 +249,7 @@
               <th style="width: 130px;">สถานะ</th>
               <th style="width: 160px;">รหัสแม่ (Master SKU)</th>
               <th>ชื่อสินค้าชุด (ในระบบ DDcar)</th>
-              <th style="width: 140px;" class="text-right">ราคาปลีก / ทุน</th>
+              <th id="th-price-cost" style="width: 140px;" class="text-right">ราคาปลีก / ทุน</th>
               <th>สูตรส่วนประกอบที่ผูกไว้ (Recipe BOM)</th>
               <th style="width: 110px;" class="text-center">จัดการ</th>
             </tr>
@@ -335,6 +335,14 @@
     var currentEditingName = '';
 
     $(document).ready(function() {
+      if (!localStorage.user_id) {
+        window.location = 'web_login.html';
+        return;
+      }
+      var canViewCost = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
+      if (!canViewCost) {
+        $('#th-price-cost').text('ราคาปลีก');
+      }
       loadBundleData();
     });
 
@@ -406,7 +414,8 @@
         }
 
         var priceStr = '฿' + (item.price || 0).toLocaleString();
-        var costStr = item.cost > 0 ? '<div class="text-muted small">ทุน: ฿' + item.cost.toLocaleString() + '</div>' : '';
+        var canViewCost = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
+        var costStr = (canViewCost && item.cost > 0) ? '<div class="text-muted small">ทุน: ฿' + item.cost.toLocaleString() + '</div>' : '';
 
         var tr = $('<tr></tr>');
         tr.append('<td>' + statusBadge + '</td>');

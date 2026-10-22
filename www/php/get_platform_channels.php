@@ -1,6 +1,5 @@
 <?php
 require_once "db.php";
-require_once "platform_mapping_init.php";
 header("Content-Type: application/json; charset=utf-8");
 
 $sql = "SELECT c.*,

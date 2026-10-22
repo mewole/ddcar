@@ -455,8 +455,10 @@
         '<span class="prod-place-badge ml-1"><i class="fas fa-map-marker-alt mr-1"></i>' + item.place + '</span>' : '';
 
       // Supplier Info
+      var canViewCost = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
       var supplierHtml = '';
-      if (item.best_supplier) {
+      if (canViewCost) {
+        if (item.best_supplier) {
         supplierHtml = '<div class="supplier-box">' +
           '<div class="d-flex align-items-center justify-content-between">' +
             '<div>' +
@@ -476,6 +478,7 @@
             '<i class="fas fa-search mr-1"></i> ประวัติ' +
           '</button>' +
         '</div>';
+        }
       }
 
       // Safe image URL with zero recursion onerror
@@ -679,7 +682,11 @@
     }
 
     // เปิด Modal ประวัติราคาและเปรียบเทียบร้านค้า
-    function openSupplierModal(prod_id, prod_name) {
+    function openSupplierModal(prod_id, prod_name){
+      if (localStorage.user_role !== "แอดมิน" && localStorage.user_role !== "เจ้าของร้าน") {
+        alert("เฉพาะแอดมินและเจ้าของร้านเท่านั้นที่สามารถดูประวัติราคาและต้นทุนได้");
+        return;
+      }
       $('#modalProdName').text(prod_name);
       $('#modalImportBtn').attr('onclick', 'goToImport(' + prod_id + ')');
       $('#supplierModalBody').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><div class="mt-2 text-muted">กำลังค้นหาประวัติราคาทุกร้าน...</div></div>');
@@ -688,7 +695,7 @@
       $.ajax({
         type: "POST",
         url: "php/get_supplier_prices.php",
-        data: { prod_id: prod_id },
+        data: { prod_id: prod_id, role: (localStorage.user_role || '') },
         dataType: "json",
         success: function(d) {
           var html = '';

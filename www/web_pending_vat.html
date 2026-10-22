@@ -409,6 +409,16 @@
     var allSuppliers = [];
 
     $(document).ready(function() {
+      if (!localStorage.user_id) {
+        window.location = 'web_login.html';
+        return;
+      }
+      var role = localStorage.user_role || '';
+      if (role !== 'แอดมิน' && role !== 'เจ้าของร้าน') {
+        alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้ (เฉพาะแอดมินและเจ้าของร้านเท่านั้น)');
+        window.location = 'web_sale.html';
+        return;
+      }
       loadPendingVatData();
     });
 

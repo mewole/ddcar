@@ -275,16 +275,7 @@
 			}, 'json');
 		});
 
-		$(document).keydown(function(objEvent) {
-			if (objEvent.keyCode == 13) {  //enter pressed
-				objEvent.preventDefault();
-				var $this = $(objEvent.target);
-				var i_enter = parseFloat($this.attr('data-index'));                      
-				if(i_enter == 1){
-						show();
-				}        
-			}         
-		})
+		// Enter key handled directly on #input-search to prevent duplicate search calls
 
   		function reposition(){
   		$("#main-ctn").css('margin-top', '15%');
@@ -340,6 +331,9 @@
 		}
 
 		function show(){
+			if (window.activeSearchAjax && typeof window.activeSearchAjax.abort === 'function') {
+				window.activeSearchAjax.abort();
+			}
 			$('#append-ctn').empty();
 			var val = $.trim($('#input-search').val());
 			if(val == ""){
@@ -352,7 +346,7 @@
 				text: "กำลังโหลดข้อมูลสินค้า..."                            
 			});		
 
-			$.ajax({
+			window.activeSearchAjax = $.ajax({
 				type: "POST",
 				url: "php/search_prod.php",
 				data: {'phrase' : val, 'with_stock': 1},
@@ -371,8 +365,10 @@
 						$('#append-ctn').append('<p class="display">ไม่พบสินค้า</p>');
 					}                                                                                                                                      
 				},
-				error: function(){
-					$('#append-ctn').append('<p class="display">เกิดข้อผิดพลาดในการเชื่อมต่อ</p>');
+				error: function(xhr, status){
+					if (status !== 'abort') {
+						$('#append-ctn').append('<p class="display">เกิดข้อผิดพลาดในการเชื่อมต่อ</p>');
+					}
 				},
 				complete: function(){
 					EasyLoading.hide();
@@ -382,6 +378,9 @@
 
 		function render_product_card_from_data(field){
 			var prod_id = field.prod_id;
+			if ($('#div-' + prod_id).length > 0) {
+				return; // Prevent duplicate product card
+			}
 			var name = field.prod_name || "";
 			var img = field.img || "";
 			var code = field.prod_code || "";
@@ -436,7 +435,7 @@
 						'<div class="prod-code-container">' + code_html + '</div>' +
 						'<div>' +
 							'<i id="i-'+prod_id+'" class="fas fa-pen text-primary btn-edit-prod" data-toggle="modal" data-target="#EditModal" style="cursor: pointer; margin-right: 15px;" title="แก้ไขสินค้า"></i>' +
-							'<i id="trash-'+prod_id+'" class="fas fa-trash text-danger btn-delete-prod" style="cursor: pointer;" title="ลบสินค้า"></i>' +
+							(canViewCost() ? '<i id="trash-'+prod_id+'" class="fas fa-trash text-danger btn-delete-prod" style="cursor: pointer;" title="ลบสินค้า"></i>' : '') +
 						'</div>' +
 					'</div>' +
 					'<div class="folder-path-container">' + folder_html + '</div>' +
@@ -565,10 +564,26 @@
 		}		
 
 		function edit_prod(prod_id, name, code){
-			$("#fileSelect").val("");
+			$("#fileSelect").val("").data('img', '');
+			$('#edit-img-preview').attr('src', '');
+			$('#edit-img-preview-wrap').hide();
 			$('#fileSelect[rel=popover]').popover('dispose');
 			$("#name-prod").val(name || "");
 			$("#code-prod").val(code || "");
+
+			// Pricing & Permission Setup
+			var canCost = (typeof window.canViewCost === 'function') ? window.canViewCost() : (localStorage.user_role == "แอดมิน" || localStorage.user_role == "เจ้าของร้าน");
+			if (!canCost) {
+				$('#col-edit-cost').hide();
+				$('#wrap-sync-history').hide();
+				$('#edit-prod-cost').val('');
+			} else {
+				$('#col-edit-cost').show();
+				$('#wrap-sync-history').show();
+				$('#chk-sync-history').prop('checked', false);
+			}
+			$('#edit-prod-pricesend').val('');
+			$('#edit-prod-price').val('');
 
 			// Reset VAT fields
 			$('#edit-vat-stock').val('0');
@@ -577,7 +592,7 @@
 			$('#edit-bundle-tag').empty();
 			$('#edit-bundle-action-wrap').hide();
 
-			// Fetch VAT & Stock details
+			// Fetch VAT & Stock & Pricing details
 			$.ajax({
 				url: 'php/get_product_sku_vat.php',
 				type: 'GET',
@@ -585,9 +600,21 @@
 				dataType: 'json',
 				success: function(res) {
 					if (res && res.success && res.data) {
-						$('#edit-vat-stock').val(res.data.vat_stock);
-						$('#edit-non-vat-stock').val(res.data.non_vat_stock);
-						$('#edit-total-stock-label').text(res.data.total_stock);
+						if (canCost) {
+							$('#edit-prod-cost').val(res.data.prod_cost || 0);
+						}
+						$('#edit-prod-pricesend').val(res.data.prod_pricesend || 0);
+						$('#edit-prod-price').val(res.data.prod_price || 0);
+
+						var vatStock = parseInt(res.data.vat_stock) || 0;
+						var nonVatStock = parseInt(res.data.non_vat_stock) || 0;
+						var totalStock = parseInt(res.data.total_stock) || 0;
+						if (vatStock === 0 && nonVatStock === 0 && totalStock > 0) {
+							nonVatStock = totalStock;
+						}
+						$('#edit-vat-stock').val(vatStock);
+						$('#edit-non-vat-stock').val(nonVatStock);
+						$('#edit-total-stock-label').text(totalStock);
 
 						if (res.data.is_bundle) {
 							$('#edit-bundle-tag').html('<span class="badge badge-info p-1"><i class="fas fa-layer-group mr-1"></i>สินค้าชุด (' + res.data.bundle_components + ' ชิ้นส่วน)</span>');
@@ -606,6 +633,10 @@
 		}
 
 		function delete_prod(prod_id, name){
+			if(!canViewCost()){
+				alert("เฉพาะแอดมินและเจ้าของร้านเท่านั้นที่มีสิทธิ์ลบสินค้า");
+				return;
+			}
 			$.confirm({
 				icon: 'fa fa-warning',
 				title: 'คุณต้องการลบ ' + (name || 'สินค้านี้'),
@@ -653,46 +684,18 @@
 
 		function save_edit(prod_id){
 			var name = $("#name-prod").val();
-			var code = $("#code-prod").val();			
-			// from an input element
-			var input = document.getElementById("fileSelect");
-        	var file = input.files[0];	
-			var b64;		
-			if (file != undefined) {
-				var tempImg = new Image();
-				tempImg.src = $("#fileSelect").data('img');
-				tempImg.onload = function() {				
-
-					var MAX_WIDTH = 960;
-					var MAX_HEIGHT = 960;
-					var width = tempImg.width;
-					var height = tempImg.height;
-
-					if (width > height) {
-						if (width > MAX_WIDTH) {
-							height *= MAX_WIDTH / width;
-							width = MAX_WIDTH;
-						}
-					} else {
-						if (height > MAX_HEIGHT) {
-							width *= MAX_HEIGHT / height;
-							height = MAX_HEIGHT;
-						}
-					}			
-
-					// Create canvas of required size.
-					var canvas = document.createElement('canvas');
-					canvas.width = width;
-					canvas.height = height;
-
-					var ctx = canvas.getContext("2d");
-					ctx.drawImage(this, 0, 0, tempImg.width, tempImg.height, 0, 0, width, height);
-
-					b64 = canvas.toDataURL("image/jpeg");				
-					console.log(b64);
-				};			
+			var code = ($("#code-prod").val() || "").trim();
+			if (!code) {
+				alert("กรุณาระบุรหัสสินค้า (SKU)");
+				return;
 			}
-			setTimeout(function() {
+
+			var input = document.getElementById("fileSelect");
+			var file = (input && input.files && input.files[0]) ? input.files[0] : null;
+
+			EasyLoading.show({ text: "กำลังบันทึกข้อมูล..." });
+
+			function doSubmit(b64Data) {
 				// Save Dual Tax Buckets
 				$.ajax({
 					url: 'php/save_platform_sku.php',
@@ -700,27 +703,40 @@
 					contentType: 'application/json',
 					data: JSON.stringify({
 						prod_id: prod_id,
-						prod_code: $("#code-prod").val().trim(),
+						prod_code: code,
 						vat_stock: parseInt($('#edit-vat-stock').val()) || 0,
 						non_vat_stock: parseInt($('#edit-non-vat-stock').val()) || 0
 					})
 				});
 
+				var cost_val = $('#edit-prod-cost').val();
+				var pricesend_val = $('#edit-prod-pricesend').val();
+				var price_val = $('#edit-prod-price').val();
+				var sync_hist = $('#chk-sync-history').is(':checked') ? 1 : 0;
+
+				var postData = {
+					'prod_id' : prod_id,
+					'name_prod' : name,
+					'code' : code,
+					'role' : localStorage.user_role || '',
+					'cost' : cost_val,
+					'price_s' : pricesend_val,
+					'price_w' : price_val,
+					'sync_history' : sync_hist
+				};
+				if (b64Data) {
+					postData['img'] = b64Data;
+				}
+
 				$.ajax({
 					type: "POST",
 					url: "php/rename_prod_web.php",
-					data: {'prod_id' : prod_id,
-						'name_prod' : name,
-						'code' : code,
-						'img' : b64},
-					beforeSend: function(){
-						EasyLoading.show({                           
-							text: "กำลังโหลด"                            
-						});
-					},             
+					data: postData,
 					success: function(data){
-						EasyLoading.hide();					                          
+						EasyLoading.hide();
 						if(data == "success"){
+							$('#EditModal').modal('hide');
+
 							// อัปเดต .data() บนปุ่มแก้ไขและลบให้มีค่าใหม่เสมอ
 							var $i = $("#i-" + prod_id);
 							$i.data('prod-name', name);
@@ -728,63 +744,117 @@
 							$("#trash-" + prod_id).data('prod-name', name);
 							$("#p-" + prod_id).text(name);
 
+							// อัปเดตราคาที่แสดงบนการ์ดสินค้าทันที
+							var $card = $("#div-" + prod_id);
+							var msg_price = "";
+							if(localStorage.user_role != "แอดมิน" && localStorage.user_role != "เจ้าของร้าน"){
+								msg_price = '<p class="m-0">ส่ง : ' + (pricesend_val || '-') + '  ปลีก : ' + (price_val || '-') + '</p>';
+							}else{
+								msg_price = '<p class="m-0">ทุน : ' + (cost_val || '-') + '  ส่ง : ' + (pricesend_val || '-') + '  ปลีก : ' + (price_val || '-') + '</p>';
+							}
+							$card.find('p.m-0').first().replaceWith(msg_price);
+
 							// อัปเดตรหัสสินค้าบนการ์ด
-							var $codeBadge = $("#div-" + prod_id).find('.prod-code-badge');
+							var $codeBadge = $card.find('.prod-code-badge');
 							if (code) {
 								if ($codeBadge.length) {
 									$codeBadge.find('.code-text').text(code);
 								} else {
-									$("#div-" + prod_id).find('.prod-code-container').html('<span class="prod-code-badge"><i class="fas fa-barcode mr-1"></i><span class="code-text">' + code + '</span></span>');
+									$card.find('.prod-code-container').html('<span class="prod-code-badge"><i class="fas fa-barcode mr-1"></i><span class="code-text">' + code + '</span></span>');
 								}
 							} else {
 								$codeBadge.remove();
 							}
 
-							if(b64){
-								$('#img-' + prod_id).attr('src', b64);
-							}			
+							if(b64Data){
+								$('#img-' + prod_id).attr('src', b64Data);
+							}
+
+							if (sync_hist == 1) {
+								$.alert({
+									icon: 'fa fa-check-circle',
+									title: 'บันทึกสำเร็จ',
+									content: 'อัปเดตราคาทุนใหม่ และปรับปรุงราคาทุนในประวัติการรับเข้าเดิมเรียบร้อยแล้ว',
+									type: 'green'
+								});
+							}
 						}else{
 							$.confirm({
 								title: 'พบข้อผิดพลาด',
-								content: 'ลองอีกครั้ง',
+								content: 'ไม่สามารถบันทึกได้ (' + data + ')',
 								backgroundDismiss: true,
 								buttons: {
 									formSubmit: {
 										text: 'ตกลง',
-										btnClass: 'btn-regis',
+										btnClass: 'btn-danger',
 										action: function () {}
 									}
 								}
 							});
 						}
-					}               
+					},
+					error: function(xhr, status, err){
+						EasyLoading.hide();
+						alert("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: " + err);
+					}
 				});
-			}, 1000);	
-		}
-
-		function readURL() {
-			var input = document.getElementById("fileSelect");
-			if (input.files && input.files[0]) {
-			var reader = new FileReader();
-			reader.onload = function(e) {
-			$('#fileSelect').data('img', e.target.result);
 			}
-			reader.readAsDataURL(input.files[0]);
-		}
+
+			if (file) {
+				var reader = new FileReader();
+				reader.onload = function(e) {
+					var tempImg = new Image();
+					tempImg.onload = function() {
+						var MAX_WIDTH = 960;
+						var MAX_HEIGHT = 960;
+						var width = tempImg.width;
+						var height = tempImg.height;
+
+						if (width > height) {
+							if (width > MAX_WIDTH) {
+								height *= MAX_WIDTH / width;
+								width = MAX_WIDTH;
+							}
+						} else {
+							if (height > MAX_HEIGHT) {
+								width *= MAX_HEIGHT / height;
+								height = MAX_HEIGHT;
+							}
+						}
+
+						var canvas = document.createElement('canvas');
+						canvas.width = Math.round(width);
+						canvas.height = Math.round(height);
+						var ctx = canvas.getContext("2d");
+						ctx.drawImage(tempImg, 0, 0, tempImg.width, tempImg.height, 0, 0, canvas.width, canvas.height);
+						var b64 = canvas.toDataURL("image/jpeg", 0.85);
+						doSubmit(b64);
+					};
+					tempImg.onerror = function() {
+						doSubmit(e.target.result);
+					};
+					tempImg.src = e.target.result;
+				};
+				reader.onerror = function() {
+					doSubmit(null);
+				};
+				reader.readAsDataURL(file);
+			} else {
+				doSubmit(null);
+			}
 		}
 
 		function select_img(){
-			console.log("select")	
-			readURL(); //set data-img of ch
-
-			$('#fileSelect[rel=popover]').popover({
-				html: true,
-				trigger: 'hover',
-				placement: 'right',
-				content: function() {
-				return '<img src=' + $(this).data('img') + '>';
-				}
-			});		  
+			var input = document.getElementById("fileSelect");
+			if (input.files && input.files[0]) {
+				var reader = new FileReader();
+				reader.onload = function(e) {
+					$('#fileSelect').data('img', e.target.result);
+					$('#edit-img-preview').attr('src', e.target.result);
+					$('#edit-img-preview-wrap').show();
+				};
+				reader.readAsDataURL(input.files[0]);
+			}
 		}
 
   		function detailback(){
@@ -868,7 +938,14 @@
                     <i class="fas fa-history mr-2 text-danger"></i> ประวัติตัดสต๊อก
                 </a>
             </div>
-    	</div>
+    	
+            <div class="col-12 col-md-4 col-lg-3 text-center my-2 my-lg-0">
+    		    <a href="web_platform_mapping.html" class="btn btn-lg btn-primary btn-block py-3 font-weight-bold text-white shadow-sm" style="font-size: 1.15rem; border-radius: 8px; background-color: #2563eb; border-color: #1d4ed8;">
+                    <i class="fas fa-link mr-1"></i> จับคู่สินค้าออนไลน์
+                    <span class="badge badge-danger ml-1" style="font-size: 0.85rem;">163</span>
+                </a>
+            </div>
+	</div>
     </div>
     <div id="detail-ctn" class="container-fullwidth" style="margin-top: 2%; margin-bottom: 2%;" hidden>
       <div id="append-ctn" class="row threejumbo justify-content-center">
@@ -1076,6 +1153,47 @@
 				      <input id="name-prod" type="text" class="form-control font-weight-bold">
 				  </div>
 			  </div>
+
+			  <!-- Price & Cost Management Section -->
+			  <div id="edit-prices-wrap" class="p-3 my-2 rounded border shadow-sm" style="background: #f8fafc;">
+			      <div class="d-flex justify-content-between align-items-center mb-2">
+			          <h6 class="font-weight-bold text-dark mb-0" style="font-size: 0.92rem;">
+			              <i class="fas fa-tags text-primary mr-1"></i> ราคาจำหน่ายและราคาทุนสินค้า
+			          </h6>
+			          <span class="badge badge-light border text-muted">แก้ไขต้นทุน/ราคา</span>
+			      </div>
+			      <div class="row">
+			          <div class="col-4" id="col-edit-cost">
+			              <label class="small text-danger font-weight-bold mb-1">
+			                  <i class="fas fa-coins mr-1"></i> ราคาทุน (บาท) *
+			              </label>
+			              <input type="number" step="0.01" min="0" id="edit-prod-cost" class="form-control form-control-sm text-right font-weight-bold text-danger" placeholder="0.00">
+			          </div>
+			          <div class="col-4">
+			              <label class="small text-info font-weight-bold mb-1">
+			                  <i class="fas fa-truck mr-1"></i> ราคาส่ง (บาท)
+			              </label>
+			              <input type="number" step="0.01" min="0" id="edit-prod-pricesend" class="form-control form-control-sm text-right font-weight-bold text-info" placeholder="0.00">
+			          </div>
+			          <div class="col-4">
+			              <label class="small text-success font-weight-bold mb-1">
+			                  <i class="fas fa-shopping-cart mr-1"></i> ราคาปลีก (บาท) *
+			              </label>
+			              <input type="number" step="0.01" min="0" id="edit-prod-price" class="form-control form-control-sm text-right font-weight-bold text-success" placeholder="0.00">
+			          </div>
+			      </div>
+			      <div class="mt-2 pt-2 border-top" id="wrap-sync-history">
+			          <div class="custom-control custom-checkbox">
+			              <input type="checkbox" class="custom-control-input" id="chk-sync-history" value="1">
+			              <label class="custom-control-label small font-weight-bold text-dark" for="chk-sync-history" style="cursor: pointer;">
+			                  <i class="fas fa-sync-alt text-primary mr-1"></i> ปรับปรุงราคาทุนนี้ไปยังประวัติการรับเข้าเดิมของสินค้านี้ด้วย (Sync ทุนย้อนหลัง)
+			              </label>
+			          </div>
+			          <div class="small text-muted mt-1" style="font-size: 0.78rem;">
+			              * เหมาะสำหรับกรณีลงราคาทุนผิดในบิลรับเข้าก่อนหน้านี้ ระบบจะแก้ไขต้นทุนในประวัติรับเข้าสินค้าให้ตรงกับทุนใหม่นี้อัตโนมัติ
+			          </div>
+			      </div>
+			  </div>
 			  <!-- Platform SKU Mapping Link -->
 			  <div class="p-2 my-2 rounded bg-light border text-center">
 			      <a href="web_platform_mapping.html" target="_blank" class="btn btn-outline-primary btn-sm font-weight-bold">
@@ -1109,15 +1227,22 @@
 			          </a>
 			      </div>
 			  </div>
-			  <div class="col-12 text-center" style="margin-top: 20px; margin-left: 5%;">
-				<form id="imageUploadForm" method="post" enctype="multipart/form-data">
-					<input id="fileSelect" onchange="select_img()" type="file" name="file" accept="image/*" rel="popover" data-img="">
+			  <div class="col-12 text-center my-3">
+				<form id="imageUploadForm" method="post" enctype="multipart/form-data" onsubmit="return false;">
+					<label for="fileSelect" class="btn btn-outline-primary btn-sm px-3 mb-2" style="cursor: pointer; border-radius: 20px;">
+						<i class="fas fa-camera mr-1"></i> เลือกรูปภาพสินค้าใหม่
+					</label>
+					<input id="fileSelect" onchange="select_img()" type="file" name="file" accept="image/*" style="display: none;" data-img="">
+					<div id="edit-img-preview-wrap" class="mt-2 text-center" style="display:none;">
+						<img id="edit-img-preview" src="" style="max-height: 120px; max-width: 160px; border-radius: 8px; border: 1px solid #ddd; object-fit: contain; box-shadow: 0 2px 5px rgba(0,0,0,0.15);">
+						<div class="mt-1"><span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i>รูปที่เลือกใหม่</span></div>
+					</div>
 				</form>
-			  </div><br>			  
+			  </div>
 			  <!-- Modal footer -->
-			  <div class="col-12 text-center">
-					<button id="save-edit" type="button" class="btn btn-primary" data-dismiss="modal">บันทึก</button>
-					<button type="button" class="btn btn-danger" data-dismiss="modal">ยกเลิก</button>
+			  <div class="col-12 text-center pb-2">
+					<button id="save-edit" type="button" class="btn btn-primary px-4">บันทึก</button>
+					<button type="button" class="btn btn-danger px-4" data-dismiss="modal">ยกเลิก</button>
 				</div>
 			  <br>
 			</div>
@@ -1931,6 +2056,6 @@
 
 </script>
     <!-- Central Navbar Script -->
-    <script src="js/navbar.js?v=2.2"></script>
+    <script src="js/navbar.js?v=2.5"></script>
 </body>
 </html>

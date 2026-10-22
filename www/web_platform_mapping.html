@@ -189,6 +189,9 @@
         </p>
       </div>
       <div class="mt-2 mt-md-0 d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-outline-primary btn-sm mr-2 font-weight-bold" onclick="openExtensionGuideModal();">
+          <i class="fas fa-puzzle-piece mr-1"></i> ส่วนขยาย Chrome Extension (ดึงออเดอร์อัตโนมัติ)
+        </button>
         <button type="button" class="btn btn-outline-secondary btn-sm mr-2 font-weight-bold" onclick="openChannelModal();">
           <i class="fas fa-store-alt mr-1"></i> จัดการร้านค้า / เพิ่มร้าน
         </button>
@@ -254,6 +257,163 @@
             <div id="kpi-bundle" class="h4 font-weight-bold text-warning mb-0">0</div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Daily Reconciliation & Smart Matcher Card -->
+    <div class="card border-0 shadow-sm rounded-lg mb-4" style="border-radius: 12px; overflow: hidden; background: #ffffff;">
+      <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+          <span class="mr-2" style="font-size: 1.3rem;">📊</span>
+          <div>
+            <h5 class="font-weight-bold mb-0 text-dark">
+              ศูนย์กระทบยอดคำสั่งซื้อ & สต็อกตัดขายประจำวัน
+            </h5>
+            <small class="text-muted">เปรียบเทียบยอดคำสั่งซื้อจริงบนแพลตฟอร์ม กับสต็อกที่ตัดขายในระบบ DDCar (ตรวจสอบ SKU ชนกัน)</small>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap align-items-center mt-2 mt-md-0" style="gap: 8px;">
+          <!-- Date Filter -->
+          <div class="input-group input-group-sm" style="width: auto;">
+            <div class="input-group-prepend">
+              <span class="input-group-text bg-light font-weight-bold"><i class="far fa-calendar-alt mr-1"></i> วันที่</span>
+            </div>
+            <input type="date" id="recon-date-picker" class="form-control form-control-sm font-weight-bold" onchange="loadReconciliation();">
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm font-weight-bold" onclick="setReconToday();">วันนี้</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm font-weight-bold" onclick="setReconYesterday();">เมื่อวาน</button>
+          <button type="button" class="btn btn-primary btn-sm font-weight-bold ml-1" onclick="loadReconciliation();">
+            <i class="fas fa-sync-alt mr-1"></i> รีเฟรช
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body p-3">
+        <!-- Channel & Sync Info Bar -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center bg-light p-2 rounded mb-3 border">
+          <div class="d-flex align-items-center">
+            <span class="font-weight-bold text-secondary mr-2"><i class="fas fa-store mr-1"></i> ร้านค้า:</span>
+            <span id="recon-channel-badge" class="badge badge-primary px-2 py-1 font-weight-bold" style="font-size: 0.9rem;">-</span>
+            <span class="text-muted small ml-2">(ตัดขายในนาม: <strong id="recon-cus-name" class="text-dark">-</strong>)</span>
+          </div>
+          <div class="small text-muted mt-1 mt-md-0">
+            <i class="fas fa-history mr-1 text-info"></i> ดึงข้อมูลอัตโนมัติล่าสุด: <strong id="recon-last-sync" class="text-dark">ยังไม่มีข้อมูล</strong>
+            <span class="badge badge-light border ml-2 text-muted">รอบเวลา: เช้า & 17:00 น.</span>
+          </div>
+        </div>
+
+        <!-- 3 KPI Columns: Platform vs DDCar vs Health -->
+        <div class="row">
+          <!-- Col 1: Platform Orders -->
+          <div class="col-md-4 mb-3 mb-md-0">
+            <div class="p-3 rounded border h-100" style="background: #faf5ff; border-color: #e9d5ff !important;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="font-weight-bold" style="color: #7e22ce;">
+                  <i class="fas fa-shopping-cart mr-1"></i> 1. ฝั่งแพลตฟอร์มออนไลน์
+                </span>
+                <span class="badge badge-info" id="recon-platform-name">Platform</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-baseline">
+                <div>
+                  <div class="small text-muted font-weight-bold">จำนวนคำสั่งซื้อ</div>
+                  <div class="h4 font-weight-bold text-dark mb-0" id="recon-p-orders">0 <span class="small font-weight-normal text-muted">ออเดอร์</span></div>
+                </div>
+                <div class="text-right">
+                  <div class="small text-muted font-weight-bold">รวมจำนวนสินค้า</div>
+                  <div class="h4 font-weight-bold text-primary mb-0" id="recon-p-items">0 <span class="small font-weight-normal text-muted">ชิ้น</span></div>
+                </div>
+              </div>
+              <div class="mt-2 pt-2 border-top small d-flex justify-content-between text-muted">
+                <span>ยอดเงินรวมแพลตฟอร์ม:</span>
+                <strong class="text-dark" id="recon-p-amount">฿0.00</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Col 2: DDCar Sales Cut -->
+          <div class="col-md-4 mb-3 mb-md-0">
+            <div class="p-3 rounded border h-100" style="background: #eff6ff; border-color: #bfdbfe !important;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="font-weight-bold text-primary">
+                  <i class="fas fa-receipt mr-1"></i> 2. ฝั่งระบบตัดขาย DDCar
+                </span>
+                <span class="badge badge-primary">สต็อกจริง</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-baseline">
+                <div>
+                  <div class="small text-muted font-weight-bold">บิลที่ตัดขาย</div>
+                  <div class="h4 font-weight-bold text-dark mb-0" id="recon-dd-bills">0 <span class="small font-weight-normal text-muted">บิล</span></div>
+                </div>
+                <div class="text-right">
+                  <div class="small text-muted font-weight-bold">จำนวนตัดขายจริง</div>
+                  <div class="h4 font-weight-bold text-success mb-0" id="recon-dd-items">0 <span class="small font-weight-normal text-muted">ชิ้น</span></div>
+                </div>
+              </div>
+              <div class="mt-2 pt-2 border-top small d-flex justify-content-between text-muted">
+                <span>ยอดรวมบิล DDCar:</span>
+                <strong class="text-dark" id="recon-dd-amount">฿0.00</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Col 3: Balance & Match Status -->
+          <div class="col-md-4">
+            <div class="p-3 rounded border h-100" style="background: #f8fafc; border-color: #e2e8f0 !important;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="font-weight-bold text-dark">
+                  <i class="fas fa-check-double mr-1"></i> 3. ผลตรวจนับ & จับคู่ SKU
+                </span>
+                <span id="recon-balance-badge" class="badge badge-secondary">รอข้อมูล</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center py-1">
+                <span class="small font-weight-bold text-muted">🟢 SKU ตรงกันแล้ว:</span>
+                <strong class="h5 mb-0 text-success font-weight-bold" id="recon-matched-cnt">0 ชิ้น</strong>
+              </div>
+              <div class="d-flex justify-content-between align-items-center py-1">
+                <span class="small font-weight-bold text-muted">🔴 ยังไม่ตรง / รอจับคู่:</span>
+                <strong class="h5 mb-0 text-danger font-weight-bold" id="recon-unmapped-cnt">0 ชิ้น</strong>
+              </div>
+              <div class="mt-2 pt-2 border-top small text-muted text-center" id="recon-balance-note">
+                เปิดหน้า Shopee / สั่งดึงออเดอร์เพื่อเริ่มตรวจนับ
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unmatched Items Quick-Matcher Section -->
+        <div id="recon-unmapped-section" class="mt-3 pt-3 border-top" style="display: none;">
+          <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+            <div>
+              <span class="font-weight-bold text-danger">
+                <i class="fas fa-exclamation-triangle mr-1"></i> รายการสินค้าที่ยังไม่ตรงกับสต็อก DDCar (<span id="txt-recon-unmapped-num">0</span> รายการ)
+              </span>
+              <span class="text-muted small ml-1">ระบบวิเคราะห์จับคู่ให้อัตโนมัติ สามารถกดยืนยันได้ทันที</span>
+            </div>
+            <div>
+              <button type="button" class="btn btn-warning btn-sm font-weight-bold text-dark shadow-sm" id="btn-batch-confirm-suggestions" onclick="confirmAllSuggestedMatches();">
+                <i class="fas fa-bolt mr-1 text-danger"></i> ⚡ ยืนยันคู่ที่ระบบแนะนำทั้งหมด (<span id="txt-suggested-cnt">0</span>)
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm table-hover mb-0 bg-white" style="font-size: 0.88rem;">
+              <thead class="thead-light">
+                <tr>
+                  <th style="width: 140px;">เลขออเดอร์ (SN)</th>
+                  <th>สินค้าบนแพลตฟอร์ม (SKU / ชื่อ)</th>
+                  <th style="width: 60px;" class="text-center">จำนวน</th>
+                  <th>💡 สินค้า DDCar ที่ระบบแนะนำ (Smart Match)</th>
+                  <th style="width: 130px;" class="text-center">การดำเนินการ</th>
+                </tr>
+              </thead>
+              <tbody id="recon-unmapped-tbody">
+                <!-- Injected via renderReconciliation -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -436,6 +596,67 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
     </div>
   </div>
 
+  <!-- Modal: Chrome Extension Setup Guide -->
+  <div class="modal fade" id="modalExtensionGuide" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title font-weight-bold">
+            <i class="fas fa-puzzle-piece text-warning mr-2"></i> ส่วนขยาย Chrome Extension (DDCar Sync Assistant)
+          </h5>
+          <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="alert alert-success d-flex align-items-center mb-3">
+            <i class="fas fa-shield-alt fa-2x text-success mr-3"></i>
+            <div>
+              <strong>ความปลอดภัย 100% (0% Ban Risk)</strong><br>
+              <small>ส่วนขยายทำงานภายใน Google Chrome ของคุณเอง โดยอ่านข้อมูลตอนที่คุณเปิดร้านค้าตามปกติ ไม่ใช้ API ไม่ใช้บอทภายนอก หมดปัญหาเรื่องโดนระงับบัญชีร้านค้า</small>
+            </div>
+          </div>
+
+          <div class="card mb-3 border-primary">
+            <div class="card-header bg-primary text-white py-2 font-weight-bold">
+              💡 วิธีเปิด Shopee 2 บัญชีพร้อมกัน (KingKong & แต่งระเบิด) ไม่หลุดล็อกอิน
+            </div>
+            <div class="card-body py-2">
+              <p class="mb-2 text-dark font-weight-bold">ใช้ฟังก์ชัน "เพิ่มโปรไฟล์" (Chrome Profiles) ของ Google Chrome:</p>
+              <ol class="mb-1 pl-3 text-secondary small">
+                <li class="mb-1">คลิกที่ <strong>รูปวงกลมโปรไฟล์</strong> ที่มุมขวาบนสุดของ Chrome (ข้างจุดสามจุด)</li>
+                <li class="mb-1">เลือก <strong>"+ Add" (เพิ่มโปรไฟล์)</strong> แล้วเลือก "ดำเนินการต่อโดยไม่ใช้บัญชี"</li>
+                <li class="mb-1">ตั้งชื่อหน้าต่างที่ 1 ว่า <strong>"Shopee KingKong"</strong> และหน้าต่างที่ 2 ว่า <strong>"Shopee แต่งระเบิด"</strong></li>
+                <li class="mb-1">แต่ละโปรไฟล์จะมี Cookie แยกจากกันเด็ดขาด เปิด 2 ร้านคู่กันได้พร้อมกันบนหน้าจอเดียว ไม่หลุดแน่นอน!</li>
+              </ol>
+            </div>
+          </div>
+
+          <h6 class="font-weight-bold text-dark mt-3 mb-2">📥 ขั้นตอนติดตั้งส่วนขยาย (ทำครั้งเดียว):</h6>
+          <ol class="pl-3 small text-secondary">
+            <li class="mb-1">ดาวน์โหลดไฟล์ Extension (.zip) จากปุ่มด้านล่าง แล้วคลายไฟล์ (Extract ZIP) ไว้ที่คอมพิวเตอร์ของคุณ</li>
+            <li class="mb-1">เปิด Chrome ไปที่ <code>chrome://extensions/</code> แล้วเปิดสวิตช์ <strong>Developer mode (โหมดนักพัฒนา)</strong> ที่มุมขวาบน</li>
+            <li class="mb-1">คลิกปุ่ม <strong>Load unpacked (โหลดส่วนขยายที่คลายการบีบอัดแล้ว)</strong> แล้วเลือกโฟลเดอร์ extension</li>
+            <li class="mb-1">คลิกไอคอนส่วนขยาย เลือกร้านค้าให้ตรงกับหน้าต่าง (KingKong หรือ แต่งระเบิด)</li>
+          </ol>
+
+          <div class="bg-light p-3 rounded border text-center my-3">
+            <div class="font-weight-bold mb-2">⏰ รอบการดึงข้อมูลอัตโนมัติ:</div>
+            <span class="badge badge-info px-3 py-2 mr-2">รอบเช้า: เมื่อเปิดคอม & ร้านค้า</span>
+            <span class="badge badge-danger px-3 py-2">รอบเย็น: 17:00 น. (5:00 PM เวลาไทย)</span>
+          </div>
+
+          <div class="text-center mt-3">
+            <a href="chrome_extension/ddcar_chrome_extension.zip" download class="btn btn-success btn-lg font-weight-bold shadow-sm px-4">
+              <i class="fas fa-download mr-2"></i> ดาวน์โหลด DDCar Extension (.ZIP)
+            </a>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">ปิดหน้าต่าง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Central Unified Navbar Script -->
   <script type="text/javascript" src="js/navbar.js"></script>
 
@@ -452,6 +673,7 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
     $(document).ready(function() {
       loadChannels();
       loadMappings();
+      loadReconciliation();
     });
 
     // 1. Load Channels
@@ -534,6 +756,7 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       currentPage = 1;
       loadChannels();
       loadMappings();
+      loadReconciliation();
     }
 
     function setStatusFilter(status) {
@@ -593,6 +816,156 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       });
     }
 
+    function formatPlatformTitleHtml(name, sku, id) {
+      if (!name) name = '';
+      sku = sku || '';
+
+      var baseName = name;
+      var varText = '';
+      var m = name.match(/^(.*?)\[(.*?)\]$/);
+      if (m) {
+        baseName = m[1].trim();
+        varText = m[2].trim();
+      }
+
+      var html = '<div class="platform-product-title-wrap">';
+      
+      // Main product title line with quick edit button
+      html += '  <div class="d-flex align-items-baseline flex-wrap mb-1">';
+      html += '    <span class="font-weight-bold text-dark platform-base-title" style="font-size: 0.96rem; line-height: 1.45; word-break: break-word;">' + escapeHtml(baseName || sku) + '</span>';
+      
+      if (id > 0) {
+        html += '    <button type="button" class="btn btn-xs btn-outline-secondary ml-2 py-0 px-2 rounded-pill shadow-xs" style="font-size: 0.72rem; line-height: 1.5; color: #475569;" title="แก้ไขชื่อสินค้าบนแพลตฟอร์ม (เติมคำที่ขาด เช่น V อะไร หรือ สีอะไร)" onclick="openEditPlatformNameModal(' + id + '); event.stopPropagation();">';
+        html += '      <i class="fas fa-pencil-alt text-muted mr-1"></i>แก้ไขชื่อ';
+        html += '    </button>';
+      }
+      html += '  </div>';
+
+      // Variation Pills (Version / Color / Model / Option)
+      if (varText) {
+        html += '  <div class="d-flex align-items-center flex-wrap mb-1">';
+        if (varText === 'Not Specified' || varText === 'ค่าเริ่มต้น') {
+          html += '    <span class="badge badge-light border text-muted" style="font-size: 0.75rem; font-weight: normal;">(ไม่มีตัวเลือกย่อย)</span>';
+        } else {
+          var parts = varText.split(/[,/]/).map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+          if (parts.length === 0) parts = [varText];
+
+          parts.forEach(function(p) {
+            var icon = 'fa-tag';
+            var badgeClass = 'badge-warning text-dark';
+            var style = 'background:#fef3c7; border: 1px solid #f59e0b; font-size: 0.82rem;';
+
+            if (p.indexOf('ซ้าย') !== -1 || p.indexOf('ขวา') !== -1) {
+              icon = 'fa-arrows-alt-h';
+              badgeClass = 'badge-info text-white';
+              style = 'background:#0284c7; font-size: 0.82rem;';
+            } else if (/^v\d+/i.test(p) || p.indexOf('รุ่น') !== -1 || p.indexOf('ทรง') !== -1) {
+              icon = 'fa-code-branch';
+              badgeClass = 'badge-primary text-white';
+              style = 'background:#4f46e5; font-size: 0.82rem;';
+            } else if (p.indexOf('สี') !== -1 || p.indexOf('เคฟล่า') !== -1 || p.indexOf('แคปล่า') !== -1 || p.indexOf('ชุบ') !== -1 || p.indexOf('ดำ') !== -1 || p.indexOf('แดง') !== -1 || p.indexOf('โครเมียม') !== -1 || p.indexOf('ส้ม') !== -1) {
+              icon = 'fa-palette';
+              badgeClass = 'badge-warning text-dark';
+              style = 'background:#fef3c7; border: 1px solid #d97706; font-size: 0.82rem;';
+            }
+
+            html += '    <span class="badge ' + badgeClass + ' font-weight-bold mr-1 mb-1 px-2 py-1 shadow-sm" style="' + style + ' border-radius: 6px;" title="ตัวเลือกสินค้า">';
+            html += '      <i class="fas ' + icon + ' mr-1"></i>' + escapeHtml(p);
+            html += '    </span>';
+          });
+        }
+        html += '  </div>';
+      }
+
+      // Platform SKU / ID tag
+      if (sku) {
+        if (sku.indexOf('ไม่พบ Seller SKU') !== -1 || sku.indexOf('NO_SKU') !== -1 || sku.indexOf('SKU อัตโนมัติ') !== -1) {
+          html += '  <div style="font-size: 0.75rem;"><span class="text-muted"><i class="fas fa-fingerprint mr-1"></i>' + escapeHtml(sku) + '</span></div>';
+        } else {
+          html += '  <div><span class="badge badge-light border text-dark font-weight-bold" style="font-size: 0.78rem;"><i class="fas fa-barcode mr-1 text-primary"></i>SKU: ' + escapeHtml(sku) + '</span></div>';
+        }
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    function openEditPlatformNameModal(id) {
+      var item = null;
+      for (var i = 0; i < mappingData.length; i++) {
+        if (mappingData[i].id == id) {
+          item = mappingData[i];
+          break;
+        }
+      }
+      if (!item) return;
+
+      $.confirm({
+        title: '<i class="fas fa-edit text-primary mr-2"></i>แก้ไขชื่อสินค้าและตัวเลือกบนแพลตฟอร์ม',
+        theme: 'modern',
+        columnClass: 'medium',
+        content: '' +
+          '<div class="text-left">' +
+          '  <div class="mb-2 p-2 rounded" style="background:#f8fafc; border:1px solid #e2e8f0;">' +
+          '    <span class="badge mr-2" style="background-color:' + item.badge_color + '; color:#fff;">' + escapeHtml(item.channel_name) + '</span>' +
+          '    <span class="text-muted small font-weight-bold">' + escapeHtml(item.platform_sku) + '</span>' +
+          '  </div>' +
+          '  <div class="form-group mb-2">' +
+          '    <label class="font-weight-bold text-dark mb-1">ชื่อสินค้า + รายละเอียด (ระบุ V หรือ สี ให้ชัดเจน):</label>' +
+          '    <textarea id="edit-platform-name-input" class="form-control" rows="3" style="font-size: 0.95rem; font-family: inherit;">' + escapeHtml(item.platform_name || '') + '</textarea>' +
+          '    <small class="form-text text-muted mt-1">' +
+          '      💡 <strong>คำแนะนำ:</strong> ใส่ชื่อสินค้าให้สมบูรณ์ และระบุตัวเลือกในวงเล็บ เช่น <code>กระจังหน้า Revo 2020-2022 ลาย Thunder [ตัวเลือก: Logo แดง, V2]</code>' +
+          '    </small>' +
+          '  </div>' +
+          '</div>',
+        buttons: {
+          save: {
+            text: '<i class="fas fa-save mr-1"></i>บันทึกชื่อสินค้า',
+            btnClass: 'btn-success font-weight-bold shadow-sm',
+            action: function() {
+              var newName = this.$content.find('#edit-platform-name-input').val().trim();
+              if (!newName) {
+                $.alert({ title: 'แจ้งเตือน', content: 'กรุณากรอกชื่อสินค้า', type: 'orange' });
+                return false;
+              }
+              EasyLoading.show({ text: "กำลังบันทึกชื่อสินค้า..." });
+              $.ajax({
+                url: 'php/update_platform_product_name.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ id: id, platform_name: newName }),
+                dataType: 'json',
+                success: function(res) {
+                  EasyLoading.hide();
+                  if (res && res.success) {
+                    item.platform_name = newName;
+                    renderMappingCards(mappingData);
+                    if (typeof loadReconciliation === 'function') loadReconciliation();
+                    $.alert({
+                      title: 'สำเร็จ',
+                      content: 'บันทึกชื่อสินค้าและตัวเลือกเรียบร้อยแล้ว!',
+                      type: 'green',
+                      autoClose: 'ok|2000'
+                    });
+                  } else {
+                    $.alert({ title: 'ผิดพลาด', content: res.message || 'บันทึกไม่สำเร็จ', type: 'red' });
+                  }
+                },
+                error: function() {
+                  EasyLoading.hide();
+                  $.alert({ title: 'ผิดพลาด', content: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', type: 'red' });
+                }
+              });
+            }
+          },
+          cancel: {
+            text: 'ยกเลิก',
+            btnClass: 'btn-secondary'
+          }
+        }
+      });
+    }
+
     function renderMappingCards(items) {
       if (items.length === 0) {
         var msg = (currentStatus === 'unmapped') 
@@ -623,8 +996,8 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
         // Col 1: Platform Info
         html += '<div class="col-lg-4 col-md-5 mb-2 mb-md-0">';
         html += '  <div class="d-flex align-items-start">';
-        html += '    <div class="mr-2">';
-        html += '      <span class="badge" style="background-color: ' + item.badge_color + '; color: #fff; font-size: 0.75rem;">';
+        html += '    <div class="mr-2 pt-1">';
+        html += '      <span class="badge shadow-xs" style="background-color: ' + item.badge_color + '; color: #fff; font-size: 0.75rem;">';
         html += '        ' + escapeHtml(item.channel_name);
         html += '      </span>';
         if (item.channel_customer) {
@@ -632,8 +1005,7 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
         }
         html += '    </div>';
         html += '    <div class="flex-grow-1">';
-        html += '      <div class="font-weight-bold text-dark" style="font-size: 0.95rem;">' + escapeHtml(item.platform_sku) + '</div>';
-        html += '      <div class="text-muted small" style="line-height: 1.3;">' + escapeHtml(item.platform_name || '(ไม่มีชื่อสินค้า)') + '</div>';
+        html += formatPlatformTitleHtml(item.platform_name || '', item.platform_sku || '', item.id);
         html += '    </div>';
         html += '  </div>';
         html += '</div>';
@@ -1183,9 +1555,280 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       });
     }
 
-    function escapeQuotes(str) {
-      if (!str) return '';
-      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    // ----------------------------------------------------
+    // DAILY RECONCILIATION & SMART MATCHER
+    // ----------------------------------------------------
+    var currentReconData = null;
+
+    function openExtensionGuideModal() {
+      $('#modalExtensionGuide').modal('show');
+    }
+
+    function initReconDatePicker() {
+      var today = new Date().toISOString().split('T')[0];
+      if (!$('#recon-date-picker').val()) {
+        $('#recon-date-picker').val(today);
+      }
+    }
+
+    function setReconToday() {
+      var today = new Date().toISOString().split('T')[0];
+      $('#recon-date-picker').val(today);
+      loadReconciliation();
+    }
+
+    function setReconYesterday() {
+      var d = new Date();
+      d.setDate(d.getDate() - 1);
+      var yest = d.toISOString().split('T')[0];
+      $('#recon-date-picker').val(yest);
+      loadReconciliation();
+    }
+
+    function loadReconciliation() {
+      initReconDatePicker();
+      var selectedDate = $('#recon-date-picker').val();
+      var channel = (currentChannel === 'all' || !currentChannel) ? 'shopee_kingkong' : currentChannel;
+
+      $.ajax({
+        url: 'php/get_daily_reconciliation.php',
+        type: 'GET',
+        data: {
+          channel: channel,
+          date: selectedDate
+        },
+        dataType: 'json',
+        success: function(res) {
+          if (res && res.success) {
+            currentReconData = res;
+            renderReconciliation(res);
+          }
+        },
+        error: function(err) {
+          console.warn('Could not load reconciliation:', err);
+        }
+      });
+    }
+
+    function renderReconciliation(data) {
+      if (!data) return;
+      var sum = data.summary || {};
+      var ch = data.channel || {};
+
+      $('#recon-channel-badge').text(ch.name || ch.code);
+      $('#recon-cus-name').text(ch.customer_name || '-');
+      $('#recon-platform-name').text(ch.platform ? ch.platform.toUpperCase() : 'PLATFORM');
+
+      // Last sync
+      if (data.last_synced_at) {
+        $('#recon-last-sync').text(data.last_synced_at);
+      } else {
+        $('#recon-last-sync').text('ยังไม่มีประวัติดึงข้อมูลวันนี้');
+      }
+
+      // Col 1: Platform
+      $('#recon-p-orders').html(sum.platform_orders + ' <span class="small font-weight-normal text-muted">ออเดอร์</span>');
+      $('#recon-p-items').html(sum.platform_items + ' <span class="small font-weight-normal text-muted">ชิ้น</span>');
+      $('#recon-p-amount').text('฿' + parseFloat(sum.platform_total_amount || 0).toLocaleString('th-TH', {minimumFractionDigits: 2}));
+
+      // Col 2: DDCar
+      $('#recon-dd-bills').html(sum.ddcar_bills + ' <span class="small font-weight-normal text-muted">บิล</span>');
+      $('#recon-dd-items').html(sum.ddcar_items + ' <span class="small font-weight-normal text-muted">ชิ้น</span>');
+      $('#recon-dd-amount').text('฿' + parseFloat(sum.ddcar_total_amount || 0).toLocaleString('th-TH', {minimumFractionDigits: 2}));
+
+      // Col 3: Status
+      $('#recon-matched-cnt').text(sum.matched_count + ' ชิ้น');
+      $('#recon-unmapped-cnt').text(sum.unmapped_count + ' ชิ้น');
+
+      // Balance Health
+      var unmapped = sum.unmapped_count || 0;
+      var pItems = sum.platform_items || 0;
+      var ddItems = sum.ddcar_items || 0;
+
+      if (unmapped === 0 && pItems > 0 && pItems === ddItems) {
+        $('#recon-balance-badge').removeClass('badge-warning badge-danger badge-secondary').addClass('badge-success').text('🟢 ตรงกัน 100%');
+        $('#recon-balance-note').html('<span class="text-success font-weight-bold">ยอดขายและจำนวนสินค้าตัดสต็อกตรงกันสมบูรณ์</span>');
+      } else if (unmapped > 0) {
+        $('#recon-balance-badge').removeClass('badge-success badge-secondary').addClass('badge-danger').text('🔴 มี ' + unmapped + ' ชิ้นรอจับคู่');
+        $('#recon-balance-note').html('<span class="text-danger font-weight-bold">พบสินค้า SKU ยังไม่ตรงกับ DDCar กรุณากดยืนยันด้านล่าง</span>');
+      } else if (pItems !== ddItems) {
+        $('#recon-balance-badge').removeClass('badge-success badge-secondary').addClass('badge-warning text-dark').text('⚠️ จำนวนต่างกัน');
+        $('#recon-balance-note').html('แพลตฟอร์ม ' + pItems + ' ชิ้น vs ตัดขาย DDCar ' + ddItems + ' ชิ้น');
+      } else {
+        $('#recon-balance-badge').removeClass('badge-danger badge-warning badge-success').addClass('badge-secondary').text('รอข้อมูล');
+        $('#recon-balance-note').text('เปิดหน้า Shopee / สั่งดึงออเดอร์เพื่อเริ่มตรวจนับ');
+      }
+
+      // Render Unmapped Table
+      var unmappedItems = data.unmapped_items || [];
+      if (unmappedItems.length > 0) {
+        $('#recon-unmapped-section').show();
+        $('#txt-recon-unmapped-num').text(unmappedItems.length);
+
+        var sugCount = 0;
+        var html = '';
+        unmappedItems.forEach(function(item, idx) {
+          var sug = item.suggestion;
+          if (sug && sug.prod_code) sugCount++;
+
+          html += '<tr>';
+          html += '<td class="align-middle"><code>' + escapeHtml(item.order_sn) + '</code></td>';
+          html += '<td class="align-middle">';
+          html += formatPlatformTitleHtml(item.platform_name || '', item.platform_sku || '', item.mapping_id || 0);
+          html += '</td>';
+          html += '<td class="align-middle text-center font-weight-bold text-primary">x ' + item.qty + '</td>';
+          html += '<td class="align-middle">';
+          if (sug && sug.prod_code) {
+            var confBadge = (sug.confidence === 'high') 
+              ? '<span class="badge badge-success mr-1">🎯 แนะนำแม่นยำ</span>'
+              : '<span class="badge badge-info mr-1">💡 ความเป็นไปได้</span>';
+            html += '<div class="d-flex align-items-center">';
+            html += confBadge;
+            html += '<div><strong>' + escapeHtml(sug.prod_code) + '</strong> - <span class="small">' + escapeHtml(sug.prod_name) + '</span></div>';
+            html += '</div>';
+          } else {
+            html += '<span class="text-muted small">ยังไม่มีคู่แนะนำอัตโนมัติ (สามารถผูกได้ในตารางด้านล่าง)</span>';
+          }
+          html += '</td>';
+          html += '<td class="align-middle text-center">';
+          if (sug && sug.prod_code) {
+            html += '<button type="button" class="btn btn-sm btn-success font-weight-bold shadow-sm" onclick="confirmQuickMatch(\'' + escapeQuotes(ch.code) + '\', \'' + escapeQuotes(item.platform_sku) + '\', \'' + escapeQuotes(item.platform_name) + '\', ' + sug.prod_id + ', \'' + escapeQuotes(sug.prod_code) + '\');">';
+            html += '<i class="fas fa-check mr-1"></i> ยืนยันคู่นี้';
+            html += '</button>';
+          } else {
+            html += '<button type="button" class="btn btn-sm btn-outline-secondary font-weight-bold" onclick="focusMappingSearch(\'' + escapeQuotes(item.platform_sku) + '\');">';
+            html += '<i class="fas fa-search mr-1"></i> ค้นหาเพื่อจับคู่';
+            html += '</button>';
+          }
+          html += '</td>';
+          html += '</tr>';
+        });
+
+        $('#recon-unmapped-tbody').html(html);
+        $('#txt-suggested-cnt').text(sugCount);
+        if (sugCount > 0) {
+          $('#btn-batch-confirm-suggestions').show();
+        } else {
+          $('#btn-batch-confirm-suggestions').hide();
+        }
+      } else {
+        $('#recon-unmapped-section').hide();
+      }
+    }
+
+    function confirmQuickMatch(channelCode, platformSku, platformName, prodId, targetSku) {
+      EasyLoading.show({ text: "กำลังบันทึกการจับคู่..." });
+      $.ajax({
+        url: 'php/save_platform_mapping.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          channel_code: channelCode,
+          platform_sku: platformSku,
+          platform_name: platformName,
+          mapping_type: 'single',
+          prod_id: prodId,
+          target_sku: targetSku
+        }),
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res && res.success) {
+            $.alert({
+              title: 'สำเร็จ',
+              content: 'ผูกรหัส SKU เรียบร้อยแล้ว ข้อมูลจะเชื่อมโยงกันถาวร',
+              type: 'green',
+              autoClose: 'ok|1500'
+            });
+            loadReconciliation();
+            loadChannels();
+            loadMappings();
+          } else {
+            $.alert({ title: 'ผิดพลาด', content: res.message || 'บันทึกไม่สำเร็จ' });
+          }
+        },
+        error: function() {
+          EasyLoading.hide();
+          $.alert({ title: 'ผิดพลาด', content: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+        }
+      });
+    }
+
+    function confirmAllSuggestedMatches() {
+      if (!currentReconData || !currentReconData.unmapped_items) return;
+      var unmapped = currentReconData.unmapped_items;
+      var toConfirm = [];
+
+      unmapped.forEach(function(item) {
+        if (item.suggestion && item.suggestion.prod_code) {
+          toConfirm.push({
+            channel_code: currentReconData.channel.code,
+            platform_sku: item.platform_sku,
+            platform_name: item.platform_name,
+            mapping_type: 'single',
+            prod_id: item.suggestion.prod_id,
+            target_sku: item.suggestion.prod_code
+          });
+        }
+      });
+
+      if (toConfirm.length === 0) {
+        $.alert({ title: 'แจ้งเตือน', content: 'ไม่มีรายการที่ระบบแนะนำ', type: 'orange' });
+        return;
+      }
+
+      $.confirm({
+        title: 'ยืนยันการจับคู่ทั้งหมด?',
+        content: 'ต้องการจับคู่สินค้าที่ระบบแนะนำจำนวน <strong>' + toConfirm.length + ' รายการ</strong> ทั้งหมดในครั้งเดียวหรือไม่?',
+        type: 'blue',
+        buttons: {
+          confirm: {
+            text: '⚡ ยืนยันทั้งหมดทันที',
+            btnClass: 'btn-primary font-weight-bold',
+            action: function() {
+              EasyLoading.show({ text: "กำลังจับคู่ " + toConfirm.length + " รายการ..." });
+              $.ajax({
+                url: 'php/save_platform_mapping.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ items: toConfirm }),
+                dataType: 'json',
+                success: function(res) {
+                  EasyLoading.hide();
+                  if (res && res.success) {
+                    $.alert({
+                      title: 'สำเร็จ',
+                      content: 'บันทึกการจับคู่ ' + (res.saved_count || toConfirm.length) + ' รายการเรียบร้อยแล้ว!',
+                      type: 'green'
+                    });
+                    loadReconciliation();
+                    loadChannels();
+                    loadMappings();
+                  } else {
+                    $.alert({ title: 'ผิดพลาด', content: res.message || 'บันทึกไม่สำเร็จ' });
+                  }
+                },
+                error: function() {
+                  EasyLoading.hide();
+                  $.alert({ title: 'ผิดพลาด', content: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+                }
+              });
+            }
+          },
+          cancel: {
+            text: 'ยกเลิก',
+            btnClass: 'btn-secondary'
+          }
+        }
+      });
+    }
+
+    function focusMappingSearch(sku) {
+      $('#txt-search').val(sku);
+      setStatusFilter('all');
+      $('html, body').animate({
+        scrollTop: $('#txt-search').offset().top - 80
+      }, 300);
     }
   </script>
 </body>

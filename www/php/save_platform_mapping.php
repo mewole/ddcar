@@ -1,6 +1,5 @@
 <?php
 require_once "db.php";
-require_once "platform_mapping_init.php";
 header("Content-Type: application/json; charset=utf-8");
 
 $raw = file_get_contents("php://input");
@@ -113,6 +112,12 @@ foreach ($items as $entry) {
 
     if (mysqli_query($conn, $sql)) {
         $saved_count++;
+        // Also update any matching unmapped platform_order_items
+        if ($status === 'mapped') {
+            @mysqli_query($conn, "UPDATE platform_order_items 
+                                  SET match_status = 'matched', prod_id = $prod_id, target_sku = '$target_sku' 
+                                  WHERE channel_code = '$channel_code' AND platform_sku = '$platform_sku'");
+        }
     } else {
         $errors[] = mysqli_error($conn);
     }

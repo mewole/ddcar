@@ -297,10 +297,9 @@
                       '<h5 class="text-secondary"><i class="fas fa-store text-primary mr-1"></i> ร้านค้า: <strong class="text-dark">' + supHeader + '</strong>' + refHeader + '</h5>'+
                   '</div>'             
               $.each(obj, function(i, field){
-                cost = ""
-                if(localStorage.user_role != "พนักงาน"){
-                  cost = field.stock_cost
-                }
+                var canViewCost = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
+                var cost = canViewCost ? field.stock_cost : "-";
+                var itemTotalCost = canViewCost ? (field.amount * field.stock_cost) : "-";
                 var skuBadge = field.supplier_sku && field.supplier_sku.trim() !== ''
                   ? ' <span class="badge badge-light border text-info ml-1" style="font-size: 0.76rem;"><i class="fas fa-tag mr-1"></i>SKU: ' + field.supplier_sku + '</span>'
                   : '';
@@ -309,7 +308,7 @@
                   '<div class="col-1 text-center items">'+field.amount+'</div>'+
                   '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span>' + skuBadge + '</div>'+
                   '<div class="col-2 text-center items">'+cost+'</div>'+
-                  '<div class="col-2 text-center items">'+field.amount*field.stock_cost+'</div>'+
+                  '<div class="col-2 text-center items">'+itemTotalCost+'</div>'+
                 '</div>'
                 
                 item = {}
@@ -322,7 +321,7 @@
               text = text + '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
                   '<div class="row" style="margin-top: 1em;">'+
                       '<div class="col-4 text-right"><h4>รวม</h4></div>'+
-                      '<div class="col-4 text-right"><h4>'+obj[0].total_stock+'</h4></div>'+
+                      '<div class="col-4 text-right"><h4>'+(canViewCost ? obj[0].total_stock : "-")+'</h4></div>'+
                   '</div>'+
                   '<div class="row">'+
                       '<div class="col-4 text-right"><h4>ผู้ทำรายการ</h4></div>'+
@@ -332,9 +331,7 @@
                   '<div class="col-4 text-right">'+                   
                     '<button onclick="print.apply(this,arr_data)" class="btn btn-lg btn-warning" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
                   '</div>'+
-                  '<div class="col-4 text-left">'+
-                    '<button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].ware_id+')">ลบรายการ <i class="fas fa-trash"></i></button>'+
-                  '</div>'+         
+                  (canViewCost ? '<div class="col-4 text-left"><button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].ware_id+')">ลบรายการ <i class="fas fa-trash"></i></button></div>' : '')+         
                 '</div>'+                
             '</div>'+
               '</div>';                   
@@ -375,10 +372,9 @@
                       '<h5 class="text-secondary"><i class="fas fa-store text-primary mr-1"></i> ร้านค้า: <strong class="text-dark">' + supHeader + '</strong>' + refHeader + '</h5>'+
                   '</div>'             
               $.each(obj, function(i, field){
-                cost = ""
-                if(localStorage.user_role != "พนักงาน"){
-                  cost = field.stock_cost
-                }
+                var canViewCost = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
+                var cost = canViewCost ? field.stock_cost : "-";
+                var itemTotalCost = canViewCost ? (field.amount * field.stock_cost) : "-";
                 var skuBadge = field.supplier_sku && field.supplier_sku.trim() !== ''
                   ? ' <span class="badge badge-light border text-info ml-1" style="font-size: 0.76rem;"><i class="fas fa-tag mr-1"></i>SKU: ' + field.supplier_sku + '</span>'
                   : '';
@@ -387,7 +383,7 @@
                   '<div class="col-1 text-center items">'+field.amount+'</div>'+
                   '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span>' + skuBadge + '</div>'+
                   '<div class="col-2 text-center items">'+cost+'</div>'+
-                  '<div class="col-2 text-center items">'+field.amount*field.stock_cost+'</div>'+
+                  '<div class="col-2 text-center items">'+itemTotalCost+'</div>'+
                 '</div>'
 
                 item = {}
@@ -400,7 +396,7 @@
               text = text + '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
                   '<div class="row" style="margin-top: 1em;">'+
                       '<div class="col-4 text-right"><h4>รวม</h4></div>'+
-                      '<div class="col-4 text-right"><h4>'+obj[0].total_stock+'</h4></div>'+
+                      '<div class="col-4 text-right"><h4>'+(canViewCost ? obj[0].total_stock : "-")+'</h4></div>'+
                   '</div>'+
                   '<div class="row">'+
                       '<div class="col-4 text-right"><h4>ผู้ทำรายการ</h4></div>'+
@@ -410,9 +406,7 @@
                   '<div class="col-4 text-right">'+                   
                     '<button onclick="print.apply(this,arr_data)" class="btn btn-lg btn-warning" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
                   '</div>'+
-                  '<div class="col-4 text-left">'+
-                    '<button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].ware_id+')">ลบรายการ <i class="fas fa-trash"></i></button>'+
-                  '</div>'+         
+                  (canViewCost ? '<div class="col-4 text-left"><button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].ware_id+')">ลบรายการ <i class="fas fa-trash"></i></button></div>' : '')+         
                 '</div>'+                           
                 '</div>'+
               '</div>';                   
