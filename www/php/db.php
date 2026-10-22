@@ -1,5 +1,4 @@
 <?php
-    header("Access-Control-Allow-Origin: *");
     date_default_timezone_set("Asia/Bangkok");
     $conn = mysqli_connect("localhost", "root", "Mewole901@", "ddcar");
     mysqli_set_charset($conn, "utf8");

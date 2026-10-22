@@ -616,13 +616,7 @@
 						$('#edit-non-vat-stock').val(nonVatStock);
 						$('#edit-total-stock-label').text(totalStock);
 
-						if (res.data.is_bundle) {
-							$('#edit-bundle-tag').html('<span class="badge badge-info p-1"><i class="fas fa-layer-group mr-1"></i>สินค้าชุด (' + res.data.bundle_components + ' ชิ้นส่วน)</span>');
-							$('#btn-goto-bundle').attr('href', 'web_bundle.html');
-							$('#edit-bundle-action-wrap').show();
-						} else {
-							$('#edit-bundle-tag').html('<span class="badge badge-light border text-muted p-1">สินค้าเดี่ยว</span>');
-						}
+						
 					}
 				}
 			});
@@ -1221,12 +1215,7 @@
 			              <small class="text-muted font-weight-bold">สต็อกรวมในร้าน/โกดัง: <span id="edit-total-stock-label" class="text-primary font-weight-bold">-</span> ชิ้น</small>
 			          </div>
 			      </div>
-			      <div id="edit-bundle-action-wrap" class="mt-2 text-center" style="display: none;">
-			          <a id="btn-goto-bundle" href="web_bundle.html" target="_blank" class="btn btn-outline-primary btn-sm font-weight-bold">
-			              <i class="fas fa-layer-group mr-1"></i> ดู/แก้ไขสูตรส่วนประกอบในศูนย์สินค้าชุด (Bundle Hub)
-			          </a>
-			      </div>
-			  </div>
+			      
 			  <div class="col-12 text-center my-3">
 				<form id="imageUploadForm" method="post" enctype="multipart/form-data" onsubmit="return false;">
 					<label for="fileSelect" class="btn btn-outline-primary btn-sm px-3 mb-2" style="cursor: pointer; border-radius: 20px;">

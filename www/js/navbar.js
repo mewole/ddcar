@@ -34,9 +34,7 @@
                 { label: 'รายงานสินค้าออกโกดัง (เดิม)', icon: 'fa fa-dolly-flatbed', href: 'web_mng_export.html' },
                 { label: 'รายงานสรุปยอดขาย', icon: 'fa fa-chart-line', href: 'web_mng_sale.html', ownerOnly: true },
                 { label: 'รายงานเครดิตลูกค้า', icon: 'fa fa-credit-card', href: 'web_credit.html' },
-                { label: 'ตามบิลภาษีซื้อ (Pending VAT)', icon: 'fa fa-file-invoice-dollar', href: 'web_pending_vat.html', ownerOnly: true },
-                { label: 'จับคู่สินค้าออนไลน์ (Platform Mapping)', icon: 'fa fa-link', href: 'web_platform_mapping.html' },
-                { label: 'จับคู่สินค้าชุด (Bundle & BOM)', icon: 'fa fa-layer-group', href: 'web_bundle.html' }
+                { label: 'ตามบิลภาษีซื้อ (Pending VAT)', icon: 'fa fa-file-invoice-dollar', href: 'web_pending_vat.html', ownerOnly: true }
             ]
         },
         {
@@ -48,9 +46,7 @@
             subItems: [
                 { label: 'จัดการผู้ใช้', icon: 'fa fa-user-cog', href: 'web_admin_user.html' },
                 { label: 'จัดการลูกค้า', icon: 'fa fa-user-edit', href: 'web_customer.html' },
-                { label: 'จัดการหน้าร้าน/โกดัง', icon: 'fa fa-store-alt', href: 'web_warehouse.html' },
-                { label: 'จับคู่สินค้าชุด (Bundle & BOM)', icon: 'fa fa-layer-group', href: 'web_bundle.html' },
-                { label: 'จับคู่สินค้าออนไลน์ (Platform Mapping)', icon: 'fa fa-link', href: 'web_platform_mapping.html' }
+                { label: 'จัดการหน้าร้าน/โกดัง', icon: 'fa fa-store-alt', href: 'web_warehouse.html' }
             ]
         },
         { id: 'nav-qrprint', label: 'พิมพ์คิวอาร์', icon: 'fa fa-qrcode', href: 'web_qrprint.html', roles: ['all'] }
@@ -68,8 +64,7 @@
             case 'web_customer.html': return 'จัดการข้อมูลลูกค้า';
             case 'web_warehouse.html': return 'จัดการหน้าร้านและโกดัง';
             case 'web_admin_user.html': return 'จัดการผู้ใช้งานและสิทธิ์';
-            case 'web_bundle.html': return 'จับคู่สินค้าชุด (Bundle & BOM)';
-            case 'web_platform_mapping.html': return 'ศูนย์จับคู่สินค้าออนไลน์ & สต็อกหลังบ้าน';
+                        case 'web_platform_mapping.html': return 'ศูนย์จับคู่สินค้าออนไลน์ & สต็อกหลังบ้าน';
             case 'web_qrprint.html': return 'พิมพ์คิวอาร์โค้ดสินค้า';
             case 'web_mng_bill.html': return 'รายงานบิล';
             case 'web_credit.html': return 'รายงานเครดิตลูกค้า';
@@ -195,14 +190,35 @@
         }
     }
 
-    // Global logout helper
+    // Global logout helper (ทำลาย Session ทั้งบน Server และ Browser)
     window.ddcarLogout = function () {
         if (window.confirm ? confirm('คุณต้องการออกจากระบบหรือไม่?') : true) {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location = 'web_login.html';
+            try {
+                fetch('php/logout.php', { method: 'POST', credentials: 'same-origin' }).finally(function() {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location = 'web_login.html';
+                });
+            } catch(e) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location = 'web_login.html';
+            }
         }
     };
+
+    // Global 401 Interceptor: หาก Session บน Server หมดอายุหรือไม่ถูกต้อง ให้พากลับหน้าล็อกอิน
+    if (window.jQuery) {
+        $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+            if (jqxhr && jqxhr.status === 401) {
+                localStorage.clear();
+                sessionStorage.clear();
+                if (!window.location.pathname.includes('login')) {
+                    window.location = 'web_login.html';
+                }
+            }
+        });
+    }
 
     // Auto mount when DOM is ready
     if (document.readyState === 'loading') {

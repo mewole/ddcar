@@ -130,15 +130,23 @@
         const orderSn = m[1];
         seenOrderSns.add(orderSn);
 
+        // Climb up to find the full order card container without crossing into adjacent orders
         let container = el;
-        for (let i = 0; i < 6 && container.parentElement; i++) {
-          container = container.parentElement;
-          if (container.classList && (container.innerText.includes("฿") || container.innerText.includes("THB"))) {
+        let bestContainer = el;
+        for (let i = 0; i < 15 && container.parentElement && container.parentElement !== document.body; i++) {
+          const parent = container.parentElement;
+          const pText = parent.innerText || "";
+          const allSns = pText.match(/\b(5\d{15,18}|\d{16,19})\b/g) || [];
+          const uniqueSns = new Set(allSns);
+          if (uniqueSns.size > 1) {
+            // Reached parent table containing multiple orders, stop here
             break;
           }
+          container = parent;
+          bestContainer = parent;
         }
 
-        const items = extractItemsFromTikTokContainer(container, orderSn);
+        const items = extractItemsFromTikTokContainer(bestContainer, orderSn);
         orders.push({
           order_sn: orderSn,
           order_date: new Date().toISOString(),
@@ -186,12 +194,27 @@
       }
     });
 
-    const processTextLines = (lines) => {
+    const processTextLines = (lines, el) => {
       let currentSku = "";
       let currentTitle = "";
       let currentQty = 1;
       let currentPrice = 0;
+      let productId = "";
+      let imageUrl = "";
+      let productUrl = "";
       const variations = [];
+
+      // Extract image and link from DOM element
+      if (el) {
+        const imgEl = el.querySelector("img");
+        if (imgEl && imgEl.src && !imgEl.src.includes("data:image/svg")) {
+          imageUrl = imgEl.src;
+        }
+        const linkEl = el.querySelector("a[href*='product'], a[href*='goods'], a[href*='item']");
+        if (linkEl && linkEl.href) {
+          productUrl = linkEl.href;
+        }
+      }
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -200,6 +223,12 @@
         if (/^(SKU|SKU ผู้ขาย|รหัสสินค้า|Seller SKU)\s*[:：]/i.test(line)) {
           currentSku = line.replace(/^(SKU|SKU ผู้ขาย|รหัสสินค้า|Seller SKU)\s*[:：]\s*/i, "").trim();
           continue;
+        }
+
+        // Product ID (TikTok 19-digit number)
+        const idMatch = line.match(/\b(17\d{16,19})\b/) || line.match(/ID\s*[:：]?\s*([0-9]{15,22})/i);
+        if (idMatch && !productId) {
+          productId = idMatch[1];
         }
 
         // Variations & Specifications (e.g. ข้อมูลจำเพาะ SKU:, Specification:, ตัวเลือก:, สี:, รุ่น:, etc.)
@@ -239,8 +268,16 @@
         }
       }
 
-      if (!currentSku && currentTitle) {
-        currentSku = "NO_SKU";
+      if (!currentSku) {
+        if (productId) {
+          currentSku = `(ไม่พบ Seller SKU) ID ${productId}`;
+        } else if (currentTitle) {
+          currentSku = "NO_SKU";
+        }
+      }
+
+      if (productId && !productUrl) {
+        productUrl = `https://seller-th.tiktok.com/product/edit/${productId}`;
       }
 
       let fullPlatformName = currentTitle || `สินค้า TikTok ${orderSn}`;
@@ -255,6 +292,8 @@
       return {
         platform_sku: currentSku,
         platform_name: fullPlatformName,
+        image_url: imageUrl,
+        product_url: productUrl,
         qty: currentQty,
         price: currentPrice
       };
@@ -263,12 +302,12 @@
     if (itemElements.length > 0) {
       itemElements.forEach((el) => {
         const lines = (el.innerText || "").split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
-        const item = processTextLines(lines);
+        const item = processTextLines(lines, el);
         if (item && item.platform_name) items.push(item);
       });
     } else {
       const lines = container.innerText.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
-      const item = processTextLines(lines);
+      const item = processTextLines(lines, container);
       if (item) items.push(item);
     }
 

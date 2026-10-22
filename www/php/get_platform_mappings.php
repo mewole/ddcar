@@ -1,6 +1,9 @@
 <?php
 require_once "db.php";
 header("Content-Type: application/json; charset=utf-8");
+header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
 
 $channel = isset($_GET['channel']) ? mysqli_real_escape_string($conn, trim($_GET['channel'])) : 'all';
 $status = isset($_GET['status']) ? mysqli_real_escape_string($conn, trim($_GET['status'])) : 'all';
@@ -61,6 +64,8 @@ if ($res) {
             "badge_color" => $row['badge_color'] ?: '#6b7280',
             "platform_sku" => $row['platform_sku'],
             "platform_name" => $row['platform_name'],
+            "image_url" => $row['image_url'] ?? '',
+            "product_url" => $row['product_url'] ?? '',
             "mapping_type" => $row['mapping_type'],
             "target_sku" => $row['target_sku'],
             "bundle_json" => $row['bundle_json'],

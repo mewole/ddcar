@@ -169,6 +169,65 @@
       padding: 8px 12px;
       margin-bottom: 6px;
     }
+
+    /* Floating Platform Title Popover */
+    #platform-title-floating-popover {
+      position: fixed;
+      display: none;
+      z-index: 999999;
+      width: 480px;
+      max-width: 92vw;
+      background: #0f172a;
+      color: #f8fafc;
+      border: 1.5px solid #38bdf8;
+      border-radius: 12px;
+      padding: 14px 18px;
+      box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.5), 0 10px 15px -5px rgba(0, 0, 0, 0.3);
+      pointer-events: auto;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      opacity: 0;
+      transform: translateY(6px);
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    #platform-title-floating-popover.show {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    #platform-title-floating-popover::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 28px;
+      border-width: 8px;
+      border-style: solid;
+      border-color: #0f172a transparent transparent transparent;
+    }
+    #platform-title-floating-popover.popover-below::after {
+      top: auto;
+      bottom: 100%;
+      border-color: transparent transparent #0f172a transparent;
+    }
+    .platform-hover-title {
+      cursor: help;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 0.94rem;
+      font-weight: 600;
+      color: #1e293b;
+      line-height: 1.42;
+      transition: color 0.15s ease;
+    }
+    .platform-hover-title:hover {
+      color: #0284c7;
+      text-decoration: underline;
+    }
+    .platform-hover-title:hover .hover-hint-icon {
+      color: #0284c7 !important;
+    }
   </style>
 </head>
 <body>
@@ -494,6 +553,26 @@
             <label class="small text-muted font-weight-bold mb-1">ชื่อสินค้าบนแพลตฟอร์ม (ไม่บังคับ)</label>
             <input type="text" id="add-platform-name" class="form-control" placeholder="ชื่อที่แสดงบน Shopee / Lazada / TikTok">
           </div>
+          <div class="form-group">
+            <label class="small text-muted font-weight-bold mb-1">ประเภทการจับคู่ *</label>
+            <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+              <label class="btn btn-outline-primary btn-sm active" onclick="$('#add-bundle-sku-wrap').hide();">
+                <input type="radio" name="add-mapping-type" id="add-type-single" value="single" checked> ชิ้นเดี่ยว (Single)
+              </label>
+              <label class="btn btn-outline-warning btn-sm text-dark font-weight-bold" onclick="$('#add-bundle-sku-wrap').show();">
+                <input type="radio" name="add-mapping-type" id="add-type-bundle" value="bundle"> สินค้าชุด (Bundle)
+              </label>
+            </div>
+          </div>
+          <div class="form-group" id="add-bundle-sku-wrap" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="small text-muted font-weight-bold mb-0">รหัสสินค้าชุด (Bundle SKU) *</label>
+              <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size: 0.72rem;" onclick="$('#add-bundle-sku').val($('#add-platform-sku').val().trim());">
+                ใช้ตาม Platform SKU
+              </button>
+            </div>
+            <input type="text" id="add-bundle-sku" class="form-control font-weight-bold text-primary" placeholder="เช่น BD-XXX หรือใช้ตาม Platform SKU">
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">ยกเลิก</button>
@@ -789,12 +868,14 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       $.ajax({
         url: 'php/get_platform_mappings.php',
         type: 'GET',
+        cache: false,
         data: {
           channel: currentChannel,
           status: currentStatus,
           search: search,
           page: currentPage,
-          limit: pageSize
+          limit: pageSize,
+          _t: Date.now()
         },
         dataType: 'json',
         success: function(res) {
@@ -816,9 +897,43 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       });
     }
 
-    function formatPlatformTitleHtml(name, sku, id) {
-      if (!name) name = '';
-      sku = sku || '';
+    function getPlatformProductUrl(item) {
+      if (item.product_url && item.product_url.startsWith('http')) {
+        return item.product_url;
+      }
+      var ch = (item.channel_code || '').toLowerCase();
+      var sku = item.platform_sku || '';
+      var name = item.platform_name || '';
+      var cleanSku = sku.replace(/^\(ไม่พบ Seller SKU\)\s*/i, '').trim();
+      var idMatch = cleanSku.match(/ID\s*([0-9]{15,22})/i) || sku.match(/\b([0-9]{15,22})\b/);
+
+      if (ch.indexOf('tiktok') !== -1) {
+        if (idMatch) {
+          return 'https://seller-th.tiktok.com/product/edit/' + idMatch[1];
+        }
+        return 'https://seller-th.tiktok.com/product/manage?keyword=' + encodeURIComponent(cleanSku || name.substring(0, 30));
+      } else if (ch.indexOf('shopee') !== -1) {
+        if (cleanSku && cleanSku.indexOf('ไม่มี SKU') === -1) {
+          return 'https://seller.shopee.co.th/portal/product/list/all?keyword=' + encodeURIComponent(cleanSku);
+        }
+        return 'https://seller.shopee.co.th/portal/product/list/all?keyword=' + encodeURIComponent(name.substring(0, 30));
+      } else if (ch.indexOf('lazada') !== -1) {
+        if (cleanSku && cleanSku.indexOf('SKU อัตโนมัติ') === -1) {
+          return 'https://sellercenter.lazada.co.th/apps/product/list?keyword=' + encodeURIComponent(cleanSku);
+        }
+        return 'https://sellercenter.lazada.co.th/apps/product/list?keyword=' + encodeURIComponent(name.substring(0, 30));
+      }
+      return '';
+    }
+
+    function formatPlatformTitleHtml(item) {
+      var name = item.platform_name || '';
+      var sku = item.platform_sku || '';
+      var id = item.id || 0;
+      var channelName = item.channel_name || 'Platform';
+      var badgeColor = item.badge_color || '#0284c7';
+      var imgSrc = item.image_url || item.matched_img || '';
+      var platformUrl = getPlatformProductUrl(item);
 
       var baseName = name;
       var varText = '';
@@ -830,15 +945,39 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
 
       var html = '<div class="platform-product-title-wrap">';
       
-      // Main product title line with quick edit button
-      html += '  <div class="d-flex align-items-baseline flex-wrap mb-1">';
-      html += '    <span class="font-weight-bold text-dark platform-base-title" style="font-size: 0.96rem; line-height: 1.45; word-break: break-word;">' + escapeHtml(baseName || sku) + '</span>';
+      // Main product title line with hover tooltip trigger, platform link & quick edit button
+      html += '  <div class="d-flex align-items-start justify-content-between mb-1">';
+      html += '    <div class="platform-hover-title pr-2 flex-grow-1" ' +
+              '         data-full-name="' + escapeHtml(name) + '" ' +
+              '         data-channel-name="' + escapeHtml(channelName) + '" ' +
+              '         data-badge-color="' + escapeHtml(badgeColor) + '" ' +
+              '         data-sku="' + escapeHtml(sku) + '" ' +
+              '         data-var="' + escapeHtml(varText) + '" ' +
+              '         data-img="' + escapeHtml(imgSrc) + '" ' +
+              '         data-url="' + escapeHtml(platformUrl) + '" ' +
+              '         title="ชี้เพื่อดูชื่อความยาวทั้งหมดและรูปภาพตามแพลตฟอร์ม">' +
+              escapeHtml(baseName || sku) +
+              '      <i class="fas fa-search-plus hover-hint-icon text-muted ml-1" style="font-size: 0.72rem; opacity: 0.6;" title="ชี้เพื่อดูชื่อเต็ม & รูปสินค้า"></i>' +
+              '    </div>';
       
-      if (id > 0) {
-        html += '    <button type="button" class="btn btn-xs btn-outline-secondary ml-2 py-0 px-2 rounded-pill shadow-xs" style="font-size: 0.72rem; line-height: 1.5; color: #475569;" title="แก้ไขชื่อสินค้าบนแพลตฟอร์ม (เติมคำที่ขาด เช่น V อะไร หรือ สีอะไร)" onclick="openEditPlatformNameModal(' + id + '); event.stopPropagation();">';
-        html += '      <i class="fas fa-pencil-alt text-muted mr-1"></i>แก้ไขชื่อ';
-        html += '    </button>';
+      html += '    <div class="d-flex align-items-center flex-shrink-0" style="gap: 4px;">';
+      if (platformUrl) {
+        var platShort = 'แพลตฟอร์ม';
+        if (channelName.indexOf('TikTok') !== -1) platShort = 'TikTok';
+        else if (channelName.indexOf('Shopee') !== -1) platShort = 'Shopee';
+        else if (channelName.indexOf('Lazada') !== -1) platShort = 'Lazada';
+
+        html += '      <a href="' + escapeHtml(platformUrl) + '" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-outline-info py-0 px-2 rounded font-weight-bold" style="font-size: 0.72rem; line-height: 1.6; text-decoration: none;" title="เปิดดูรายการสินค้านี้บน ' + escapeHtml(channelName) + ' (รีเช็คสินค้า)" onclick="event.stopPropagation();">';
+        html += '        <i class="fas fa-external-link-alt mr-1"></i>ดูบน ' + platShort;
+        html += '      </a>';
       }
+
+      if (id > 0) {
+        html += '      <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2 rounded" style="font-size: 0.72rem; line-height: 1.6; color: #475569;" title="แก้ไขชื่อสินค้าบนแพลตฟอร์ม (เติมคำที่ขาด เช่น V อะไร หรือ สีอะไร)" onclick="openEditPlatformNameModal(' + id + '); event.stopPropagation();">';
+        html += '        <i class="fas fa-pencil-alt text-primary mr-1"></i>แก้ไขชื่อ';
+        html += '      </button>';
+      }
+      html += '    </div>';
       html += '  </div>';
 
       // Variation Pills (Version / Color / Model / Option)
@@ -889,6 +1028,114 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       html += '</div>';
       return html;
     }
+
+    // Global Floating Popover on Hover (with Product Image + Full Length Title + Link)
+    var popoverHideTimeout = null;
+
+    $(document).on('mouseenter', '.platform-hover-title, .platform-img-thumb-wrap', function() {
+      clearTimeout(popoverHideTimeout);
+      var $el = $(this).closest('.mapping-card').find('.platform-hover-title');
+      if ($el.length === 0) $el = $(this);
+
+      var fullName = $el.attr('data-full-name') || $el.text();
+      var channelName = $el.attr('data-channel-name') || 'Platform';
+      var badgeColor = $el.attr('data-badge-color') || '#0284c7';
+      var sku = $el.attr('data-sku') || '';
+      var varText = $el.attr('data-var') || '';
+      var imgSrc = $el.attr('data-img') || '';
+      var productUrl = $el.attr('data-url') || '';
+
+      var $pop = $('#platform-title-floating-popover');
+      if ($pop.length === 0) {
+        $('body').append('<div id="platform-title-floating-popover"></div>');
+        $pop = $('#platform-title-floating-popover');
+      }
+
+      var contentHtml = '';
+      contentHtml += '<div class="d-flex align-items-center justify-content-between mb-2 pb-2" style="border-bottom: 1px solid rgba(255,255,255,0.15);">';
+      contentHtml += '  <div class="d-flex align-items-center">';
+      contentHtml += '    <span class="badge px-2 py-1 mr-2" style="background:' + badgeColor + '; color:#fff; font-size:0.75rem;">' + escapeHtml(channelName) + '</span>';
+      contentHtml += '    <span class="text-info small font-weight-bold"><i class="fas fa-expand-arrows-alt mr-1"></i>ชื่อเต็มความยาวทั้งหมดบนแพลตฟอร์ม</span>';
+      contentHtml += '  </div>';
+      if (productUrl) {
+        contentHtml += '  <a href="' + escapeHtml(productUrl) + '" target="_blank" rel="noopener noreferrer" class="btn btn-xs btn-info py-0 px-2 rounded-pill font-weight-bold text-white shadow-sm" style="font-size:0.72rem; text-decoration:none;">';
+        contentHtml += '    <i class="fas fa-external-link-alt mr-1"></i>เปิดดูในแพลตฟอร์ม';
+        contentHtml += '  </a>';
+      }
+      contentHtml += '</div>';
+
+      contentHtml += '<div class="d-flex align-items-start mb-2">';
+      if (imgSrc) {
+        contentHtml += '  <div class="mr-3 flex-shrink-0">';
+        contentHtml += '    <img src="' + escapeHtml(imgSrc) + '" class="rounded shadow" style="width: 84px; height: 84px; object-fit: cover; border: 2px solid #38bdf8; background: #1e293b;" onerror="this.onerror=null; this.src=\'img/logo.jpg\';">';
+        contentHtml += '  </div>';
+      } else {
+        contentHtml += '  <div class="mr-3 flex-shrink-0 d-flex align-items-center justify-content-center rounded" style="width: 84px; height: 84px; background: rgba(255,255,255,0.06); border: 1.5px dashed rgba(56, 189, 248, 0.35); color: #94a3b8; font-size: 0.72rem; text-align: center; padding: 4px;">';
+        contentHtml += '    <div><i class="fas fa-image fa-2x mb-1 text-info opacity-50"></i><br><span style="color:#cbd5e1;">(รอรูปจากร้าน)</span></div>';
+        contentHtml += '  </div>';
+      }
+      contentHtml += '  <div class="flex-grow-1">';
+      contentHtml += '    <div class="font-weight-bold text-white mb-1" style="font-size: 1.02rem; line-height: 1.5; letter-spacing: 0.2px;">';
+      contentHtml += escapeHtml(fullName);
+      contentHtml += '    </div>';
+      if (sku) {
+        contentHtml += '    <div class="text-light small opacity-80 mb-1"><i class="fas fa-barcode mr-1 text-info"></i>' + escapeHtml(sku) + '</div>';
+      }
+      contentHtml += '  </div>';
+      contentHtml += '</div>';
+
+      if (varText && varText !== 'Not Specified' && varText !== 'ค่าเริ่มต้น') {
+        contentHtml += '<div class="mb-2 p-2 rounded" style="background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.45);">';
+        contentHtml += '  <div class="text-warning small font-weight-bold mb-1"><i class="fas fa-palette mr-1"></i>ตัวเลือก / สเปกสินค้า (สี, ขนาด, รุ่น, ไซส์):</div>';
+        contentHtml += '  <div class="text-white small font-weight-bold">' + escapeHtml(varText) + '</div>';
+        contentHtml += '</div>';
+      }
+
+      $pop.html(contentHtml);
+
+      var rect = this.getBoundingClientRect();
+      var popWidth = Math.min(520, window.innerWidth - 30);
+      var left = rect.left;
+      if (left + popWidth > window.innerWidth - 20) {
+        left = window.innerWidth - popWidth - 20;
+      }
+      if (left < 10) left = 10;
+
+      var approxHeight = imgSrc ? 200 : 150;
+      var top = rect.top - approxHeight - 12;
+      var isBelow = false;
+      if (top < 15) {
+        top = rect.bottom + 12;
+        isBelow = true;
+      }
+
+      $pop.toggleClass('popover-below', isBelow);
+      $pop.css({
+        top: top + 'px',
+        left: left + 'px',
+        width: popWidth + 'px'
+      });
+
+      setTimeout(function() {
+        var exactHeight = $pop.outerHeight();
+        if (!isBelow) {
+          $pop.css('top', (rect.top - exactHeight - 12) + 'px');
+        }
+        $pop.addClass('show');
+      }, 15);
+    });
+
+    $(document).on('mouseleave', '.platform-hover-title, .platform-img-thumb-wrap', function() {
+      popoverHideTimeout = setTimeout(function() {
+        if (!$('#platform-title-floating-popover:hover').length) {
+          $('#platform-title-floating-popover').removeClass('show');
+        }
+      }, 120);
+    });
+
+    $(document).on('mouseleave', '#platform-title-floating-popover', function() {
+      $('#platform-title-floating-popover').removeClass('show');
+    });
 
     function openEditPlatformNameModal(id) {
       var item = null;
@@ -993,19 +1240,33 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
         html += '<div class="mapping-card ' + cardClass + '" id="card-row-' + item.id + '" data-id="' + item.id + '">';
         html += '<div class="row align-items-center">';
 
+        var imgSrc = item.image_url || item.matched_img || '';
+
         // Col 1: Platform Info
         html += '<div class="col-lg-4 col-md-5 mb-2 mb-md-0">';
         html += '  <div class="d-flex align-items-start">';
-        html += '    <div class="mr-2 pt-1">';
-        html += '      <span class="badge shadow-xs" style="background-color: ' + item.badge_color + '; color: #fff; font-size: 0.75rem;">';
-        html += '        ' + escapeHtml(item.channel_name);
-        html += '      </span>';
-        if (item.channel_customer) {
-          html += '    <div class="text-muted" style="font-size: 0.7rem;">ลูกค้า: ' + escapeHtml(item.channel_customer) + '</div>';
+        
+        // Thumbnail Image
+        if (imgSrc) {
+          html += '    <div class="platform-img-thumb-wrap mr-2 flex-shrink-0" style="width: 52px; height: 52px; border-radius: 8px; overflow: hidden; border: 1.5px solid #e2e8f0; background: #f8fafc; cursor: pointer;" title="ชี้เพื่อดูรูปภาพและชื่อเต็ม">' +
+                  '      <img src="' + escapeHtml(imgSrc) + '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src=\'img/logo.jpg\';">' +
+                  '    </div>';
+        } else {
+          html += '    <div class="platform-img-thumb-wrap mr-2 flex-shrink-0 text-center" style="width: 52px; height: 52px; border-radius: 8px; border: 1.5px dashed #cbd5e1; background: #f8fafc; display: flex; align-items: center; justify-content: center;" title="ยังไม่มีรูปภาพ">' +
+                  '      <i class="fas fa-image text-muted" style="font-size: 1.15rem; opacity: 0.45;"></i>' +
+                  '    </div>';
         }
-        html += '    </div>';
-        html += '    <div class="flex-grow-1">';
-        html += formatPlatformTitleHtml(item.platform_name || '', item.platform_sku || '', item.id);
+
+        html += '    <div class="flex-grow-1" style="min-width: 0;">';
+        html += '      <div class="d-flex align-items-center mb-1">';
+        html += '        <span class="badge shadow-xs mr-2" style="background-color: ' + item.badge_color + '; color: #fff; font-size: 0.73rem;">';
+        html += '          ' + escapeHtml(item.channel_name);
+        html += '        </span>';
+        if (item.channel_customer) {
+          html += '      <span class="text-muted" style="font-size: 0.72rem;">ลูกค้า: ' + escapeHtml(item.channel_customer) + '</span>';
+        }
+        html += '      </div>';
+        html += formatPlatformTitleHtml(item);
         html += '    </div>';
         html += '  </div>';
         html += '</div>';
@@ -1058,8 +1319,33 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
 
         // Bundle Mode Container
         html += '  <div id="wrap-bundle-' + item.id + '" style="' + (!isBundle ? 'display:none;' : '') + '">';
+        
+        // SKU Bundle Box
+        html += '    <div class="p-2 mb-2 rounded border" style="background: #fffbeb; border-color: #fde68a !important;">';
+        html += '      <div class="d-flex justify-content-between align-items-center mb-1">';
+        html += '        <label class="small font-weight-bold text-dark mb-0">';
+        html += '          <i class="fas fa-layer-group text-warning mr-1"></i> รหัสสินค้าชุด (SKU Bundle) *';
+        html += '        </label>';
+        html += '        <div>';
+        html += '          <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 font-weight-bold mr-1" style="font-size: 0.72rem;" onclick="autoFillBundleSku(' + item.id + ');" title="ใช้รหัสเดียวกับ Platform SKU">';
+        html += '            <i class="fas fa-copy mr-1"></i> ใช้ตาม Platform SKU';
+        html += '          </button>';
+        html += '          <button type="button" class="btn btn-xs btn-outline-info py-0 px-2 font-weight-bold" style="font-size: 0.72rem;" onclick="autoGenerateNewBundleSku(' + item.id + ');" title="สร้างรหัสสินค้าชุดใหม่ BD-...">';
+        html += '            <i class="fas fa-magic mr-1"></i> สร้างรหัสชุด (BD-...)';
+        html += '          </button>';
+        html += '        </div>';
+        html += '      </div>';
+        html += '      <div class="input-group input-group-sm">';
+        html += '        <div class="input-group-prepend">';
+        html += '          <span class="input-group-text bg-white font-weight-bold text-warning"><i class="fas fa-barcode"></i></span>';
+        html += '        </div>';
+        html += '        <input type="text" id="input-bundle-sku-' + item.id + '" class="form-control font-weight-bold text-primary" placeholder="กรอกหรือกดปุ่มสร้างรหัส SKU สินค้าชุด..." value="' + escapeHtml(item.target_sku || item.platform_sku || '') + '" oninput="markChanged(' + item.id + ');">';
+        html += '      </div>';
+        html += '      <div class="small text-muted mt-1" style="font-size: 0.72rem;">* รหัสสินค้าชุดกลางสำหรับบันทึกและตัดสต็อกออเดอร์แพลตฟอร์ม</div>';
+        html += '    </div>';
+
         html += '    <div class="d-flex justify-content-between align-items-center mb-1">';
-        html += '      <span class="small font-weight-bold text-secondary"><i class="fas fa-cogs mr-1"></i> ส่วนประกอบที่ต้องตัดสต็อก:</span>';
+        html += '      <span class="small font-weight-bold text-secondary"><i class="fas fa-cogs mr-1"></i> ส่วนประกอบที่ต้องตัดสต็อก (ชิ้นส่วนในชุด):</span>';
         html += '      <button type="button" class="btn btn-outline-success btn-xs py-0 px-2 font-weight-bold" onclick="addBundleComponentRow(' + item.id + ');">';
         html += '        <i class="fas fa-plus mr-1"></i> เพิ่มชิ้นส่วน';
         html += '      </button>';
@@ -1135,6 +1421,26 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
     function removeBundleChildRow(rowId, childIdx) {
       $('#b-child-' + rowId + '-' + childIdx).remove();
       markChanged(rowId);
+    }
+
+    function autoFillBundleSku(id, sku) {
+      if (!sku) {
+        var itm = (mappingData || []).find(function(x) { return x.id == id; });
+        if (itm) sku = itm.platform_sku;
+      }
+      $('#input-bundle-sku-' + id).val(sku || '');
+      markChanged(id);
+    }
+
+    function autoGenerateNewBundleSku(id, sku) {
+      if (!sku) {
+        var itm = (mappingData || []).find(function(x) { return x.id == id; });
+        if (itm) sku = itm.platform_sku;
+      }
+      var cleanSku = (sku || '').trim().toUpperCase();
+      var newSku = cleanSku.startsWith('BD-') ? cleanSku : ('BD-' + cleanSku);
+      $('#input-bundle-sku-' + id).val(newSku);
+      markChanged(id);
     }
 
     function switchRowMode(rowId, mode) {
@@ -1270,8 +1576,11 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       };
 
       if (mode === 'single') {
-        data.target_sku = $('#input-sku-' + rowId).val().trim();
+        data.target_sku = ($('#input-sku-' + rowId).val() || '').trim();
       } else {
+        var bSku = ($('#input-bundle-sku-' + rowId).val() || '').trim();
+        data.target_sku = bSku;
+        data.bundle_sku = bSku;
         var comps = [];
         $('#bundle-rows-' + rowId + ' .bundle-child-row').each(function() {
           var s = $(this).find('.bundle-child-sku').val().trim();
@@ -1289,6 +1598,17 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
 
     function saveSingleRow(rowId) {
       var payload = collectRowData(rowId);
+      if (payload.mapping_type === 'single') {
+        if (!payload.target_sku) {
+          $.alert({ title: 'แจ้งเตือน', content: 'กรุณาระบุรหัสสินค้าในคลัง DDCAR', type: 'orange' });
+          return;
+        }
+      } else {
+        if (!payload.target_sku) {
+          $.alert({ title: 'แจ้งเตือน', content: 'กรุณากรอกรหัสสินค้าชุด (SKU Bundle) หรือกดปุ่มสร้างรหัสชุด', type: 'orange' });
+          return;
+        }
+      }
       EasyLoading.show({ text: "กำลังบันทึก..." });
 
       $.ajax({
@@ -1411,6 +1731,12 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
         return;
       }
 
+      var mappingType = $('input[name="add-mapping-type"]:checked').val() || 'single';
+      var bundleSku = $('#add-bundle-sku').val().trim();
+      if (mappingType === 'bundle' && !bundleSku) {
+        bundleSku = sku;
+      }
+
       EasyLoading.show({ text: "กำลังเพิ่มรายการ..." });
       $.ajax({
         url: 'php/save_platform_mapping.php',
@@ -1420,7 +1746,9 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
           channel_code: channel,
           platform_sku: sku,
           platform_name: name,
-          mapping_type: 'single'
+          mapping_type: mappingType,
+          bundle_sku: bundleSku,
+          target_sku: bundleSku
         }),
         dataType: 'json',
         success: function(res) {
@@ -1555,6 +1883,16 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       });
     }
 
+    function escapeQuotes(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;')
+        .replace(/\r/g, '')
+        .replace(/\n/g, ' ');
+    }
+
     // ----------------------------------------------------
     // DAILY RECONCILIATION & SMART MATCHER
     // ----------------------------------------------------
@@ -1674,7 +2012,7 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
           html += '<tr>';
           html += '<td class="align-middle"><code>' + escapeHtml(item.order_sn) + '</code></td>';
           html += '<td class="align-middle">';
-          html += formatPlatformTitleHtml(item.platform_name || '', item.platform_sku || '', item.mapping_id || 0);
+          html += formatPlatformTitleHtml(item.platform_name || '', item.platform_sku || '', item.mapping_id || 0, ch.name || ch.code, ch.badge_color);
           html += '</td>';
           html += '<td class="align-middle text-center font-weight-bold text-primary">x ' + item.qty + '</td>';
           html += '<td class="align-middle">';

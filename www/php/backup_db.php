@@ -8,6 +8,12 @@ ini_set('memory_limit', '512M');
 set_time_limit(600);
 
 include "db.php";
+include_once "auth_guard.php";
+
+// หากไม่ได้รันผ่าน Command Line (CLI) บนเครื่องเซิร์ฟเวอร์ ให้บังคับตรวจสอบสิทธิ์เจ้าของร้าน/แอดมินเท่านั้น
+if (php_sapi_name() !== 'cli') {
+    require_role(['เจ้าของร้าน', 'แอดมิน']);
+}
 
 $backup_dir = __DIR__ . '/../_backup_db';
 if (!is_dir($backup_dir)) {
@@ -18,11 +24,25 @@ if (!is_dir($backup_dir)) {
 
 $action = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : 'backup');
 
-// Action 1: ดาวน์โหลดไฟล์สำรอง
+// Action 1: ดาวน์โหลดไฟล์สำรอง (เฉพาะแอดมิน/เจ้าของร้าน)
 if ($action === 'download') {
     $file = isset($_GET['file']) ? basename($_GET['file']) : '';
+
+    // ตรวจสอบชื่อไฟล์อย่างเข้มงวด (ต้องขึ้นต้นด้วย ddcar_backup_ และลงท้ายด้วย .sql หรือ .sql.gz เท่านั้น)
+    if (!preg_match('/^ddcar_backup_[0-9_]+\.sql(\.gz)?$/', $file)) {
+        header("HTTP/1.1 400 Bad Request");
+        echo "Invalid backup filename format.";
+        exit;
+    }
+
     $filepath = $backup_dir . '/' . $file;
-    if (!empty($file) && file_exists($filepath)) {
+    if (file_exists($filepath) && is_file($filepath)) {
+        // บันทึก Log การดาวน์โหลดฐานข้อมูลเพื่อความปลอดภัย
+        $curr_user = get_current_user_session();
+        $log_user = $curr_user ? ($curr_user['user_name'] . ' (ID:' . $curr_user['user_id'] . ')') : 'CLI/System';
+        $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'UNKNOWN';
+        @file_put_contents($backup_dir . '/download.log', date('Y-m-d H:i:s') . " | File: $file | By: $log_user | IP: $ip\n", FILE_APPEND);
+
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . $file . '"');

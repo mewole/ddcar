@@ -141,15 +141,22 @@
         const orderSn = match[1];
         seenOrderSns.add(orderSn);
 
+        // Climb up to find the full order card container without crossing into adjacent orders
         let container = el;
-        for (let i = 0; i < 6 && container.parentElement; i++) {
-          container = container.parentElement;
-          if (container.classList && (container.classList.contains("order-item") || container.innerText.includes("฿"))) {
+        let bestContainer = el;
+        for (let i = 0; i < 15 && container.parentElement && container.parentElement !== document.body; i++) {
+          const parent = container.parentElement;
+          const pText = parent.innerText || "";
+          const allSns = pText.match(/\b(2[3-9][0-1][0-9][0-3][0-9][A-Z0-9]{6,12})\b/g) || [];
+          const uniqueSns = new Set(allSns);
+          if (uniqueSns.size > 1) {
             break;
           }
+          container = parent;
+          bestContainer = parent;
         }
 
-        const items = extractItemsFromContainer(container, orderSn);
+        const items = extractItemsFromContainer(bestContainer, orderSn);
         orders.push({
           order_sn: orderSn,
           order_date: new Date().toISOString(),
@@ -202,10 +209,21 @@
       let currentTitle = "";
       let currentQty = 1;
       let currentPrice = 0;
+      let imageUrl = "";
+      let productUrl = "";
       const variations = [];
 
-      // Check Shopee DOM model class if el is provided
+      // Extract image & link from element
       if (el) {
+        const imgEl = el.querySelector("img");
+        if (imgEl && imgEl.src && !imgEl.src.includes("data:image/svg")) {
+          imageUrl = imgEl.src;
+        }
+        const linkEl = el.querySelector("a[href*='product'], a[href*='portal/sale']");
+        if (linkEl && linkEl.href) {
+          productUrl = linkEl.href;
+        }
+
         const modelEl = el.querySelector(".order-item__model, [class*='model-name'], [class*='variation']");
         if (modelEl && modelEl.innerText.trim()) {
           variations.push(modelEl.innerText.replace(/^(ตัวเลือกสินค้า|ตัวเลือก|Variation)\s*[:：]\s*/i, "").trim());
@@ -267,6 +285,8 @@
       return {
         platform_sku: currentSku,
         platform_name: fullPlatformName,
+        image_url: imageUrl,
+        product_url: productUrl,
         qty: currentQty,
         price: currentPrice
       };

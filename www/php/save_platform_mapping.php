@@ -1,5 +1,6 @@
 <?php
 require_once "db.php";
+@mysqli_report(MYSQLI_REPORT_OFF);
 header("Content-Type: application/json; charset=utf-8");
 
 $raw = file_get_contents("php://input");
@@ -47,6 +48,11 @@ foreach ($items as $entry) {
         }
     } else {
         // Bundle Mapping
+        $target_sku = isset($entry['bundle_sku']) ? mysqli_real_escape_string($conn, trim($entry['bundle_sku'])) : (isset($entry['target_sku']) ? mysqli_real_escape_string($conn, trim($entry['target_sku'])) : '');
+        if (empty($target_sku)) {
+            $target_sku = $platform_sku;
+        }
+
         $components = isset($entry['bundle_components']) ? $entry['bundle_components'] : [];
         if (!empty($components) && is_array($components)) {
             $cleaned_comps = [];
@@ -68,16 +74,25 @@ foreach ($items as $entry) {
                 $status = 'mapped';
 
                 // Sync with bundle_recipes table for auto-deduct support in save_order.php
-                @mysqli_query($conn, "DELETE FROM bundle_recipes WHERE bundle_sku = '$platform_sku'");
+                @mysqli_query($conn, "DELETE FROM bundle_recipes WHERE bundle_sku = '$target_sku' OR bundle_sku = '$platform_sku'");
                 foreach ($cleaned_comps as $comp) {
                     $c_sku_esc = mysqli_real_escape_string($conn, $comp['sku']);
                     $r_qty = intval($comp['qty']);
                     $c_nm_esc = mysqli_real_escape_string($conn, $comp['name']);
                     @mysqli_query($conn, "INSERT INTO bundle_recipes 
-                        (bundle_sku, child_sku, ratio, is_hidden, child_name) 
-                        VALUES ('$platform_sku', '$c_sku_esc', $r_qty, 1, '$c_nm_esc')");
+                        (bundle_sku, child_sku, ratio, is_hidden_bom, child_name) 
+                        VALUES ('$target_sku', '$c_sku_esc', $r_qty, 1, '$c_nm_esc')");
+                    if ($target_sku !== $platform_sku) {
+                        @mysqli_query($conn, "INSERT INTO bundle_recipes 
+                            (bundle_sku, child_sku, ratio, is_hidden_bom, child_name) 
+                            VALUES ('$platform_sku', '$c_sku_esc', $r_qty, 1, '$c_nm_esc')");
+                    }
                 }
+            } else if (!empty($target_sku)) {
+                $status = 'mapped';
             }
+        } else if (!empty($target_sku)) {
+            $status = 'mapped';
         }
     }
 

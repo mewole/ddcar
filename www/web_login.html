@@ -182,9 +182,9 @@
                                 }
                             });
                         } else {
-                            var obj = jQuery.parseJSON(data);
+                            var obj = (typeof data === 'object') ? data : (typeof data === 'string' ? JSON.parse(data) : data);
                             $.each(obj, function(i, field){
-                                localStorage.user_name = name;
+                                localStorage.user_name = field.user_name || name;
                                 localStorage.user_id = field.user_id;
                                 localStorage.user_role = field.user_role;
                                 window.location = 'web_sale.html';

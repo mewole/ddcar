@@ -10,7 +10,11 @@ if (!ob_start("ob_gzhandler")) {
 ini_set('display_errors', 0);
 error_reporting(0);
 include "db.php";
+include_once "auth_guard.php";
 include_once "folder_helper.php";
+
+require_login(); // บังคับว่าต้องล็อกอินก่อนดูรายการสินค้าใกล้หมด
+$is_owner_or_admin = (isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], ['เจ้าของร้าน', 'แอดมิน']));
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -29,6 +33,9 @@ if ($mode === 'zero') {
     $res = mysqli_query($conn, $sql);
     if ($res) {
         while ($r = mysqli_fetch_assoc($res)) {
+            if (!$is_owner_or_admin) {
+                $r['prod_cost'] = 0; // พนักงานทั่วไปไม่สามารถดูราคาทุนได้
+            }
             $prod_list[] = $r;
             $pids[] = intval($r['prod_id']);
         }
@@ -44,6 +51,9 @@ if ($mode === 'zero') {
     $res = mysqli_query($conn, $sql);
     if ($res) {
         while ($r = mysqli_fetch_assoc($res)) {
+            if (!$is_owner_or_admin) {
+                $r['prod_cost'] = 0; // พนักงานทั่วไปไม่สามารถดูราคาทุนได้
+            }
             $prod_list[] = $r;
             $pids[] = intval($r['prod_id']);
         }

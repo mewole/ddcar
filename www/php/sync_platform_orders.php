@@ -1,4 +1,6 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type");
 require_once "db.php";
 header("Content-Type: application/json; charset=utf-8");
 
@@ -102,6 +104,8 @@ foreach ($orders as $ord) {
         $p_name = mysqli_real_escape_string($conn, trim($it['platform_name'] ?? ''));
         $p_item_id = mysqli_real_escape_string($conn, trim($it['item_id'] ?? ''));
         $p_model_id = mysqli_real_escape_string($conn, trim($it['model_id'] ?? ''));
+        $p_img = mysqli_real_escape_string($conn, trim($it['image_url'] ?? $it['img'] ?? ''));
+        $p_url = mysqli_real_escape_string($conn, trim($it['product_url'] ?? $it['url'] ?? ''));
         $qty = max(1, intval($it['qty'] ?? 1));
         $price = floatval($it['price'] ?? 0);
 
@@ -111,7 +115,7 @@ foreach ($orders as $ord) {
         $match_status = 'unmapped';
 
         if (!empty($p_sku)) {
-            $chk_map = mysqli_query($conn, "SELECT prod_id, target_sku, status FROM platform_sku_mapping 
+            $chk_map = mysqli_query($conn, "SELECT prod_id, target_sku, status, image_url, product_url FROM platform_sku_mapping 
                                             WHERE channel_code = '$channel_code' AND platform_sku = '$p_sku' LIMIT 1");
             if ($chk_map && mysqli_num_rows($chk_map) > 0) {
                 $m_row = mysqli_fetch_assoc($chk_map);
@@ -120,37 +124,50 @@ foreach ($orders as $ord) {
                     $target_sku = mysqli_real_escape_string($conn, $m_row['target_sku']);
                     $match_status = 'matched';
                 }
-                // Update platform_name if new incoming name is longer or has better variation info
+                
+                // Update platform_name, image_url, product_url if new data is better
+                $up_parts = [];
                 if (!empty($p_name)) {
-                    mysqli_query($conn, "UPDATE platform_sku_mapping 
-                                        SET platform_name = '$p_name' 
-                                        WHERE channel_code = '$channel_code' AND platform_sku = '$p_sku' 
-                                        AND (platform_name = '' OR CHAR_LENGTH(platform_name) < CHAR_LENGTH('$p_name') OR (platform_name LIKE '%[Not Specified]%' AND '$p_name' NOT LIKE '%[Not Specified]%'))");
+                    $up_parts[] = "platform_name = CASE 
+                        WHEN (platform_name = '' OR CHAR_LENGTH(platform_name) < CHAR_LENGTH('$p_name') OR (platform_name LIKE '%[Not Specified]%' AND '$p_name' NOT LIKE '%[Not Specified]%')) 
+                        THEN '$p_name' ELSE platform_name END";
+                }
+                if (!empty($p_img)) {
+                    $up_parts[] = "image_url = CASE WHEN (image_url = '' OR image_url IS NULL) THEN '$p_img' ELSE image_url END";
+                }
+                if (!empty($p_url)) {
+                    $up_parts[] = "product_url = CASE WHEN (product_url = '' OR product_url IS NULL) THEN '$p_url' ELSE product_url END";
+                }
+                if (!empty($up_parts)) {
+                    mysqli_query($conn, "UPDATE platform_sku_mapping SET " . implode(", ", $up_parts) . " WHERE channel_code = '$channel_code' AND platform_sku = '$p_sku'");
                 }
             } else {
                 // Auto-create unmapped entry for visibility in mapping table
                 // Check if SKU directly matches a DDCar product prod_code
-                $chk_direct = mysqli_query($conn, "SELECT prod_id, prod_code FROM product WHERE prod_code = '$p_sku' LIMIT 1");
+                $chk_direct = mysqli_query($conn, "SELECT prod_id, prod_code, img FROM product WHERE prod_code = '$p_sku' LIMIT 1");
                 if ($chk_direct && mysqli_num_rows($chk_direct) > 0) {
                     $d_row = mysqli_fetch_assoc($chk_direct);
                     $prod_id = intval($d_row['prod_id']);
                     $target_sku = mysqli_real_escape_string($conn, $d_row['prod_code']);
+                    if (empty($p_img) && !empty($d_row['img'])) {
+                        $p_img = mysqli_real_escape_string($conn, $d_row['img']);
+                    }
                     $match_status = 'mapped';
                     mysqli_query($conn, "INSERT IGNORE INTO platform_sku_mapping 
-                        (channel_code, platform_sku, platform_name, mapping_type, prod_id, target_sku, status)
-                        VALUES ('$channel_code', '$p_sku', '$p_name', 'single', $prod_id, '$target_sku', 'mapped')");
+                        (channel_code, platform_sku, platform_name, image_url, product_url, mapping_type, prod_id, target_sku, status)
+                        VALUES ('$channel_code', '$p_sku', '$p_name', '$p_img', '$p_url', 'single', $prod_id, '$target_sku', 'mapped')");
                 } else {
                     mysqli_query($conn, "INSERT IGNORE INTO platform_sku_mapping 
-                        (channel_code, platform_sku, platform_name, mapping_type, status)
-                        VALUES ('$channel_code', '$p_sku', '$p_name', 'single', 'unmapped')");
+                        (channel_code, platform_sku, platform_name, image_url, product_url, mapping_type, status)
+                        VALUES ('$channel_code', '$p_sku', '$p_name', '$p_img', '$p_url', 'single', 'unmapped')");
                 }
             }
         } elseif (!empty($p_name)) {
             // No SKU provided by platform, insert by name
             $safe_sku_placeholder = 'NO_SKU_' . substr(md5($p_name), 0, 10);
             mysqli_query($conn, "INSERT IGNORE INTO platform_sku_mapping 
-                (channel_code, platform_sku, platform_name, mapping_type, status)
-                VALUES ('$channel_code', '$safe_sku_placeholder', '$p_name', 'single', 'unmapped')");
+                (channel_code, platform_sku, platform_name, image_url, product_url, mapping_type, status)
+                VALUES ('$channel_code', '$safe_sku_placeholder', '$p_name', '$p_img', '$p_url', 'single', 'unmapped')");
             $p_sku = $safe_sku_placeholder;
         }
 
@@ -162,8 +179,8 @@ foreach ($orders as $ord) {
 
         // Insert item record
         $sql_it = "INSERT INTO platform_order_items 
-                   (order_sn, channel_code, platform_item_id, platform_model_id, platform_sku, platform_name, qty, price, prod_id, target_sku, match_status)
-                   VALUES ('$order_sn', '$channel_code', '$p_item_id', '$p_model_id', '$p_sku', '$p_name', $qty, $price, $prod_id, '$target_sku', '$match_status')";
+                   (order_sn, channel_code, platform_item_id, platform_model_id, platform_sku, platform_name, image_url, product_url, qty, price, prod_id, target_sku, match_status)
+                   VALUES ('$order_sn', '$channel_code', '$p_item_id', '$p_model_id', '$p_sku', '$p_name', '$p_img', '$p_url', $qty, $price, $prod_id, '$target_sku', '$match_status')";
         mysqli_query($conn, $sql_it);
         $items_processed++;
     }
