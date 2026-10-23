@@ -3,80 +3,87 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Home</title>
-  <!-- Bootstrap Import -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
-  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
-  
-  <script type="text/javascript" src="js/jquery-confirm.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
-  <script type="text/javascript" src="js/jquery.touchSwipe.min.js"></script>
-  <script src="cordova.js"></script>
-  <script type="text/javascript" src="js/scanqr.js"></script>
-  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
+  <title>ตรวจสอบเวอร์ชัน - DDCAR</title>
+  <!-- Local Assets -->
+  <link rel="stylesheet" href="css/bootstrap.min.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
   <link rel="stylesheet" href="css/loading.css">
 
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
+  <script type="text/javascript" src="js/jquery-confirm.js"></script>
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script defer src="js/fontawesome-all.js"></script>
+  <script type="text/javascript" src="js/scanqr.js"></script>
+  <script type="text/javascript" src="js/config.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
+
   <!-- Font -->
-  <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Prompt:400,600,700&display=swap" rel="stylesheet">
   <style>
-      .version-card {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 24px 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-        margin: 20px auto;
-        max-width: 360px;
-      }
-      .badge-latest {
-        background: #e8f5e9;
-        color: #2e7d32;
-        border-radius: 20px;
-        padding: 6px 14px;
-        font-size: 13px;
-        font-weight: bold;
-        display: inline-block;
-      }
-      .badge-update {
-        background: #fff3e0;
-        color: #e65100;
-        border-radius: 20px;
-        padding: 6px 14px;
-        font-size: 13px;
-        font-weight: bold;
-        display: inline-block;
-      }
-      .btn-download-apk {
-        background: linear-gradient(135deg, #da4646 0%, #b71c1c 100%);
-        color: white !important;
-        font-weight: bold;
-        border-radius: 12px;
-        padding: 12px 24px;
-        display: block;
-        margin: 15px auto 0;
-        text-decoration: none !important;
-        box-shadow: 0 4px 12px rgba(218, 70, 70, 0.35);
-        transition: transform 0.15s ease;
-      }
-      .btn-download-apk:active {
-        transform: scale(0.97);
-      }
+    body {
+      background: #ffffff !important;
+    }
+    .version-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 32px 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+      margin: 20px auto;
+      max-width: 360px;
+    }
+    .badge-latest {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #a7f3d0;
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .badge-update {
+      background: #fff7ed;
+      color: #ea580c;
+      border: 1px solid #fed7aa;
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .btn-download-apk {
+      background: linear-gradient(135deg, #da251c 0%, #b91c1c 100%);
+      color: white !important;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: 14px 24px;
+      display: block;
+      margin: 15px auto 0;
+      text-decoration: none !important;
+      box-shadow: 0 4px 14px rgba(218, 37, 28, 0.28);
+      transition: transform 0.15s ease;
+      cursor: pointer;
+    }
+    .btn-download-apk:active {
+      transform: scale(0.97);
+    }
   </style>
+
   <script>
+    var currentDownloadUrl = '';
+
     async function onLoad(){
       if(localStorage.bell){
-          $('.dot').prop('hidden',false);
+          $('.dot').prop('hidden', false);
       }
 
-      var currentVer = '2.0.2';
+      var currentVer = '2.1.0';
       if (window.DDBridge && typeof DDBridge.getAppInfo === 'function') {
         var info = await DDBridge.getAppInfo();
         if (info && info.version) currentVer = info.version;
@@ -101,15 +108,23 @@
               if (!downloadUrl.startsWith('http')) {
                 downloadUrl = serverUrl + 'ddcar-latest.apk';
               }
+              currentDownloadUrl = downloadUrl;
 
               $('#new-version').text('เวอร์ชันล่าสุดบนระบบ: v' + serverVer);
 
-              if (serverVer === currentVer) {
+              // Use semantic version comparison
+              var hasUpdate = false;
+              if (window.DDBridge && typeof DDBridge.compareVersions === 'function') {
+                hasUpdate = DDBridge.compareVersions(serverVer, currentVer) > 0;
+              } else {
+                hasUpdate = serverVer !== currentVer;
+              }
+
+              if (!hasUpdate) {
                 $('#status-badge').html('<span class="badge-latest"><i class="fas fa-check-circle"></i> คุณใช้เวอร์ชันล่าสุดแล้ว</span>');
                 $('#download-box').prop('hidden', true);
               } else {
                 $('#status-badge').html('<span class="badge-update"><i class="fas fa-exclamation-circle"></i> มีเวอร์ชันใหม่พร้อมให้อัปเดต</span>');
-                $('#btn-apk').attr('href', downloadUrl);
                 $('#download-box').prop('hidden', false);
               }
             }
@@ -123,47 +138,57 @@
         }               
       });     
     }  
+
+    function startDownload() {
+      if (!currentDownloadUrl) {
+        currentDownloadUrl = (localStorage.pathServer || 'http://ddaccessory.trueddns.com:24330/dd-shop/') + 'ddcar-latest.apk';
+      }
+      if (window.DDBridge && typeof DDBridge.openUrl === 'function') {
+        DDBridge.openUrl(currentDownloadUrl);
+      } else {
+        window.open(currentDownloadUrl, '_system');
+      }
+    }
   </script>
 </head>
 
-<body onload="onLoad();" style="overflow-x: hidden; background: #f8f9fa;">
-   <!-- Loading -->
-   <div class="overlay" hidden><div class="loading"></div></div>
+<body onload="onLoad();">
+  <!-- Loading -->
+  <div class="overlay" hidden><div class="loading"></div></div>
   
   <!-- Nav menu top -->
-  <div class="row fixed-top navs justify-content-center align-items-center">
-      <div class="col-2 text-center" onclick="window.history.back();">
-          <i id="i-back" class="fas fa-angle-left"></i>
-      </div>
-      <div class="col-8 text-center">
-          <h5 id="h5-title">ตรวจสอบเวอร์ชัน</h5>
-      </div>
-      <div class="col-2 text-center"></div>
+  <div class="row navs align-items-center fixed-top justify-content-center">
+    <div class="col-2 text-center" onclick="window.history.back();">
+      <i id="i-back" class="fas fa-angle-left"></i>
+    </div>
+    <div class="col-8 text-center">
+      <h5 id="h5-title">ตรวจสอบเวอร์ชัน</h5>
+    </div>
+    <div class="col-2 text-center"></div>
   </div>
-  <br><br>
 
   <!-- Content -->
-  <div id="big-ctn" class="container text-center" style="margin-top: 50px;">
+  <div id="big-ctn" class="container text-center" style="margin-top: calc(70px + var(--safe-top));">
     <div class="version-card">
-      <img src="img/logo.jpg" alt="Logo" style="width: 120px; height: auto; border-radius: 12px; margin-bottom: 15px;">
+      <img src="img/logo.jpg" alt="Logo" style="width: 130px; height: auto; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
       
-      <h5 id="version" style="font-weight: bold; color: #333; margin-top: 10px;">กำลังตรวจสอบ...</h5>
-      <p id="new-version" style="color: #666; font-size: 14px; margin-bottom: 12px;">กำลังดึงข้อมูล...</p>
+      <h5 id="version" style="font-weight: 700; color: #0f172a; margin-top: 10px;">กำลังตรวจสอบ...</h5>
+      <p id="new-version" style="color: #64748b; font-size: 14px; margin-bottom: 18px;">กำลังดึงข้อมูล...</p>
       
-      <div id="status-badge" style="margin-bottom: 15px;"></div>
+      <div id="status-badge" style="margin-bottom: 20px;"></div>
 
       <div id="download-box" hidden>
-        <a id="btn-apk" href="#" class="btn-download-apk">
-          <i class="fas fa-cloud-download-alt"></i> ดาวน์โหลดและติดตั้งอัปเดต
-        </a>
-        <small style="color: #888; display: block; margin-top: 8px;">ดาวน์โหลดตรงไฟล์ APK จาก Server ร้าน</small>
+        <button onclick="startDownload();" class="btn-download-apk" style="border: none; width: 100%;">
+          <i class="fas fa-cloud-download-alt" style="margin-right: 8px;"></i> ดาวน์โหลดและติดตั้งอัปเดต
+        </button>
+        <small style="color: #94a3b8; display: block; margin-top: 10px;">ดาวน์โหลดตรงไฟล์ APK จาก Server ร้าน และเปิดติดตั้ง</small>
       </div>
     </div>
   </div>
   <!-- End big container -->
 
   <!-- Nav menu bottom -->
-  <div class="row fixed-bottom navs">
+  <div class="row fixed-bottom align-items-center">
     <div class="col-3 text-center" onclick="window.location = 'index.html';">
       <i id="i-home" class="fas fa-home menu active"></i>
     </div>
@@ -175,7 +200,7 @@
       <i id="i-qrcode" class="fas fa-qrcode menu"></i>
     </div>
     <div class="col-3 text-center" onclick="window.location = 'other.html';">
-      <i class="fa fa-bars menu"></i>
+      <i class="fas fa-bars menu"></i>
     </div>
   </div>
 </body>

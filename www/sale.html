@@ -3,27 +3,28 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Home</title>
-    <!-- Bootstrap Import -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
-    
-    <script type="text/javascript" src="js/jquery-confirm.js"></script>
-    <script type="text/javascript" src="js/scanqr.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-    <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
-    <script src="cordova.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
+    <title>ขายสินค้า - DDCAR</title>
+    <!-- Local Assets -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/jquery-confirm.css">
     <link rel="stylesheet" href="css/loading.css">
 
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
+    <script type="text/javascript" src="js/jquery-confirm.js"></script>
+    <script type="text/javascript" src="js/popper.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script defer src="js/fontawesome-all.js"></script>
+    <script type="text/javascript" src="js/onscan.min.js"></script>
+    <script type="text/javascript" src="js/scanqr.js"></script>
+    <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/capacitor-bridge.js"></script>
+
     <!-- Font -->
-    <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Prompt:400,600,700&display=swap" rel="stylesheet">
 
     <style>
         #title {
@@ -130,6 +131,22 @@
             }  
             if(localStorage.bell){
                 $('.dot').prop('hidden',false);
+            }
+
+            if (typeof onScan !== 'undefined') {
+                try {
+                    onScan.attachTo(document, {
+                        suffixKeyCodes: [13],
+                        onScan: function(sCode) {
+                            if (sCode && sCode.trim() !== '') {
+                                if (!$('#name').prop('disabled')) {
+                                    $('#search_prod').val(sCode.trim());
+                                    search_prod();
+                                }
+                            }
+                        }
+                    });
+                } catch(e) {}
             }      
         });
 
@@ -364,10 +381,10 @@
             }
             const CapacitorBarcodeScanner = window.Capacitor?.Plugins?.CapacitorBarcodeScanner || window.CapacitorBarcodeScanner;
             try {
-                // เรียกใช้ Capacitor Barcode Scanner แทน Cordova
+                // เรียกใช้ Capacitor Barcode Scanner hint: 17 (รับบาร์โค้ดทุกรูปแบบทั้ง 1D และ 2D)
                 const result = await CapacitorBarcodeScanner.scanBarcode({
-                    hint: 0, // 0 หมายถึง QR_CODE (Html5QrcodeSupportedFormats.QR_CODE)
-                    scanInstructions: "วางคิวอาโค้ดภายในสี่เหลี่ยมผืนผ้าที่ช่องมองภาพเพื่อแสกน"
+                    hint: 17,
+                    scanInstructions: "วางบาร์โค้ดหรือคิวอาร์โค้ดให้อยู่ในกรอบเพื่อสแกน"
                 });
 
                 // เช็กว่ามีการสแกนและมีผลลัพธ์กลับมาหรือไม่
@@ -695,62 +712,71 @@
     <!-- Start big container -->
     <div id="big-ctn" class="container-fullwidth justify-content-center">
         <!-- Nav menu top -->
-        <div class="row navs align-items-center mgem1o5 fixed-top">
+        <div class="row navs align-items-center fixed-top justify-content-center">
           <div id="col-back" class="col-2 text-center" onclick="window.location = 'index.html';">
             <i id="i-back" class="fas fa-angle-left"></i>
           </div>
           <div class="col-8 text-center">
             <h5 id="h5-title" class="fade" onclick="showware();">เลือกโกดัง/หน้าร้าน</h5>
           </div>
-          <div class="col-1 text-right" onclick="check();"><div id="check-sale"class="circle-text">0</div></div>
+          <div class="col-2 text-right" onclick="check();" style="cursor: pointer;">
+            <div id="check-sale" class="circle-text">0</div>
+          </div>
         </div>
 
-        <div id="in-ctn" class="container">
-            <div class="row mg-10">
-                <div class="col-12 text-center pdlr">
-                    <label for="cus">ลูกค้า</label>
-                    <input id="cus" type="text" class="w3-input" onclick="select_cus();" placeholder="กรุณาใส่ชื่อลูกค้าก่อนทำการขาย" readonly>
+        <div id="in-ctn" class="container" style="padding: 16px 20px;">
+            <div style="margin-bottom: 14px;">
+                <label for="cus"><i class="fas fa-user text-danger" style="margin-right: 6px;"></i> เลือกลูกค้า</label>
+                <input id="cus" type="text" class="w3-input" onclick="select_cus();" placeholder="แตะเพื่อเลือกรายชื่อลูกค้า..." readonly>
+            </div>
+            <div style="margin-bottom: 18px;">
+                <label for="name"><i class="fas fa-box text-danger" style="margin-right: 6px;"></i> ชื่อสินค้า</label>
+                <input disabled id="name" type="text" class="w3-input" onclick="search();" placeholder="แตะเพื่อค้นหาสินค้า...">
+            </div>
+            
+            <!-- Detail Card -->
+            <div class="card-sport" style="margin-bottom: 20px;">
+                <div class="row align-items-center">
+                    <div class="col-4 text-center" style="padding-right: 6px;">
+                        <label for="barcode" style="font-size: 12px; margin-bottom: 4px;">รหัสสินค้า</label>
+                        <input readonly id="barcode" type="text" class="w3-input" style="font-size: 14px; padding: 8px;">
+                    </div>
+                    <div class="col-4 text-center" style="padding-left: 6px; padding-right: 6px;">
+                        <label for="price" style="font-size: 12px; margin-bottom: 4px;">ราคา (บาท)</label>
+                        <input readonly id="price" type="number" class="w3-input" data-index="2" style="font-size: 15px; font-weight: 700; color: #da251c; padding: 8px;">
+                    </div>
+                    <div class="col-4 text-center" style="padding-left: 6px;">
+                        <label for="amount" style="font-size: 12px; margin-bottom: 4px;">จำนวน</label>
+                        <input readonly id="amount" onkeyup="edit_amt()" type="number" min="1" value="1" class="w3-input" data-index="3" style="font-size: 15px; font-weight: 700; padding: 8px;">
+                    </div>
                 </div>
             </div>
-            <div class="row mg-10">
-                <div class="col-12 text-center pdlr">
-                    <label for="name">ชื่อสินค้า</label>
-                    <input disabled id="name" type="text" class="w3-input" onclick="search();">
+
+            <!-- Action Buttons -->
+            <div class="row align-items-center" style="margin-bottom: 14px;">
+                <div class="col-5" style="padding-right: 6px;">
+                    <button id="btn-addpic" class="mbtn" onclick="scanqr();" disabled style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                        <i class="fas fa-qrcode" style="margin-right: 6px;"></i> สแกน
+                    </button>
+                </div>
+                <div class="col-7" style="padding-left: 6px;">
+                    <button id="btn-folder" class="select_folder" onclick="selectfolder()" disabled>
+                        <i class="fas fa-folder-open text-warning" style="margin-right: 6px;"></i> เลือกจากคลัง
+                    </button>
                 </div>
             </div>
-            <div class="row" style="margin-bottom: 20%;">
-                <div class="col-5 text-center">
-                    <label for="barcode">รหัส</label>
-                    <input readonly id="barcode" type="text" class="w3-input">
-                </div>
-                <div class="col-4 text-center">
-                    <label for="price">ราคา</label>
-                    <input readonly id="price" type="number" class="w3-input" data-index="2">
-                </div>
-                <div class="col-3 text-center">
-                    <label for="amount">จำนวน</label>
-                    <input readonly id="amount" onkeyup="edit_amt()" type="number" min="1" value="1" class="w3-input" data-index="3">
-                </div>
-            </div>
-            <div class="row justify-content-center mgem1">
-                <div class="col-3 text-center" style="padding-left: 0; padding-right: 0;">
-                    <button id="btn-addpic" class="mbtn-green" onclick="scanqr();" disabled>สแกน</button>
-                </div>
-                <div class="col-7 text-center" style="padding-right: 0;">
-                    <button id="btn-folder" class="select_folder" onclick="selectfolder()" disabled>เลือกสินค้า</button>
-                </div>
-            </div>
-            <div class="row justify-content-center mgem1o5">
-              <div class="col-10 text-center" style="padding-left: 0; padding-right: 0;">
-                <button id="btn-addprod" class="mbtn" onclick="add_prod();" disabled>เพิ่มสินค้า</button>
-              </div>
+
+            <div>
+                <button id="btn-addprod" class="mbtn" onclick="add_prod();" disabled style="min-height: 52px; font-size: 1.15rem;">
+                    <i class="fas fa-cart-plus" style="margin-right: 8px;"></i> เพิ่มสินค้าลงรายการ
+                </button>
             </div>
         </div>
     </div>
     <!-- End big container -->
 
     <!-- Nav menu bottom -->
-    <div id="navs-bttm" class="row fixed-bottom navs">
+    <div id="navs-bttm" class="row fixed-bottom align-items-center">
         <div class="col-3 text-center" onclick="window.location = 'index.html';">
             <i id="i-home" class="fas fa-home menu"></i>
         </div>
@@ -758,16 +784,23 @@
             <div class="dot" hidden></div>
             <i id="i-bell" class="fas fa-bell menu"></i>
         </div>
-        <div class="col-3 text-center" onclick="scan();">
+        <div class="col-3 text-center" onclick="handleBottomScan();">
             <i id="i-qrcode" class="fas fa-qrcode menu"></i>
         </div>
         <div class="col-3 text-center" onclick="window.location = 'other.html';">
-            <i id="i-bars" class="fa fa-bars menu"></i>
+            <i id="i-bars" class="fas fa-bars menu"></i>
         </div>
     </div>
     <!-- End Nav menu bottom -->
-    
-    <script>       
+
+    <script>
+    function handleBottomScan() {
+        if (!$('#btn-addpic').prop('disabled')) {
+            scanqr();
+        } else {
+            scan();
+        }
+    }       
     //Touch animation
     $(".mbtn").on("touchstart", function() {
       $(this).addClass('mbtn-touch');
