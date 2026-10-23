@@ -282,6 +282,20 @@
 
     var currentFilter = 'all';
     var currentSearch = '';
+    var currentViewScope = 'active_90';
+
+    function setViewScope(scope) {
+      if (currentViewScope === scope) return;
+      currentViewScope = scope;
+      if (scope === 'active_90') {
+        $('#btn-scope-active').removeClass('btn-outline-primary').addClass('btn-primary');
+        $('#btn-scope-all').removeClass('btn-primary').addClass('btn-outline-secondary');
+      } else {
+        $('#btn-scope-all').removeClass('btn-outline-secondary').addClass('btn-primary');
+        $('#btn-scope-active').removeClass('btn-primary').addClass('btn-outline-primary');
+      }
+      loadData(true);
+    }
     var start = 0;
     var limit = 25;
     var isLoading = false;
@@ -363,6 +377,7 @@
           rich: 1,
           filter: currentFilter,
           search: currentSearch,
+          view_scope: currentViewScope,
           start: start,
           limit: limit
         },

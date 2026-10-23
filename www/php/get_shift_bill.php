@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 include "db.php";
 $output = array();   
     $date = isset($_POST['date']) ? mysqli_real_escape_string($conn, trim($_POST['date'])) : date('Y-m-d');

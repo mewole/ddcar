@@ -563,9 +563,6 @@
 		}
 		
 		$(document).keydown(function(objEvent) {
-			if (objEvent.keyCode == 9) {  //tab pressed
-				objEvent.preventDefault(); // stops its action         
-			}
 			if (objEvent.keyCode == 13) {  //enter pressed
 				objEvent.preventDefault();
 				var $this = $(objEvent.target);
@@ -618,7 +615,7 @@
 						$.each(obj, function(i, field){							
 							if(field.ware_name || obj[i][2] == "โกดัง"){
 								$('#b').append('<a class="dropdown-item text-center" href="#" onclick="setware('+field.ware_id+',\''+field.ware_name+'\',\'โกดัง\')">'+field.ware_name+'</a>');
-								$('#c').append('<a class="dropdown-item text-center" href="#" onclick="setwareto('+field.ware_id+',\''+field.ware_name+'\')">'+field.ware_name+'</a>');
+								
 							}else if(field.shop_name || obj[i][2] == "หน้าร้าน"){
 								$('#b').append('<a class="dropdown-item text-center" href="#" onclick="setware('+field.shop_id+',\''+field.shop_name+'\',\'หน้าร้าน\')">'+field.shop_name+'</a>');
 							}										
@@ -720,7 +717,7 @@
 			var price = $('#price').val();   
 			var name = $('#name').val();    
 			var amt = $('#amount').val();            
-			if(name == "" || amt == "" || code == "" || price == ""){ 
+						if(name == "" || amt == "" || code == "" || price == ""){ 
 				$('#name').focus();
 				$.confirm({
 					title: 'พบข้อผิดพลาด',
@@ -730,8 +727,41 @@
 						formSubmit: {
 							text: 'ตกลง',
 							btnClass: 'btn-regis',
-							action: function () {
-							}
+							action: function () {}
+						}
+					}
+				});
+				return 0;
+			}
+			var numAmt = parseInt(amt, 10);
+			var numPrice = parseFloat(price);
+			if (isNaN(numAmt) || numAmt <= 0 || parseFloat(amt) !== numAmt) {
+				$('#amount').focus();
+				$.confirm({
+					title: 'พบข้อผิดพลาด',
+					content: 'จำนวนสินค้าต้องเป็นจำนวนเต็มบวกที่มากกว่า 0',
+					backgroundDismiss: true,
+					buttons: {
+						formSubmit: {
+							text: 'ตกลง',
+							btnClass: 'btn-regis',
+							action: function () { $('#amount').focus(); }
+						}
+					}
+				});
+				return 0;
+			}
+			if (isNaN(numPrice) || numPrice < 0) {
+				$('#price').focus();
+				$.confirm({
+					title: 'พบข้อผิดพลาด',
+					content: 'ราคาสินค้าต้องไม่ติดลบ',
+					backgroundDismiss: true,
+					buttons: {
+						formSubmit: {
+							text: 'ตกลง',
+							btnClass: 'btn-regis',
+							action: function () { $('#price').focus(); }
 						}
 					}
 				});
@@ -921,7 +951,7 @@
 			$("#btn-trash-"+arg).prop('hidden', true);
 			$("#btn-save-"+arg).prop('hidden', false);
 
-			$('#amount-'+arg).on("keyup input", function(){
+			$('#amount-'+arg).off('keyup input').on('keyup input', function(){
 				if(parseInt($("#amount-"+arg).val()) > parseInt(arr_data[arg].min)){
 					$.confirm({
 						title: 'เตือน',
@@ -1731,7 +1761,7 @@
         </nav>
 
       	<div class="container-fullwidth">
-      		<div id="head" class="row mgb-5" style="padding-left: 2%; padding-right: 2%;">
+      		<div id="head_info" class="row mgb-5" style="padding-left: 2%; padding-right: 2%;">
       		  <div class="col-2 text-center" style="color: #666;">วันที่</div>
       		  <div class="col-3 text-center" style="color: #666;">ลูกค้า</div>
 			  <div class="col-2 text-center" style="color: #666;">ขายจาก</div>
@@ -1772,7 +1802,7 @@
       	</div><hr style="width: 85%;">
       	
       	<div class="container-fullwidth">
-      		<div id="head" class="row mgb-5">
+      		<div id="head_cart" class="row mgb-5">
       		  <div class="col-2 text-center nopd">บาร์โค้ด</div>
       		  <div class="col-4 text-center">ชื่อสินค้า</div>
       		  <div class="col-1 text-center">จำนวน</div>

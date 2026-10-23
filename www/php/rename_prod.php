@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_staff_or_admin();
+
 include "db.php";
 $prod_id  = $_POST['prod_id'] ?? null;
     $name     = trim($_POST['name_prod'] ?? '');

@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_admin_or_owner();
+
 header("Content-Type: text/plain; charset=UTF-8");
 include "db.php";
 $indexes = [

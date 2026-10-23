@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_staff_or_admin();
+
 include "db.php";
     $prod_id  = isset($_POST['prod']) ? intval($_POST['prod']) : 0;
     $cost     = isset($_POST['cost']) ? floatval($_POST['cost']) : 0.0;

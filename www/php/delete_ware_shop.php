@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_admin_or_owner();
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('HTTP/1.1 405 Method Not Allowed'); exit; }  
     include "db.php";
     $id  = $_POST['id'];

@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 include "db.php";
 $imp_id = isset($_POST['imp_id']) ? intval($_POST['imp_id']) : 0;
 $output = array();

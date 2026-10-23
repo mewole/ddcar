@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_staff_or_admin();
+
 include "db.php";
 header("Content-Type: application/json; charset=UTF-8");
 

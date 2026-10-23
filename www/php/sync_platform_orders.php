@@ -1,9 +1,10 @@
 <?php
+include_once "auth_guard.php";
+require_staff_or_admin();
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, X-Extension-Request, Authorization");
 require_once "db.php";
-include_once "auth_guard.php";
-
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true) ?: $_POST;
 if (isset($_POST['payload'])) {
@@ -16,8 +17,7 @@ $is_ext = (!empty($_SERVER['HTTP_X_EXTENSION_REQUEST']) ||
            strpos($sync_source, 'order') !== false || 
            strpos($sync_source, 'page') !== false);
 if (!$is_ext && !is_logged_in()) {
-    require_login();
-}
+    }
 header("Content-Type: application/json; charset=utf-8");
 
 // Ensure Tables Exist with matching collation

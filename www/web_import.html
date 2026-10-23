@@ -1681,6 +1681,7 @@
       						<label class="font-weight-bold text-secondary mb-1" style="font-size: 0.88rem;"><i class="fas fa-store text-primary mr-1"></i> ร้านค้า / ผู้จำหน่าย (จาก) <span class="text-danger">*</span></label>
       						<input id="header_supplier" type="text" class="form-control form-control-sm font-weight-bold text-primary" placeholder="* พิมพ์หรือเลือกร้านค้า" list="header_supplier_datalist" autocomplete="off">
       						<datalist id="header_supplier_datalist"></datalist>
+<datalist id="supplier-datalist"></datalist>
       					</div>
 
       					<div class="col-lg-2 col-md-4 col-sm-6 mb-2 mb-lg-0">
@@ -2052,19 +2053,25 @@
 		}
 
 		function populateSupplierDatalist(data) {
-			var dl = $('#supplier-datalist');
-			dl.empty();
+			var dl1 = $('#supplier-datalist');
+			var dl2 = $('#header_supplier_datalist');
+			dl1.empty();
+			dl2.empty();
 			var seen = {};
 			if (data.history && data.history.length > 0) {
 				$.each(data.history, function(idx, item) {
 					seen[item.supplier] = true;
-					dl.append('<option value="' + item.supplier + '">ถูกสุด: ' + item.min_cost + ' ฿ (สั่งล่าสุด: ' + (item.last_date ? item.last_date.split(' ')[0] : '-') + ')</option>');
+					var opt = '<option value="' + item.supplier + '">ถูกสุด: ' + item.min_cost + ' ฿ (สั่งล่าสุด: ' + (item.last_date ? item.last_date.split(' ')[0] : '-') + ')</option>';
+					dl1.append(opt);
+					dl2.append(opt);
 				});
 			}
 			if (data.all_suppliers && data.all_suppliers.length > 0) {
 				$.each(data.all_suppliers, function(idx, sup) {
 					if (!seen[sup]) {
-						dl.append('<option value="' + sup + '">ร้านในระบบ</option>');
+						var opt2 = '<option value="' + sup + '">ร้านในระบบ</option>';
+						dl1.append(opt2);
+						dl2.append(opt2);
 					}
 				});
 			}

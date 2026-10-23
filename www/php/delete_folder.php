@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_admin_or_owner();
+
 include "db.php";
 $title = isset($_POST['title']) ? trim(mysqli_real_escape_string($conn, $_POST['title'])) : '';
 

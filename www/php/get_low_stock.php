@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 /**
  * get_low_stock.php
  * รายงานสินค้าใกล้หมด / ต่ำกว่าจุดสั่งซื้อซ้ำ (Reorder Point / min_amount)

@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_login();
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);

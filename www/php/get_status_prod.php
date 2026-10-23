@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 include "db.php";
     include_once "img_helper.php";
     header("Content-Type: application/json; charset=UTF-8");
@@ -14,6 +15,9 @@ include "db.php";
 
     $filter = isset($_POST['filter']) ? trim($_POST['filter']) : 'all';
     $search = isset($_POST['search']) ? mysqli_real_escape_string($conn, trim($_POST['search'])) : '';
+    $view_scope = isset($_POST['view_scope']) ? trim($_POST['view_scope']) : 'active_90';
+    $active_cond = "p.prod_id IN (SELECT DISTINCT soi.prod_id FROM sale_order_item soi JOIN sale_order so ON soi.order_id = so.order_id WHERE so.date_time >= DATE_SUB(CURDATE(), INTERVAL 90 DAY))";
+    $apply_active = ($view_scope === 'active_90' && empty($search));
 
     if ($is_rich) {
         // 1. คำนวณ KPI Stats ความเร็วสูง (<20ms)
@@ -26,7 +30,7 @@ include "db.php";
             'preorder_count' => 0
         ];
 
-        $q_st1 = mysqli_query($conn, "SELECT status, COUNT(*) AS c FROM product WHERE status != 'normal' GROUP BY status");
+        $q_st1 = mysqli_query($conn, "SELECT p.status, COUNT(*) AS c FROM product p WHERE p.status != 'normal' " . ($apply_active ? "AND ($active_cond) " : "") . "GROUP BY p.status");
         if ($q_st1) {
             while ($rst = mysqli_fetch_assoc($q_st1)) {
                 if ($rst['status'] == 'danger') $stats['danger_count'] = intval($rst['c']);
@@ -70,32 +74,32 @@ include "db.php";
                        ORDER BY p.prod_id DESC 
                        LIMIT $start, $limit";
         } else if ($filter === 'danger') {
-            $q_prod = "SELECT prod_id, prod_code, prod_name, prod_cost, min_amount, status 
-                       FROM product 
-                       WHERE status = 'danger' 
-                       ORDER BY prod_id DESC 
+            $q_prod = "SELECT p.prod_id, p.prod_code, p.prod_name, p.prod_cost, p.min_amount, p.status 
+                       FROM product p 
+                       WHERE p.status = 'danger' " . ($apply_active ? "AND ($active_cond) " : "") . "
+                       ORDER BY p.prod_id DESC 
                        LIMIT $start, $limit";
         } else if ($filter === 'warning') {
-            $q_prod = "SELECT prod_id, prod_code, prod_name, prod_cost, min_amount, status 
-                       FROM product 
-                       WHERE status = 'warning' 
-                       ORDER BY prod_id DESC 
+            $q_prod = "SELECT p.prod_id, p.prod_code, p.prod_name, p.prod_cost, p.min_amount, p.status 
+                       FROM product p 
+                       WHERE p.status = 'warning' " . ($apply_active ? "AND ($active_cond) " : "") . "
+                       ORDER BY p.prod_id DESC 
                        LIMIT $start, $limit";
         } else if ($filter === 'not_ordered') {
             $q_prod = "SELECT p.prod_id, p.prod_code, p.prod_name, p.prod_cost, p.min_amount, p.status 
                        FROM product p 
                        LEFT JOIN product_status_ext ext ON p.prod_id = ext.prod_id 
-                       WHERE p.status != 'normal' 
+                       WHERE p.status != 'normal' " . ($apply_active ? "AND ($active_cond) " : "") . "
                          AND (ext.is_ordered = 0 OR ext.is_ordered IS NULL) 
                          AND (ext.is_preorder = 0 OR ext.is_preorder IS NULL) 
                        ORDER BY p.prod_id DESC 
                        LIMIT $start, $limit";
         } else {
             // 'all': สินค้าที่สถานะผิดปกติทั้งหมด
-            $q_prod = "SELECT prod_id, prod_code, prod_name, prod_cost, min_amount, status 
-                       FROM product 
-                       WHERE status != 'normal' 
-                       ORDER BY prod_id DESC 
+            $q_prod = "SELECT p.prod_id, p.prod_code, p.prod_name, p.prod_cost, p.min_amount, p.status 
+                       FROM product p 
+                       WHERE p.status != 'normal' " . ($apply_active ? "AND ($active_cond) " : "") . "
+                       ORDER BY p.prod_id DESC 
                        LIMIT $start, $limit";
         }
 

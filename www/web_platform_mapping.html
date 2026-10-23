@@ -1148,7 +1148,7 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
 
       if (ch.indexOf('tiktok') !== -1) {
         if (idMatch) {
-          return 'https://seller-th.tiktok.com/product/edit/' + idMatch[1];
+          return 'https://www.tiktok.com/view/product/' + idMatch[1];
         }
         return 'https://seller-th.tiktok.com/product/manage?keyword=' + encodeURIComponent(searchWord);
       } else if (ch.indexOf('shopee') !== -1) {
@@ -1174,7 +1174,7 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       var channelName = item.channel_name || 'Platform';
       var badgeColor = item.badge_color || '#0284c7';
       // ONLY accept genuine CDN images starting with http:// or https:// for platform image
-      var platformImg = (item.image_url && (item.image_url.startsWith('http://') || item.image_url.startsWith('https://'))) ? item.image_url : '';
+      var platformImg = (item.image_url && (item.image_url.startsWith('http://') || item.image_url.startsWith('https://') || item.image_url.startsWith('img/'))) ? item.image_url : (item.matched_img || '');
       var platformUrl = getPlatformProductUrl(item);
       var matchedImg = item.matched_img || '';
       var matchedName = item.matched_prod_name || '';

@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 require_once "db.php";
 // 1. Table: platform_channels
 @mysqli_query($conn, "CREATE TABLE IF NOT EXISTS platform_channels (

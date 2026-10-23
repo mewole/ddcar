@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 include "db.php";
 header("Content-Type: text/html; charset=UTF-8");
 $bill_id = isset($_POST['bill_id']) ? mysqli_real_escape_string($conn, $_POST['bill_id']) : '';

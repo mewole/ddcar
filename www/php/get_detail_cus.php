@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 include "db.php";
 $cus_id = $_POST['cus_id'];  
 

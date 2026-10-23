@@ -222,17 +222,23 @@
       		}else if(localStorage.user_role == 'ดูคลังสินค้า'){
 				$('a[name="a-menu"]').click(false);
 			}
-			if(localStorage.arr_prod_st){
-				$("#main-ctn").prop('hidden', true);
-				$("#detail-ctn").prop('hidden', false).removeAttr('hidden').show();
-				var retrievedObject = localStorage.getItem('arr_prod_st');
-				var arr_data = JSON.parse(retrievedObject); 
-				for(var i = 0 ; i < arr_data.length ; i++){
-					prod_id = arr_data[i].prod_id;	
-					name = arr_data[i].name;
-					img = arr_data[i].img;				       
-					get_amt(prod_id,name,img);
-				}	
+			if(localStorage.arr_prod_st && localStorage.arr_prod_st !== "" && localStorage.arr_prod_st !== "undefined" && localStorage.arr_prod_st !== "null"){
+				try {
+					var retrievedObject = localStorage.getItem('arr_prod_st');
+					var arr_data = JSON.parse(retrievedObject); 
+					if (Array.isArray(arr_data)) {
+						$("#main-ctn").prop('hidden', true);
+						$("#detail-ctn").prop('hidden', false).removeAttr('hidden').show();
+						for(var i = 0 ; i < arr_data.length ; i++){
+							var p_id = arr_data[i].prod_id;	
+							var p_name = arr_data[i].name;
+							var p_img = arr_data[i].img;				       
+							get_amt(p_id, p_name, p_img);
+						}
+					}
+				} catch(e) {
+					console.warn('Error reading arr_prod_st:', e);
+				}
 				localStorage.arr_prod_st = "";			
 			}
 
@@ -260,12 +266,7 @@
 
 			$(document).off('click', '.btn-open-adjust').on('click', '.btn-open-adjust', function(e) {
 				e.preventDefault();
-				var $btn = $(this).closest('.btn-open-adjust');
-				var pid = $btn.attr('data-prod-id') || $btn.data('prod-id');
-				var pname = $btn.attr('data-prod-name') || $btn.data('prod-name') || $('#p-' + pid).text();
-				var pcode = $btn.attr('data-prod-code') || $btn.data('prod-code') || '';
-				var pimg = $('#img-' + pid).attr('src') || 'img/no_img.png';
-				openAdjustStockModal(pid, pname, pcode, pimg);
+				openAdjustStockModal(this);
 			});
 
 			// เช็คจำนวนสินค้าใกล้หมดเพื่อแสดง badge เตือน
@@ -446,7 +447,7 @@
 					img_html +
 					msg +
 					(canViewCost() ? '<div id="supplier-badge-' + prod_id + '" class="supplier-badge-wrap"></div>' : '') +
-					'<button type="button" class="btn btn-sm btn-outline-danger btn-block mt-3 font-weight-bold btn-open-adjust" id="btn-adj-'+prod_id+'" title="ตัดของชำรุด/ของหาย/ปรับสต๊อกโดยตรง">' +
+					'<button type="button" class="btn btn-sm btn-outline-danger btn-block mt-3 font-weight-bold btn-open-adjust" id="btn-adj-'+prod_id+'" data-toggle="modal" data-target="#AdjustStockModal" data-prod-id="'+prod_id+'" onclick="openAdjustStockModal(this); return false;" title="ตัดของชำรุด/ของหาย/ปรับสต๊อกโดยตรง">' +
 						'<i class="fas fa-minus-circle mr-1" style="pointer-events: none;"></i> ปรับลด / ตัดสต๊อก' +
 					'</button>' +
 				'</div>'
@@ -594,7 +595,7 @@
 			$('#edit-non-vat-stock').val('0');
 			$('#edit-total-stock-label').text('กำลังโหลด...');
 			$('#edit-bundle-tag').empty();
-			$('#edit-bundle-action-wrap').hide();
+			
 
 			// Fetch VAT & Stock & Pricing details
 			$.ajax({
@@ -1823,82 +1824,113 @@
 		// =========================================================
 		// Direct Stock Adjustment (Write-off / Damaged / Adjust)
 		// =========================================================
-		function openAdjustStockModal(prodId, prodName, prodCode, prodImg) {
-			$('#adj-modal-prod-id').val(prodId);
-			$('#adj-modal-prod-name').text(prodName);
-			$('#adj-modal-prod-code').text(prodCode ? ('SKU: ' + prodCode) : '');
-			$('#adj-modal-prod-img').attr('src', prodImg || 'img/no_img.png');
-			$('#adj-reason').val('').removeClass('is-invalid');
-			$('#adj-qty').val(1);
-			$('#adj-place-select').empty().append('<option value="">-- กำลังโหลดสถานที่... --</option>');
-			$('#adj-current-stock-info').text('-');
-			$('#adj-after-stock-info').text('-');
-			$('#btn-submit-adjust').prop('disabled', true);
-
-			var userName = localStorage.getItem('user_name') || localStorage.getItem('user_id') || 'พนักงาน';
-			$('#adj-user-display').text(userName);
-			var now = new Date();
-			var pad = function(n) { return (n < 10 ? '0' : '') + n; };
-			var nowStr = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ' น.';
-			$('#adj-time-display').text(nowStr);
-
-			$('#AdjustStockModal').modal('show');
-
-			$.ajax({
-				type: "POST",
-				url: "php/check_amt_prod.php",
-				data: { prod_id: prodId },
-				dataType: "json",
-				success: function(res) {
-					$('#adj-place-select').empty();
-					var validOptions = 0;
-					var firstStockedVal = '';
-					if (res && res.length > 0) {
-						$.each(res, function(i, item) {
-							var placeType = item.type || (item.ware_name ? 'ware' : 'shop');
-							var placeName = (placeType === 'ware') ? (item.ware_name || 'โกดัง ' + item.id) : (item.shop_name || 'หน้าร้าน ' + item.id);
-							var amt = parseInt(item.amount, 10) || 0;
-							var valStr = placeType + '-' + item.id;
-							validOptions++;
-							if (amt > 0 && !firstStockedVal) {
-								firstStockedVal = valStr;
-							}
-							var optLabel = (placeType === 'ware' ? '🏬 โกดัง: ' : '🏪 หน้าร้าน: ') + placeName + (amt > 0 ? (' (คงเหลือ ' + amt + ' ชิ้น)') : ' (คงเหลือ 0 ชิ้น)');
-							var $opt = $('<option></option>')
-								.val(valStr)
-								.text(optLabel)
-								.attr('data-place-type', placeType)
-								.attr('data-place-id', item.id)
-								.attr('data-place-name', placeName)
-								.attr('data-amount', amt)
-								.data('place-type', placeType)
-								.data('place-id', item.id)
-								.data('place-name', placeName)
-								.data('amount', amt);
-							if (amt <= 0) {
-								$opt.css('color', '#94a3b8');
-							}
-							$('#adj-place-select').append($opt);
-						});
+		window.openAdjustStockModal = function(targetOrId, prodName, prodCode, prodImg) {
+			try {
+				var prodId = targetOrId;
+				if (typeof targetOrId === 'object' && targetOrId !== null) {
+					var $el = $(targetOrId);
+					if (!$el.hasClass('btn-open-adjust')) {
+						$el = $el.closest('.btn-open-adjust');
 					}
-
-					if (validOptions === 0) {
-						$('#adj-place-select').append('<option value="">-- ไม่พบสถานที่ในระบบ --</option>');
-						$('#adj-current-stock-info').html('<span class="text-danger font-weight-bold">-</span>');
-						$('#adj-qty').prop('disabled', true).val(0);
-						$('#btn-submit-adjust').prop('disabled', true);
-					} else {
-						if (firstStockedVal) {
-							$('#adj-place-select').val(firstStockedVal);
-						}
-						updateAdjustStockCalculations();
-					}
-				},
-				error: function() {
-					$('#adj-place-select').html('<option value="">เกิดข้อผิดพลาดในการโหลดข้อมูล</option>');
+					prodId = $el.attr('data-prod-id') || $el.data('prod-id') || $el.closest('[id^="div-"]').attr('id').replace('div-', '');
+					prodName = prodName || $el.attr('data-prod-name') || $el.data('prod-name');
+					prodCode = prodCode || $el.attr('data-prod-code') || $el.data('prod-code');
 				}
-			});
-		}
+				prodId = parseInt(prodId, 10);
+				if (!prodId) {
+					console.error('Invalid prodId for openAdjustStockModal:', targetOrId);
+					return;
+				}
+
+				if (!prodName || prodName === "") {
+					prodName = $('#p-' + prodId).text() || $('#div-' + prodId).find('.prod-title-name').text() || ('สินค้า #' + prodId);
+				}
+				if (!prodCode || prodCode === "") {
+					prodCode = $('#btn-adj-' + prodId).attr('data-prod-code') || $('#i-' + prodId).data('prod-code') || $('#div-' + prodId).find('.code-text').text() || '';
+				}
+				if (!prodImg || prodImg === "") {
+					prodImg = $('#img-' + prodId).attr('src') || 'img/no_img.png';
+				}
+
+				$('#adj-modal-prod-id').val(prodId);
+				$('#adj-modal-prod-name').text(prodName);
+				$('#adj-modal-prod-code').text(prodCode ? ('SKU: ' + prodCode) : '');
+				$('#adj-modal-prod-img').attr('src', prodImg || 'img/no_img.png');
+				$('#adj-reason').val('').removeClass('is-invalid');
+				$('#adj-qty').val(1).prop('disabled', true);
+				$('#adj-place-select').empty().append('<option value="">-- กำลังโหลดสถานที่... --</option>');
+				$('#adj-current-stock-info').text('-');
+				$('#adj-after-stock-info').text('-');
+				$('#btn-submit-adjust').prop('disabled', true);
+
+				var userName = localStorage.getItem('user_name') || localStorage.getItem('user_id') || 'พนักงาน';
+				$('#adj-user-display').text(userName);
+				var now = new Date();
+				var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+				var nowStr = pad(now.getDate()) + '/' + pad(now.getMonth() + 1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ' น.';
+				$('#adj-time-display').text(nowStr);
+
+				// Ensure modal is open
+				$('#AdjustStockModal').modal('show');
+
+				$.ajax({
+					type: "POST",
+					url: "php/check_amt_prod.php",
+					data: { prod_id: prodId },
+					dataType: "json",
+					success: function(res) {
+						$('#adj-place-select').empty();
+						var validOptions = 0;
+						var firstStockedVal = '';
+						if (res && res.length > 0) {
+							$.each(res, function(i, item) {
+								var placeType = item.type || (item.ware_name ? 'ware' : 'shop');
+								var placeName = (placeType === 'ware') ? (item.ware_name || 'โกดัง ' + item.id) : (item.shop_name || 'หน้าร้าน ' + item.id);
+								var amt = parseInt(item.amount, 10) || 0;
+								var valStr = placeType + '-' + item.id;
+								validOptions++;
+								if (amt > 0 && !firstStockedVal) {
+									firstStockedVal = valStr;
+								}
+								var optLabel = (placeType === 'ware' ? '🏬 โกดัง: ' : '🏪 หน้าร้าน: ') + placeName + (amt > 0 ? (' (คงเหลือ ' + amt + ' ชิ้น)') : ' (คงเหลือ 0 ชิ้น)');
+								var $opt = $('<option></option>')
+									.val(valStr)
+									.text(optLabel)
+									.attr('data-place-type', placeType)
+									.attr('data-place-id', item.id)
+									.attr('data-place-name', placeName)
+									.attr('data-amount', amt)
+									.data('place-type', placeType)
+									.data('place-id', item.id)
+									.data('place-name', placeName)
+									.data('amount', amt);
+								if (amt <= 0) {
+									$opt.css('color', '#94a3b8');
+								}
+								$('#adj-place-select').append($opt);
+							});
+						}
+
+						if (validOptions === 0) {
+							$('#adj-place-select').append('<option value="">-- ไม่พบสถานที่ในระบบ --</option>');
+							$('#adj-current-stock-info').html('<span class="text-danger font-weight-bold">-</span>');
+							$('#adj-qty').prop('disabled', true).val(0);
+							$('#btn-submit-adjust').prop('disabled', true);
+						} else {
+							if (firstStockedVal) {
+								$('#adj-place-select').val(firstStockedVal);
+							}
+							updateAdjustStockCalculations();
+						}
+					},
+					error: function() {
+						$('#adj-place-select').html('<option value="">เกิดข้อผิดพลาดในการโหลดข้อมูล</option>');
+					}
+				});
+			} catch(e) {
+				console.error('Error in openAdjustStockModal:', e);
+			}
+		};
 
 		function updateAdjustStockCalculations() {
 			var $selected = $('#adj-place-select option:selected');

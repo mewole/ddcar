@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_staff_or_admin();
+
 include "db.php";
 $input  = $_POST['JSON'];
     $obj = json_decode($input,true); 
@@ -22,6 +23,21 @@ $input  = $_POST['JSON'];
     $vat_type = isset($_POST['vat_type']) ? mysqli_real_escape_string($conn, trim($_POST['vat_type'])) : (isset($_POST['vat']) && $_POST['vat'] == 'vat' ? 'vat' : 'no_vat');
     $vat_amount = ($vat_type === 'vat') ? round(floatval($_POST['total'] ?? 0) * 7 / 107, 2) : 0.00;
     $b_to = $_POST['ware_id_to'];
+    // ตรวจสอบความถูกต้องของรายการสินค้าฝั่ง Server (ป้องกันจำนวนติดลบ, 0, หรือราคาไม่ถูกต้อง)
+    if (!is_array($obj) || empty($obj)) {
+        echo "fail:ไม่มีรายการสินค้า";
+        exit;
+    }
+    foreach ($obj as $checkItem) {
+        $chk_pid = isset($checkItem['prod_id']) ? intval($checkItem['prod_id']) : 0;
+        $chk_amt = isset($checkItem['amt']) ? floatval($checkItem['amt']) : 0;
+        $chk_price = isset($checkItem['price']) ? floatval($checkItem['price']) : -1;
+        if ($chk_pid <= 0 || $chk_amt <= 0 || $chk_price < 0) {
+            echo "fail:ข้อมูลสินค้าไม่ถูกต้อง (จำนวนต้องมากกว่า 0 และราคาไม่ติดลบ)";
+            exit;
+        }
+    }
+
 
     mysqli_begin_transaction($conn);
     if($b_to == 0){

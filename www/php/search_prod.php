@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 /**
  * search_prod.php
  * ค้นหาสินค้าจากชื่อหรือรหัสสินค้า (ต้นฉบับเสถียร รองรับทุกหน้าในระบบ)

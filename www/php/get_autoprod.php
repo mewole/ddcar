@@ -1,4 +1,7 @@
 <?php
+include_once "auth_guard.php";
+require_login();
+
 /**
  * get_autoprod.php
  * คืนค่ารายการสินค้าทั้งหมดสำหรับ Autocomplete ในหน้าขายและจัดการสต็อก
@@ -13,8 +16,6 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: private, no-cache, no-store, must-revalidate');
 
 include "db.php";
-include_once "auth_guard.php";
-
 // ดึงเฉพาะรหัส ชื่อ และราคาขาย (ปลีก/ส่ง) ไม่ส่งต้นทุนออกไปเด็ดขาด
 $query = "SELECT prod_id, prod_name, prod_code, prod_price, prod_pricesend FROM product";     
 $result = mysqli_query($conn, $query);

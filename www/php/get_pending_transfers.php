@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 include "db.php";
 header('Content-Type: application/json; charset=utf-8');
 

@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, X-Requested-With, X-User-Id");
 header("Content-Type: text/html; charset=UTF-8");

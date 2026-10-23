@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 /**
  * get_suppliers.php
  * คืนค่ารายชื่อร้านค้า/ซัพพลายเออร์ทั้งหมดในระบบ สำหรับ Autocomplete และ Datalist

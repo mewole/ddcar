@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_staff_or_admin();
+
 include "db.php";
 // 1. กรองข้อมูลป้องกัน SQL Injection + Trim ตัดเว้นวรรคหน้า-หลังออก
     $title  = isset($_POST['title']) ? trim(mysqli_real_escape_string($conn, $_POST['title'])) : '';    

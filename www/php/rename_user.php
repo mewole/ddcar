@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_admin_or_owner();
+
 include "db.php";
 $user_id  = $_POST['user_id'];
     $user_name  = $_POST['name'];

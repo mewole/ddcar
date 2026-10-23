@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_login();
+
 /**
  * get_sales_analytics.php
  * วิเคราะห์สินค้าขายดี (Top 20 Best Sellers) และ สินค้าค้างสต๊อก/ไม่เคลื่อนไหว (Dead Stock)

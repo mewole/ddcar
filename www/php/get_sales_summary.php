@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_login();
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 include "db.php";
@@ -35,6 +36,7 @@ function get_top_products($conn, $from_dt, $to_dt, $txt_cancel, $cus_id = null, 
               INNER JOIN product p ON soi.prod_id = p.prod_id
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
+                AND s.payment_type != 'ตัดไม่คิดเงิน'
                 $where_cus
               GROUP BY p.prod_id, p.prod_name
               ORDER BY total_qty DESC, total_revenue DESC
@@ -68,6 +70,7 @@ function get_payment_breakdown($conn, $from_dt, $to_dt, $txt_cancel, $cus_id = n
               FROM sale_order s
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
+                AND s.payment_type != 'ตัดไม่คิดเงิน'
                 $where_cus
               GROUP BY payment_type
               ORDER BY total_sales DESC";
@@ -93,6 +96,7 @@ function get_hourly_breakdown($conn, $from_dt, $to_dt, $txt_cancel) {
               FROM sale_order s
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
+                AND s.payment_type != 'ตัดไม่คิดเงิน'
               GROUP BY HOUR(s.date_time)
               ORDER BY sale_hour ASC";
     $res = mysqli_query($conn, $q_sales);
@@ -120,6 +124,7 @@ function get_hourly_breakdown($conn, $from_dt, $to_dt, $txt_cancel) {
               INNER JOIN product pr ON soi.prod_id = pr.prod_id
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
+                AND s.payment_type != 'ตัดไม่คิดเงิน'
               GROUP BY HOUR(s.date_time)";
     $res_c = mysqli_query($conn, $q_cost);
     if ($res_c && mysqli_num_rows($res_c) > 0) {
@@ -201,6 +206,7 @@ if ($action === 'daily') {
               LEFT JOIN customer c ON s.customer_id = c.cus_id
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
+                AND s.payment_type != 'ตัดไม่คิดเงิน'
               ORDER BY s.order_id DESC";
 
     $result = mysqli_query($conn, $query);
@@ -240,16 +246,34 @@ if ($action === 'daily') {
                 $cost_map[intval($rc['order_id'])] = floatval($rc['total_cost']);
             }
         }
+        $total_writeoff_cost = 0;
+        $total_writeoff_bills = 0;
+        $q_w = mysqli_query($conn, "SELECT COUNT(DISTINCT s.order_id) AS cnt, SUM(COALESCE(soi.prod_amount, 0) * COALESCE(pr.prod_cost, 0)) AS cost FROM sale_order s STRAIGHT_JOIN sale_order_item soi ON s.order_id = soi.order_id INNER JOIN product pr ON soi.prod_id = pr.prod_id WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt' AND s.order_number NOT LIKE '%$txt_cancel%' AND TRIM(s.payment_type) LIKE '%ตัดไม่คิดเงิน%'");
+        if ($q_w && $rw = mysqli_fetch_assoc($q_w)) {
+            $total_writeoff_cost = floatval($rw['cost']);
+            $total_writeoff_bills = intval($rw['cnt']);
+        }
         foreach ($bills as &$b) {
             $oid = $b['order_id'];
             $c = isset($cost_map[$oid]) ? $cost_map[$oid] : 0;
-            $p = ($b['total_price'] == 0) ? 0 : round($b['total_price'] - $c, 2);
+            $is_writeoff = ($b['payment_type'] === 'ตัดไม่คิดเงิน' || (floatval($b['total_price']) == 0 && ($b['payment_type'] === 'ตัดไม่คิดเงิน' || (isset($b['cus_name']) && strpos($b['cus_name'], 'ตัด') !== false))));
             $b['cost'] = $c;
-            $b['profit'] = $p;
-            $total_cost += $c;
-            $total_profit += $p;
+            $b['is_writeoff'] = $is_writeoff;
+            if ($is_writeoff) {
+                $b['profit'] = 0;
+                $total_writeoff_cost += $c;
+                $total_writeoff_bills++;
+                $total_sales -= $b['total_price'];
+                $total_bills--;
+            } else {
+                $p = round($b['total_price'] - $c, 2);
+                $b['profit'] = $p;
+                $total_cost += $c;
+                $total_profit += $p;
+            }
         }
         unset($b);
+        $total_bills = max(0, $total_bills);
     }
 
     $avg_per_bill = ($total_bills > 0) ? round($total_sales / $total_bills, 2) : 0;
@@ -259,6 +283,7 @@ if ($action === 'daily') {
     $pay_map = array();
     $hour_map = array();
     foreach ($bills as $b) {
+        if (!empty($b['is_writeoff'])) continue;
         // Payment
         $pt = !empty(trim($b['payment_type'])) ? trim($b['payment_type']) : 'ไม่ระบุ';
         if (!isset($pay_map[$pt])) {
@@ -338,7 +363,9 @@ if ($action === 'daily') {
             'total_profit' => round($total_profit, 2),
             'total_bills' => $total_bills,
             'avg_per_bill' => $avg_per_bill,
-            'margin_pct' => $margin_pct
+            'margin_pct' => $margin_pct,
+            'writeoff_cost' => round($total_writeoff_cost, 2),
+            'writeoff_bills' => $total_writeoff_bills
         ),
         'hourly_breakdown' => $hourly_breakdown,
         'top_products' => $top_products,
@@ -376,6 +403,7 @@ if ($action === 'monthly') {
               FROM sale_order s
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
+                AND s.payment_type != 'ตัดไม่คิดเงิน'
               GROUP BY DATE(s.date_time)
               ORDER BY sale_date ASC";
     $res_sales = mysqli_query($conn, $q_sales);
@@ -396,6 +424,7 @@ if ($action === 'monthly') {
               INNER JOIN product pr ON soi.prod_id = pr.prod_id
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
+                AND s.payment_type != 'ตัดไม่คิดเงิน'
               GROUP BY DATE(s.date_time)";
     $res_cost = mysqli_query($conn, $q_cost);
     if ($res_cost && mysqli_num_rows($res_cost) > 0) {
@@ -506,6 +535,7 @@ if ($action === 'yearly') {
               FROM sale_order s
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
+                AND s.payment_type != 'ตัดไม่คิดเงิน'
               GROUP BY MONTH(s.date_time)
               ORDER BY sale_month ASC";
     $res_sales = mysqli_query($conn, $q_sales);
@@ -526,6 +556,7 @@ if ($action === 'yearly') {
               INNER JOIN product pr ON soi.prod_id = pr.prod_id
               WHERE s.date_time BETWEEN '$from_dt' AND '$to_dt'
                 AND s.order_number NOT LIKE '%$txt_cancel%'
+                AND s.payment_type != 'ตัดไม่คิดเงิน'
               GROUP BY MONTH(s.date_time)";
     $res_cost = mysqli_query($conn, $q_cost);
     if ($res_cost && mysqli_num_rows($res_cost) > 0) {

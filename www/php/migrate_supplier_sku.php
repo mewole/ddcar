@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_admin_or_owner();
+
 /**
  * migrate_supplier_sku.php
  * Migration script for Supplier Header and Supplier SKU Mapping

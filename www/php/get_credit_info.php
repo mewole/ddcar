@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_login();
+
 include "db.php";
 $credit_id = $_POST['credit_id'];
     $txt = "(cancel)";

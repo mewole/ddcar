@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_admin_or_owner();
+
 /**
  * migrate_adjustment.php
  * Ensure stock_adjustment table exists in ddcar database

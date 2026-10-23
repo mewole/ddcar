@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_admin_or_owner();
+
 ini_set('memory_limit', '512M');
 set_time_limit(180);
 

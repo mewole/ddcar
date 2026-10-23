@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน']);
+require_admin_or_owner();
+
 /**
  * backup_db.php
  * ระบบสำรองฐานข้อมูล MySQL อัตโนมัติ (Automated Backup & Retention Policy)

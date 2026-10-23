@@ -1,10 +1,10 @@
 <?php
+include_once "auth_guard.php";
+
 /**
  * logout.php
  * ทำลาย Session บนเซิร์ฟเวอร์ และล้าง Session Cookie อย่างปลอดภัย
  */
-include_once "auth_guard.php";
-
 $_SESSION = [];
 
 if (ini_get("session.use_cookies")) {

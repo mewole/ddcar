@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_staff_or_admin();
+
 include "db.php";
 $cus_id  = $_POST['cus_id'];
     $total  = $_POST['total']; 

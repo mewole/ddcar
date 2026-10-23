@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_staff_or_admin();
+
 include "db.php";
 $id  = $_POST['id'];
     $type  = $_POST['type'];

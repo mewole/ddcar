@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 require_once "db.php";
 header("Content-Type: application/json; charset=utf-8");
 
@@ -35,9 +36,24 @@ $channel_meta = [
     ]
 ];
 
-$cur_channel = $channel_meta[$channel_code] ?? $channel_meta['shopee_kingkong'];
-$target_cus_id = intval($cur_channel['cus_id']);
-$target_cus_name = mysqli_real_escape_string($conn, $cur_channel['cus_name']);
+$is_all_channels = ($channel_code === 'all');
+$all_cus_ids = [131, 133, 136, 466];
+$all_cus_list = implode(',', $all_cus_ids);
+
+if ($is_all_channels) {
+    $cur_channel = [
+        'name' => 'รวมทุกช่องทาง',
+        'cus_id' => 0,
+        'cus_name' => 'รวมทุกช่องทาง',
+        'platform' => 'all'
+    ];
+    $target_cus_id = 0;
+    $target_cus_name = 'รวมทุกช่องทาง';
+} else {
+    $cur_channel = $channel_meta[$channel_code] ?? $channel_meta['shopee_kingkong'];
+    $target_cus_id = intval($cur_channel['cus_id']);
+    $target_cus_name = mysqli_real_escape_string($conn, $cur_channel['cus_name']);
+}
 
 // Ensure tables exist
 @mysqli_query($conn, "CREATE TABLE IF NOT EXISTS platform_orders (
@@ -88,7 +104,7 @@ $target_cus_name = mysqli_real_escape_string($conn, $cur_channel['cus_name']);
 // 1. Get Platform Orders for this date
 $sql_p_ord = "SELECT COUNT(*) as ord_cnt, COALESCE(SUM(items_count), 0) as item_cnt, COALESCE(SUM(total_amount), 0) as total_amt
               FROM platform_orders 
-              WHERE channel_code = '$channel_code' 
+              WHERE " . ($is_all_channels ? "1=1" : "channel_code = '$channel_code'") . " 
                 AND (DATE(order_date) = '$date' OR DATE(created_at) = '$date')";
 $res_p_ord = mysqli_query($conn, $sql_p_ord);
 $row_p_ord = $res_p_ord ? mysqli_fetch_assoc($res_p_ord) : ['ord_cnt' => 0, 'item_cnt' => 0, 'total_amt' => 0];
@@ -102,7 +118,7 @@ $sql_p_items = "SELECT i.*, m.target_sku as mapped_sku, p.prod_id as found_prod_
                 FROM platform_order_items i
                 LEFT JOIN platform_sku_mapping m ON (i.channel_code = m.channel_code AND i.platform_sku = m.platform_sku)
                 LEFT JOIN product p ON (m.prod_id = p.prod_id OR (i.target_sku != '' AND i.target_sku = p.prod_code))
-                WHERE i.channel_code = '$channel_code' 
+                WHERE " . ($is_all_channels ? "1=1" : "i.channel_code = '$channel_code'") . " 
                   AND (DATE(i.created_at) = '$date' OR EXISTS (SELECT 1 FROM platform_orders o WHERE o.order_sn = i.order_sn AND DATE(o.order_date) = '$date'))
                 ORDER BY i.match_status ASC, i.id DESC";
 $res_p_items = mysqli_query($conn, $sql_p_items);
@@ -176,13 +192,14 @@ if ($res_p_items) {
 }
 
 // 3. Get DDCar Sales cut for this customer on this date
-// Matches by cus_id OR cus_name
+// Matches by cus_id OR cus_name (or all online customer IDs when channel=all)
+$where_cus = $is_all_channels ? "s.customer_id IN ($all_cus_list)" : "(s.customer_id = $target_cus_id OR c.cus_name LIKE '%$target_cus_name%')";
 $sql_dd_bills = "SELECT s.order_id, s.order_number, s.total_price, s.date_time,
                         COUNT(i.item_id) as items_cnt, COALESCE(SUM(i.prod_amount), 0) as total_qty
                  FROM sale_order s
                  LEFT JOIN customer c ON s.customer_id = c.cus_id
                  LEFT JOIN sale_order_item i ON s.order_id = i.order_id
-                 WHERE (s.customer_id = $target_cus_id OR c.cus_name LIKE '%$target_cus_name%')
+                 WHERE $where_cus
                    AND DATE(s.date_time) = '$date'
                    AND s.order_number NOT LIKE '%(cancel)%'
                  GROUP BY s.order_id";
@@ -201,7 +218,8 @@ if ($res_dd_bills) {
 }
 
 // 4. Get Last Sync Time
-$q_last = mysqli_query($conn, "SELECT synced_at FROM platform_sync_logs WHERE channel_code = '$channel_code' ORDER BY id DESC LIMIT 1");
+$sync_where = $is_all_channels ? "" : "WHERE channel_code = '$channel_code'";
+$q_last = mysqli_query($conn, "SELECT synced_at FROM platform_sync_logs $sync_where ORDER BY id DESC LIMIT 1");
 $last_synced_at = ($q_last && mysqli_num_rows($q_last) > 0) ? mysqli_fetch_assoc($q_last)['synced_at'] : null;
 
 echo json_encode([

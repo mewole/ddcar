@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_staff_or_admin();
+
 require_once "db.php";
 @mysqli_report(MYSQLI_REPORT_OFF);
 header("Content-Type: application/json; charset=utf-8");

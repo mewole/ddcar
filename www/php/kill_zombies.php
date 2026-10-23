@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_role(['เจ้าของร้าน', 'แอดมิน']);
+require_admin_or_owner();
+
 include "db.php";
 $zombies = [226059, 226061, 226064, 226066, 226107];
 foreach ($zombies as $zid) {

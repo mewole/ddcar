@@ -1,5 +1,8 @@
 <?php
-    include "db.php";   
+include_once "auth_guard.php";
+require_login();
+
+include "db.php";   
   
     $sql = "SELECT url,version FROM version";
     $result = mysqli_query($conn, $sql);

@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 ini_set('memory_limit', '512M');
     include "db.php";
 // 1. รับค่าและตัดเว้นวรรค

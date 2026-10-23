@@ -1,8 +1,9 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
-require_login();
-    header("Content-Type: application/json; charset=UTF-8");
+require_admin_or_owner();
+
+include "db.php";
+header("Content-Type: application/json; charset=UTF-8");
 
     $version = isset($_REQUEST['version']) ? trim($_REQUEST['version']) : '';
     $url = isset($_REQUEST['url']) ? trim($_REQUEST['url']) : '';

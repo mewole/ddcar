@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 /**
  * search_cus.php
  * ค้นหาข้อมูลลูกค้าสำหรับหน้าขายและจัดการระบบ (web_sale.html, select_cus.html)

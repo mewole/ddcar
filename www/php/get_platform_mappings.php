@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 require_once "db.php";
 header("Content-Type: application/json; charset=utf-8");
 header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
@@ -36,26 +37,32 @@ $where_sql = implode(" AND ", $where);
 $count_res = mysqli_query($conn, "SELECT COUNT(*) as total FROM platform_sku_mapping m WHERE $where_sql");
 $total_rows = $count_res ? intval(mysqli_fetch_assoc($count_res)['total']) : 0;
 
-// Query items
-$sql = "SELECT m.*, c.channel_name, c.platform_type, c.badge_color, c.customer_name as channel_customer,
-               p.prod_id as matched_prod_id, p.prod_name as matched_prod_name, p.prod_price as matched_price,
-               CASE WHEN p.img LIKE 'img/%' THEN p.img WHEN LENGTH(p.img) < 200 THEN p.img ELSE '' END as matched_img
+// High-speed 2-step lookup: avoids cross-collation join table scan
+$sql = "SELECT m.*, c.channel_name, c.platform_type, c.badge_color, c.customer_name as channel_customer
         FROM platform_sku_mapping m
         LEFT JOIN platform_channels c ON m.channel_code = c.channel_code
-        LEFT JOIN product p ON (m.target_sku != '' AND m.target_sku = p.prod_code)
         WHERE $where_sql
         ORDER BY (m.status = 'unmapped') DESC, m.id DESC
         LIMIT $offset, $limit";
 
 $res = mysqli_query($conn, $sql);
 $items = [];
-$prod_ids = [];
+$target_skus = [];
 
 if ($res) {
     while ($row = mysqli_fetch_assoc($res)) {
-        $pid = intval($row['matched_prod_id']);
-        if ($pid > 0) {
-            $prod_ids[] = $pid;
+        $sku = trim($row['target_sku'] ?? '');
+        if (!empty($sku)) {
+            $target_skus[] = "'" . mysqli_real_escape_string($conn, $sku) . "'";
+        }
+
+        // Format TikTok product URL
+        $prod_url = $row['product_url'] ?? '';
+        if (strpos($prod_url, 'seller-th.tiktok.com/product/edit/') !== false) {
+            preg_match('/edit\/([0-9]+)/', $prod_url, $t_match);
+            if (!empty($t_match[1])) {
+                $prod_url = 'https://www.tiktok.com/view/product/' . $t_match[1];
+            }
         }
 
         $items[] = [
@@ -67,16 +74,16 @@ if ($res) {
             "platform_sku" => $row['platform_sku'],
             "platform_name" => $row['platform_name'],
             "image_url" => $row['image_url'] ?? '',
-            "product_url" => $row['product_url'] ?? '',
+            "product_url" => $prod_url,
             "mapping_type" => $row['mapping_type'],
             "target_sku" => $row['target_sku'],
             "bundle_json" => $row['bundle_json'],
             "vat_type" => $row['vat_type'],
             "status" => $row['status'],
-            "matched_prod_id" => $pid,
-            "matched_prod_name" => $row['matched_prod_name'] ?: '',
-            "matched_img" => $row['matched_img'] ?: '',
-            "matched_price" => floatval($row['matched_price']),
+            "matched_prod_id" => 0,
+            "matched_prod_name" => '',
+            "matched_img" => '',
+            "matched_price" => 0.0,
             "total_stock" => 0,
             "bundle_components" => [],
             "bundle_available_stock" => null
@@ -84,7 +91,52 @@ if ($res) {
     }
 }
 
-// Ultra-fast Batch Stock Query for found products
+// Step 2: Fetch matched products via indexed IN query (< 5ms)
+$prod_map = [];
+$prod_ids = [];
+if (!empty($target_skus)) {
+    $sku_list = implode(',', array_unique($target_skus));
+    $q_p = mysqli_query($conn, "SELECT prod_id, prod_code, prod_name, prod_price,
+            CASE WHEN img LIKE 'img/%' THEN img WHEN LENGTH(img) < 200 THEN img ELSE '' END as matched_img
+            FROM product WHERE prod_code IN ($sku_list)");
+    if ($q_p) {
+        while ($p = mysqli_fetch_assoc($q_p)) {
+            $prod_map[$p['prod_code']] = $p;
+            $prod_ids[] = intval($p['prod_id']);
+        }
+    }
+}
+
+// Attach matched product details
+$img_dir = __DIR__ . '/../img/products';
+foreach ($items as &$it) {
+    $tsku = $it['target_sku'];
+    if (!empty($tsku) && isset($prod_map[$tsku])) {
+        $p = $prod_map[$tsku];
+        $it['matched_prod_id'] = intval($p['prod_id']);
+        $it['matched_prod_name'] = $p['prod_name'] ?: '';
+        $it['matched_price'] = floatval($p['prod_price']);
+
+        // Check product image on disk
+        $m_img = $p['matched_img'];
+        if (empty($m_img)) {
+            if (file_exists($img_dir . '/' . $p['prod_id'] . '.jpg')) {
+                $m_img = 'img/products/' . $p['prod_id'] . '.jpg';
+            } else if (file_exists($img_dir . '/' . $p['prod_id'] . '.png')) {
+                $m_img = 'img/products/' . $p['prod_id'] . '.png';
+            }
+        }
+        $it['matched_img'] = $m_img;
+
+        // Fallback: If image_url is empty, use DDCar product image
+        if (empty($it['image_url']) && !empty($m_img)) {
+            $it['image_url'] = $m_img;
+        }
+    }
+}
+unset($it);
+
+// Ultra-fast Batch Stock Query for found products (< 10ms)
 if (!empty($prod_ids)) {
     $pid_str = implode(',', array_unique($prod_ids));
     $stock_map = [];

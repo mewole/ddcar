@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_admin_or_owner();
+
 /**
  * save_stock_adjustment.php
  * Direct stock deduction/adjustment (Write-off / Damaged / Count Correction)

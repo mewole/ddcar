@@ -1,6 +1,7 @@
 <?php
 include_once "auth_guard.php";
 require_login();
+
 include "db.php";
 $sql = "SELECT status FROM bell"; 
     $result = mysqli_query($conn, $sql);    
