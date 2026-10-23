@@ -88,9 +88,13 @@
         },                       
         success: function(data){ 
           $(".overlay").prop('hidden', true);  
-          var obj = jQuery.parseJSON(data); 
-          credit_num = obj[0].credit_num;
-          cus_name = obj[0].cus_name;
+          var obj = (window.safeParseJSON ? window.safeParseJSON(data) : null) || (function(){ try { return JSON.parse(data); } catch(e){ return null; } })(); 
+          if (!obj || !Array.isArray(obj) || obj.length === 0) {
+            $('#h5-title').text('ไม่พบข้อมูลเครดิต');
+            return;
+          }
+          credit_num = obj[0].credit_num || '';
+          cus_name = obj[0].cus_name || '';
           var c = 1;
           $('#h5-title').text(cus_name);          
           $.each(obj, function(i, field){
@@ -189,8 +193,12 @@
             }
           }         
           $('#net').text("รวมทั้งสิ้น : " +sum);          
-        }               
-      });
+        },
+        error: function(xhr, status, error) {
+          $(".overlay").prop('hidden', true);
+          $('#h5-title').text('เกิดข้อผิดพลาด');
+          $('#myUL').append('<li class="text-center text-danger my-4"><p>ไม่สามารถดึงข้อมูลเครดิตได้ (' + (error || status) + ')</p></li>');
+        }
     });
 
     function decimalWithComma(num){

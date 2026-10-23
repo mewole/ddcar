@@ -75,38 +75,54 @@
         },             
         success: function(data){  
           $(".overlay").prop('hidden', true);
-          var obj = jQuery.parseJSON(data); 
-          if (!obj || obj.length === 0) return;
+          var obj = (window.safeParseJSON ? window.safeParseJSON(data) : null) || (function(){ try { return JSON.parse(data); } catch(e){ return null; } })(); 
+          if (!obj || !Array.isArray(obj) || obj.length === 0) {
+            $('#h5-title').text('ไม่พบข้อมูลรายการ');
+            return;
+          }
           originalTranData = JSON.parse(JSON.stringify(obj));
 
-          $('#h5-title').text(obj[0].tran_number);
-          $('#warehouse').text(obj[0].shop_name);
-          var txt = obj[0].date_time.split(" ");
-          var txt2 = txt[0].split("-");
-          var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2) + " " + txt[1].substr(0,5);
-          $('#date').text(date);
+          $('#h5-title').text(obj[0].tran_number || '');
+          $('#warehouse').text(obj[0].shop_name || '');
+          var dt = obj[0].date_time || '';
+          if (dt && dt.indexOf(' ') !== -1) {
+            var txt = dt.split(" ");
+            var txt2 = txt[0].split("-");
+            var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2) + " " + txt[1].substr(0,5);
+            $('#date').text(date);
+          }
 
           ware_id_o = obj[0].shop_id;
           ware_id = obj[0].shop_id;
           arr = [];
+          var hasItems = false;
           $.each(obj, function(i, field){
-            var idx = i + 1;
-            $('#in-ctn').append('<div id="prod-'+idx+'" class="row mgemo5">'+
-              '<div class="col-1 text-center" ">' +
-                '<p id="amt-'+idx+'" class="amount">'+field.amount+'</p>' +
-              '</div>' +
-              '<div class="col-7 text-center no-pd">' +
-              '<p id="name-'+idx+'">'+field.prod_name+'</p>' +
-              '</div>' +
-              '<div class="col-2 col-@">' +
-              '<p id="cost-'+idx+'">'+field.tran_cost+'</p>' +
-              '</div>' +
-              '<div class="col-2 text-right no-pd">' +
-              '<p id="total-'+idx+'">'+field.amount*field.tran_cost+'</p>' +
-              '</div>' +
-              '</div>');
-            arr.push(field.amount);
+            if (field.item_id && field.item_id !== '0' && field.item_id !== 0 && field.prod_name) {
+              hasItems = true;
+              var idx = arr.length + 1;
+              var pName = field.prod_name || 'สินค้า (ลบแล้ว)';
+              var pAmt = parseFloat(field.amount) || 0;
+              var pCost = parseFloat(field.tran_cost) || 0;
+              $('#in-ctn').append('<div id="prod-'+idx+'" class="row mgemo5">'+
+                '<div class="col-1 text-center" ">' +
+                  '<p id="amt-'+idx+'" class="amount">'+pAmt+'</p>' +
+                '</div>' +
+                '<div class="col-7 text-center no-pd">' +
+                '<p id="name-'+idx+'">'+pName+'</p>' +
+                '</div>' +
+                '<div class="col-2 col-@">' +
+                '<p id="cost-'+idx+'">'+pCost+'</p>' +
+                '</div>' +
+                '<div class="col-2 text-right no-pd">' +
+                '<p id="total-'+idx+'">'+(pAmt*pCost)+'</p>' +
+                '</div>' +
+                '</div>');
+              arr.push(pAmt);
+            }
           });
+          if (!hasItems) {
+            $('#in-ctn').append('<div class="row my-4"><div class="col-12 text-center text-muted font-italic"><p>(ไม่มีรายการสินค้า หรือสินค้าถูกยกเลิก/ลบแล้ว)</p></div></div>');
+          }
           $('#in-ctn').append('<div class="row"><hr style="margin-top: 1em;">'+
           '<div class="col-4 text-center" style="padding-left: 0;"><h5 class="bold">รวม</h5></div>'+
           '<div class="col-7 text-right" style="padding-right: 0;"><h5 id="sum" class="bold"></h5></div>'+
@@ -117,8 +133,13 @@
           '</div>'+
         '</div>');   
             
-          $('#sum').text(obj[0].total_tran);
-          $('#user').text("ผู้ทำรายการ: " + obj[0].user_name);                                          
+          $('#sum').text(obj[0].total_tran || '0');
+          $('#user').text("ผู้ทำรายการ: " + (obj[0].user_name || '-'));                                          
+        },
+        error: function(xhr, status, error) {
+          $(".overlay").prop('hidden', true);
+          $('#h5-title').text('เกิดข้อผิดพลาด');
+          $('#in-ctn').append('<div class="row my-4"><div class="col-12 text-center text-danger"><p>ไม่สามารถดึงข้อมูลรายการได้ (' + (error || status) + ')</p></div></div>');
         }               
       });  
     });   
@@ -382,8 +403,8 @@
     </div>
 
     <div class="row fixed-top" style="margin-top: 4.5em;">
-      <div class="col-12 text-center"><h5 id="warehouse">โกดัง A</h5></div>
-      <div class="col-12 text-center"><h5 id="date">12/01/18 15:00</h5></div>
+      <div class="col-12 text-center"><h5 id="warehouse">-</h5></div>
+      <div class="col-12 text-center"><h5 id="date">-</h5></div>
       <hr>
       <div class="col-12 text-center"><h5 class="underline">รายการ</h5></div>
     </div>
