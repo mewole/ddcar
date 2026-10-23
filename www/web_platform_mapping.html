@@ -960,7 +960,7 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
   </div>
 
   <!-- Central Unified Navbar Script -->
-  <script type="text/javascript" src="js/navbar.js?v=3.0"></script>
+  <script type="text/javascript" src="js/navbar.js?v=3.5"></script>
 
   <script>
     var currentChannel = 'all';
@@ -1133,25 +1133,33 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
     }
 
     function getPlatformProductUrl(item) {
-      if (item.product_url && item.product_url.startsWith('http')) {
-        return item.product_url;
-      }
+      var rawUrl = (item.product_url || '').trim();
       var ch = (item.channel_code || '').toLowerCase();
       var sku = item.platform_sku || '';
       var name = item.platform_name || '';
-      var cleanSku = sku.replace(/^\(ไม่พบ Seller SKU\)\s*/i, '').replace(/^\(ไม่มี SKU\)\s*/i, '').trim();
-      var idMatch = cleanSku.match(/ID\s*([0-9]{15,22})/i) || sku.match(/\b([0-9]{15,22})\b/);
 
-      // Clean search query from product base name
+      // If TikTok item, ALWAYS resolve to public view or public search (no private seller login wall)
+      if (ch.indexOf('tiktok') !== -1) {
+        var idMatch = rawUrl.match(/edit\/([0-9]{15,22})/i) 
+                   || sku.match(/ID\s*([0-9]{15,22})/i) 
+                   || sku.match(/\b([0-9]{15,22})\b/)
+                   || (item.tiktok_id ? [null, item.tiktok_id] : null);
+        if (idMatch && idMatch[1]) {
+          return 'https://www.tiktok.com/view/product/' + idMatch[1];
+        }
+        var baseName = name.replace(/\[.*?\]/g, ' ').replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
+        var searchWord = baseName.split(' ').slice(0, 5).join(' ') || baseName.substring(0, 35);
+        return 'https://www.tiktok.com/search?q=' + encodeURIComponent(searchWord);
+      }
+
+      if (rawUrl && rawUrl.startsWith('http')) {
+        return rawUrl;
+      }
+
       var baseName = name.replace(/\[.*?\]/g, ' ').replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
       var searchWord = baseName.split(' ').slice(0, 5).join(' ') || baseName.substring(0, 35);
 
-      if (ch.indexOf('tiktok') !== -1) {
-        if (idMatch) {
-          return 'https://www.tiktok.com/view/product/' + idMatch[1];
-        }
-        return 'https://seller-th.tiktok.com/product/manage?keyword=' + encodeURIComponent(searchWord);
-      } else if (ch.indexOf('shopee') !== -1) {
+      if (ch.indexOf('shopee') !== -1) {
         return 'https://shopee.co.th/search?keyword=' + encodeURIComponent(searchWord);
       } else if (ch.indexOf('lazada') !== -1) {
         return 'https://www.lazada.co.th/catalog/?q=' + encodeURIComponent(searchWord);

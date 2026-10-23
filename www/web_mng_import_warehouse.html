@@ -271,6 +271,7 @@
     }
 
     function appendCollapse(index){
+        var canViewCost = (typeof window.canViewCost === "function") ? window.canViewCost() : (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
         if($("#detail-"+index).length){
             //
         }else{
@@ -289,8 +290,10 @@
             success: function(data){  
               EasyLoading.hide();
               var obj = jQuery.parseJSON(data); 
-              var supHeader = (obj[0].supplier_name || obj[0].source_from || '-');
-              var refHeader = obj[0].ref_invoice ? (' | บิลร้าน: <b class="text-success">' + obj[0].ref_invoice + '</b>') : '';
+              var firstRow = (obj && obj.length > 0) ? obj[0] : {};
+              var supHeader = (firstRow.supplier_name || firstRow.source_from || '-');
+              var firstRow = (obj && obj.length > 0) ? obj[0] : {};
+              var refHeader = firstRow.ref_invoice ? (' | บิลร้าน: <b class="text-success">' + firstRow.ref_invoice + '</b>') : '';
               text = text + '<div class="collapse" id="detail-'+index+'">'+
                 '<div class="card card-body">'+
                   '<div class="row justify-content-center mb-2">'+
@@ -322,18 +325,18 @@
               text = text + '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
                   '<div class="row" style="margin-top: 1em;">'+
                       '<div class="col-4 text-right"><h4>รวม</h4></div>'+
-                      '<div class="col-4 text-right"><h4>'+(canViewCost ? obj[0].total_stock : "-")+'</h4></div>'+
+                      '<div class="col-4 text-right"><h4>'+(canViewCost ? (firstRow.total_stock || 0) : "-")+'</h4></div>'+
                   '</div>'+
                   '<div class="row">'+
                       '<div class="col-4 text-right"><h4>ผู้ทำรายการ</h4></div>'+
-                      '<div class="col-4 text-right"><h4>'+obj[0].user_name+'</h4></div>'+
+                      '<div class="col-4 text-right"><h4>'+(firstRow.user_name || "-")+'</h4></div>'+
                   '</div>'+
                   '<div class="row justify-content-center mt-3 pt-2" style="border-top: 1px dashed #ddd;">'+
                     '<div class="col-12 text-center d-flex flex-wrap justify-content-center align-items-center">'+
                       '<button onclick="printWarehouseSlip('+index+')" class="btn btn-primary px-3 py-2 mr-2 mb-2 font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-receipt mr-1"></i> พิมพ์บิล (สลิป 80mm)</button>'+
                       '<button onclick="printWarehouseA4('+index+')" class="btn btn-info px-3 py-2 mr-2 mb-2 font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-file-invoice mr-1"></i> พิมพ์ใบรับของ (A4)</button>'+
                       '<button onclick="print.apply(this,arr_data)" class="btn btn-warning px-3 py-2 mr-2 mb-2 text-white font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-barcode mr-1"></i> พิมพ์สติกเกอร์บาร์โค้ด</button>'+
-                      (canDelete ? '<button class="btn btn-danger px-3 py-2 mb-2 font-weight-bold" style="font-size: 0.95rem;" onclick="delete_bill('+index+','+obj[0].ware_id+')"><i class="fas fa-trash-alt mr-1"></i> ลบรายการ</button>' : '')+
+                      (canDelete ? '<button class="btn btn-danger px-3 py-2 mb-2 font-weight-bold" style="font-size: 0.95rem;" onclick="delete_bill('+index+','+(firstRow.ware_id || 1)+')"><i class="fas fa-trash-alt mr-1"></i> ลบรายการ</button>' : '')+
                     '</div>'+
                   '</div>'+                
             '</div>'+
@@ -349,6 +352,7 @@
     }
 
     function appendCollapses(index){
+        var canViewCost = (typeof window.canViewCost === "function") ? window.canViewCost() : (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
         if($("#details-"+index).length){
             //
         }else{
@@ -367,8 +371,10 @@
             success: function(data){  
               EasyLoading.hide();
               var obj = (typeof data === 'string') ? JSON.parse(data) : data; 
-              var supHeader = (obj[0].supplier_name || obj[0].source_from || '-');
-              var refHeader = obj[0].ref_invoice ? (' | บิลร้าน: <b class="text-success">' + obj[0].ref_invoice + '</b>') : '';
+              var firstRow = (obj && obj.length > 0) ? obj[0] : {};
+              var supHeader = (firstRow.supplier_name || firstRow.source_from || '-');
+              var firstRow = (obj && obj.length > 0) ? obj[0] : {};
+              var refHeader = firstRow.ref_invoice ? (' | บิลร้าน: <b class="text-success">' + firstRow.ref_invoice + '</b>') : '';
               text = text + '<div class="collapse" id="details-'+index+'">'+
                 '<div class="card card-body">'+
                   '<div class="row justify-content-center mb-2">'+
@@ -400,18 +406,18 @@
               text = text + '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
                   '<div class="row" style="margin-top: 1em;">'+
                       '<div class="col-4 text-right"><h4>รวม</h4></div>'+
-                      '<div class="col-4 text-right"><h4>'+(canViewCost ? obj[0].total_stock : "-")+'</h4></div>'+
+                      '<div class="col-4 text-right"><h4>'+(canViewCost ? (firstRow.total_stock || 0) : "-")+'</h4></div>'+
                   '</div>'+
                   '<div class="row">'+
                       '<div class="col-4 text-right"><h4>ผู้ทำรายการ</h4></div>'+
-                      '<div class="col-4 text-right"><h4>'+obj[0].user_name+'</h4></div>'+
+                      '<div class="col-4 text-right"><h4>'+(firstRow.user_name || "-")+'</h4></div>'+
                   '</div>'+
                   '<div class="row justify-content-center mt-3 pt-2" style="border-top: 1px dashed #ddd;">'+
                     '<div class="col-12 text-center d-flex flex-wrap justify-content-center align-items-center">'+
                       '<button onclick="printWarehouseSlip('+index+')" class="btn btn-primary px-3 py-2 mr-2 mb-2 font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-receipt mr-1"></i> พิมพ์บิล (สลิป 80mm)</button>'+
                       '<button onclick="printWarehouseA4('+index+')" class="btn btn-info px-3 py-2 mr-2 mb-2 font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-file-invoice mr-1"></i> พิมพ์ใบรับของ (A4)</button>'+
                       '<button onclick="print.apply(this,arr_data)" class="btn btn-warning px-3 py-2 mr-2 mb-2 text-white font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-barcode mr-1"></i> พิมพ์สติกเกอร์บาร์โค้ด</button>'+
-                      (canDelete ? '<button class="btn btn-danger px-3 py-2 mb-2 font-weight-bold" style="font-size: 0.95rem;" onclick="delete_bill('+index+','+obj[0].ware_id+')"><i class="fas fa-trash-alt mr-1"></i> ลบรายการ</button>' : '')+
+                      (canDelete ? '<button class="btn btn-danger px-3 py-2 mb-2 font-weight-bold" style="font-size: 0.95rem;" onclick="delete_bill('+index+','+(firstRow.ware_id || 1)+')"><i class="fas fa-trash-alt mr-1"></i> ลบรายการ</button>' : '')+
                     '</div>'+
                   '</div>'+                           
                 '</div>'+
@@ -443,7 +449,8 @@
           var time = (dt[1] || '').substr(0, 5);
           var d = (dt[0] || '').split("-");
           var date = (d.length === 3) ? (d[2] + "/" + d[1] + "/" + d[0]) : dt[0];
-          var sup = obj[0].supplier_name || obj[0].source_from || '-';
+          var firstRow = (obj && obj.length > 0) ? obj[0] : {};
+          var sup = (firstRow.supplier_name || firstRow.source_from || '-');
           var ref = obj[0].ref_invoice ? obj[0].ref_invoice : '';
           var wareName = obj[0].ware_name || 'โกดัง';
           var canViewCost = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
@@ -558,7 +565,8 @@
           var time = (dt[1] || '').substr(0, 5);
           var d = (dt[0] || '').split("-");
           var date = (d.length === 3) ? (d[2] + "/" + d[1] + "/" + d[0]) : dt[0];
-          var sup = obj[0].supplier_name || obj[0].source_from || '-';
+          var firstRow = (obj && obj.length > 0) ? obj[0] : {};
+          var sup = (firstRow.supplier_name || firstRow.source_from || '-');
           var ref = obj[0].ref_invoice ? obj[0].ref_invoice : '-';
           var wareName = obj[0].ware_name || 'โกดัง';
           var canViewCost = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
@@ -804,7 +812,7 @@
         --->
     </div>
     <!-- Central Navbar Script -->
-    <script src="js/navbar.js?v=3.0"></script>
+    <script src="js/navbar.js?v=3.5"></script>
 </body>
 
 </html>

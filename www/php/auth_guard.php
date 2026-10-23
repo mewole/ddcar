@@ -68,18 +68,40 @@ function is_extension_authenticated() {
  * @return bool
  */
 function is_logged_in() {
-    // 1. ตรวจสอบ Extension Token สำหรับไฟล์ซิงค์ที่ได้รับอนุญาต
+    // 1. ตรวจสอบ Extension Token สำหรับไฟล์ซิงค์ที่ได้รับอนุญาตใน Allowlist เท่านั้น
     if (is_extension_authenticated()) {
         return true;
     }
 
-    // 2. ตรวจสอบ PHP Session ฝั่ง Server (สร้างขึ้นหลังผ่าน password_verify ใน login.php)
+    // 2. ตรวจสอบ PHP Session ฝั่ง Server (สร้างขึ้นหลังผ่าน password_verify ใน login.php เท่านั้น)
     if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
         return true;
     }
 
-    // 3. ป้องกันหน้าร้านหยุดชะงัก: ตรวจสอบเครือข่ายภายในร้าน (LAN / Tailscale / Localhost)
-    // อนุญาตเฉพาะเครื่องในร้านที่เรียกผ่านระบบ dd-shop เพื่อไม่ให้งานขายและจัดการสต๊อกสะดุด
+    // 3. กฎความปลอดภัยเข้มงวด: คำสั่งที่เขียน, แก้ไข, ลบข้อมูล, สำรองฐานข้อมูล, หรือปรับสต๊อก ต้องมี Session 100% ห้ามยกเว้นเด็ดขาด
+    $current_script = basename($_SERVER['SCRIPT_FILENAME'] ?? $_SERVER['PHP_SELF'] ?? '');
+    $mutation_scripts = [
+        'save_order.php', 'save_stock_adjustment.php', 'stock_in.php', 'transfer_in.php',
+        'create_transfer.php', 'confirm_transfer.php', 'reject_transfer.php', 'rename_transfer.php',
+        'delete_bill.php', 'delete_user.php', 'delete_transfer.php', 'delete_transfer_to.php',
+        'delete_import.php', 'delete_warehouse.php', 'backup_db.php', 'update_prod.php',
+        'update_user.php', 'rename_user.php', 'add_user.php', 'add_product.php',
+        'save_platform_orders.php', 'import_platform_skus.php'
+    ];
+    $is_mutation = in_array($current_script, $mutation_scripts) ||
+                    strpos($current_script, 'delete_') === 0 ||
+                    strpos($current_script, 'save_') === 0 ||
+                    strpos($current_script, 'update_') === 0 ||
+                    strpos($current_script, 'insert_') === 0 ||
+                    strpos($current_script, 'backup_') === 0;
+
+    if ($is_mutation) {
+        // คำสั่งเขียน/ลบ/ปรับสต๊อกทั้งหมด ต้องมี Server Session ที่ผ่านการล็อกอินด้วยรหัสผ่านเท่านั้น ห้าม Bypass เด็ดขาด
+        return false;
+    }
+
+    // 4. สำหรับคำขออ่าน (READ-ONLY) ในช่วงเปลี่ยนผ่าน: หากเรียกจากเบราว์เซอร์ที่มี Referer ในร้าน
+    // ให้สิทธิ์ต่ำสุดเป็น 'ดูคลังสินค้า' (Read-only) โดยไม่สามารถเขียนหรือลบข้อมูลใดๆ ได้
     $remote_ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
     $is_internal_network = ($remote_ip === '127.0.0.1' || $remote_ip === '::1' || 
                             strpos($remote_ip, '100.') === 0 || 
@@ -88,32 +110,12 @@ function is_logged_in() {
                             strpos($remote_ip, '10.') === 0);
 
     if ($is_internal_network) {
-        $req_uid = !empty($_SERVER['HTTP_X_USER_ID']) ? (int)$_SERVER['HTTP_X_USER_ID'] : (!empty($_REQUEST['user_id']) ? (int)$_REQUEST['user_id'] : 0);
         $has_shop_referer = (!empty($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], '/dd-shop/') !== false);
-
-        if ($req_uid > 0 || $has_shop_referer) {
-            $effective_uid = $req_uid > 0 ? $req_uid : (isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 33);
-            $_SESSION['user_id'] = $effective_uid;
-            
-            // ดึง Role จากฐานข้อมูลเพื่อความปลอดภัย (ไม่เชื่อค่าจาก Request)
-            global $conn;
-            if (isset($conn) && $conn) {
-                $clean_uid = mysqli_real_escape_string($conn, (string)$effective_uid);
-                $q = mysqli_query($conn, "SELECT user_id, user_name, user_role FROM user WHERE user_id = '$clean_uid' LIMIT 1");
-                if ($q && mysqli_num_rows($q) > 0) {
-                    $r = mysqli_fetch_assoc($q);
-                    $_SESSION['user_name'] = $r['user_name'];
-                    $_SESSION['user_role'] = $r['user_role'];
-                } else {
-                    // หาก ID ไม่พบในฐานข้อมูล (เช่น user_id เก่าที่บันทึกเป็น 1) ให้แมปไปยังบัญชีเจ้าของร้านจริง (Jet #33)
-                    $q_owner = mysqli_query($conn, "SELECT user_id, user_name, user_role FROM user WHERE user_role IN ('เจ้าของร้าน', 'แอดมิน') ORDER BY user_id ASC LIMIT 1");
-                    if ($q_owner && $ro = mysqli_fetch_assoc($q_owner)) {
-                        $_SESSION['user_id'] = (int)$ro['user_id'];
-                        $_SESSION['user_name'] = $ro['user_name'];
-                        $_SESSION['user_role'] = $ro['user_role'];
-                    }
-                }
-            }
+        if ($has_shop_referer) {
+            // อนุญาตเฉพาะอ่าน (Read-only) และกำหนดบทบาทจำกัดเพื่อความปลอดภัย
+            $_SESSION['user_id'] = 33;
+            $_SESSION['user_name'] = 'ร้านค้า (LAN-Readonly)';
+            $_SESSION['user_role'] = 'ดูคลังสินค้า';
             return true;
         }
     }

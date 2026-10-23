@@ -197,6 +197,14 @@
         }
     }
 
+    
+    // Global helper: ตรวจสอบสิทธิ์ดูต้นทุนสินค้า (เฉพาะแอดมินและเจ้าของร้าน)
+    window.canViewCost = function () {
+        var role = localStorage.user_role || '';
+        return (role === 'แอดมิน' || role === 'เจ้าของร้าน');
+    };
+    window.canViewCostVal = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
+
     // Global logout helper (ทำลาย Session ทั้งบน Server และ Browser)
     window.ddcarLogout = function () {
         if (window.confirm ? confirm('คุณต้องการออกจากระบบหรือไม่?') : true) {

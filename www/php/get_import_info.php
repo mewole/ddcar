@@ -7,15 +7,17 @@ header("Content-Type: text/html; charset=UTF-8");
 $imp_id = isset($_POST['imp_id']) ? mysqli_real_escape_string($conn, $_POST['imp_id']) : '';
 $output = array();
 
-$query = "SELECT s.stock_number, s.ware_id, w.ware_name, s.date_time, s.total_stock,
+$query = "SELECT s.stock_number, s.ware_id, COALESCE(w.ware_name, 'โกดัง') AS ware_name, s.date_time, s.total_stock,
                  s.supplier_name, s.ref_invoice,
-                 i.item_id, i.prod_id, p.prod_name, i.stock_cost, i.amount, i.source_from, i.supplier_sku,
-                 u.user_name, p.prod_code, p.prod_price 
+                 i.item_id, i.prod_id, COALESCE(p.prod_name, 'สินค้า (รหัสลบแล้ว)') AS prod_name, 
+                 COALESCE(i.stock_cost, 0) AS stock_cost, COALESCE(i.amount, 0) AS amount, 
+                 COALESCE(i.source_from, s.supplier_name, '-') AS source_from, i.supplier_sku,
+                 COALESCE(u.user_name, 'แอดมิน') AS user_name, COALESCE(p.prod_code, '') AS prod_code, COALESCE(p.prod_price, 0) AS prod_price 
           FROM stock_in s 
-          INNER JOIN warehouse_detail w ON s.ware_id = w.ware_id 
-          INNER JOIN stock_in_item i ON s.stock_id = i.stock_id 
-          INNER JOIN product p ON i.prod_id = p.prod_id 
-          INNER JOIN user u ON s.user_id = u.user_id 
+          LEFT JOIN warehouse_detail w ON s.ware_id = w.ware_id 
+          LEFT JOIN stock_in_item i ON s.stock_id = i.stock_id 
+          LEFT JOIN product p ON i.prod_id = p.prod_id 
+          LEFT JOIN user u ON s.user_id = u.user_id 
           WHERE s.stock_id = '$imp_id'";
 $result = mysqli_query($conn, $query);
 

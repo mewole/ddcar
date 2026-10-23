@@ -781,7 +781,7 @@
 </head>
 
 <body>
-    <!-- Navbar Container (Managed by js/navbar.js?v=3.0) -->
+    <!-- Navbar Container (Managed by js/navbar.js?v=3.5) -->
     <div id="ddcar-nav-mount"></div>
 
     <div class="main-container">
@@ -896,6 +896,14 @@
                 </div>
                 <div class="kpi-card-value" id="kpi-count">0</div>
                 <div class="kpi-card-sub" id="kpi-count-sub">เฉลี่ย ฿0.00 / บิล</div>
+            </div>
+            <div class="kpi-card" id="card-writeoff" style="border-left: 4px solid #f59e0b;">
+                <div class="kpi-card-header">
+                    <div class="kpi-card-title text-warning">ตัดไม่คิดเงิน (Write-off)</div>
+                    <div class="kpi-card-icon" style="background: rgba(245, 158, 11, 0.15); color: #d97706;"><i class="fa fa-hand-holding-heart"></i></div>
+                </div>
+                <div class="kpi-card-value text-warning" id="kpi-writeoff">฿0.00</div>
+                <div class="kpi-card-sub" id="kpi-writeoff-sub">0 บิล (แยกต้นทุนไม่รวมยอดขาย)</div>
             </div>
         </div>
 
@@ -1131,7 +1139,7 @@
     </div>
 
     <!-- Central Navbar Script -->
-    <script src="js/navbar.js?v=3.0"></script>
+    <script src="js/navbar.js?v=3.5"></script>
 
     <!-- Application Logic -->
     <script>
@@ -1755,6 +1763,10 @@
             $('#kpi-count-title').text('จำนวนบิล');
             $('#kpi-count').text(data.summary.total_bills + ' บิล');
             $('#kpi-count-sub').text('เฉลี่ย ฿' + formatMoney(data.summary.avg_per_bill) + ' / บิล');
+            var wCost = parseFloat(data.summary.writeoff_cost || 0);
+            var wBills = parseInt(data.summary.writeoff_bills || 0);
+            $('#kpi-writeoff').text('฿' + formatMoney(wCost));
+            $('#kpi-writeoff-sub').text(wBills + ' บิล (แยกต้นทุนไม่รวมยอดขาย)');
 
             // Table Title
             $('#table-title').html('<i class="fa fa-calendar-day text-primary"></i> บิลขายประจำวัน : ' + formatThaiDate(currentDate));
@@ -1846,6 +1858,10 @@
             $('#kpi-count-title').text('จำนวนบิล');
             $('#kpi-count').text(data.summary.total_bills + ' บิล');
             $('#kpi-count-sub').text(data.summary.best_day ? 'ขายดีสุด วันที่ ' + data.summary.best_day.day : '-');
+            var wCostM = parseFloat(data.summary.writeoff_cost || 0);
+            var wBillsM = parseInt(data.summary.writeoff_bills || 0);
+            $('#kpi-writeoff').text('฿' + formatMoney(wCostM));
+            $('#kpi-writeoff-sub').text(wBillsM + ' บิล (ประจำเดือนนี้)');
 
             $('#table-title').html('<i class="fa fa-calendar-alt text-primary"></i> สรุปยอดขายแยกรายวัน : ' + mName);
             $('#table-badge').text(data.daily_breakdown.length + ' วัน');
@@ -1928,6 +1944,10 @@
             $('#kpi-count-title').text('จำนวนบิลทั้งปี');
             $('#kpi-count').text(data.summary.total_bills + ' บิล');
             $('#kpi-count-sub').text(data.summary.best_month ? 'เดือนขายดีสุด: ' + data.summary.best_month.month_name : '-');
+            var wCostY = parseFloat(data.summary.writeoff_cost || 0);
+            var wBillsY = parseInt(data.summary.writeoff_bills || 0);
+            $('#kpi-writeoff').text('฿' + formatMoney(wCostY));
+            $('#kpi-writeoff-sub').text(wBillsY + ' บิล (ทั้งปี)');
 
             $('#table-title').html('<i class="fa fa-chart-bar text-primary"></i> สรุปยอดขายแยกรายเดือน : ปี ' + yTh);
             $('#table-badge').text('12 เดือน');

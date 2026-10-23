@@ -1036,7 +1036,27 @@
     }
 
   		function save(arg){
-			if(parseInt($("#amount-"+arg).val()) > parseInt(arr_data[arg].min)){
+			var rawAmt = parseInt($("#amount-"+arg).val(), 10);
+			var rawPrice = parseFloat($("#price-"+arg).val());
+			if (isNaN(rawAmt) || rawAmt <= 0) {
+				$.alert({
+					title: 'แจ้งเตือน',
+					content: 'จำนวนสินค้าต้องมากกว่า 0 ชิ้น',
+					type: 'red'
+				});
+				$("#amount-" + arg).val(arr_data[arg].amt || 1);
+				return 0;
+			}
+			if (isNaN(rawPrice) || rawPrice < 0) {
+				$.alert({
+					title: 'แจ้งเตือน',
+					content: 'ราคาสินค้าต้องไม่ติดลบ',
+					type: 'red'
+				});
+				$("#price-" + arg).val(arr_data[arg].price || 0);
+				return 0;
+			}
+			if(rawAmt > parseInt(arr_data[arg].min)){
 				$.confirm({
 					title: 'เตือน',
 					content: 'สินค้ามีจำนวนไม่พอใน' + $('#btn-b').text() + ' สินค้ามีจำนวน ' + arr_data[arg].min,
@@ -1090,12 +1110,37 @@
 
 		
 		function save2db(){
-			if(arr_data.length == 0 || cus_id == null){
-					return 0;
+			if (window.isOrderSaving) {
+				console.warn('Order is currently saving, duplicate submission blocked.');
+				return false;
+			}
+			if(!arr_data || arr_data.length == 0){
+				$.alert({
+					title: 'แจ้งเตือน',
+					content: 'กรุณาเลือกสินค้าอย่างน้อย 1 รายการก่อนชำระเงิน',
+					type: 'orange'
+				});
+				return 0;
+			}
+			var cusVal = ($('#cus').val() || '').trim();
+			if(cus_id == null || cus_id == -1 || cusVal === ""){
+				$.alert({
+					title: 'แจ้งเตือน',
+					content: 'กรุณาเลือกลูกค้า',
+					type: 'orange'
+				});
+				return 0;
 			}
 			if($("#change-money").val() == "" || $("#get-money").val() == ""){
-					return 0;
-			}			
+				$.alert({
+					title: 'แจ้งเตือน',
+					content: 'กรุณากรอกจำนวนเงินที่รับและคำนวณเงินทอนให้เรียบร้อย',
+					type: 'orange'
+				});
+				return 0;
+			}
+			window.isOrderSaving = true;
+			$('#btn_save').prop('disabled', true).text('กำลังบันทึก...');			
 			var dis = $('#discount-money').val();
 			if(dis == ""){
 				dis = 0;
@@ -1555,6 +1600,20 @@
 								content: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง'
 							});
 						}
+					},
+					error: function(xhr, status, error) {
+						EasyLoading.hide();
+						window.isOrderSaving = false;
+						$('#btn_save').prop('disabled', false).text('บันทึก');
+						$.alert({
+							title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
+							content: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้: ' + (error || status)
+						});
+					},
+					complete: function() {
+						EasyLoading.hide();
+						window.isOrderSaving = false;
+						$('#btn_save').prop('disabled', false).text('บันทึก');
 					}               
 			});
 						
@@ -2235,6 +2294,6 @@
 		})
 	</script>
 	<!-- Central Navbar Script -->
-	<script src="js/navbar.js?v=3.0"></script>
+	<script src="js/navbar.js?v=3.5"></script>
 </body>
 </html>

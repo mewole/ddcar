@@ -7,15 +7,17 @@ header("Content-Type: text/html; charset=UTF-8");
 $imp_id = isset($_POST['imp_id']) ? mysqli_real_escape_string($conn, $_POST['imp_id']) : '';
 $output = array();
 
-$query = "SELECT s.tran_number, s.shop_id, w.shop_name, s.date_time, s.total_tran,
+$query = "SELECT s.tran_number, s.shop_id, COALESCE(w.shop_name, 'หน้าร้าน') AS shop_name, s.date_time, s.total_tran,
                  s.supplier_name, s.ref_invoice,
-                 i.item_id, i.prod_id, p.prod_name, i.tran_cost, i.amount, i.source_from, i.supplier_sku,
-                 u.user_name, p.prod_code, p.prod_price
+                 i.item_id, i.prod_id, COALESCE(p.prod_name, 'สินค้า (รหัสลบแล้ว)') AS prod_name, 
+                 COALESCE(i.tran_cost, 0) AS tran_cost, COALESCE(i.amount, 0) AS amount, 
+                 COALESCE(i.source_from, s.supplier_name, '-') AS source_from, i.supplier_sku,
+                 COALESCE(u.user_name, 'แอดมิน') AS user_name, COALESCE(p.prod_code, '') AS prod_code, COALESCE(p.prod_price, 0) AS prod_price
           FROM transfer_in s 
-          INNER JOIN shop_detail w ON s.shop_id = w.shop_id 
-          INNER JOIN transfer_in_item i ON s.tran_id = i.tran_id 
-          INNER JOIN product p ON i.prod_id = p.prod_id 
-          INNER JOIN user u ON s.user_id = u.user_id 
+          LEFT JOIN shop_detail w ON s.shop_id = w.shop_id 
+          LEFT JOIN transfer_in_item i ON s.tran_id = i.tran_id 
+          LEFT JOIN product p ON i.prod_id = p.prod_id 
+          LEFT JOIN user u ON s.user_id = u.user_id 
           WHERE s.tran_id = '$imp_id'";
 $result = mysqli_query($conn, $query);
 
