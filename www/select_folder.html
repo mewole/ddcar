@@ -7,6 +7,11 @@
   <title>เลือกโฟลเดอร์สินค้า - DDCAR</title>
   <!-- Local Assets -->
   <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/svg-with-js.css">
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/jquery-confirm.css">
+  <link rel="stylesheet" href="css/loading.css">
+
   <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
   <script type="text/javascript" src="js/jquery-ui.min.js"></script>
   <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
@@ -16,10 +21,6 @@
   <script defer src="js/fontawesome-all.js"></script>
   <script type="text/javascript" src="js/config.js"></script>
   <script type="text/javascript" src="js/capacitor-bridge.js"></script>
-
-  <link rel="stylesheet" href="css/index.css">
-  <link rel="stylesheet" href="css/jquery-confirm.css">
-  <link rel="stylesheet" href="css/loading.css">
 
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
@@ -31,11 +32,70 @@
     }
 
     .six{
-      color: #666;
+      color: #94a3b8;
     }
 
     .checked{
-      color: #66b266;
+      color: #16a34a;
+    }
+
+    .folder-item-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .folder-item-card:active {
+      background: #f8fafc;
+      transform: scale(0.99);
+    }
+    .admin-action-col {
+      display: none;
+      gap: 6px;
+      margin-right: 10px;
+    }
+    .action-mini-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-row-del {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    .btn-row-edit {
+      background: #e0f2fe;
+      color: #0284c7;
+    }
+    .multi-select-col {
+      display: none;
+      margin-right: 12px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .folder-main-tap {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+    }
+    .nav-bottom-item.active .menu,
+    .nav-bottom-item.active svg {
+      color: var(--dd-red, #da251c) !important;
+      fill: var(--dd-red, #da251c) !important;
+      background: var(--dd-red-light, #fee2e2) !important;
     }
   </style>
 
@@ -124,16 +184,32 @@
                     var codeB = (b && b.prod_code) ? String(b.prod_code) : "";
                     return codeA.localeCompare(codeB, undefined, { numeric: true });
                   });			
+                  var isEditActive = $("#i-edit").hasClass('active');
+                  var isDelActive = $("#i-del").hasClass('active');
+                  var canShowAdmin = (from == "add" && isOwnerOrAdmin && (isEditActive || isDelActive));
+                  var adminColDisplay = canShowAdmin ? 'flex' : 'none';
+                  var multiDisplay = isMultiSelectMode ? 'flex' : 'none';
+
                   $.each(obj, function(i, field){
-                      text_html = "<div id='row-title-"+i+"' class='row'>" +
+                      var codeBadge = field.prod_code ? ('<span class="badge badge-light border mr-2" style="font-size: 12px; font-weight: 700; color: #1e293b;">' + field.prod_code + '</span>') : '';
+                      var adminButtons = '';
+                      if (from == "add" && isOwnerOrAdmin) {
+                        adminButtons = "<div class='admin-action-col' style='display: " + adminColDisplay + ";'>" +
+                          "<button class='action-mini-btn btn-row-del' onclick='event.stopPropagation(); remove(" + i + ");' style='display: " + (isDelActive ? "inline-flex" : "none") + ";'><i class='fa fa-trash-alt'></i></button>" +
+                          "<button class='action-mini-btn btn-row-edit' onclick='event.stopPropagation(); edit(" + i + ");' style='display: " + (isEditActive ? "inline-flex" : "none") + ";'><i class='fa fa-edit'></i></button>" +
+                        "</div>";
+                      }
+                      text_html = "<div id='row-title-"+i+"' class='folder-item-card' onclick='cardClick(\"" + obj[i].prod_id + "\", " + i + ")'>" +
                         "<span id='span-"+i+"' hidden>" + obj[i].prod_id + "</span>" +
-                        "<div class='col-2 text-center'><i id='box-"+i+"' class='far fa-check-square six box' onclick='check("+i+")' hidden></i><i class='fa fa-trash-alt i-trash' onclick='remove("+i+")' style='color: #666;' hidden></i><i class='fa fa-edit i-edit' onclick='edit("+i+")' style='color: #666;' hidden></i></div>" +                        
-                        "<div id='getin-"+i+"' class='col-8 text-center title' onclick='getIn(\"" + obj[i].prod_id + "\", "+i+")'>" +
-                        "<h5 id='title-"+i+"'>" + obj[i].prod_name + "</h5>" +
+                        "<div class='multi-select-col' style='display: " + multiDisplay + ";' onclick='event.stopPropagation(); check(" + i + ")'>" +
+                          "<i id='box-"+i+"' class='far fa-square six box'></i>" +
                         "</div>" +
-                        "<div class='col-2'></div>" +
-                        "</div >"+
-                        "<hr id='hr-"+i+"'>";
+                        adminButtons +
+                        "<div class='folder-main-tap'>" +
+                          "<div style='flex: 1; min-width: 0;'>" + codeBadge + "<span id='title-"+i+"' style='font-weight: 600; color: #0f172a; font-size: 14px;'>" + obj[i].prod_name + "</span></div>" +
+                          "<div style='color: #cbd5e1; padding-left: 6px;'><i class='fas fa-chevron-right fa-sm'></i></div>" +
+                        "</div>" +
+                        "</div>";
                       $("#in-ctn").append(text_html);
                       index = i;
                   });
@@ -141,22 +217,35 @@
               }else{
                 // case have folder 
                 if(from == "add" && isOwnerOrAdmin){
-                  $("#navs-bttm").prop("hidden", false);
+                  $("#navs-bttm").prop("hidden", false).show();
                 }
                 obj.sort(function(a, b) {
                   var titleA = (a && a.title) ? String(a.title).trim() : "";
                   var titleB = (b && b.title) ? String(b.title).trim() : "";
                   return titleA.localeCompare(titleB, 'en', { numeric: true, sensitivity: 'base' });
                 });                
+                var isEditActive = $("#btn-nav-edit").hasClass('active') || $("#i-edit").hasClass('active');
+                var isDelActive = $("#btn-nav-del").hasClass('active') || $("#i-del").hasClass('active');
+                var canShowAdmin = (from == "add" && isOwnerOrAdmin && (isEditActive || isDelActive));
+                var adminColDisplay = canShowAdmin ? 'flex' : 'none';
+
                 $.each(obj, function(i, field){
                   var safeTitle = String(obj[i].title || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                  text_html = "<div id='row-title-"+i+"' class='row'>" +
+                  var adminButtons = '';
+                  if (from == "add" && isOwnerOrAdmin) {
+                    adminButtons = "<div class='admin-action-col' style='display: " + adminColDisplay + ";'>" +
+                      "<button class='action-mini-btn btn-row-del' onclick='event.stopPropagation(); remove(" + i + ");' style='display: " + (isDelActive ? "inline-flex" : "none") + ";'><i class='fa fa-trash-alt'></i></button>" +
+                      "<button class='action-mini-btn btn-row-edit' onclick='event.stopPropagation(); edit(" + i + ");' style='display: " + (isEditActive ? "inline-flex" : "none") + ";'><i class='fa fa-edit'></i></button>" +
+                    "</div>";
+                  }
+                  text_html = "<div id='row-title-"+i+"' class='folder-item-card' onclick='cardClick(\"" + safeTitle + "\", " + i + ")'>" +
                     "<span id='span-"+i+"' hidden>" + obj[i].title + "</span>" +
-                    "<div class='col-2'><i class='fa fa-trash-alt i-trash' onclick='remove("+i+")' style='color: #666;' hidden></i><i class='fa fa-edit i-edit' onclick='edit("+i+")' style='color: #666;' hidden></i></div>" +
-                    "<div id='getin-"+i+"' class='col-8 text-center title' onclick='getIn(\"" + safeTitle + "\")'>" +
-                    "<h5 id='title-"+i+"'>" + obj[i].title + "</h5></div>" +
-                    "<div class='col-2'></div>" +
-                    "</div ><hr id='hr-"+i+"'>";
+                    adminButtons +
+                    "<div class='folder-main-tap'>" +
+                      "<div style='flex: 1; min-width: 0; display: flex; align-items: center;'><i class='fas fa-folder text-warning fa-lg' style='margin-right: 12px;'></i><span id='title-"+i+"' style='font-weight: 600; color: #0f172a; font-size: 15px;'>" + obj[i].title + "</span></div>" +
+                      "<div style='color: #cbd5e1; padding-left: 6px;'><i class='fas fa-chevron-right fa-sm'></i></div>" +
+                    "</div>" +
+                    "</div>";
                   $("#in-ctn").append(text_html);
                   index = i;
                 });               
@@ -194,11 +283,17 @@
       return query_string;
     }();
 
-    function show_box(){
-      if ($(".box").is(":visible")) {
-          $(".box").attr('hidden', true);        
-      }else{
-          $(".box").attr('hidden', false);         
+    var isMultiSelectMode = false;
+    function show_box(e){
+      if(e) e.stopPropagation();
+      isMultiSelectMode = !isMultiSelectMode;
+      if (isMultiSelectMode) {
+          $(".multi-select-col").css('display', 'flex');
+          $("#show-box").addClass('text-danger');
+      } else {
+          $(".multi-select-col").hide();
+          $("#show-box").removeClass('text-danger');
+          $("#show-box-go").prop('hidden', true);
       }
     }
 
@@ -282,20 +377,24 @@
       window.location = goto;    
     }
 
-    function disactive(arg) {
-      nav_menu = ['home', 'add', 'edit', 'del'];
-      for (i = 0; i < 4; i++) {
-        if (nav_menu[i] != arg) {
-          if ($("#i-" + nav_menu[i]).hasClass('active')) $("#i-" + nav_menu[i]).removeClass('active');
-        }
+    function cardClick(val, i) {
+      if ($("#btn-nav-edit").hasClass('active') || $("#i-edit").hasClass('active')) {
+        edit(i);
+        return;
       }
-    }
-
-    function disac(arg){
-      if ($("#i-" + arg).hasClass('active')) $("#i-" + arg).removeClass('active');
+      if ($("#btn-nav-del").hasClass('active') || $("#i-del").hasClass('active')) {
+        remove(i);
+        return;
+      }
+      getIn(val, i);
     }
 
     function menu(arg) {
+      if (arg == "home") {
+        window.location = 'index.html';
+        return;
+      }
+
       if (arg == "add" || arg == "edit" || arg == "del") {
         var isOwnerOrAdmin = (localStorage.user_role == "แอดมิน" || localStorage.user_role == "เจ้าของร้าน");
         if (!isOwnerOrAdmin) {
@@ -310,69 +409,62 @@
           return;
         }
       }
-      // Animate
-      disactive(arg);
-      if($("#i-"+arg).hasClass('active')){
-        console.log("i-"+arg+"hasClass('active')");
-        $("#i-"+arg).removeClass('active');
-      }else{
-        $("#i-" + arg).fadeOut(150).fadeIn(100, function() {
-          $("#i-" + arg).addClass('active');
-        });
-      }
 
-      if(arg == "add"){
-        if(last_node == 1){
+      if (arg == "add") {
+        $("#btn-nav-edit, #btn-nav-del, #i-edit, #i-del").removeClass('active');
+        $(".admin-action-col").hide();
+        $(".btn-row-del").hide();
+        $(".btn-row-edit").hide();
+
+        if (last_node == 1) {
           add_prod();
+          return;
         }
-        if ($(".i-add").is(":visible")) {
-          $(".i-trash").attr('hidden', true);$(".i-edit").attr('hidden', true);
-          $(".i-edit").attr('hidden', true);
-          disac("edit");
-        } else {
-          $(".i-add").attr('hidden', false);
-          $(".i-trash").attr('hidden', true);
-          $(".i-edit").attr('hidden', true);
-        }
+
         $("style").append(".jconfirm .jconfirm-box{margin-bottom:70%;}");
         $.confirm({
           title: "เพิ่มหมวดหมู่",
-          content: '<div class="row" style="margin-top: 2%; margin-bottom: 2%;"><div class="col-1"></div><div class="col-10"><input id="edt-name" type="text" class="input-cf" autofocus style="text-transform: uppercase";></div><div class="col-1"></div></div>',
+          content: '<div class="row" style="margin-top: 2%; margin-bottom: 2%;"><div class="col-1"></div><div class="col-10"><input id="edt-name" type="text" class="input-cf" autofocus style="text-transform: uppercase;"></div><div class="col-1"></div></div>',
           backgroundDismiss: true,
           buttons: {
-            ยกเลิก: function () {
-                //$(".jconfirm .jconfirm-box").css('margin-bottom', '5%');
-              },
+            ยกเลิก: function () {},
             formSubmit: {
               text: 'ตกลง',
               btnClass: 'btn-danger',
               action: function () {
-                newname = $("#edt-name").val().toUpperCase();
+                var newname = $("#edt-name").val().toUpperCase();
                 add(newname);                   
               }
             }
           }
         });
-      }else if(arg == "home"){
-        
-        window.location = 'index.html';
-      }else if(arg == "edit"){       
-        if ($(".i-edit").is(":visible")) {
-          $(".i-trash").attr('hidden', true);
-          $(".i-edit").attr('hidden', true);
-          disac("edit");
-        } else {           
-          $(".i-trash").attr('hidden', true);
-          $(".i-edit").attr('hidden', false);             
+      } else if (arg == "edit") {
+        var isCurrentlyActive = $("#btn-nav-edit").hasClass('active') || $("#i-edit").hasClass('active');
+        $("#btn-nav-edit, #btn-nav-del, #i-edit, #i-del").removeClass('active');
+
+        if (!isCurrentlyActive) {
+          $("#btn-nav-edit, #i-edit").addClass('active');
+          $(".admin-action-col").css('display', 'flex');
+          $(".btn-row-del").hide();
+          $(".btn-row-edit").css('display', 'inline-flex');
+        } else {
+          $(".admin-action-col").hide();
+          $(".btn-row-edit").hide();
+          $(".btn-row-del").hide();
         }
-      }else if(arg == "del"){       
-        if($(".i-trash").is(":visible")){
-          $(".i-edit").attr('hidden', true);
-          $(".i-trash").attr('hidden', true);
-          disac("del");
-        }else{           
-          $(".i-edit").attr('hidden', true);
-          $(".i-trash").attr('hidden', false);           
+      } else if (arg == "del") {
+        var isCurrentlyActive = $("#btn-nav-del").hasClass('active') || $("#i-del").hasClass('active');
+        $("#btn-nav-edit, #btn-nav-del, #i-edit, #i-del").removeClass('active');
+
+        if (!isCurrentlyActive) {
+          $("#btn-nav-del, #i-del").addClass('active');
+          $(".admin-action-col").css('display', 'flex');
+          $(".btn-row-edit").hide();
+          $(".btn-row-del").css('display', 'inline-flex');
+        } else {
+          $(".admin-action-col").hide();
+          $(".btn-row-del").hide();
+          $(".btn-row-edit").hide();
         }
       }
     }
@@ -381,9 +473,10 @@
       if(last_node == 0){
         goto = "select_folder.html?from="+ encodeURIComponent(from || "") + "&folder=" + encodeURIComponent(arg);
       }else if(last_node == 1){ 
-        if($(".box").is(':visible')){
+        if(isMultiSelectMode){
           if($("#box-"+arg2).hasClass('six')) check(arg2);
-          else if($("#box-"+arg2).hasClass('checked')) uncheck(arg2);         
+          else if($("#box-"+arg2).hasClass('checked')) uncheck(arg2);
+          return;         
         }else if(from == "import"){
           goto = "import.html?product="+ encodeURIComponent(arg);
         }else if(from == "tran_in"){
@@ -397,18 +490,28 @@
         }else if(from == "thre"){
           goto = "set_threshold.html?product="+ encodeURIComponent(arg);
         }else if(from == "add"){
-          var retrievedObject = localStorage.getItem('stack_folder');
-          var arr_data = JSON.parse(retrievedObject);      
-          arr_data.splice(arr_data.length-1,1);
-          localStorage.setItem('stack_folder', JSON.stringify(arr_data));         
-          goto = "show_prod.html?prod_id="+ encodeURIComponent(arg) +"&folder="+ encodeURIComponent(parent);        
+          try {
+            var retrievedObject = localStorage.getItem('stack_folder');
+            var arr_data = JSON.parse(retrievedObject || '[]');      
+            if (arr_data.length > 0) arr_data.splice(arr_data.length-1,1);
+            localStorage.setItem('stack_folder', JSON.stringify(arr_data));
+          } catch(e) {}
+          goto = "show_prod.html?prod_id="+ encodeURIComponent(arg) +"&folder="+ encodeURIComponent(parent || '');        
+        } else {
+          goto = "stock.html?product=" + encodeURIComponent(arg);
         }
       }     
       
-      window.location = goto;
+      if (goto) {
+        window.location = goto;
+      }
     }
 
     function add(arg){
+      var isEditActive = $("#btn-nav-edit").hasClass('active') || $("#i-edit").hasClass('active');
+      var isDelActive = $("#btn-nav-del").hasClass('active') || $("#i-del").hasClass('active');
+      var adminColDisplay = (isEditActive || isDelActive) ? 'flex' : 'none';
+
       // First State
       if(!$("#big-ctn").is(":visible")){
         input = $("#first-add").val().toUpperCase();
@@ -427,17 +530,22 @@
               $(".overlay").prop('hidden', true);
               if (data == "success") {
                 index++;
-                text_html = "<div id='row-title-"+index+"' class='row'>" +
+                var safeInput = String(input).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                text_html = "<div id='row-title-"+index+"' class='folder-item-card' onclick='cardClick(\"" + safeInput + "\", " + index + ")'>" +
                   "<span id='span-"+index+"' hidden>" + input + "</span>" +
-                  "<div class='col-2'><i class='fa fa-trash-alt i-trash' onclick='remove("+index+")' style='color: #666;' hidden></i><i class='fa fa-edit i-edit' onclick='edit("+index+")' style='color: #666;' hidden></i></div>" +
-                  "<div id='getin-"+index+"' class='col-8 text-center title' onclick='getIn(\"" + input + "\")'>" +
-                  "<h5 id='title-"+index+"'>" + input + "</h5></div>" +
-                  "<div class='col-2'></div>" +
-                  "</div ><hr id='hr-"+index+"'>";
+                  "<div class='admin-action-col' style='display: " + adminColDisplay + ";'>" +
+                    "<button class='action-mini-btn btn-row-del' onclick='event.stopPropagation(); remove(" + index + ");' style='display: " + (isDelActive ? "inline-flex" : "none") + ";'><i class='fa fa-trash-alt'></i></button>" +
+                    "<button class='action-mini-btn btn-row-edit' onclick='event.stopPropagation(); edit(" + index + ");' style='display: " + (isEditActive ? "inline-flex" : "none") + ";'><i class='fa fa-edit'></i></button>" +
+                  "</div>" +
+                  "<div class='folder-main-tap'>" +
+                    "<div style='flex: 1; min-width: 0; display: flex; align-items: center;'><i class='fas fa-folder text-warning fa-lg' style='margin-right: 12px;'></i><span id='title-"+index+"' style='font-weight: 600; color: #0f172a; font-size: 15px;'>" + input + "</span></div>" +
+                    "<div style='color: #cbd5e1; padding-left: 6px;'><i class='fas fa-chevron-right fa-sm'></i></div>" +
+                  "</div>" +
+                  "</div>";
 
                 $("#big-ctn").prop('hidden', false);
                 $("#add-ctn").prop('hidden', true);
-                $("#navs-bttm").prop("hidden", false);
+                $("#navs-bttm").prop("hidden", false).show();
                 $("#in-ctn").append(text_html);
               } else {
                 $.confirm({
@@ -484,13 +592,18 @@
             success: function (data) {
               if(data == "success"){
                 index++;
-                text_html = "<div id='row-title-"+index+"' class='row'>" +
+                var safeInput = String(input).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                text_html = "<div id='row-title-"+index+"' class='folder-item-card' onclick='cardClick(\"" + safeInput + "\", " + index + ")'>" +
                   "<span id='span-"+index+"' hidden>" + input + "</span>" +
-                  "<div class='col-2'><i class='fa fa-trash-alt i-trash' onclick='remove("+index+")' style='color: #666;' hidden></i><i class='fa fa-edit i-edit' onclick='edit("+index+")' style='color: #666;' hidden></i></div>" +
-                  "<div id='getin-"+index+"' class='col-8 text-center title' onclick='getIn(\"" + input + "\")'>" +
-                  "<h5 id='title-"+index+"'>" + input + "</h5></div>" +
-                  "<div class='col-2'></div>" +
-                  "</div ><hr id='hr-"+index+"'>";
+                  "<div class='admin-action-col' style='display: " + adminColDisplay + ";'>" +
+                    "<button class='action-mini-btn btn-row-del' onclick='event.stopPropagation(); remove(" + index + ");' style='display: " + (isDelActive ? "inline-flex" : "none") + ";'><i class='fa fa-trash-alt'></i></button>" +
+                    "<button class='action-mini-btn btn-row-edit' onclick='event.stopPropagation(); edit(" + index + ");' style='display: " + (isEditActive ? "inline-flex" : "none") + ";'><i class='fa fa-edit'></i></button>" +
+                  "</div>" +
+                  "<div class='folder-main-tap'>" +
+                    "<div style='flex: 1; min-width: 0; display: flex; align-items: center;'><i class='fas fa-folder text-warning fa-lg' style='margin-right: 12px;'></i><span id='title-"+index+"' style='font-weight: 600; color: #0f172a; font-size: 15px;'>" + input + "</span></div>" +
+                    "<div style='color: #cbd5e1; padding-left: 6px;'><i class='fas fa-chevron-right fa-sm'></i></div>" +
+                  "</div>" +
+                  "</div>";
                 $("#in-ctn").append(text_html);
               }else{
                 $.confirm({
@@ -573,7 +686,9 @@
             if(data == "success"){
               $(".overlay").prop('hidden', true);                             
               $("#title-" + arg).text(name); 
-              $("#getin-"+arg).attr("onclick", "getIn(\"" + name + "\")");
+              $("#span-" + arg).text(name);
+              var safeNewName = String(name).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+              $("#row-title-" + arg).attr("onclick", "cardClick(\"" + safeNewName + "\", " + arg + ")");
             }else{
               $.confirm({
                 title: 'พบข้อผิดพลาด',
@@ -721,6 +836,7 @@
     function page_back(){
       if(parent == "car"){
         localStorage.stack_folder = "";
+        var goto = "index.html";
         if(from == "add"){
           goto = "index.html";
         }else if(from == "import"){
@@ -736,17 +852,22 @@
         }else if(from == "thre"){
           goto = "set_threshold.html";
         }
-        
-        window.location = goto;  
-      }     
-      var retrievedObject = localStorage.getItem('stack_folder');
-      var arr_data = JSON.parse(retrievedObject);   
-      var data = arr_data[arr_data.length-2];
-      arr_data.splice(arr_data.length-2,2);
-      localStorage.setItem('stack_folder', JSON.stringify(arr_data));  
-      goto = "select_folder.html?from="+ from+ "&folder=" +data;
-      
-      window.location = goto;
+        window.location = goto;
+        return;
+      }
+      try {
+        var retrievedObject = localStorage.getItem('stack_folder');
+        var arr_data = JSON.parse(retrievedObject || '[]');   
+        if (arr_data && arr_data.length >= 2) {
+          var data = arr_data[arr_data.length - 2];
+          arr_data.splice(arr_data.length - 2, 2);
+          localStorage.setItem('stack_folder', JSON.stringify(arr_data));  
+          window.location = "select_folder.html?from=" + encodeURIComponent(from || "") + "&folder=" + encodeURIComponent(data);
+          return;
+        }
+      } catch(e) {}
+      localStorage.stack_folder = "";
+      window.location = (from == "add") ? "index.html" : ("select_folder.html?from=" + encodeURIComponent(from || ""));
     }   
   </script>
 </head>
@@ -778,39 +899,39 @@
   <!-- start big container -->
   <div id="big-ctn" class="container-fullwidth justify-content-center">
     <!-- Nav menu top -->
-    <div class="row navs align-items-center mgem1o5 fixed-top">
-      <div class="col-2 text-center" onclick="page_back();">
+    <div class="row navs align-items-center fixed-top justify-content-center">
+      <div id="col-back" class="col-2 text-center" onclick="page_back();">
         <i id="i-back" class="fas fa-angle-left"></i>
       </div>
       <div class="col-8 text-center">
         <h5 id="h5-title"></h5>
       </div>
-      <div class="col-1 text-right" onclick="show_search();">
-        <i id='show-box' class='fas fa-check-square' onclick='show_box()' hidden></i>
-        <i id='show-box-go' class='fa fa-check' onclick='nextselect()' hidden></i>
+      <div class="col-2 text-right" style="cursor: pointer;">
+        <i id='show-box' class='fas fa-check-square fa-lg' onclick='show_box(event)' hidden></i>
+        <i id='show-box-go' class='fa fa-check fa-lg text-success' onclick='nextselect()' hidden></i>
       </div>
     </div>
-    <div id="in-ctn" class="container mgem1">
+    <div id="in-ctn" class="container mgem1" style="padding-bottom: 90px;">
     </div>
   </div> 
   <!-- End big container -->
 
    <!-- Nav menu bottom -->
-   <div id="navs-bttm" class="row fixed-bottom navs" hidden>
-    <div class="col-3 text-center" onclick="menu('home')">
+   <div id="navs-bttm" class="fixed-bottom" hidden>
+    <div id="btn-nav-home" class="nav-bottom-item" onclick="menu('home')">
         <i id="i-home" class="fas fa-home menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="menu('add')">
+    <div id="btn-nav-add" class="nav-bottom-item" onclick="menu('add')">
         <i id="i-add" class="fas fa-plus menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="menu('edit')">
+    <div id="btn-nav-edit" class="nav-bottom-item" onclick="menu('edit')">
         <i id="i-edit" class="fas fa-edit menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="menu('del')">
+    <div id="btn-nav-del" class="nav-bottom-item" onclick="menu('del')">
         <i id="i-del" class="fa fa-trash-alt menu"></i>
     </div>
-</div>
-<!-- End Nav menu bottom -->
+   </div>
+   <!-- End Nav menu bottom -->
 </body>
 
 </html>

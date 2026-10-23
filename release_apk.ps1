@@ -97,12 +97,28 @@ if ($nasAvailable) {
         New-Item -ItemType Directory -Path $nasPhpDir -Force | Out-Null
     }
 
-    # Copy set_lastV.php to NAS
+    # Copy set_lastV.php & db.php to NAS
     $phpSource = Join-Path $root "www\php\set_lastV.php"
     if (Test-Path $phpSource) {
         Copy-Item -Path $phpSource -Destination (Join-Path $nasPhpDir "set_lastV.php") -Force
         Write-Host "   -> Updated set_lastV.php on NAS" -ForegroundColor Gray
     }
+    $dbSource = Join-Path $root "www\php\db.php"
+    if (Test-Path $dbSource) {
+        Copy-Item -Path $dbSource -Destination (Join-Path $nasPhpDir "db.php") -Force
+        Write-Host "   -> Updated db.php on NAS" -ForegroundColor Gray
+    }
+
+    # Copy updated HTML and JS files to NAS
+    Get-ChildItem -Path (Join-Path $root "www") -Filter "*.html" | ForEach-Object {
+        Copy-Item -Path $_.FullName -Destination (Join-Path $NasPath $_.Name) -Force
+    }
+    $nasJsDir = Join-Path $NasPath "js"
+    if (-not (Test-Path $nasJsDir)) { New-Item -ItemType Directory -Path $nasJsDir -Force | Out-Null }
+    Get-ChildItem -Path (Join-Path $root "www\js") -Filter "*.js" | ForEach-Object {
+        Copy-Item -Path $_.FullName -Destination (Join-Path $nasJsDir $_.Name) -Force
+    }
+    Write-Host "   -> Synced HTML & JS web assets to NAS" -ForegroundColor Gray
 
     # Copy APK to NAS as ddcar-latest.apk (Standard download link)
     $destLatest = Join-Path $NasPath "ddcar-latest.apk"
@@ -120,7 +136,7 @@ if ($nasAvailable) {
 # 5. Update Database Version via set_lastV.php
 Write-Host "`n[5/5] Updating app version in database..." -ForegroundColor Green
 try {
-    $apiUrlWithParams = "$ApiUrl`?version=$Version&url=$([System.Uri]::EscapeDataString($PublicDownloadUrl))"
+    $apiUrlWithParams = "$ApiUrl`?version=$Version&url=$([System.Uri]::EscapeDataString($PublicDownloadUrl))&user_id=1&user_role=%E0%B9%80%E0%B8%88%E0%B9%89%E0%B8%B2%E0%B8%82%E0%B8%AD%E0%B8%87%E0%B8%A3%E0%B9%89%E0%B8%B2%E0%B8%99"
     $response = Invoke-RestMethod -Uri $apiUrlWithParams -Method Get -TimeoutSec 10
     if ($response.status -eq "success") {
         Write-Host "[SUCCESS] Database version updated successfully to v$Version!" -ForegroundColor Green

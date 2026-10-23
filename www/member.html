@@ -7,6 +7,11 @@
   <title>ผู้ใช้งาน - DDCAR</title>
   <!-- Local Assets -->
   <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/svg-with-js.css">
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/jquery-confirm.css">
+  <link rel="stylesheet" href="css/loading.css">
+
   <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
   <script type="text/javascript" src="js/jquery-ui.min.js"></script>
   <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
@@ -17,172 +22,220 @@
   <script type="text/javascript" src="js/config.js"></script>
   <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
-  <link rel="stylesheet" href="css/index.css">
-  <link rel="stylesheet" href="css/jquery-confirm.css">
-  <link rel="stylesheet" href="css/loading.css">
-
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
 
   <style>
-    #title{
-      color: #666;
-      letter-spacing: 1px;
-      font-weight: bold;
+    .member-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      transition: all 0.15s ease;
     }
-    .nopd{
-      padding-right: 0px;
-      padding-left: 0px;
+    .member-card:active {
+      background: #f8fafc;
     }
-    hr{
-      margin-top: 0;
+    .action-icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
     }
   </style>
 
   <script>
+    var memberList = [];
+
     $(document).ready(function() {
-      $.ajax({
-        type: "GET",
-        url:localStorage.pathServer + "php/get_user.php",
-        beforeSend: function(){
-            $(".overlay").prop('hidden', false);
-        },     
-        success: function(data){    
-          $(".overlay").prop('hidden', true);           
-          var obj = jQuery.parseJSON(data);
-          if(obj){
-              $.each(obj, function(i, field){
-              $('#in-ctn').append(" <div id='cus-"+i+"' class='row'>" +
-                "<span id='user-"+i+"' hidden>"+obj[i].user_id+"</span>" +
-                "<span id='phone-"+i+"' hidden>"+obj[i].phone+"</span>" +
-                "<div class='col-1 text-left'>" + 
-                  "<i class='fa fa-trash-alt i-del' onclick='edit_del("+i+");' style='color: #666666;' hidden></i>" +
-                  "<i class='fa fa-edit i-edit' onclick='edit_mem("+i+");' style='color: #666666;' hidden></i>" +
-                "</div>" +
-                "<div class='col-6 text-center nopd'>" +
-                  "<p id='name-"+i+"'>"+obj[i].user_name+"</p>" +
-                "</div>" +
-                "<div class='col-4 text-center nopd'>" +
-                  "<p id='role-"+i+"'>"+obj[i].user_role+"</p>" +
-                "</div>" +
-                "<div class='col-1'></div>" +
-                "</div> <hr id='hr-"+i+"'>");                  
-            }); 
-          }        
-        }                    
+      loadMembers();
+
+      $('#search-member').on('input', function() {
+        filterMembers($(this).val());
       });
     });
 
-    function disactive(arg) {
-      nav_menu = ['home', 'add', 'edit', 'del'];
-      for (i = 0; i < 4; i++) {
-        if (nav_menu[i] != arg) {
-          if ($("#i-" + nav_menu[i]).hasClass('active')) $("#i-" + nav_menu[i]).removeClass('active');
+    function loadMembers() {
+      $(".overlay").prop('hidden', false);
+      $.ajax({
+        type: "GET",
+        url: localStorage.pathServer + "php/get_user.php",
+        cache: false,
+        success: function(data){  
+          $(".overlay").prop('hidden', true);           
+          var obj = window.safeParseJSON(data);
+          memberList = Array.isArray(obj) ? obj : [];
+          renderMembers(memberList);
+        },
+        error: function(xhr, status, error) {
+          $(".overlay").prop('hidden', true);
+          $('#member-list').html(
+            '<div class="text-center p-4 text-danger">' +
+              '<i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>' +
+              '<strong>ไม่สามารถโหลดข้อมูลผู้ใช้งานได้</strong><br>' +
+              '<span class="small text-muted mb-3 d-block">เซิร์ฟเวอร์ตอบสนองช้า หรือเครือข่ายขัดข้อง</span>' +
+              '<button class="btn btn-outline-danger btn-sm mt-2 px-3" onclick="loadMembers()"><i class="fas fa-redo-alt mr-1"></i> ลองใหม่อีกครั้ง</button>' +
+            '</div>'
+          );
         }
-      }
+      });
     }
 
-    function disac(arg){
-      if ($("#i-" + arg).hasClass('active')) $("#i-" + arg).removeClass('active');
+    function renderMembers(list) {
+      var $ctn = $('#member-list');
+      $ctn.empty();
+      if (!list || list.length === 0) {
+        $ctn.html('<div class="text-center p-4 text-muted"><i class="fas fa-users-slash fa-2x mb-2"></i><br>ไม่พบรายชื่อผู้ใช้งาน</div>');
+        return;
+      }
+      $.each(list, function(i, item){
+        var userId = item.user_id;
+        var userName = item.user_name || '-';
+        var userRole = item.user_role || '-';
+        var phone = item.phone || '';
+        
+        var isEditVisible = $('#i-edit').hasClass('active');
+        var isDelVisible = $('#i-del').hasClass('active');
+
+        var roleBadgeClass = 'badge-secondary';
+        if (userRole === 'แอดมิน' || userRole === 'เจ้าของร้าน') roleBadgeClass = 'badge-danger';
+        else if (userRole === 'พนักงาน') roleBadgeClass = 'badge-info';
+
+        var html = 
+          "<div id='mem-" + userId + "' class='member-card'>" +
+            "<div class='action-col' style='display: " + (isEditVisible || isDelVisible ? "flex" : "none") + "; gap: 6px; margin-right: 10px;'>" +
+              "<div class='action-icon-btn i-del' onclick='deleteMember(\"" + userName.replace(/"/g, '&quot;') + "\", " + userId + ");' style='background: #fee2e2; color: #dc2626; display: " + (isDelVisible ? "inline-flex" : "none") + ";'>" +
+                "<i class='fa fa-trash-alt'></i>" +
+              "</div>" +
+              "<div class='action-icon-btn i-edit' onclick='editMember(" + userId + ", \"" + userName.replace(/"/g, '&quot;') + "\", \"" + userRole + "\", \"" + phone + "\");' style='background: #e0f2fe; color: #0284c7; display: " + (isEditVisible ? "inline-flex" : "none") + ";'>" +
+                "<i class='fa fa-edit'></i>" +
+              "</div>" +
+            "</div>" +
+            "<div style='flex: 1; min-width: 0; cursor: pointer;' onclick='editMember(" + userId + ", \"" + userName.replace(/"/g, '&quot;') + "\", \"" + userRole + "\", \"" + phone + "\");'>" +
+              "<div style='font-weight: 600; color: #0f172a; font-size: 15px;' class='text-truncate'>" + userName + "</div>" +
+              "<div style='font-size: 12px; color: #64748b; margin-top: 2px;'>" + (phone ? ('<i class=\"fas fa-phone fa-xs mr-1\"></i>' + phone) : 'ไม่มีเบอร์โทร') + "</div>" +
+            "</div>" +
+            "<div style='text-align: right;'>" +
+              "<span class='badge " + roleBadgeClass + "' style='font-size: 12px; padding: 4px 8px;'>" + userRole + "</span>" +
+            "</div>" +
+          "</div>";
+        $ctn.append(html);
+      });
+    }
+
+    function filterMembers(query) {
+      if (!query || query.trim() === '') {
+        renderMembers(memberList);
+        return;
+      }
+      var q = query.trim().toLowerCase();
+      var filtered = memberList.filter(function(m) {
+        var name = (m.user_name || '').toLowerCase();
+        var role = (m.user_role || '').toLowerCase();
+        var phone = (m.phone || '').toLowerCase();
+        return name.indexOf(q) !== -1 || role.indexOf(q) !== -1 || phone.indexOf(q) !== -1;
+      });
+      renderMembers(filtered);
+    }
+
+    function disactive(arg) {
+      var nav_menu = ['home', 'add', 'edit', 'del'];
+      for (var i = 0; i < nav_menu.length; i++) {
+        if (nav_menu[i] != arg) {
+          $("#i-" + nav_menu[i]).removeClass('active');
+        }
+      }
     }
 
     function menu(arg) {
-      // Animate
-      disactive(arg);
-      console.log(arg);
-      if($("#i-"+arg).hasClass('active')){
-        console.log("i-"+arg+"hasClass('active')");
-        $("#i-"+arg).removeClass('active');
-      }else{
-        $("#i-" + arg).fadeOut(150).fadeIn(100, function() {
-          $("#i-" + arg).addClass('active');
-        });
+      if (arg == "add") {
+        window.location = "register.html";
+        return;
       }
 
-      if(arg == "add"){
-        goto = "register.html";
-        
-        window.location = goto;
-      }else if(arg == "edit"){
-        // show edit all
-        if ($(".i-edit").is(":visible")) {
-          $(".i-del").attr('hidden', true);
-          $(".i-edit").attr('hidden', true);
-          disac("edit");
-        } else {
-          $(".i-del").attr('hidden', true);
-          $(".i-edit").attr('hidden', false);
-        }
-      }else if (arg == "del") {
-        // show trash all 
-        if($(".i-del").is(":visible")){
-          $(".i-edit").attr('hidden', true);
-          $(".i-del").attr('hidden', true);
-          disac("del");
-        }else{
-          $(".i-edit").attr('hidden', true);
-          $(".i-del").attr('hidden', false);
+      if ($("#i-" + arg).hasClass('active')) {
+        $("#i-" + arg).removeClass('active');
+        $('.action-col').hide();
+        $('.i-del').hide();
+        $('.i-edit').hide();
+      } else {
+        disactive(arg);
+        $("#i-" + arg).addClass('active');
+        if (arg == "edit") {
+          $('.action-col').show();
+          $('.i-del').hide();
+          $('.i-edit').css('display', 'inline-flex');
+        } else if (arg == "del") {
+          $('.action-col').show();
+          $('.i-edit').hide();
+          $('.i-del').css('display', 'inline-flex');
         }
       }
     }
 
-    function edit_del(arg) {
-      var name = $('#name-' + arg).text();    
+    function editMember(id, name, role, phone) {
+      var target = "member_show.html?id=" + encodeURIComponent(id) + 
+                   "&name=" + encodeURIComponent(name) + 
+                   "&role=" + encodeURIComponent(role) + 
+                   "&phone=" + encodeURIComponent(phone);
+      window.location = target;
+    }
+
+    function deleteMember(name, id) {
       $.confirm({
-          title: 'ลบรายการ',
-          content: 'ต้องการลบ '+name+' หรือไม่',
-          backgroundDismiss: true,
-          buttons: {
-            formSubmit: {
-              text: 'ตกลง',
-              btnClass: 'btn-danger',
-              action: function () {
-                  $.ajax({
-                    type: "POST",
-                    url:localStorage.pathServer + "php/delete_user.php",           
-                    data: {'name' : name},  
-                    beforeSend: function(){
-                      $(".overlay").prop('hidden', false);
-                    },              
-                    success: function(data){ 
-                      $(".overlay").prop('hidden', true); 
-                      if(data == "success"){
-                        $("#cus-"+arg).remove(); 
-                        $("#hr-"+arg).remove();
-                      }else{
-                        $.confirm({
-                          title: 'พบข้อผิดพลาด',
-                          content: 'ลองอีกครั้ง',
-                          backgroundDismiss: true,
-                          buttons: {
-                            formSubmit: {
-                              text: 'ตกลง',
-                              btnClass: 'btn-regis',
-                              action: function () {
-                              }
-                            }
-                          }
-                        });
-                      }        
-                    }               
-                  });   
-                }
-            },ยกเลิก: function () {}
+        title: 'ยืนยันการลบผู้ใช้',
+        content: 'ต้องการลบผู้ใช้ "' + name + '" หรือไม่?',
+        backgroundDismiss: true,
+        buttons: {
+          confirm: {
+            text: 'ลบข้อมูล',
+            btnClass: 'btn-danger',
+            action: function () {
+              $(".overlay").prop('hidden', false);
+              $.ajax({
+                type: "POST",
+                url: localStorage.pathServer + "php/delete_user.php",           
+                data: {'name' : name},              
+                success: function(data){ 
+                  $(".overlay").prop('hidden', true); 
+                  if(data == "success"){
+                    $("#mem-" + id).fadeOut(200, function() { $(this).remove(); });
+                    memberList = memberList.filter(function(m) { return m.user_name !== name; });
+                  } else {
+                    $.confirm({
+                      title: 'พบข้อผิดพลาด',
+                      content: 'ไม่สามารถลบข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+                      backgroundDismiss: true,
+                      buttons: { ok: { text: 'ตกลง', btnClass: 'btn-dark' } }
+                    });
+                  }        
+                },
+                error: function() {
+                  $(".overlay").prop('hidden', true);
+                  $.confirm({
+                    title: 'ข้อผิดพลาด',
+                    content: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้',
+                    backgroundDismiss: true,
+                    buttons: { ok: { text: 'ตกลง', btnClass: 'btn-dark' } }
+                  });
+                }               
+              });   
+            }
+          },
+          cancel: {
+            text: 'ยกเลิก',
+            action: function () {}
           }
+        }
       }); 
     }
-
-    function edit_mem(arg){
-      user_id = $('#user-' + arg).text()
-      user_name = $('#name-' + arg).text()
-      role = $('#role-' + arg).text()
-      phone = $('#phone-' + arg).text()
-      goto = "member_show.html?id=" + user_id + "&name=" + user_name + "&role=" + role + "&phone=" + phone;
-      
-      window.location = goto;      
-    }
-
-    
   </script>
 </head>
 
@@ -190,48 +243,51 @@
   <!-- Loading -->
   <div class="overlay" hidden><div class="loading"></div></div> 
 
-  <!-- big container -->
-  <div id="big-ctn" class="container justify-content-center">
+  <div id="big-ctn" class="container-fullwidth justify-content-center">
     <!-- Nav menu top -->
-    <div class="row navs align-items-center mgem1o5 fixed-top">
-      <div class="col-2 text-center" onclick="window.location = 'index.html';">
+    <div class="row navs align-items-center fixed-top justify-content-center">
+      <div id="col-back" class="col-2 text-center" onclick="window.location = 'index.html';">
         <i id="i-back" class="fas fa-angle-left"></i>
       </div>
       <div class="col-8 text-center">
-        <h5 id="h5-title">ผู้ใช้</h5>
+        <h5 id="h5-title">จัดการผู้ใช้งาน</h5>
+      </div>
+      <div class="col-2 text-center" onclick="window.location = 'register.html';" style="cursor: pointer;">
+        <i class="fas fa-user-plus text-white" style="font-size: 18px;"></i>
       </div>
     </div>
 
-    <div id="row-title" class="row fixed-top" style="margin-top: 4.5em;">
-      <div class="col-1"></div>
-      <div id="title" class="col-6 text-center nopd">ชื่อ</div>
-      <div id="title" class="col-4 text-center nopd">บทบาท</div>
-      <div class="col-1"></div>
-    </div><hr id="title-hr" class="mgem1" style="margin-top: 6.3em; width: 98%;">
+    <!-- Search Bar fixed under top nav -->
+    <div style="position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; z-index: 1010; background: #ffffff; padding: 10px 16px; border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+      <div style="position: relative;">
+        <i class="fas fa-search" style="position: absolute; left: 14px; top: 12px; color: #94a3b8; font-size: 14px;"></i>
+        <input id="search-member" type="search" class="form-control" placeholder="ค้นหาชื่อผู้ใช้, ตำแหน่ง..." style="padding-left: 36px; border-radius: 10px; height: 38px; font-size: 14px; background: #f8fafc; border-color: #e2e8f0;">
+      </div>
+    </div>
 
-    <div id="in-ctn" class="container-fullwidth" style="margin-top: 0!important; height: calc(100vh - (4.5em + 120px));">
-      <!-- Show -->
-  
+    <!-- Content Area -->
+    <div id="in-ctn" class="container" style="margin-top: calc(118px + var(--safe-top)) !important; padding: 10px 16px calc(80px + var(--safe-bottom)); min-height: calc(100vh - 120px);">
+      <div id="member-list">
+        <!-- Rendered list -->
+      </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="fixed-bottom">
+      <div class="nav-bottom-item" onclick="window.location = 'index.html';">
+        <i id="i-home" class="fas fa-home menu"></i>
+      </div>
+      <div class="nav-bottom-item" onclick="menu('add')">
+        <i id="i-add" class="fas fa-plus menu"></i>
+      </div>
+      <div class="nav-bottom-item" onclick="menu('edit')">
+        <i id="i-edit" class="fas fa-edit menu"></i>
+      </div>
+      <div class="nav-bottom-item" onclick="menu('del')">
+        <i id="i-del" class="fa fa-trash-alt menu"></i>
+      </div>
     </div>
   </div>
-  <!-- End big container -->
-
-  <!-- Nav menu bottom -->
-  <div class="row fixed-bottom navs">
-    <div class="col-3 text-center" onclick="window.location = 'index.html';">
-      <i id="i-home" class="fas fa-home menu"></i>
-    </div>
-    <div class="col-3 text-center" onclick="menu('add')">
-      <i id="i-add" class="fas fa-plus menu"></i>
-    </div>
-    <div class="col-3 text-center" onclick="menu('edit')">
-      <i id="i-edit" class="fas fa-edit menu"></i>
-    </div>
-    <div class="col-3 text-center" onclick="menu('del')">
-      <i id="i-del" class="fa fa-trash-alt menu"></i>
-    </div>
-  </div>
-  <!-- End Nav menu bottom -->
 </body>
 
 </html>

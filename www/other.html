@@ -7,6 +7,7 @@
   <title>อื่นๆ - DDCAR</title>
   <!-- Local Assets -->
   <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/svg-with-js.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
   <link rel="stylesheet" href="css/loading.css">
@@ -138,7 +139,7 @@
 
   <!-- Top Nav -->
   <div class="row navs align-items-center fixed-top justify-content-center">
-    <div class="col-2 text-center" onclick="window.history.back();">
+    <div id="col-back" class="col-2 text-center" onclick="window.location = 'index.html';">
       <i id="i-back" class="fas fa-angle-left"></i>
     </div>
     <div class="col-8 text-center">
@@ -182,7 +183,7 @@
       <!-- Version info -->
       <div class="text-center" style="margin-top: 40px; color: #94a3b8; font-size: 13px;">
         <div>DDCAR Mobile Application</div>
-        <div>Version 2.1.0 (Build 4)</div>
+        <div>Version 2.1.4 (Build 9)</div>
         <div style="font-size: 11px; margin-top: 4px;">DD ACCESSORIES MOTOR SPORT</div>
       </div>
 
@@ -190,18 +191,18 @@
   </div>
 
   <!-- Nav menu bottom -->
-  <div class="row fixed-bottom align-items-center">
-    <div class="col-3 text-center" onclick="window.location = 'index.html';">
+  <div class="fixed-bottom">
+    <div class="nav-bottom-item" onclick="window.location = 'index.html';">
       <i id="i-home" class="fas fa-home menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="window.location = 'bell.html';">
+    <div class="nav-bottom-item" onclick="window.location = 'bell.html';">
       <div class="dot" hidden></div>
       <i id="i-bell" class="fas fa-bell menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="scan();">
+    <div class="nav-bottom-item" onclick="scan();">
       <i id="i-qrcode" class="fas fa-qrcode menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="return 0;">
+    <div class="nav-bottom-item" onclick="return 0;">
       <i id="i-bars" class="fas fa-bars menu active"></i>
     </div>
   </div>

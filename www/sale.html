@@ -7,6 +7,7 @@
     <title>ขายสินค้า - DDCAR</title>
     <!-- Local Assets -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/svg-with-js.css">
     <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/jquery-confirm.css">
     <link rel="stylesheet" href="css/loading.css">
@@ -147,7 +148,21 @@
                         }
                     });
                 } catch(e) {}
-            }      
+            }
+
+            // Live autocomplete input listener (requires at least 2 characters)
+            var saleSearchTimer = null;
+            $('#search_prod').on('input', function() {
+                var q = $(this).val().trim();
+                if (saleSearchTimer) clearTimeout(saleSearchTimer);
+                if (q.length >= 2) {
+                    saleSearchTimer = setTimeout(function() {
+                        search_prod_instant(q);
+                    }, 350);
+                } else {
+                    $('#myUL').empty();
+                }
+            });
         });
 
         $(document).keydown(function(objEvent) {
@@ -181,10 +196,11 @@
                             backgroundDismiss: true,
                             buttons: {
                                 formSubmit: {
-                                text: 'ตกลง',
-                                btnClass: 'btn-regis',
-                                action: function () {
-                                }
+                                    text: 'ตกลง',
+                                    btnClass: 'btn-danger',
+                                    action: function () {
+                                        set_default();
+                                    }
                                 }
                             }
                         });  
@@ -196,15 +212,32 @@
             if(bool){
                 $.ajax({
                     type: "POST",
-                    url:localStorage.pathServer + "php/get_sale.php",    
-                    data:{'prod_id' : id,'cus_id':cus_id,'ware_id': localStorage.ware_id_s,'type':localStorage.ware_type},
-                    //async: false,                       
+                    url: localStorage.pathServer + "php/get_sale.php",    
+                    data: {'prod_id' : id, 'cus_id': cus_id, 'ware_id': localStorage.ware_id_s, 'type': localStorage.ware_type},
                     beforeSend: function(){
                         $(".overlay").prop('hidden', false);
                     },             
                     success: function(data){  
                         $(".overlay").prop('hidden', true); 
-                        var obj = jQuery.parseJSON(data);                                                           
+                        var obj = window.safeParseJSON(data);
+                        if (!obj || !Array.isArray(obj) || obj.length === 0) {
+                            $.confirm({
+                                title: 'ไม่พบข้อมูลสินค้า',
+                                content: 'ไม่สามารถดึงข้อมูลสินค้านี้ได้ หรือสินค้าไม่มีในระบบ',
+                                backgroundDismiss: true,
+                                buttons: {
+                                    formSubmit: {
+                                        text: 'ตกลง',
+                                        btnClass: 'btn-danger',
+                                        action: function() {
+                                            set_default();
+                                        }
+                                    }
+                                }
+                            });
+                            show();
+                            return;
+                        }                                                           
                         $.each(obj, function(i, field){                           
                             if(obj[i][9]){
                                 $('#price').val(obj[i][9]);  
@@ -220,28 +253,49 @@
                             img = obj[i].img;   
                             old_price = $('#price').val();  
                             min = obj[i].min_amount;
-                                if(min <= 0){
-                                    $.confirm({
-                                        title: 'เตือน',
-                                        content: 'สินค้าไม่มีใน' + $('#h5-title').text(),
-                                        backgroundDismiss: true,
-                                        buttons: {
-                                            formSubmit: {
+                            if(min <= 0){
+                                $.confirm({
+                                    title: 'เตือน',
+                                    content: 'สินค้าไม่มีใน' + $('#h5-title').text(),
+                                    backgroundDismiss: true,
+                                    buttons: {
+                                        formSubmit: {
                                             text: 'ตกลง',
-                                            btnClass: 'btn-regis',
+                                            btnClass: 'btn-danger',
                                             action: function () {
-                                            }
+                                                set_default();
                                             }
                                         }
-                                    });  
-                                    set_default();
-                                    if(localStorage.arr_prod_s){
-                                        bool = false;
-                                        add_prod();
-                                    }  
-                                }                                                                     
+                                    }
+                                });  
+                                set_default();
+                                if(localStorage.arr_prod_s){
+                                    bool = false;
+                                    add_prod();
+                                }  
+                            } else {
+                                $("#btn-addprod").removeAttr('disabled');
+                            }                                                                     
                         });
                         show();                                             
+                    },
+                    error: function(xhr, status, error) {
+                        $(".overlay").prop('hidden', true);
+                        $.confirm({
+                            title: 'ข้อผิดพลาดการเชื่อมต่อ',
+                            content: 'ไม่สามารถติดต่อเซิร์ฟเวอร์เพื่อดึงข้อมูลสินค้าได้ กรุณาลองใหม่อีกครั้ง',
+                            backgroundDismiss: true,
+                            buttons: {
+                                formSubmit: {
+                                    text: 'ตกลง',
+                                    btnClass: 'btn-danger',
+                                    action: function() {
+                                        set_default();
+                                    }
+                                }
+                            }
+                        });
+                        show();
                     }               
                 });     
             }else{
@@ -613,29 +667,48 @@
         }
 
         function search_prod(){
-            var val = $('#search_prod').val();
-            if(val == ""){
-                return 0;
+            var val = $('#search_prod').val().trim();
+            if(val == "") return 0;
+            $('#search_prod').blur();
+            search_prod_instant(val);
+        }
+
+        function search_prod_instant(val){
+            if(!val || val.trim() === ""){
+                $('#myUL').empty();
+                return;
             }       
-            $('#search_prod').blur();  
-            $('#myUL').empty();
             $.ajax({
                 type: "POST",
                 url: localStorage.pathServer + "php/search_prod.php",
                 data: {'phrase' : val},
-                beforeSend: function(){
-                    $(".overlay").prop('hidden', false);
-                },             
+                cache: false,
                 success: function(data){  
-                    $(".overlay").prop('hidden', true);                             
-                    var obj = jQuery.parseJSON(data);
-                    if(obj){
+                    var obj = window.safeParseJSON(data);
+                    $('#myUL').empty();
+                    if(obj && obj.length > 0){
                         $.each(obj, function(i, field){ 
-                            $('#myUL').append('<li><div id="prod-1" class="row" onclick="get_sale('+field.prod_id+')">' +
-                            '<div class="col-4 text-center p">'+field.prod_code+'</div>' +
-                            '<div class="col-8 text-center p">'+field.prod_name+'</div>' +
-                            '</div><hr></li>');        
+                            var codeDisplay = field.prod_code ? field.prod_code : '-';
+                            var price = (type == "ส่ง" || type == "ขายส่ง") ? field.prod_pricesend : field.prod_price;
+                            var priceDisplay = price ? (Number(price).toLocaleString() + ' ฿') : '';
+                            $('#myUL').append(
+                                '<li style="padding: 10px 4px; border-bottom: 1px solid #f1f5f9;">' +
+                                  '<div class="row align-items-center" onclick="get_sale('+field.prod_id+')" style="cursor: pointer;">' +
+                                    '<div class="col-4 text-center">' +
+                                      '<span class="badge badge-light border" style="font-size: 0.85rem; font-weight: 700; color: #1e293b;">'+codeDisplay+'</span>' +
+                                    '</div>' +
+                                    '<div class="col-5 text-left">' +
+                                      '<div style="font-weight: 600; color: #0f172a; font-size: 0.95rem;">'+field.prod_name+'</div>' +
+                                    '</div>' +
+                                    '<div class="col-3 text-right font-weight-bold text-danger" style="font-size: 0.9rem;">' +
+                                      priceDisplay +
+                                    '</div>' +
+                                  '</div>' +
+                                '</li>'
+                            );        
                         }); 
+                    } else {
+                        $('#myUL').append('<li class="text-center p-4 text-muted">ไม่พบสินค้าที่ตรงกับการค้นหา</li>');
                     }                                                                                                                                        
                 }               
             }); 
@@ -687,6 +760,48 @@
             $('#price').val("");                
             $('#amount').val("1");      
             $('#name').focus();
+        }
+
+        function resetForm(){
+            $.confirm({
+                title: 'ยืนยันล้างข้อมูลทั้งหมด',
+                content: 'ต้องการล้างข้อมูลทั้งหมดในหน้านี้ (รวมถึงลูกค้า และรายการสินค้าทั้งหมดที่เลือกไว้) หรือไม่?',
+                backgroundDismiss: true,
+                buttons: {
+                    confirm: {
+                        text: 'ล้างข้อมูลทั้งหมด',
+                        btnClass: 'btn-danger',
+                        action: function() {
+                            set_default();
+                            prod_id = "";
+                            old_price = "";
+                            img = "";
+                            min = 0;
+                            bool = true;
+                            cus_id = "";
+                            type = "";
+                            $('#cus').val('').removeAttr('disabled');
+                            $('#check-sale').text('0');
+                            localStorage.removeItem('cus_name');
+                            localStorage.removeItem('cus_id');
+                            localStorage.removeItem('type');
+                            localStorage.removeItem('cus_addr');
+                            localStorage.removeItem('cus_tel');
+                            localStorage.removeItem('arr_prod_s');
+                            localStorage.removeItem('arr_sale');
+                            $("#name").attr('disabled', true);
+                            $("#btn-folder").attr('disabled', true);
+                            $("#btn-addpic").attr('disabled', true);
+                            $("#btn-addprod").attr('disabled', true);
+                            $("#h5-title").attr('onclick', 'showware();');
+                            try {
+                                window.history.replaceState({}, document.title, window.location.pathname);
+                            } catch(e) {}
+                        }
+                    },
+                    cancel: { text: 'ยกเลิก' }
+                }
+            });
         }
 
     </script>
@@ -766,9 +881,15 @@
                 </div>
             </div>
 
-            <div>
+            <div style="margin-bottom: 12px;">
                 <button id="btn-addprod" class="mbtn" onclick="add_prod();" disabled style="min-height: 52px; font-size: 1.15rem;">
                     <i class="fas fa-cart-plus" style="margin-right: 8px;"></i> เพิ่มสินค้าลงรายการ
+                </button>
+            </div>
+
+            <div>
+                <button id="btn-reset" type="button" class="btn btn-outline-secondary btn-block" onclick="resetForm();" style="border-radius: 12px; font-weight: 600; padding: 10px; font-size: 0.95rem; border: 1.5px solid #cbd5e1; color: #475569;">
+                    <i class="fas fa-redo-alt mr-1"></i> ล้างข้อมูลทั้งหมด (เริ่มบิลใหม่)
                 </button>
             </div>
         </div>
@@ -776,18 +897,18 @@
     <!-- End big container -->
 
     <!-- Nav menu bottom -->
-    <div id="navs-bttm" class="row fixed-bottom align-items-center">
-        <div class="col-3 text-center" onclick="window.location = 'index.html';">
+    <div id="navs-bttm" class="fixed-bottom">
+        <div class="nav-bottom-item" onclick="window.location = 'index.html';">
             <i id="i-home" class="fas fa-home menu"></i>
         </div>
-        <div class="col-3 text-center" onclick="window.location = 'bell.html';">
+        <div class="nav-bottom-item" onclick="window.location = 'bell.html';">
             <div class="dot" hidden></div>
             <i id="i-bell" class="fas fa-bell menu"></i>
         </div>
-        <div class="col-3 text-center" onclick="handleBottomScan();">
+        <div class="nav-bottom-item" onclick="handleBottomScan();">
             <i id="i-qrcode" class="fas fa-qrcode menu"></i>
         </div>
-        <div class="col-3 text-center" onclick="window.location = 'other.html';">
+        <div class="nav-bottom-item" onclick="window.location = 'other.html';">
             <i id="i-bars" class="fas fa-bars menu"></i>
         </div>
     </div>

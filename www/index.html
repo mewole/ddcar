@@ -7,6 +7,7 @@
   <title>DDCAR - เมนูหลัก</title>
   <!-- Local Assets -->
   <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/svg-with-js.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
   <link rel="stylesheet" href="css/loading.css">
@@ -144,9 +145,7 @@
         tabs('main');
       }
       
-      if(localStorage.user_role == "เจ้าของร้าน"){
-        $('#tabs-admin').prop('hidden', true);         
-      } else if(localStorage.user_role == "พนักงาน"){
+      if(localStorage.user_role == "พนักงาน"){
         tabs('main');
         $('#tabs-admin').prop('hidden', true);
         $('#tabs-log').prop('hidden', true);          
@@ -158,6 +157,10 @@
         $("#tile_import").css({'pointer-events': 'none', 'opacity': '0.5'});
         $("#tile_export").css({'pointer-events': 'none', 'opacity': '0.5'});
         $("#tile_qrimport").css({'pointer-events': 'none', 'opacity': '0.5'});
+      } else {
+        // แอดมิน, เจ้าของร้าน, หรืออื่นๆ: แสดงทุกแท็บ
+        $('#tabs-admin').prop('hidden', false);
+        $('#tabs-log').prop('hidden', false);
       }
 
       localStorage.stack_folder = "";
@@ -299,7 +302,7 @@
     <div class="row navs align-items-center fixed-top justify-content-center">
       <div class="col-2 text-center"></div>
       <div class="col-8 text-center">
-        <h5 id="h5-title"><i class="fas fa-car" style="margin-right: 6px;"></i> DDCAR</h5>
+        <h5 id="h5-title"><img src="img/logo.jpg" alt="Logo" class="app-header-logo"> DDCAR</h5>
       </div>
       <div class="col-2 text-center"></div>
     </div>
@@ -382,7 +385,7 @@
 
       <!-- Tab 2: Reports / Log -->
       <div id="log" hidden>
-        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'web_mng_bill.html';">
+        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'manage_bill.html';">
           <div class="action-icon-box action-icon-red">
             <i class="fas fa-receipt"></i>
           </div>
@@ -393,40 +396,40 @@
           <i class="fas fa-chevron-right action-arrow"></i>
         </div>
 
-        <div class="action-tile" onclick="localStorage.myD = ''; window.location = 'web_mng_sale.html';">
+        <div class="action-tile" onclick="localStorage.myD = ''; window.location = 'manage_salesum.html';">
           <div class="action-icon-box action-icon-dark">
             <i class="fas fa-chart-line"></i>
           </div>
           <div>
             <div class="action-title">รายงานสรุปยอดขาย</div>
-            <p class="action-desc">ดูยอดขายรายวันและสถิติสินค้า</p>
+            <p class="action-desc">ดูยอดขายรายวันและสรุปกำไร</p>
           </div>
           <i class="fas fa-chevron-right action-arrow"></i>
         </div>
 
-        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'web_mng_import_warehouse.html';">
+        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'manage_import.html';">
           <div class="action-icon-box action-icon-red">
-            <i class="fas fa-boxes"></i>
+            <i class="fas fa-arrow-down"></i>
           </div>
           <div>
-            <div class="action-title">รายงานสินค้าเข้าโกดัง</div>
+            <div class="action-title">รายงานสินค้าเข้า</div>
             <p class="action-desc">ประวัติการนำเข้าของแต่ละรอบ</p>
           </div>
           <i class="fas fa-chevron-right action-arrow"></i>
         </div>
 
-        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'web_mng_import.html';">
+        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'manage_export.html';">
           <div class="action-icon-box action-icon-dark">
-            <i class="fas fa-store"></i>
+            <i class="fas fa-arrow-up"></i>
           </div>
           <div>
-            <div class="action-title">รายงานสินค้าเข้าหน้าร้าน</div>
-            <p class="action-desc">ประวัติการเติมสต๊อกหน้าร้าน</p>
+            <div class="action-title">รายงานสินค้าออก</div>
+            <p class="action-desc">ประวัติการเบิกสินค้าออกโกดัง</p>
           </div>
           <i class="fas fa-chevron-right action-arrow"></i>
         </div>
 
-        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'web_mng_transfer.html';">
+        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'manage_transfer_in.html';">
           <div class="action-icon-box action-icon-red">
             <i class="fas fa-exchange-alt"></i>
           </div>
@@ -437,7 +440,7 @@
           <i class="fas fa-chevron-right action-arrow"></i>
         </div>
 
-        <div class="action-tile" onclick="localStorage.myS = ''; window.location = 'web_credit.html';">
+        <div class="action-tile" onclick="localStorage.myS = ''; window.location = 'manage_credit.html';">
           <div class="action-icon-box action-icon-dark">
             <i class="fas fa-credit-card"></i>
           </div>
@@ -500,18 +503,18 @@
   </div>
 
   <!-- Nav menu bottom -->
-  <div class="row fixed-bottom align-items-center">
-    <div class="col-3 text-center" onclick="return 0;">
+  <div class="fixed-bottom">
+    <div class="nav-bottom-item" onclick="return 0;">
       <i id="i-home" class="fas fa-home menu active"></i>
     </div>
-    <div class="col-3 text-center" onclick="window.location = 'bell.html';">
+    <div class="nav-bottom-item" onclick="window.location = 'bell.html';">
       <div class="dot" hidden></div>
       <i id="i-bell" class="fas fa-bell menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="scan('index');">
+    <div class="nav-bottom-item" onclick="scan('index');">
       <i id="i-qrcode" class="fas fa-qrcode menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="window.location = 'other.html';">
+    <div class="nav-bottom-item" onclick="window.location = 'other.html';">
       <i id="i-bars" class="fas fa-bars menu"></i>
     </div>
   </div>

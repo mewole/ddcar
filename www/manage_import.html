@@ -3,144 +3,100 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Home</title>
-  <!-- Bootstrap Import -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
-  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
-  <script type="text/javascript" src="js/config.js"></script>
-  
-  <script type="text/javascript" src="js/jquery-confirm.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
-  <script src="cordova.js"></script>
-  <script type="text/javascript" src="js/scanqr.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
- 
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
+  <title>รายงานสินค้าเข้าโกดัง - DDCAR</title>
+  <!-- Local Assets -->
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/svg-with-js.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
   <link rel="stylesheet" href="css/loading.css">
+  <link rel="stylesheet" href="css/duDatepicker.css">
+
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
+  <script type="text/javascript" src="js/jquery-confirm.js"></script>
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script defer src="js/fontawesome-all.js"></script>
+  <script type="text/javascript" src="js/config.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
+  <script src="js/duDatepicker.js"></script>
 
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
 
-  <!-- DatePicker -->
-  <link rel="stylesheet" href="css/duDatepicker.css">
-  <script src="js/duDatepicker.js"></script>
-
   <style>
-    hr{
-      margin-top: 0;
-    }  
-    ul {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
+    .filter-bar-fixed {
+      position: fixed;
+      top: calc(56px + var(--safe-top));
+      left: 0;
+      right: 0;
+      z-index: 1010;
+      background: #ffffff;
+      padding: 10px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    #title{
-      color: #666;
-      letter-spacing: 1px;
-      font-weight: bold;
-    }    
   </style>
 
   <script>
-    var start = start_d = start_s = 0;
-    var bool = bool_d = bool_s = false;
+    var start = 0, start_d = 0, start_s = 0;
+    var bool = false, bool_d = false, bool_s = false;    
+    var val = "";
+
     $(document).ready(function(){
-      if(localStorage.bell){
-          $('.dot').prop('hidden',false);
+      if (localStorage.bell) {
+        $('.dot').prop('hidden', false);
       }  
-      $('#datepicker-from').duDatepicker(({format: 'dd/mm/yy', theme: 'red', cancelBtn: true, maxDate: "today"})).on('datechanged', function(e){
-        console.log(e.date);
-        $("#date").text(e.date);
-        if(e.date != null){
-          e.date = new Date();
-        }
+
+      $('#datepicker-from').duDatepicker({format: 'dd/mm/yy', theme: 'red', cancelBtn: true, maxDate: "today"}).on('datechanged', function(e){
+        $("#date-badge-text").text(e.date);
         $("#datepicker-to").trigger('click');
       });
 
-      $('#datepicker-to').duDatepicker(({format: 'dd/mm/yy', theme: 'red', cancelBtn: true, maxDate: "today"})).on('datechanged', function(e){
-        console.log(e.date);
-        $("#date").append(" - " + e.date);
-        $("#date_row").prop('hidden', false);
-        $("#search_row").prop('hidden', true);
+      $('#datepicker-to').duDatepicker({format: 'dd/mm/yy', theme: 'red', cancelBtn: true, maxDate: "today"}).on('datechanged', function(e){
+        var fromDate = $("#date-badge-text").text();
+        $("#date-badge-text").text(fromDate + " - " + e.date);
+        $("#active-filter-row").prop('hidden', false);
         localStorage.myS = '';
         localStorage.myD = '';
-        items = "";
         start_d = 0;
         bool_d = false;
         $("#myS").prop('hidden', true);
         $("#myUL").prop('hidden', true);
-        $("#myD").prop('hidden', false);
-        $("#myD").empty();
-        $("#i-back").attr("onclick","showUL()");
-        tempdate = ""
-        no = 1
+        $("#myD").prop('hidden', false).empty();
         search_date();
-      });
+      });  
+
       get_import();
 
-      if(localStorage.myS){
-        var retrievedObject = localStorage.getItem('myS');
-        var data = JSON.parse(retrievedObject)
-        items = data[0].html
-        start_s = data[0].start_s
-        show_search()
-        $("#myS").prop('hidden', false);
-        $("#myUL").prop('hidden', true);
-        $("#myD").prop('hidden', true);        
-        $("#i-back").attr("onclick","showUL()");
-        $('#myS').append(items)
-      }else if(localStorage.myD){
-        var retrievedObject = localStorage.getItem('myD');
-        var data = JSON.parse(retrievedObject)
-        items = data[0].html
-        start_d = data[0].start_d
-        show_search()
-        $("#myS").prop('hidden', true);
-        $("#myUL").prop('hidden', true);
-        $("#myD").prop('hidden', false);        
-        $("#i-back").attr("onclick","showUL()");
-        $('#myD').append(items)
-      }
-
-      //scroll to bottom
-      var total_height = $("#in-ctn").height();
-      var temp_hight = $("#in-ctn").height();
-      $("#in-ctn").scroll(function() {            
-        if($("#in-ctn").scrollTop() > total_height) {
-          total_height += temp_hight;
-          if(!$("#myUL").prop('hidden')){
-            if(bool){
-              return 0;
-            }
-            get_import();            
-          }else if(!$("#myD").prop('hidden')){
-            if(bool_d){
-              return 0;
-            }
-            search_date();
-          }else if(!$("#myS").prop('hidden')){
-            if(bool_s){
-              return 0;
-            }
-            get_import_s();
+      // Infinite scroll
+      var $ctn = $("#in-ctn");
+      $ctn.scroll(function() {
+        if ($ctn.scrollTop() + $ctn.innerHeight() >= $ctn[0].scrollHeight - 80) {  
+          if (!$("#myUL").prop('hidden')) {
+            if (!bool) get_import();            
+          } else if (!$("#myD").prop('hidden')) {
+            if (!bool_d) search_date();
+          } else if (!$("#myS").prop('hidden')) {
+            if (!bool_s) get_import_s();
           }
         }
-      });      
+      });
+
+      $('#search_import').on('search', function() {
+        search();
+      });
     });
-    
+
     $(document).keydown(function(objEvent) {
-      if (objEvent.keyCode == 13) {  //enter pressed
+      if (objEvent.keyCode == 13) {
         objEvent.preventDefault();           
         search();        
       }         
-    })
+    });
 
     function showUL(){
       localStorage.myS = '';
@@ -148,344 +104,250 @@
       $("#myS").prop('hidden', true);
       $("#myUL").prop('hidden', false);
       $("#myD").prop('hidden', true);
-      // $("#search_row").prop('hidden', true);
-      // $("#date_row").prop('hidden', true);
-      $("#i-back").attr("onclick","window.location = 'index.html';");
-      show_search();
+      $("#active-filter-row").prop('hidden', true);
+      $('#search_import').val('');
     }
-    var tempdate,no = 1
+
     function get_import(){
+      if (window.showOverlay) window.showOverlay();
       $.ajax({
         type: "POST",
-        url:localStorage.pathServer + "php/get_import.php",
-        data: {'start': start},       
-        beforeSend: function(){
-            $(".overlay").prop('hidden', false);
-        },                       
+        url: localStorage.pathServer + "php/get_import.php",
+        data: {'start': start},
+        timeout: 6500,
         success: function(data){ 
-          $(".overlay").prop('hidden', true);  
-          var obj = jQuery.parseJSON(data);
-          if(obj[0] == "last"){
-            bool = true
-          }                        
-          $.each(obj, function(i, field){
-            if(i > 0){
-              var txt = field.date_time.split(" ");
-              var txt2 = txt[0].split("-");
-              var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2);
-              if(tempdate != date){
-                  tempdate = date
-                  no = 1
-              }
-              $('#myUL').append('<li class="mgemo5"> <div class="row" onclick="import_info('+field.stock_id+')">'+
-                '<div class="col-2 text-center no-pd">' +
-                  '<p>'+no+'</p>' +
+          if (window.hideOverlay) window.hideOverlay();
+          var obj = window.safeParseJSON(data);
+          if (obj && obj[0] == "last") bool = true;
+          if (!obj || !Array.isArray(obj)) return;
+
+          var htmlArr = [];
+          for (var i = 1; i < obj.length; i++) {
+            var field = obj[i];
+            var dt = (field.date_time || '').split(" ")[0].split("-");
+            var dateStr = dt.length === 3 ? (dt[2] + "/" + dt[1] + "/" + dt[0].substr(2)) : field.date_time;
+            var safeWare = $('<div>').text(field.ware_name || 'คลังสินค้า').html();
+            var safeDoc = $('<div>').text(field.stock_number || '-').html();
+
+            htmlArr.push(
+              '<div class="report-item-card" onclick="import_info(' + field.stock_id + ')">' +
+                '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                  '<span class="badge badge-light border" style="font-size: 13px; font-weight: 700; color: #16a34a; background: #f0fdf4;">' + safeDoc + '</span>' +
+                  '<span class="text-muted small"><i class="far fa-calendar-alt mr-1"></i>' + dateStr + '</span>' +
                 '</div>' +
-                '<div class="col-4 text-center no-pd">' +
-                  '<p>'+field.stock_number+'</p>' +
+                '<div class="d-flex justify-content-between align-items-center pt-1">' +
+                  '<div style="font-size: 14px; font-weight: 600; color: #0f172a;" class="text-truncate">' +
+                    '<i class="fas fa-warehouse text-muted mr-1"></i> เข้า: ' + safeWare +
+                  '</div>' +
+                  '<div style="color: #cbd5e1;"><i class="fas fa-chevron-right fa-sm"></i></div>' +
                 '</div>' +
-                '<div class="col-3 text-center no-pd">' +
-                  '<p>'+date+'</p>' +
-                '</div>' +
-                '<div class="col-3 text-center no-pd">' +
-                  '<p>'+field.ware_name+'</p>' +
-                '</div>' +
-              '</div><hr></li>');
-              no++   
-            }                                               
-          });                                          
-        }               
+              '</div>'
+            );
+          }
+          $('#myUL').append(htmlArr.join(''));
+        },
+        error: function() {
+          if (window.hideOverlay) window.hideOverlay();
+        }
       });
       start += 30;
     }
-
+    
     function import_info(arg){
-      if(!$("#myS").prop('hidden')){        
-        json = [];
-        item = {}
-        item["html"] = items;
-        item["start_s"] = start_s;
-        json.push(item);
-        localStorage.setItem("myS",JSON.stringify(json));
-      }else if(!$("#myD").prop('hidden')){        
-        json = [];
-        item = {}
-        item["html"] = items;
-        item["start_d"] = start_d;
-        json.push(item);
-        localStorage.setItem("myD",JSON.stringify(json));
-      }
-      
-      window.location = 'import_info.html?id='+arg;
+      window.location = 'import_info.html?id=' + arg;
     }
 
-    function show_search(){
-      if($("#search_row").is(':visible')){
-        $("#search_row").prop('hidden', true);
-        if(!$("#myD").prop('hidden')){
-          $("#date_row").prop('hidden', false);
-        }
-
-        $("#row-title").css("margin-top", "4.5em");
-        $("#title-hr").css("margin-top", "6.3em");
-        $("#in-ctn").css("height", "calc(100vh - (4.5em + 120px))");
-      }else{
-        $("#search_row").prop('hidden', false);
-        $("#date_row").prop('hidden', true);
-
-        $("#row-title").css("margin-top", "8.5em");
-        $("#title-hr").css("margin-top", "10.3em");
-        $("#in-ctn").css("height", "calc(100vh - (8.9em + 120px))");
-      }
-    }
-
-    var val;
     function search(){
-      if($('#search_import').val() == ""){
-        return 0;
+      val = $('#search_import').val().trim();
+      if (val === '') {
+        showUL();
+        return;
       }
       localStorage.myS = '';
       localStorage.myD = '';
-      items = "";
       $('#search_import').blur();
-      val = $('#search_import').val();
       start_s = 0;
       bool_s = false;
-      $("#myS").prop('hidden', false);
+      $("#myS").prop('hidden', false).empty();
       $("#myUL").prop('hidden', true);
       $("#myD").prop('hidden', true);
-      $("#myS").empty();
-      $("#i-back").attr("onclick","showUL()");
-      tempdate = ""
-      no = 1
+      $("#active-filter-row").prop('hidden', false);
+      $("#date-badge-text").text('ค้นหา: ' + val);
       get_import_s();
     }
-
-    var items = "";
+    
     function get_import_s(){
+      if (window.showOverlay) window.showOverlay();
       $.ajax({
         type: "POST",
-        url:localStorage.pathServer + "php/get_import.php",
-        data: {'start': start_s, 'value' : val},
-        beforeSend: function(){
-            $(".overlay").prop('hidden', false);
-        },                       
+        url: localStorage.pathServer + "php/get_import.php",
+        data: {'start': start_s, 'value': val},
+        timeout: 6500,
         success: function(data){ 
-          $(".overlay").prop('hidden', true);  
-          var obj = jQuery.parseJSON(data);
-          if(obj[0] == "last"){
-            bool_s = true
+          if (window.hideOverlay) window.hideOverlay();
+          var obj = window.safeParseJSON(data);
+          if (obj && obj[0] == "last") bool_s = true;
+          if (!obj || !Array.isArray(obj)) return;
+
+          var htmlArr = [];
+          for (var i = 1; i < obj.length; i++) {
+            var field = obj[i];
+            var dt = (field.date_time || '').split(" ")[0].split("-");
+            var dateStr = dt.length === 3 ? (dt[2] + "/" + dt[1] + "/" + dt[0].substr(2)) : field.date_time;
+            var safeWare = $('<div>').text(field.ware_name || 'คลังสินค้า').html();
+            var safeDoc = $('<div>').text(field.stock_number || '-').html();
+
+            htmlArr.push(
+              '<div class="report-item-card" onclick="import_info(' + field.stock_id + ')">' +
+                '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                  '<span class="badge badge-light border" style="font-size: 13px; font-weight: 700; color: #16a34a; background: #f0fdf4;">' + safeDoc + '</span>' +
+                  '<span class="text-muted small"><i class="far fa-calendar-alt mr-1"></i>' + dateStr + '</span>' +
+                '</div>' +
+                '<div class="d-flex justify-content-between align-items-center pt-1">' +
+                  '<div style="font-size: 14px; font-weight: 600; color: #0f172a;" class="text-truncate">' +
+                    '<i class="fas fa-warehouse text-muted mr-1"></i> เข้า: ' + safeWare +
+                  '</div>' +
+                  '<div style="color: #cbd5e1;"><i class="fas fa-chevron-right fa-sm"></i></div>' +
+                '</div>' +
+              '</div>'
+            );
           }
-          $.each(obj, function(i, field){
-            if(i > 0){
-              var txt = field.date_time.split(" ");
-              var txt2 = txt[0].split("-");
-              var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2);
-              if(tempdate != date){
-                  tempdate = date
-                  no = 1
-              }
-              items = items + '<li class="mgemo5"> <div class="row" onclick="import_info('+field.stock_id+')">'+
-                '<div class="col-2 text-center no-pd">' +
-                  '<p>'+no+'</p>' +
-                '</div>' +
-                '<div class="col-4 text-center no-pd">' +
-                  '<p>'+field.stock_number+'</p>' +
-                '</div>' +
-                '<div class="col-3 text-center no-pd">' +
-                  '<p>'+date+'</p>' +
-                '</div>' +
-                '<div class="col-3 text-center no-pd">' +
-                  '<p>'+field.ware_name+'</p>' +
-                '</div>' +
-              '</div><hr></li>'
-              $('#myS').append('<li class="mgemo5"> <div class="row" onclick="import_info('+field.stock_id+')">'+
-                '<div class="col-2 text-center no-pd">' +
-                  '<p>'+no+'</p>' +
-                '</div>' +
-                '<div class="col-4 text-center no-pd">' +
-                  '<p>'+field.stock_number+'</p>' +
-                '</div>' +
-                '<div class="col-3 text-center no-pd">' +
-                  '<p>'+date+'</p>' +
-                '</div>' +
-                '<div class="col-3 text-center no-pd">' +
-                  '<p>'+field.ware_name+'</p>' +
-                '</div>' +
-              '</div><hr></li>');
-              no++     
-            }                                                
-          });                                         
-        }               
+          if (start_s === 0 && htmlArr.length === 0) {
+            htmlArr.push('<div class="text-center p-4 text-muted"><i class="fas fa-search fa-2x mb-2"></i><br>ไม่พบรายการสินค้าเข้าที่ค้นหา</div>');
+          }
+          $('#myS').append(htmlArr.join(''));
+        },
+        error: function() {
+          if (window.hideOverlay) window.hideOverlay();
+        }
       });
-      start_s += 30;
+      start_s += 30;      
     }
 
     function search_date(){
-      txt = $("#date").text().split("-");
-      temp = txt[0].split("/");
-      date =  "20" + temp[2] + "-" + temp[1] + "-" + temp[0];
-      date = date.replace(/\s+/g, '');
-      date = date + " 00:00:00";
+      var txt = $("#date-badge-text").text().split("-");
+      if (txt.length < 2) return;
+      var temp = txt[0].trim().split("/");
+      var date = "20" + temp[2] + "-" + temp[1] + "-" + temp[0] + " 00:00:00";
+      
+      var temp2 = txt[1].trim().split("/");
+      var date_to = "20" + temp2[2] + "-" + temp2[1] + "-" + temp2[0] + " 23:59:59";     
 
-      temp = txt[1].split("/");
-      date_to =  "20" + temp[2] + "-" + temp[1] + "-" + temp[0];
-      date_to = date_to.replace(/\s+/g, '');
-      date_to = date_to + " 23:59:59";
-
+      if (window.showOverlay) window.showOverlay();
       $.ajax({
         type: "POST",
-        url:localStorage.pathServer + "php/get_import.php",         
-        data:{'date' : date, 'date_to' : date_to ,'start' : start_d},
-        beforeSend: function(){
-          $(".overlay").prop('hidden', false);
-        },                       
+        url: localStorage.pathServer + "php/get_import.php",         
+        data: {'date': date, 'date_to': date_to, 'start': start_d},
+        timeout: 6500,
         success: function(data){ 
-          $(".overlay").prop('hidden', true);  
-          var obj = jQuery.parseJSON(data);
-          if(obj[0] == "last"){
-            bool_d = true;
-          }                              
-          $.each(obj, function(i, field){
-            if(i > 0){
-              var txt = field.date_time.split(" ");
-              var txt2 = txt[0].split("-");
-              var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2);
-              if(tempdate != date){
-                  tempdate = date
-                  no = 1
-              }
-              items = items + '<li class="mgemo5"> <div class="row" onclick="import_info('+field.stock_id+')">'+                
-                '<div class="col-2 text-center no-pd">' +
-                  '<p>'+no+'</p>' +
-                '</div>' +
-                '<div class="col-4 text-center no-pd">' +
-                  '<p>'+field.stock_number+'</p>' +
-                '</div>' +
-                '<div class="col-3 text-center no-pd">' +
-                  '<p>'+date+'</p>' +
-                '</div>' +
-                '<div class="col-3 text-center no-pd">' +
-                  '<p>'+field.ware_name+'</p>' +
-                '</div>' +
-              '</div><hr></li>'
-              $('#myD').append('<li class="mgemo5"> <div class="row" onclick="import_info('+field.stock_id+')">'+
-                '<div class="col-2 text-center no-pd">' +
-                  '<p>'+no+'</p>' +
-                '</div>' +
-                '<div class="col-4 text-center no-pd">' +
-                  '<p>'+field.stock_number+'</p>' +
-                '</div>' +
-                '<div class="col-3 text-center no-pd">' +
-                  '<p>'+date+'</p>' +
-                '</div>' +
-                '<div class="col-3 text-center no-pd">' +
-                  '<p>'+field.ware_name+'</p>' +
-                '</div>' +
-              '</div><hr></li>');
-              no++ 
-            }                                      
-          });                                         
-        }               
-      });  
-      start_d += 30;          
-    }
+          if (window.hideOverlay) window.hideOverlay();
+          var obj = window.safeParseJSON(data);
+          if (obj && obj[0] == "last") bool_d = true;
+          if (!obj || !Array.isArray(obj)) return;
 
+          var htmlArr = [];
+          for (var i = 1; i < obj.length; i++) {
+            var field = obj[i];
+            var dt = (field.date_time || '').split(" ")[0].split("-");
+            var dateStr = dt.length === 3 ? (dt[2] + "/" + dt[1] + "/" + dt[0].substr(2)) : field.date_time;
+            var safeWare = $('<div>').text(field.ware_name || 'คลังสินค้า').html();
+            var safeDoc = $('<div>').text(field.stock_number || '-').html();
+
+            htmlArr.push(
+              '<div class="report-item-card" onclick="import_info(' + field.stock_id + ')">' +
+                '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                  '<span class="badge badge-light border" style="font-size: 13px; font-weight: 700; color: #16a34a; background: #f0fdf4;">' + safeDoc + '</span>' +
+                  '<span class="text-muted small"><i class="far fa-calendar-alt mr-1"></i>' + dateStr + '</span>' +
+                '</div>' +
+                '<div class="d-flex justify-content-between align-items-center pt-1">' +
+                  '<div style="font-size: 14px; font-weight: 600; color: #0f172a;" class="text-truncate">' +
+                    '<i class="fas fa-warehouse text-muted mr-1"></i> เข้า: ' + safeWare +
+                  '</div>' +
+                  '<div style="color: #cbd5e1;"><i class="fas fa-chevron-right fa-sm"></i></div>' +
+                '</div>' +
+              '</div>'
+            );
+          }
+          if (start_d === 0 && htmlArr.length === 0) {
+            htmlArr.push('<div class="text-center p-4 text-muted"><i class="fas fa-calendar-times fa-2x mb-2"></i><br>ไม่พบรายการสินค้าเข้าในช่วงวันนี้</div>');
+          }
+          $('#myD').append(htmlArr.join(''));
+        },
+        error: function() {
+          if (window.hideOverlay) window.hideOverlay();
+        }
+      });
+      start_d += 30;
+    }
   </script>
 </head>
 
 <body>
   <!-- Loading -->
-  <div class="overlay" hidden><div class="loading"></div></div> 
+  <div class="overlay" hidden><div class="loading"></div></div>  
 
-  <!-- End big container -->
   <div id="big-ctn" class="container-fullwidth justify-content-center">
     <!-- Nav menu top -->
-    <div id="top-navs" class="row navs align-items-center mgem1o5 fixed-top">
-      <div id="i-back" class="col-2 text-center" onclick="window.location ='index.html';">
-        <i class="fas fa-angle-left"></i>
+    <div class="row navs align-items-center fixed-top justify-content-center">
+      <div id="col-back" class="col-2 text-center" onclick="window.location ='index.html?menu=3';">
+        <i id="i-back" class="fas fa-angle-left"></i>
       </div>
-      <div class="col-8 text-center nopd">
-        <h5 id="h5-title">รายการสินค้าเข้าโกดัง</h5>
+      <div class="col-8 text-center">
+        <h5 id="h5-title">รายงานสินค้าเข้าโกดัง</h5>
       </div>
-      <div class="col-1 text-right" onclick="show_search();">
-        <i class="fas fa-search" style="color: white; font-size: 120%; margin-top: 2px;"></i>
-      </div>
-    </div>
-
-    <div id="date_row" class="row mgem1o5 fixed-top" style="margin-top: 4.5em;" hidden>
-      <div class="col-12 text-center">
-        <h5 id="date"></h5>
+      <div class="col-2 text-center" onclick="$('#datepicker-from').trigger('click');" style="cursor: pointer;">
+        <i class="far fa-calendar-alt text-white" style="font-size: 18px;"></i>
       </div>
     </div>
 
-    <div id="search_row" class="row mgem1o5 fixed-top" style="margin-top: 4.5em; padding-left: 1.5em; padding-right: 1.5em;" hidden>
-      <div class="col-9">
-        <input id="search_import" type="search" class="form-control form-control-lg text-center" placeholder="เลขที่ / โกดัง">
-      </div> 
-      <div class="col-3">
-        <button id="datepicker-from" class="mbtn" style="height: 90%; margin-top: 2px;">
+    <!-- Filter & Search Bar fixed under navbar -->
+    <div class="filter-bar-fixed">
+      <div class="d-flex align-items-center" style="gap: 8px;">
+        <div style="position: relative; flex: 1;">
+          <i class="fas fa-search" style="position: absolute; left: 12px; top: 12px; color: #94a3b8; font-size: 14px;"></i>
+          <input id="search_import" type="search" class="form-control" placeholder="ค้นหาเลขที่เอกสาร หรือ โกดัง..." style="padding-left: 34px; border-radius: 10px; height: 38px; font-size: 14px; background: #f8fafc; border-color: #e2e8f0;">
+        </div>
+        <button id="datepicker-from" class="btn btn-outline-danger" style="height: 38px; border-radius: 10px; padding: 0 12px; display: flex; align-items: center;" title="เลือกช่วงวันที่">
           <i class="far fa-calendar-alt"></i>
         </button>
         <button id="datepicker-to" hidden></button>
-      </div> 
+      </div>
+
+      <!-- Active filter indicator badge -->
+      <div id="active-filter-row" class="pt-2 d-flex justify-content-between align-items-center" hidden>
+        <span class="badge badge-light border text-danger" style="font-size: 12px; font-weight: 600;">
+          <i class="fas fa-filter mr-1"></i> <span id="date-badge-text"></span>
+        </span>
+        <button class="btn btn-sm btn-link text-muted p-0" onclick="showUL();" style="font-size: 12px; text-decoration: none;">
+          <i class="fas fa-times-circle"></i> ล้างตัวกรอง
+        </button>
+      </div>
     </div>
 
-    <div id="row-title" class="row fixed-top" style="margin-top: 4.5em;">
-      <div id="title" class="col-2 text-center">ที่</div>
-      <div id="title" class="col-4 text-center">เลขที่</div>
-      <div id="title" class="col-3 text-center nopd">วันที่</div>
-      <div id="title" class="col-3 text-center nopd">โกดัง</div> 
-    </div><hr id="title-hr" class="mgem1" style="margin-top: 6.3em; width: 98%;">
-
-    <div id="in-ctn" class="container-fullwidth" style="margin-top: 0!important; height: calc(100vh - (4.5em + 120px));">
-      <ul id="myUL">
-
-      </ul>
-      <ul id="myD" hidden>
-
-      </ul>
-      <ul id="myS" hidden>
-
-      </ul>
+    <!-- Content scroll area -->
+    <div id="in-ctn" class="container" style="margin-top: calc(118px + var(--safe-top)) !important; padding: 10px 16px calc(80px + var(--safe-bottom)); min-height: calc(100vh - 120px);">
+      <div id="myUL"></div>
+      <div id="myD" hidden></div>
+      <div id="myS" hidden></div>
     </div>
-  </div>
-  <!-- End big container -->
+  </div>     
 
   <!-- Nav menu bottom -->
-  <div id="btm-navs" class="row fixed-bottom navs">
-    <div class="col-3 text-center" onclick="window.location = 'index.html?menu=3';">
+  <div class="fixed-bottom">
+    <div class="nav-bottom-item" onclick="window.location ='index.html?menu=3';">
       <i id="i-home" class="fas fa-home menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="window.location = 'bell.html';">
+    <div class="nav-bottom-item" onclick="window.location = 'bell.html';">
       <div class="dot" hidden></div>
       <i id="i-bell" class="fas fa-bell menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="scan();">
+    <div class="nav-bottom-item" onclick="scan();">
       <i id="i-qrcode" class="fas fa-qrcode menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="window.location = 'other.html';">
-      <i id="i-bars" class="fa fa-bars menu"></i>
+    <div class="nav-bottom-item" onclick="window.location = 'other.html';">
+      <i id="i-bars" class="fas fa-bars menu"></i>
     </div>
   </div>
-  <!-- End Nav menu bottom -->
-  <script>
-    //Touch animation
-    $(".mbtn").on("touchstart", function() {
-      $(this).addClass('mbtn-touch');
-    });
-    $(".mbtn").on("touchend", function() {
-      $(this).removeClass('mbtn-touch');
-    });
-    /*$(function () {
-      var viewer = ImageViewer();
-      $('#img').click(function () {
-          alert("click");
-          var imgSrc = this.src;
-          viewer.show(imgSrc);
-      });
-    });*/
-  </script>
 </body>
 
 </html>

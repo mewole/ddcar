@@ -7,6 +7,10 @@
     <title>ตรวจสอบรายการขาย - DDCAR</title>
     <!-- Local Assets -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/svg-with-js.css">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/jquery-confirm.css">
+
     <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
@@ -16,9 +20,6 @@
     <script defer src="js/fontawesome-all.js"></script>
     <script type="text/javascript" src="js/config.js"></script>
     <script type="text/javascript" src="js/capacitor-bridge.js"></script>
-
-    <link rel="stylesheet" href="css/index.css">
-    <link rel="stylesheet" href="css/jquery-confirm.css">
 
     <!-- Font -->
     <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
@@ -56,22 +57,9 @@
     <script>
         arr_data = [];  
         $(document).ready(function () { 
-            margin = $("#navs-menu").outerHeight()*3;
-            $("#ctn-btm").css('padding-bottom', margin);
-            margin = $("#ctn-btm").outerHeight();
-            $("#big-ctn").css('margin-bottom', margin); 
-            
-            // $("style").append('.jconfirm .jconfirm-box{margin-bottom: 60%;}');
-
-            margin = $("#ctn-btn").outerHeight() + $("#navs-menu").outerHeight() -15;
-            $("#navs-net").css('margin-bottom', margin); 
-
-            margin = $("#ctn-btn").outerHeight() + $("#navs-menu").outerHeight() + $("#navs-net").outerHeight() -15;
-            $("#big-ctn").css('margin-bottom', margin);         
-
-            $("#cus-title").text(localStorage.cus_name);
+            $("#cus-title").text(localStorage.cus_name || "ลูกค้าทั่วไป");
             var retrievedObject = localStorage.getItem('arr_sale');
-            arr_data = JSON.parse(retrievedObject);
+            arr_data = retrievedObject ? JSON.parse(retrievedObject) : [];
             var sum = 0;
             for(var i = 0 ; i < arr_data.length ; i ++){                              
                 var sum_prod = arr_data[i].price*arr_data[i].amt;
@@ -358,61 +346,42 @@
     <!-- big container -->
     <div id="big-ctn" class="container-fullwidth justify-content-center">
         <!-- Nav menu top -->
-        <div class="row navs align-items-center mgem1o5 fixed-top">
-          <div class="col-2 text-center" onclick="window.location = 'sale.html';">
+        <div class="row navs align-items-center fixed-top justify-content-center">
+          <div id="col-back" class="col-2 text-center" onclick="window.location = 'sale.html';">
             <i id="i-back" class="fas fa-angle-left"></i>
           </div>
           <div class="col-8 text-center">
-            <h5 id="h5-title">ตรวจสอบ</h5>
+            <h5 id="h5-title">ตรวจสอบรายการขาย</h5>
           </div>
+          <div class="col-2 text-center"></div>
         </div>     
-        <div class="row mg-7">
-            <div class="col-12 text-center">
-                <h5 id="cus-title"></h5>
-            </div>
+        <div class="sub-header-fixed text-center" style="font-weight: 700; color: #1e293b; font-size: 15px;">
+            <i class="fas fa-user text-danger" style="margin-right: 6px;"></i> <span id="cus-title">ลูกค้าทั่วไป</span>
         </div>
-        <div id="in-ctn" class="container" style="height: calc(100vh - (4.5em + 150px)) !important; margin-top: 4.5em;">
+        <div id="in-ctn" class="container sub-header-content" style="padding-bottom: 120px !important;">
             <!-- Show --> 
         </div>    
     </div>
     <!-- End big container -->
 
-    <div id="ctn-btm" class="container fixed-bottom" style="background: #f3f3f3;">
-        <div class="container">
-            <div class="row">
-                <div class="col-12 text-center">
-                    <h5 class="h5-title" style="font-size: 130%;">รวม :
-                        <span  style="color: red;"id="net">0</span>
-                    </h5>
-                </div>
+    <div id="ctn-btm" class="fixed-bottom" style="background: #ffffff; padding: 12px 16px max(12px, var(--safe-bottom)); border-top: 1px solid var(--dd-border); box-shadow: 0 -4px 16px rgba(0,0,0,0.06); height: auto !important; display: block !important;">
+        <div class="row align-items-center" style="margin-bottom: 10px;">
+            <div class="col-6 text-left" style="font-weight: 700; font-size: 15px; color: #64748b;">
+                ยอดรวมสุทธิ
             </div>
-            <div class="row">
-                <div class="col-4 text-center" style="padding-left: 0; padding-right: 0;">
-                    <button class="mbtn-cancle" onclick="clearAll();">ยกเลิก</button>
-                </div>
-                <div class="col-8 text-center" style="padding-right: 0;">
-                    <button class="mbtn" onclick="next()">ต่อไป</button>
-                </div>
+            <div class="col-6 text-right" style="font-weight: 800; font-size: 1.35rem; color: #da251c;">
+                ฿ <span id="net">0</span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-4" style="padding-right: 6px;">
+                <button class="mbtn-cancle" onclick="clearAll();">ยกเลิก</button>
+            </div>
+            <div class="col-8" style="padding-left: 6px;">
+                <button class="mbtn" onclick="next()">ต่อไป <i class="fas fa-arrow-right" style="margin-left: 6px;"></i></button>
             </div>
         </div>
     </div>
-    
-    <!-- Nav menu bottom -->
-    <div id="navs-menu" class="row fixed-bottom navs">
-        <div class="col-3 text-center" onclick="window.location = 'index.html';">
-            <i id="i-home" class="fas fa-home menu"></i>
-        </div>
-        <div class="col-3 text-center" onclick="menu('add')">
-            <i id="i-add" class="fas fa-plus menu"></i>
-        </div>
-        <div class="col-3 text-center" onclick="menu('edit')">
-            <i id="i-edit" class="fas fa-edit menu"></i>
-        </div>
-        <div class="col-3 text-center" onclick="menu('del')">
-            <i id="i-del" class="fa fa-trash-alt menu"></i>
-        </div>
-    </div>
-    <!-- End Nav menu bottom -->
     <script>
         //Touch animation
         $(".mbtn").on("touchstart", function() {

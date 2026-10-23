@@ -18,7 +18,9 @@
   <script type="text/javascript" src="js/config.js"></script>
   <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
-  <link href="css/imageviewer.css"  rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/svg-with-js.css">
+  <link href="css/imageviewer.css" rel="stylesheet" type="text/css" />
   <link rel="stylesheet" href="css/untitled.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
@@ -361,13 +363,14 @@
   <!-- End big container -->
   <div id="big-ctn" class="container justify-content-center">
     <!-- Nav menu top -->
-    <div class="row navs align-items-center mgem1o5 fixed-top">
-      <div class="col-2 text-center" onclick="page_back()">
+    <div class="row navs align-items-center fixed-top justify-content-center">
+      <div id="col-back" class="col-2 text-center" onclick="page_back()">
         <i id="i-back" class="fas fa-angle-left"></i>
       </div>
       <div class="col-8 text-center">
         <h5 id="h5-title">เพิ่มสินค้า</h5>
       </div>
+      <div class="col-2 text-center"></div>
     </div>
     
     <div id="in-ctn" class="container-fullwidth">
@@ -409,19 +412,19 @@
       </div>
     </div>
     <!-- Nav menu bottom -->
-    <div class="row fixed-bottom navs">
-      <div class="col-3 text-center" onclick="window.location = 'index.html';">
+    <div class="fixed-bottom">
+      <div class="nav-bottom-item" onclick="window.location = 'index.html';">
         <i id="i-home" class="fas fa-home menu"></i>
       </div>
-      <div class="col-3 text-center" onclick="window.location ='bell.html';">
+      <div class="nav-bottom-item" onclick="window.location ='bell.html';">
         <div class="dot" hidden></div>
         <i id="i-bell" class="fas fa-bell menu"></i>
       </div>
-      <div class="col-3 text-center" onclick="scan();">
+      <div class="nav-bottom-item" onclick="scan();">
         <i id="i-qrcode" class="fas fa-qrcode menu"></i>
       </div>
-      <div class="col-3 text-center" onclick="window.location = 'other.html';">
-        <i id="i-bars" class="fa fa-bars menu"></i>
+      <div class="nav-bottom-item" onclick="window.location = 'other.html';">
+        <i id="i-bars" class="fas fa-bars menu"></i>
       </div>
     </div>
     <!-- End Nav menu bottom -->

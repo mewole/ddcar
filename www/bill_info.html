@@ -70,7 +70,10 @@
 
   <script>
     var bill_id,pay,dis,get,ware_id_o,type_o,total,credit_id,credit_id_new;
-    arr = [];
+    var arr = [];
+    var originalBillData = null;
+    var isEditMode = false;
+
     $(document).ready(function(){
       url = new URL(window.location.href);
       bill_id = url.searchParams.get("id"); 
@@ -85,6 +88,9 @@
         success: function(data){  
           $(".overlay").prop('hidden', true);
           var obj = jQuery.parseJSON(data); 
+          if (!obj || obj.length === 0) return;
+          originalBillData = JSON.parse(JSON.stringify(obj));
+          
           $('#h5-title').text(obj[0].order_number);
           if(obj[0].type == "โกดัง"){
             $('#warehouse').text(obj[0][19].ware_name);           
@@ -93,7 +99,6 @@
           }          
           $('#cus').text(obj[0].cus_name + " ");
           $("#cus").append('<span id="type">'+obj[0].payment_type+'</span>');
-          //$("#type").text(obj[0].payment_type);
           var txt = obj[0].date_time.split(" ");
           var txt2 = txt[0].split("-");
           var date = txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2) + " " + txt[1].substr(0,5);
@@ -109,19 +114,22 @@
           total = obj[0].total_price;
           credit_id = obj[0].credit_id;
           credit_id_new = obj[0].credit_id;
+
+          arr = [];
           $.each(obj, function(i, field){
-            $('#in-ctn').append('<div id="prod-'+field.item_id+'" class="row mgemo5">' +              
+            var idx = i + 1;
+            $('#in-ctn').append('<div id="prod-'+idx+'" class="row mgemo5">' +              
               '<div class="col-1 text-center">' +
-                '<p id="amt-'+field.item_id+'" class="amount">'+field.prod_amount+'</p>' +
+                '<p id="amt-'+idx+'" class="amount" data-idx="'+idx+'">'+field.prod_amount+'</p>' +
               '</div>' +
               '<div class="col-7 text-center nopd">' +
-                '<p id="name-'+field.item_id+'" class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</p>' +
+                '<p id="name-'+idx+'" class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</p>' +
                 '</div>' +
                 '<div class="col-2 text-center">' +
-                  '<p id="price-'+field.item_id+'">'+field.prod_price+'</p>' +
+                  '<p id="price-'+idx+'">'+field.prod_price+'</p>' +
                 '</div>' +
                   '<div class="col-2 text-center nopd">' +
-                    '<p id="total-'+field.item_id+'">'+field.prod_price*field.prod_amount+'</p>' +
+                    '<p id="total-'+idx+'">'+field.prod_price*field.prod_amount+'</p>' +
                   '</div>' +
               '</div>');
             arr.push(field.prod_amount);
@@ -166,80 +174,85 @@
       });
     });   
 
-    function disactive(arg) {
-        nav_menu = ['home', 'print', 'edit', 'del'];
-        
-        if($("#warehouse").hasClass('underline')) {
-          $(".i-del").attr('hidden', true);
-          $(".amount").removeClass('underline');
-          $("#discount").removeClass('underline');
-          $("#type").removeClass('underline');
-          $("#get").removeClass('underline');
-          $("#warehouse").removeClass('underline');
-          $("#warehouse").attr('onclick', '');
-          $("#discount").attr('onclick', '');
-          $("#type").attr('onclick', '');
-          $("#get").attr('onclick', '');
-          $("#i-save").attr('onclick', '');
-          $("#i-save").css('color', "#e57f7f");
-          // if has 3 prod then index = 3
-          for(i = 1; i <= 3; i++){ $("#amt-"+i).attr('onclick', ''); }
-        }
+    function cancelEdit() {
+      isEditMode = false;
+      $("#i-edit").removeClass('active');
+      $("#i-save").attr('onclick', '').css({'color': '#e57f7f', 'opacity': '0.5', 'cursor': 'default'});
+      $(".amount").removeClass('underline').css('cursor', 'default');
+      $("#discount").removeClass('underline').attr('onclick', '').css('cursor', 'default');
+      $("#type").removeClass('underline').attr('onclick', '').css('cursor', 'default');
+      $("#get").removeClass('underline').attr('onclick', '').css('cursor', 'default');
+      $("#warehouse").removeClass('underline').attr('onclick', '').css('cursor', 'default');
+      
+      for(var i = 1; i <= arr.length; i++){
+        $("#amt-"+i).attr('onclick', '').css('cursor', 'default');
+      }
 
-
-        for (i = 0; i < 4; i++) {
-            if (nav_menu[i] != arg) {
-                if ($("#i-" + nav_menu[i]).hasClass('active')) $("#i-" + nav_menu[i]).removeClass('active');
-            }
+      // Revert values to original loaded data
+      if (originalBillData && originalBillData.length > 0) {
+        var base = originalBillData[0];
+        if(base.type == "โกดัง"){
+          $('#warehouse').text(base[19] ? base[19].ware_name : '');           
+        }else if(base.type == "หน้าร้าน"){
+          $('#warehouse').text(base[19] ? base[19].shop_name : '');           
         }
+        type = type_o;
+        ware_id = ware_id_o;
+        pay = base.payment_type;
+        $('#type').text(pay);
+        $('#sum').text(base.sum_price);
+        $('#discount').text(base.total_discount);
+        $('#total').text(base.total_price);
+        $('#get').text(base.get_price);
+        $('#chng').text(base.chng);
+        credit_id_new = credit_id;
+
+        for (var b = 0; b < originalBillData.length; b++) {
+          var idx = b + 1;
+          var it = originalBillData[b];
+          $('#amt-' + idx).text(it.prod_amount);
+          $('#total-' + idx).text(it.prod_price * it.prod_amount);
+        }
+      }
+    }
+
+    function enterEditMode() {
+      isEditMode = true;
+      var nav_menu = ['home', 'print', 'del'];
+      for (var i = 0; i < nav_menu.length; i++) {
+        $("#i-" + nav_menu[i]).removeClass('active');
+      }
+      $("#i-" + 'edit').addClass('active');
+
+      $(".amount").addClass('underline').css('cursor', 'pointer');
+      $("#discount").addClass('underline').css('cursor', 'pointer');
+      $("#get").addClass('underline').css('cursor', 'pointer');
+      $("#type").addClass('underline').css('cursor', 'pointer');
+      $("#warehouse").addClass('underline').css('cursor', 'pointer');           
+      
+      $("#warehouse").attr('onclick', 'edit_warehouse()');    
+      $("#discount").attr('onclick', 'edit_discount()');
+      $("#type").attr('onclick', 'edit_type()');
+      $("#get").attr('onclick', 'edit_get()');
+      $("#i-save").attr('onclick', 'save()').css({'color': '#ffffff', 'opacity': '1', 'cursor': 'pointer'});
+
+      for(var i = 1; i <= arr.length; i++){
+        $("#amt-"+i).attr('onclick', 'edit_amount('+i+')').css('cursor', 'pointer');
+      }
     }
 
     function menu(arg) {
-    	// Animate
-        disactive(arg);
-        if($("#i-"+arg).hasClass('active')){
-            //console.log("i-"+arg+"hasClass('active')");
-            $("#i-"+arg).removeClass('active');
-          }else{
-            $("#i-" + arg).fadeOut(150).fadeIn(100, function() {
-              $("#i-" + arg).addClass('active');
-            });
+      if (arg == "edit") {
+        if (isEditMode) {
+          cancelEdit();
+        } else {
+          enterEditMode();
         }
-        if (arg == "add") {
-            //goto = "sale.html";            
-        } else if(arg == "edit"){
-            // show edit all
-            if ($("#warehouse").hasClass('underline')) {
-              $(".i-del").attr('hidden', true);
-              $(".amount").removeClass('underline');
-              $("#discount").removeClass('underline');
-              $("#type").removeClass('underline');
-              $("#get").removeClass('underline');
-              $("#warehouse").removeClass('underline');
-              $("#warehouse").attr('onclick', '');
-              $("#discount").attr('onclick', '');
-              $("#type").attr('onclick', '');
-              $("#get").attr('onclick', '');
-              $("#i-save").attr('onclick', '');
-              $("#i-save").css('color', "#e57f7f");
-              // if has 3 prod then index = 3
-              for(i = 1; i <= 3; i++){ $("#amt-"+i).attr('onclick', ''); }
-            } else {
-              $(".i-del").attr('hidden', true);
-              $(".amount").addClass('underline');
-              $("#discount").addClass('underline');
-              $("#get").addClass('underline');
-              $("#type").addClass('underline');
-              $("#warehouse").addClass('underline');           
-              $("#warehouse").attr('onclick', 'edit_warehouse()');    
-              $("#discount").attr('onclick', 'edit_discount()');
-              $("#type").attr('onclick', 'edit_type()');
-              $("#get").attr('onclick', 'edit_get()');
-              $("#i-save").attr('onclick', 'save()');
-              $("#i-save").css('color', "#fff");
-              for(i = 1; i <= 3; i++){ $("#amt-"+i).attr('onclick', 'edit_amount('+i+')'); }
-            }
-        } else if (arg == "del") {
+      } else {
+        if (isEditMode) {
+          cancelEdit();
+        }
+        if (arg == "del") {
             // show trash all 
             $("style").append(".jconfirm .jconfirm-box{margin-bottom: 5%;}");
             $.confirm({
@@ -325,25 +338,29 @@
             text: 'ตกลง',
             btnClass: 'btn-danger',
             action: function () {
-              var amt = $('#edt-amt').val();
-              if(amt > $("#amt-"+arg).text()){
+              var amt = parseInt($('#edt-amt').val());
+              if(isNaN(amt) || amt < 0){
                 return 0;
               }
-              var sum = $('#sum').text();
-              var sum_o = $('#price-'+arg).text()*$("#amt-"+arg).text();
-              var sum_n = $('#price-'+arg).text()*amt;
-              //var sumsum = (sum-sum_o)+sum_n;
-              var total_amt = $("#amt-"+arg).text() - amt
-              var sumsum = (sum-sum_n);
-              var total =sumsum-$('#discount').text();
+              var old_amt = parseInt($("#amt-"+arg).text()) || 0;
+              if(amt == old_amt){
+                return 0;
+              }
+              var price = parseFloat($('#price-'+arg).text()) || 0;
+              var sum = parseFloat($('#sum').text()) || 0;
+              var sum_o = price * old_amt;
+              var sum_n = price * amt;
+              var sumsum = (sum - sum_o) + sum_n;
+              var disc = parseFloat($('#discount').text()) || 0;
+              var total = sumsum - disc;
+              var gett = parseFloat($('#get').text()) || 0;
               $('#total-'+arg).text(sum_n);
               $('#sum').text(sumsum);
               $('#total').text(total);
-              $('#chng').text($('#get').text()-total);
-              $("#amt-"+arg).text(total_amt);              
+              $('#chng').text(gett - total);
+              $("#amt-"+arg).text(amt);              
             }
           },ยกเลิก: function () {
-              //$(".jconfirm .jconfirm-box").css('margin-bottom', '5%');
             }
         }
       });
@@ -1125,14 +1142,14 @@
   <!-- big container -->
   <div id="big-ctn" class="container justify-content-center">
     <!-- Nav menu top -->
-    <div class="row navs align-items-center mgem1o5 fixed-top">
-      <div class="col-2 text-center" onclick="window.history.back()">
+    <div class="row navs align-items-center fixed-top justify-content-center">
+      <div id="col-back" class="col-2 text-center" onclick="window.history.back()">
         <i id="i-back" class="fas fa-angle-left"></i>
       </div>
       <div class="col-8 text-center">
         <h5 id="h5-title">S18-00001</h5>
       </div>
-      <div class="col-1 text-right">
+      <div class="col-2 text-right pr-3">
         <i id="i-save" class="fa fa-save" style="font-size: 135%; margin-top: 3px; color: #e57f7f;"></i>
       </div>
     </div>
@@ -1144,24 +1161,24 @@
       <hr>
     </div>
 
-    <div id="in-ctn" class="container-fullwidth" style="height: calc(100vh - (12em+120px)) !important; margin-top: 11em !important;">
+    <div id="in-ctn" class="container-fullwidth" style="height: calc(100vh - (12em+120px)) !important; margin-top: 11em !important; padding-bottom: 80px;">
       <div class="row mgemo5">
         <div class="col-12 text-center"><h5 class="underline">รายการ</h5></div>
       </div>
     </div>
   </div>
   <!-- Nav menu bottom -->
-  <div class="row fixed-bottom navs">
-    <div class="col-3 text-center" onclick="window.location = 'index.html';">
-      <i id="i-home" class="fa fa-home menu"></i>
+  <div class="fixed-bottom">
+    <div class="nav-bottom-item" onclick="window.location = 'index.html';">
+      <i id="i-home" class="fas fa-home menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="menu('edit')">
-      <i id="i-edit" class="fa fa-edit menu"></i>
+    <div class="nav-bottom-item" onclick="menu('edit')">
+      <i id="i-edit" class="fas fa-edit menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="menu('print')">
+    <div class="nav-bottom-item" onclick="menu('print')">
       <i id="i-print" class="fas fa-print menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="menu('del')">
+    <div class="nav-bottom-item" onclick="menu('del')">
       <i id="i-del" class="fa fa-trash-alt menu"></i>
     </div>
   </div>

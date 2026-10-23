@@ -7,6 +7,7 @@
     <title>เช็คสต๊อก - DDCAR</title>
     <!-- Local Assets -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/svg-with-js.css">
     <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/jquery-confirm.css">
     <link rel="stylesheet" href="css/loading.css">
@@ -71,6 +72,20 @@
         if(prod_id){
           get_amt(prod_id);
         }
+
+        // Live autocomplete input listener (requires at least 2 characters to avoid premature search)
+        var stockSearchTimer = null;
+        $('#search_prod').on('input', function() {
+          var q = $(this).val().trim();
+          if (stockSearchTimer) clearTimeout(stockSearchTimer);
+          if (q.length >= 2) {
+            stockSearchTimer = setTimeout(function() {
+              search_prod_instant(q);
+            }, 350);
+          } else {
+            $('#myUL').empty();
+          }
+        });
 
         // Hardware scanner listener (PDA / Gun scanner)
         if (typeof onScan !== 'undefined') {
@@ -241,18 +256,23 @@
           return 0;
         }       
         $('#search_prod').blur();  
-        $('#myUL').empty();
+        search_prod_instant(val);
+      }
+
+      function search_prod_instant(val){
+        if(!val || val.trim() === ""){
+          $('#myUL').empty();
+          return;
+        }
+        // Do NOT call blur() or overlay here! This keeps mobile soft keyboard open while typing
         $.ajax({
           type: "POST",
           url: localStorage.pathServer + "php/search_prod.php",
-          data: {'phrase' : val},
-          beforeSend: function(){
-            $(".overlay").prop('hidden', false);
-          },             
+          data: {'phrase' : val.trim()},
           success: function(data){  
-            $(".overlay").prop('hidden', true);                             
-            var obj = jQuery.parseJSON(data);
+            var obj = window.safeParseJSON(data);
             if(obj && obj.length > 0){
+              var htmlArr = [];
               $.each(obj, function(i, field){ 
                 var folderHtml = '';
                 if(field.folder_path && field.folder_path.trim() !== '') {
@@ -263,7 +283,7 @@
                 }
                 var codeDisplay = field.prod_code ? field.prod_code : '-';
                 var encFolder = encodeURIComponent(field.folder_path || '');
-                $('#myUL').append('<li style="padding: 10px 4px; border-bottom: 1px solid #f1f5f9;"><div class="row align-items-center" onclick="get_amt('+field.prod_id+', \''+encFolder+'\')" style="cursor: pointer;">' +
+                htmlArr.push('<li style="padding: 10px 4px; border-bottom: 1px solid #f1f5f9;"><div class="row align-items-center" onclick="get_amt('+field.prod_id+', \''+encFolder+'\')" style="cursor: pointer;">' +
                   '<div class="col-4 text-center"><span class="badge badge-light border" style="font-size: 0.85rem; font-weight: 700; color: #1e293b;">'+codeDisplay+'</span></div>' +
                   '<div class="col-8 text-left">' +
                     '<div style="font-weight: 600; color: #0f172a; font-size: 0.95rem;">'+field.prod_name+'</div>' +
@@ -271,12 +291,13 @@
                   '</div>' +
                   '</div></li>');        
               }); 
+              $('#myUL').html(htmlArr.join(''));
             } else {
-              $('#myUL').append('<li class="text-center p-4 text-muted">ไม่พบสินค้าที่ตรงกับการค้นหา</li>');
+              $('#myUL').html('<li class="text-center p-4 text-muted">ไม่พบสินค้าที่ตรงกับการค้นหา</li>');
             }                                                                                                                                        
           },
           error: function() {
-            $(".overlay").prop('hidden', true);
+            // Silently ignore during live autocomplete to never interrupt typing
           }               
         }); 
       }
