@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
 require_login();
-    $cus_id = $_POST['cus_id'];  
+include "db.php";
+$cus_id = $_POST['cus_id'];  
 
     $query = "SELECT cus_name,cus_tel,cus_addr,cus_type FROM customer WHERE cus_id = '$cus_id'";
     $result = mysqli_query($conn, $query);

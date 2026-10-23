@@ -1,7 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();
-    include "db.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";
     $output = array();   
     $dt = date('Y-m-d');
     $lastday = date("Y-m-t 23:59:59", strtotime($dt));

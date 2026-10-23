@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
 include "db.php";
 
 $t0 = microtime(true);

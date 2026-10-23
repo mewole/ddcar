@@ -1,9 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
 require_login();
-    
-    // 1. ดักความปลอดภัยป้องกัน SQL Injection + trim ตัดเว้นวรรคส่วนเกิน
+include "db.php";
+// 1. ดักความปลอดภัยป้องกัน SQL Injection + trim ตัดเว้นวรรคส่วนเกิน
     $name      = isset($_POST['name']) ? trim(mysqli_real_escape_string($conn, $_POST['name'])) : '';   
     $old_name  = isset($_POST['old_name']) ? trim(mysqli_real_escape_string($conn, $_POST['old_name'])) : '';
 

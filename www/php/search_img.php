@@ -1,8 +1,11 @@
 <?php
-include "db.php";
 include_once "auth_guard.php";
-require_login(); 
-$prod_id = isset($_POST['prod_id']) ? intval($_POST['prod_id']) : 0;  
+require_login();
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
+include "db.php";
+
+$prod_id = isset($_POST['prod_id']) ? intval($_POST['prod_id']) : (isset($_GET['prod_id']) ? intval($_GET['prod_id']) : 0);  
 $output = array(); 
 
 if ($prod_id > 0) {

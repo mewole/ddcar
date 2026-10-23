@@ -57,7 +57,7 @@
             }, 
             success: function(data){  
               $(".overlay").prop('hidden', true);                                 
-              var obj = jQuery.parseJSON(data);
+              var obj = (typeof data === 'object') ? data : jQuery.parseJSON(data);
               if(obj){
                 $.each(obj, function(i, field){                   
                   $('#myUL').append("<li class='mgemo5'>" +                

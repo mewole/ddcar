@@ -1,9 +1,8 @@
-<?php  
-    include "db.php";
+<?php
 include_once "auth_guard.php";
-require_login();
-    
-    $title = isset($_POST['title']) ? trim(mysqli_real_escape_string($conn, $_POST['title'])) : '';
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";
+$title = isset($_POST['title']) ? trim(mysqli_real_escape_string($conn, $_POST['title'])) : '';
 
     if(empty($title)){
         echo "fail";

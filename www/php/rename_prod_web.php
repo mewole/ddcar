@@ -1,10 +1,10 @@
 <?php
-    ini_set('display_errors', 1);
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+ini_set('display_errors', 1);
     error_reporting(E_ALL);
 
     include "db.php";
-    include_once "auth_guard.php";
-    require_login();
     include_once "img_helper.php";
 
     $prod_id   = $_POST['prod_id'] ?? null;

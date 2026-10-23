@@ -1,7 +1,7 @@
 <?php
 include_once "auth_guard.php";
-require_login();  
-    $conn = mysqli_connect("localhost", "id3340019_dd", "pkl2468GG", "id3340019_dd");  
+require_login();
+$conn = mysqli_connect("localhost", "id3340019_dd", "pkl2468GG", "id3340019_dd");  
     $title  = $_POST['title'];
   
     $sql = "SELECT parent.title FROM tree AS node,tree AS parent WHERE node.lft BETWEEN parent.lft 

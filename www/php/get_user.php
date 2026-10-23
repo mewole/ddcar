@@ -1,14 +1,14 @@
 <?php
-/**
- * get_user.php
- * ดึงรายชื่อผู้ใช้งานในระบบ (เฉพาะเจ้าของร้านและแอดมิน)
- * ป้องกันความปลอดภัย: ไม่ส่งรหัสผ่าน Hash ออกไปสู่เครือข่ายเด็ดขาด
- */
-include "db.php";
 include_once "auth_guard.php";
 require_role(['เจ้าของร้าน', 'แอดมิน']);
-
+/**
+ * get_user.php
+ * ดึงรายชื่อผู้ใช้งานในระบบ
+ * ป้องกันความปลอดภัย: ส่งเฉพาะ user_id, user_name, phone, user_role (ไม่ส่งรหัสผ่าน Hash เด็ดขาด)
+ */
+include "db.php";
 header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Origin: *");
 $output = array();    
 
 $query = "SELECT user_id, user_name, phone, user_role FROM user ORDER BY user_id ASC";

@@ -1,9 +1,9 @@
 <?php
+include_once "auth_guard.php";
+require_login();
 /**
  * DDCar - Get TikTok SKU Assistant Items with Safe Tri-Match Candidates & Strict Guard
  */
-include_once "auth_guard.php";
-require_login();
 require_once "db.php";
 
 header("Content-Type: application/json; charset=utf-8");
@@ -312,11 +312,17 @@ foreach ($items as &$item) {
     }
 }
 
+$mapped_cnt = intval($kpi['mapped_cnt'] ?? 0);
+$total_cnt = intval($kpi['total'] ?? 0);
+$percent = ($total_cnt > 0) ? round(($mapped_cnt / $total_cnt) * 100) : 0;
+
 echo json_encode([
+    'success' => true,
     'kpi' => [
-        'total' => intval($kpi['total'] ?? 0),
+        'total' => $total_cnt,
         'unmapped' => intval($kpi['unmapped_cnt'] ?? 0),
-        'mapped' => intval($kpi['mapped_cnt'] ?? 0)
+        'mapped' => $mapped_cnt,
+        'percent' => $percent
     ],
     'pagination' => [
         'page' => $page,
@@ -324,6 +330,9 @@ echo json_encode([
         'total_filtered' => $total_filtered,
         'total_pages' => ceil($total_filtered / $limit)
     ],
+    'total_filtered' => $total_filtered,
+    'page' => $page,
+    'limit' => $limit,
     'items' => $items
 ], JSON_UNESCAPED_UNICODE);
 ?>

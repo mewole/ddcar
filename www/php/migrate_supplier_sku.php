@@ -1,13 +1,12 @@
 <?php
+include_once "auth_guard.php";
+require_login();
 /**
  * migrate_supplier_sku.php
  * Migration script for Supplier Header and Supplier SKU Mapping
  */
 header('Content-Type: application/json; charset=utf-8');
 include "db.php";
-include_once "auth_guard.php";
-require_login();
-
 $log = [];
 
 function addColumnIfNotExists($conn, $table, $column, $definition) {

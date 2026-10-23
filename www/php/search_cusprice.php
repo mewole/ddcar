@@ -1,9 +1,12 @@
 <?php
-include "db.php";
 include_once "auth_guard.php";
 require_login();
-$cus_id = isset($_POST['cus_id']) ? intval($_POST['cus_id']) : 0;   
-$prod_id = isset($_POST['prod_id']) ? intval($_POST['prod_id']) : 0;
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
+include "db.php";
+
+$cus_id = isset($_POST['cus_id']) ? intval($_POST['cus_id']) : (isset($_GET['cus_id']) ? intval($_GET['cus_id']) : 0);   
+$prod_id = isset($_POST['prod_id']) ? intval($_POST['prod_id']) : (isset($_GET['prod_id']) ? intval($_GET['prod_id']) : 0);
 $output = array();       
 
 if ($cus_id > 0 && $prod_id > 0) {

@@ -55,8 +55,8 @@
         $("#tabs-main").trigger('click');
       }
       
-      if(localStorage.user_role == "เจ้าของร้าน"){
-        $('#tabs-admin').prop('hidden',true);         
+      if(localStorage.user_role == "เจ้าของร้าน" || localStorage.user_role == "แอดมิน"){
+        $('#tabs-admin').prop('hidden',false);         
       }else if(localStorage.user_role == "พนักงาน"){
         $("#tabs-main").trigger('click');
         $('#tabs-admin').prop('hidden',true);
@@ -272,22 +272,22 @@
     <div id="admin" class="scroll container-fullwidth">
       <div class="row justify-content-center mgem1o5">
         <div class="col-9 text-center">
-          <button id="mng-member" class="mbtn" onclick="window.location ='member.html';">ผู้ใช้</button>
+          <button id="mng-member" class="mbtn" onclick="window.location ='web_admin_user.html';">จัดการผู้ใช้งาน</button>
         </div>
       </div>
       <div class="row justify-content-center mgem1o5">
         <div class="col-9 text-center">
-          <button id="add-cus" class="mbtn" onclick="window.location ='customer.html';">ลูกค้า</button>
+          <button id="add-cus" class="mbtn" onclick="window.location ='web_customer.html';">จัดการลูกค้า</button>
         </div>
       </div>
       <div class="row justify-content-center mgem1o5">
         <div class="col-9 text-center">
-          <button id="add-prod" class="mbtn" onclick="window.location ='select_folder.html?from=add';">สินค้า</button>
+          <button id="add-prod" class="mbtn" onclick="window.location ='select_folder.html?from=add';">จัดการสินค้า</button>
         </div>
       </div>
       <div class="row justify-content-center mgem1o5">
         <div class="col-9 text-center">
-          <button id="add-ware" class="mbtn" onclick="window.location ='warehouse.html';">หน้าร้าน / โกดัง</button>
+          <button id="add-ware" class="mbtn" onclick="window.location ='web_warehouse.html';">หน้าร้าน / โกดัง</button>
         </div>
       </div>
       

@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
-require_login();   
-    $prod_id  = $_POST['prod_id'] ?? null;
+require_login();
+include "db.php";
+$prod_id  = $_POST['prod_id'] ?? null;
     $name     = trim($_POST['name_prod'] ?? '');
     $raw_code = trim($_POST['code'] ?? '');   
     $code     = strtoupper(str_replace(' ', '', $raw_code));

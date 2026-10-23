@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
 require_login();
-    $input  = $_POST['JSON'];
+include "db.php";
+$input  = $_POST['JSON'];
     $obj = json_decode($input,true); 
     $input_d  = $_POST['JSOND'];
     $obj_d = json_decode($input_d,true); 

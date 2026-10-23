@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_login();
 /**
  * save_stock_adjustment.php
  * Direct stock deduction/adjustment (Write-off / Damaged / Count Correction)
@@ -7,9 +9,6 @@
 
 header("Content-Type: application/json; charset=UTF-8");
 include "db.php";
-include_once "auth_guard.php";
-require_login();
-
 $prod_id    = isset($_POST['prod_id']) ? intval($_POST['prod_id']) : 0;
 $place_type = isset($_POST['place_type']) ? trim($_POST['place_type']) : '';
 $place_id   = isset($_POST['place_id']) ? intval($_POST['place_id']) : 0;

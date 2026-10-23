@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
-require_login();
-    header("Content-Type: application/json; charset=UTF-8");
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";
+header("Content-Type: application/json; charset=UTF-8");
 
     // Auto-create payment audit table if not exists
     $sql_init = "CREATE TABLE IF NOT EXISTS credit_payment (

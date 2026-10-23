@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
 require_login();
-    $start = isset($_POST['start']) ? intval($_POST['start']) : 0;
+include "db.php";
+$start = isset($_POST['start']) ? intval($_POST['start']) : 0;
     $output = array();
     $txt = "(cancel)";
 

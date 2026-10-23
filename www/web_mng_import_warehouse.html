@@ -318,6 +318,7 @@
                 item ["price"] = field.prod_price
                 arr_data.push(item);
               });
+              var canDelete = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
               text = text + '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
                   '<div class="row" style="margin-top: 1em;">'+
                       '<div class="col-4 text-right"><h4>รวม</h4></div>'+
@@ -327,12 +328,14 @@
                       '<div class="col-4 text-right"><h4>ผู้ทำรายการ</h4></div>'+
                       '<div class="col-4 text-right"><h4>'+obj[0].user_name+'</h4></div>'+
                   '</div>'+
-                  '<div class="row justify-content-center" style="margin-top: 1em;">'+
-                  '<div class="col-4 text-right">'+                   
-                    '<button onclick="print.apply(this,arr_data)" class="btn btn-lg btn-warning" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
-                  '</div>'+
-                  (canViewCost ? '<div class="col-4 text-left"><button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].ware_id+')">ลบรายการ <i class="fas fa-trash"></i></button></div>' : '')+         
-                '</div>'+                
+                  '<div class="row justify-content-center mt-3 pt-2" style="border-top: 1px dashed #ddd;">'+
+                    '<div class="col-12 text-center d-flex flex-wrap justify-content-center align-items-center">'+
+                      '<button onclick="printWarehouseSlip('+index+')" class="btn btn-primary px-3 py-2 mr-2 mb-2 font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-receipt mr-1"></i> พิมพ์บิล (สลิป 80mm)</button>'+
+                      '<button onclick="printWarehouseA4('+index+')" class="btn btn-info px-3 py-2 mr-2 mb-2 font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-file-invoice mr-1"></i> พิมพ์ใบรับของ (A4)</button>'+
+                      '<button onclick="print.apply(this,arr_data)" class="btn btn-warning px-3 py-2 mr-2 mb-2 text-white font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-barcode mr-1"></i> พิมพ์สติกเกอร์บาร์โค้ด</button>'+
+                      (canDelete ? '<button class="btn btn-danger px-3 py-2 mb-2 font-weight-bold" style="font-size: 0.95rem;" onclick="delete_bill('+index+','+obj[0].ware_id+')"><i class="fas fa-trash-alt mr-1"></i> ลบรายการ</button>' : '')+
+                    '</div>'+
+                  '</div>'+                
             '</div>'+
               '</div>';                   
             }               
@@ -363,7 +366,7 @@
             },             
             success: function(data){  
               EasyLoading.hide();
-              var obj = jQuery.parseJSON(data); 
+              var obj = (typeof data === 'string') ? JSON.parse(data) : data; 
               var supHeader = (obj[0].supplier_name || obj[0].source_from || '-');
               var refHeader = obj[0].ref_invoice ? (' | บิลร้าน: <b class="text-success">' + obj[0].ref_invoice + '</b>') : '';
               text = text + '<div class="collapse" id="details-'+index+'">'+
@@ -393,6 +396,7 @@
                 item ["price"] = field.prod_price
                 arr_data.push(item);               
               });
+              var canDelete = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
               text = text + '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
                   '<div class="row" style="margin-top: 1em;">'+
                       '<div class="col-4 text-right"><h4>รวม</h4></div>'+
@@ -402,12 +406,14 @@
                       '<div class="col-4 text-right"><h4>ผู้ทำรายการ</h4></div>'+
                       '<div class="col-4 text-right"><h4>'+obj[0].user_name+'</h4></div>'+
                   '</div>'+
-                  '<div class="row justify-content-center" style="margin-top: 1em;">'+
-                  '<div class="col-4 text-right">'+                   
-                    '<button onclick="print.apply(this,arr_data)" class="btn btn-lg btn-warning" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
-                  '</div>'+
-                  (canViewCost ? '<div class="col-4 text-left"><button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].ware_id+')">ลบรายการ <i class="fas fa-trash"></i></button></div>' : '')+         
-                '</div>'+                           
+                  '<div class="row justify-content-center mt-3 pt-2" style="border-top: 1px dashed #ddd;">'+
+                    '<div class="col-12 text-center d-flex flex-wrap justify-content-center align-items-center">'+
+                      '<button onclick="printWarehouseSlip('+index+')" class="btn btn-primary px-3 py-2 mr-2 mb-2 font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-receipt mr-1"></i> พิมพ์บิล (สลิป 80mm)</button>'+
+                      '<button onclick="printWarehouseA4('+index+')" class="btn btn-info px-3 py-2 mr-2 mb-2 font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-file-invoice mr-1"></i> พิมพ์ใบรับของ (A4)</button>'+
+                      '<button onclick="print.apply(this,arr_data)" class="btn btn-warning px-3 py-2 mr-2 mb-2 text-white font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-barcode mr-1"></i> พิมพ์สติกเกอร์บาร์โค้ด</button>'+
+                      (canDelete ? '<button class="btn btn-danger px-3 py-2 mb-2 font-weight-bold" style="font-size: 0.95rem;" onclick="delete_bill('+index+','+obj[0].ware_id+')"><i class="fas fa-trash-alt mr-1"></i> ลบรายการ</button>' : '')+
+                    '</div>'+
+                  '</div>'+                           
                 '</div>'+
               '</div>';                   
             }               
@@ -418,6 +424,241 @@
         $('html, body').animate({
               scrollTop: $("#ipts-"+index).offset().top
           }, 1100);
+    }
+    
+    function printWarehouseSlip(index){
+      $.ajax({
+        type: "POST",
+        url: "php/get_import_info.php",
+        data: {'imp_id': index},
+        beforeSend: function(){
+          EasyLoading.show({ text: "กำลังเตรียมพิมพ์บิล..." });
+        },
+        success: function(data){
+          EasyLoading.hide();
+          var obj = (typeof data === 'string') ? JSON.parse(data) : data;
+          if(!obj || obj.length === 0) return;
+
+          var dt = (obj[0].date_time || '').split(" ");
+          var time = (dt[1] || '').substr(0, 5);
+          var d = (dt[0] || '').split("-");
+          var date = (d.length === 3) ? (d[2] + "/" + d[1] + "/" + d[0]) : dt[0];
+          var sup = obj[0].supplier_name || obj[0].source_from || '-';
+          var ref = obj[0].ref_invoice ? obj[0].ref_invoice : '';
+          var wareName = obj[0].ware_name || 'โกดัง';
+          var canViewCost = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
+
+          var totalQty = 0;
+          var totalCost = 0;
+          var rowsHtml = '';
+
+          $.each(obj, function(i, item){
+            var qty = parseInt(item.amount) || 0;
+            var cost = parseFloat(item.stock_cost) || 0;
+            totalQty += qty;
+            totalCost += (qty * cost);
+            var skuText = item.supplier_sku && item.supplier_sku.trim() !== '' ? ('<br><span style="font-size: 10px; color: #555;">[SKU: ' + item.supplier_sku + ']</span>') : '';
+            var codeText = item.prod_code ? ('<span style="font-size: 10px; color: #333;">(' + item.prod_code + ') </span>') : '';
+
+            rowsHtml += "<tr>" +
+              "<td style='text-align: center; vertical-align: top; padding: 4px 0;'>" + (i + 1) + "</td>" +
+              "<td style='text-align: left; vertical-align: top; padding: 4px 4px;'>" + codeText + item.prod_name + skuText + "</td>" +
+              "<td style='text-align: right; vertical-align: top; padding: 4px 0; font-weight: bold;'>" + qty + "</td>" +
+              (canViewCost ? ("<td style='text-align: right; vertical-align: top; padding: 4px 0;'>" + cost.toLocaleString('th-TH', {minimumFractionDigits: 2}) + "</td>") : "") +
+            "</tr>";
+          });
+
+          var billHtml = "<!DOCTYPE html><html><head><meta charset='utf-8'>" +
+            "<title>ใบรายการนำเข้าสินค้าโกดัง - " + obj[0].stock_number + "</title>" +
+            "<link href='https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&family=Maitree:wght@400;600&display=swap' rel='stylesheet'>" +
+            "<style>" +
+            "* { box-sizing: border-box; margin: 0; padding: 0; } " +
+            "@page { size: 80mm auto; margin: 0mm; } " +
+            "@media print { " +
+            "  html, body { width: 100% !important; min-width: 0 !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } " +
+            "  @page { size: 80mm auto; margin: 0mm; } " +
+            "} " +
+            "body { font-family: 'Prompt', 'Maitree', Tahoma, 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.35; color: #000 !important; background: #fff; width: 100%; } " +
+            ".bill-wrap { width: 72mm; margin: 0 auto; padding: 4mm 2mm; } " +
+            ".text-center { text-align: center; } .text-left { text-align: left; } .text-right { text-align: right; } " +
+            ".font-bold { font-weight: bold; } " +
+            ".line-dashed { border-top: 1px dashed #000; margin: 6px 0; } " +
+            ".row-info { display: flex; margin-bottom: 3px; font-size: 12px; } " +
+            ".row-info .lbl { width: 78px; font-weight: bold; text-align: right; padding-right: 6px; flex-shrink: 0; } " +
+            ".row-info .val { flex-grow: 1; text-align: left; word-break: break-word; } " +
+            "table.items-table { width: 100%; border-collapse: collapse; margin: 6px 0; } " +
+            "table.items-table th { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; font-size: 12px; font-weight: bold; } " +
+            "table.items-table td { font-size: 12px; } " +
+            ".row-summary { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; } " +
+            ".row-summary.total { font-size: 13px; font-weight: bold; margin-top: 3px; } " +
+            ".sign-box { margin-top: 18px; font-size: 11px; line-height: 1.8; text-align: center; } " +
+            "</style></head><body>" +
+            "<div class='bill-wrap'>" +
+            "<div class='text-center font-bold' style='font-size: 16px;'>DD MOTOR SPORT</div>" +
+            "<div class='text-center' style='font-size: 11px;'>B-24, B-28 อาคารศรีวรจักร ถ.หลวงป้อมปราบศัตรูพ่าย</div>" +
+            "<div class='text-center' style='font-size: 11px;'>โทร. 02-2265280, 02-2222437</div>" +
+            "<div class='text-center font-bold' style='margin: 6px 0; font-size: 14px; text-decoration: underline;'>ใบรายการนำเข้าสินค้าโกดัง</div>" +
+            "<div class='line-dashed'></div>" +
+            "<div class='row-info'><div class='lbl'>เลขที่นำเข้า :</div><div class='val font-bold'>" + obj[0].stock_number + "</div></div>" +
+            "<div class='row-info'><div class='lbl'>วันที่ :</div><div class='val'>" + date + " " + time + "</div></div>" +
+            "<div class='row-info'><div class='lbl'>ร้านค้า/ผู้ส่ง :</div><div class='val font-bold'>" + sup + "</div></div>" +
+            (ref ? ("<div class='row-info'><div class='lbl'>บิลร้าน :</div><div class='val font-bold'>" + ref + "</div></div>") : "") +
+            "<div class='row-info'><div class='lbl'>โกดัง :</div><div class='val'>" + wareName + "</div></div>" +
+            "<div class='row-info'><div class='lbl'>ผู้บันทึก :</div><div class='val'>" + (obj[0].user_name || '-') + "</div></div>" +
+            "<div class='line-dashed'></div>" +
+            "<table class='items-table'>" +
+            "<thead><tr>" +
+            "<th style='width: 8%; text-align: center;'>#</th>" +
+            "<th style='width: " + (canViewCost ? "54%" : "72%") + "; text-align: left;'>รายการ</th>" +
+            "<th style='width: " + (canViewCost ? "18%" : "20%") + "; text-align: right;'>จำนวน</th>" +
+            (canViewCost ? "<th style='width: 20%; text-align: right;'>ทุน</th>" : "") +
+            "</tr></thead>" +
+            "<tbody>" + rowsHtml + "</tbody>" +
+            "</table>" +
+            "<div class='line-dashed'></div>" +
+            "<div class='row-summary total'><div>รวมจำนวนทั้งหมด :</div><div>" + totalQty + " ชิ้น</div></div>" +
+            (canViewCost ? ("<div class='row-summary total' style='color:#000;'><div>รวมต้นทุน :</div><div>" + totalCost.toLocaleString('th-TH', {minimumFractionDigits: 2}) + " บาท</div></div>") : "") +
+            "<div class='line-dashed'></div>" +
+            "<div class='sign-box'>" +
+            "<div>ผู้เช็คสินค้า : ........................................</div>" +
+            "<div style='margin-top: 10px;'>ผู้นำสินค้าเข้า : ........................................</div>" +
+            "</div>" +
+            "</div></body></html>";
+
+          var WinPrint = window.open('', '', 'left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0');
+          WinPrint.document.write(billHtml);
+          WinPrint.document.close();
+          WinPrint.focus();
+          setTimeout(function() {
+            WinPrint.print();
+            WinPrint.close();
+          }, 350);
+        },
+        error: function(xhr, status, err){
+          EasyLoading.hide();
+          $.alert('ไม่สามารถโหลดข้อมูลบิลเพื่อพิมพ์ได้: ' + err);
+        }
+      });
+    }
+
+    function printWarehouseA4(index){
+      $.ajax({
+        type: "POST",
+        url: "php/get_import_info.php",
+        data: {'imp_id': index},
+        beforeSend: function(){
+          EasyLoading.show({ text: "กำลังเตรียมพิมพ์ใบรับของ A4..." });
+        },
+        success: function(data){
+          EasyLoading.hide();
+          var obj = (typeof data === 'string') ? JSON.parse(data) : data;
+          if(!obj || obj.length === 0) return;
+
+          var dt = (obj[0].date_time || '').split(" ");
+          var time = (dt[1] || '').substr(0, 5);
+          var d = (dt[0] || '').split("-");
+          var date = (d.length === 3) ? (d[2] + "/" + d[1] + "/" + d[0]) : dt[0];
+          var sup = obj[0].supplier_name || obj[0].source_from || '-';
+          var ref = obj[0].ref_invoice ? obj[0].ref_invoice : '-';
+          var wareName = obj[0].ware_name || 'โกดัง';
+          var canViewCost = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
+
+          var totalQty = 0;
+          var totalCost = 0;
+          var rowsHtml = '';
+
+          $.each(obj, function(i, item){
+            var qty = parseInt(item.amount) || 0;
+            var cost = parseFloat(item.stock_cost) || 0;
+            var itemTotal = qty * cost;
+            totalQty += qty;
+            totalCost += itemTotal;
+            var skuBadge = item.supplier_sku && item.supplier_sku.trim() !== '' ? (' <small class="text-muted">[SKU: ' + item.supplier_sku + ']</small>') : '';
+
+            rowsHtml += "<tr>" +
+              "<td class='text-center'>" + (i + 1) + "</td>" +
+              "<td class='text-center font-weight-bold'>" + (item.prod_code || '-') + "</td>" +
+              "<td class='text-left'>" + item.prod_name + skuBadge + "</td>" +
+              "<td class='text-center font-weight-bold'>" + qty + "</td>" +
+              (canViewCost ? ("<td class='text-right'>" + cost.toLocaleString('th-TH', {minimumFractionDigits: 2}) + "</td>" +
+              "<td class='text-right font-weight-bold'>" + itemTotal.toLocaleString('th-TH', {minimumFractionDigits: 2}) + "</td>") : "") +
+            "</tr>";
+          });
+
+          var docHtml = "<!DOCTYPE html><html><head><meta charset='utf-8'>" +
+            "<title>ใบรับสินค้าเข้าโกดัง - " + obj[0].stock_number + "</title>" +
+            "<link href='https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap' rel='stylesheet'>" +
+            "<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>" +
+            "<style>" +
+            "@page { size: A4 portrait; margin: 10mm 12mm; } " +
+            "body { font-family: 'Prompt', Tahoma, sans-serif; font-size: 13px; color: #000; background: #fff; } " +
+            ".table-doc th, .table-doc td { border: 1px solid #333 !important; padding: 6px 8px !important; } " +
+            ".table-doc thead th { background-color: #f2f2f2 !important; font-weight: bold; } " +
+            ".sign-box { border: 1px solid #888; border-radius: 4px; padding: 12px; min-height: 80px; text-align: center; } " +
+            "</style></head><body>" +
+            "<div class='container-fluid p-2'>" +
+              "<div class='row pb-2 mb-2 border-bottom align-items-center'>" +
+                "<div class='col-7'>" +
+                  "<h4 class='font-weight-bold mb-0'>DD MOTOR SPORT</h4>" +
+                  "<div class='small text-muted'>B-24, B-28 อาคารศรีวรจักร ถ.หลวงป้อมปราบศัตรูพ่าย โทร. 02-2265280, 02-2222437</div>" +
+                "</div>" +
+                "<div class='col-5 text-right'>" +
+                  "<h4 class='font-weight-bold text-dark mb-0'>ใบรับสินค้าเข้าโกดัง</h4>" +
+                  "<div class='small text-muted'>GOODS RECEIPT SLIP (WAREHOUSE)</div>" +
+                "</div>" +
+              "</div>" +
+              "<div class='row mb-3'>" +
+                "<div class='col-6'>" +
+                  "<div><b>เลขที่รับเข้า:</b> " + obj[0].stock_number + "</div>" +
+                  "<div><b>ร้านค้า/ผู้จำหน่าย:</b> " + sup + "</div>" +
+                  "<div><b>เลขที่บิลร้าน:</b> " + ref + "</div>" +
+                "</div>" +
+                "<div class='col-6 text-right'>" +
+                  "<div><b>วันที่:</b> " + date + " " + time + "</div>" +
+                  "<div><b>โกดังที่รับ:</b> " + wareName + "</div>" +
+                  "<div><b>ผู้ทำรายการ:</b> " + (obj[0].user_name || '-') + "</div>" +
+                "</div>" +
+              "</div>" +
+              "<table class='table table-sm table-doc mb-3'>" +
+                "<thead>" +
+                  "<tr>" +
+                    "<th class='text-center' style='width: 6%;'>#</th>" +
+                    "<th class='text-center' style='width: 18%;'>รหัสสินค้า</th>" +
+                    "<th class='text-left' style='width: " + (canViewCost ? "44%" : "66%") + ";'>ชื่อสินค้า</th>" +
+                    "<th class='text-center' style='width: 10%;'>จำนวน</th>" +
+                    (canViewCost ? "<th class='text-right' style='width: 11%;'>ราคาทุน</th><th class='text-right' style='width: 11%;'>รวม (บาท)</th>" : "") +
+                  "</tr>" +
+                "</thead>" +
+                "<tbody>" + rowsHtml + "</tbody>" +
+                "<tfoot>" +
+                  "<tr>" +
+                    "<th colspan='3' class='text-right font-weight-bold'>รวมจำนวนชิ้นทั้งหมด:</th>" +
+                    "<th class='text-center font-weight-bold'>" + totalQty + "</th>" +
+                    (canViewCost ? ("<th class='text-right font-weight-bold'>รวมมูลค่า:</th><th class='text-right font-weight-bold'>" + totalCost.toLocaleString('th-TH', {minimumFractionDigits: 2}) + "</th>") : "") +
+                  "</tr>" +
+                "</tfoot>" +
+              "</table>" +
+              "<div class='row mt-4'>" +
+                "<div class='col-4'><div class='sign-box'><div class='small text-muted mb-4'>ผู้ส่งสินค้า</div>........................................<div class='small text-muted mt-1'>(วันที่ ......./......./.......)</div></div></div>" +
+                "<div class='col-4'><div class='sign-box'><div class='small text-muted mb-4'>ผู้ตรวจรับสินค้า</div>........................................<div class='small text-muted mt-1'>(วันที่ ......./......./.......)</div></div></div>" +
+                "<div class='col-4'><div class='sign-box'><div class='small text-muted mb-4'>ผู้บันทึกข้อมูลเข้าสต๊อก</div>........................................<div class='small text-muted mt-1'>(" + (obj[0].user_name || '-') + ")</div></div></div>" +
+              "</div>" +
+            "</div></body></html>";
+
+          var WinPrint = window.open('', '', 'left=0,top=0,width=850,height=900,toolbar=0,scrollbars=0,status=0');
+          WinPrint.document.write(docHtml);
+          WinPrint.document.close();
+          WinPrint.focus();
+          setTimeout(function() {
+            WinPrint.print();
+            WinPrint.close();
+          }, 350);
+        },
+        error: function(xhr, status, err){
+          EasyLoading.hide();
+          $.alert('ไม่สามารถโหลดข้อมูลบิลเพื่อพิมพ์ได้: ' + err);
+        }
+      });
     }
     
     function print(...arr_data){

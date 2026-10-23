@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
-require_login();   
-    include_once "img_helper.php";
+require_login();
+include "db.php";
+include_once "img_helper.php";
     
     // 1. รับค่า + ตัดเว้นวรรค + กรองข้อมูลเพื่อความปลอดภัยจาก SQL Injection
     $name     = isset($_POST['name_prod']) ? trim(mysqli_real_escape_string($conn, $_POST['name_prod'])) : '';    

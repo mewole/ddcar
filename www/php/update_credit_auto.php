@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
-require_login();
-    $output = array();
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";
+$output = array();
     $day = date("d");   
     $month = date("m"); 
     $txt = "หมดอายุ"; 

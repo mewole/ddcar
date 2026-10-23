@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
-require_login();
-    $credit_id = $_POST['credit_id'];
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";
+$credit_id = $_POST['credit_id'];
     $txt = "(cancel)";
     
     $query = "SELECT s.order_id,s.order_number,c.cus_name,s.total_price,s.date_time,s.payment_type,d.credit_num 

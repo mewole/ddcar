@@ -613,13 +613,13 @@
 				},             
 				success: function(data){  
 					EasyLoading.hide();
-					var obj = jQuery.parseJSON(data); 
+					var obj = (typeof data === 'object') ? data : jQuery.parseJSON(data); 
 					if(obj){
 						$.each(obj, function(i, field){							
-							if(obj[i][2] == "โกดัง"){
+							if(field.ware_name || obj[i][2] == "โกดัง"){
 								$('#b').append('<a class="dropdown-item text-center" href="#" onclick="setware('+field.ware_id+',\''+field.ware_name+'\',\'โกดัง\')">'+field.ware_name+'</a>');
 								$('#c').append('<a class="dropdown-item text-center" href="#" onclick="setwareto('+field.ware_id+',\''+field.ware_name+'\')">'+field.ware_name+'</a>');
-							}else if(obj[i][2] == "หน้าร้าน"){
+							}else if(field.shop_name || obj[i][2] == "หน้าร้าน"){
 								$('#b').append('<a class="dropdown-item text-center" href="#" onclick="setware('+field.shop_id+',\''+field.shop_name+'\',\'หน้าร้าน\')">'+field.shop_name+'</a>');
 							}										
 						}); 
@@ -648,7 +648,7 @@
 					},             
 					success: function(data){  
 						EasyLoading.hide();
-						var obj = jQuery.parseJSON(data);                                         
+						var obj = (typeof data === 'object') ? data : jQuery.parseJSON(data);                                         
 						$.each(obj, function(i, field){					
 							min = obj[i].min_amount;
 							if(min == 0){

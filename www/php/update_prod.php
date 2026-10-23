@@ -1,8 +1,7 @@
 <?php
-    include "db.php";
-    include_once "auth_guard.php";
-    require_login();
-
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";
     $prod_id  = isset($_POST['prod']) ? intval($_POST['prod']) : 0;
     $cost     = isset($_POST['cost']) ? floatval($_POST['cost']) : 0.0;
     $price_s  = isset($_POST['price_s']) ? floatval($_POST['price_s']) : 0.0;

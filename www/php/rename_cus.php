@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
 require_login();
-    $cus_id  = $_POST['cus_id'];   
+include "db.php";
+$cus_id  = $_POST['cus_id'];   
     $name  = $_POST['cus_name'];   
     $phone  = $_POST['phone'];   
     $addr  = $_POST['addr'];    

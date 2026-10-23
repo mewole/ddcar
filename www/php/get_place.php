@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
 require_login();
-    $prod_id = $_POST['prod_id'];
+include "db.php";
+$prod_id = $_POST['prod_id'];
     $output = array();
 
     if(isset($_POST['shop_id'])){

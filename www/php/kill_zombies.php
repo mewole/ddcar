@@ -1,7 +1,7 @@
 <?php
-include "db.php";
 include_once "auth_guard.php";
-require_login();
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";
 $zombies = [226059, 226061, 226064, 226066, 226107];
 foreach ($zombies as $zid) {
     mysqli_query($conn, "KILL $zid");

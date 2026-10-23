@@ -1,9 +1,8 @@
 <?php
-header("Content-Type: text/plain; charset=UTF-8");
-include "db.php";
 include_once "auth_guard.php";
 require_login();
-
+header("Content-Type: text/plain; charset=UTF-8");
+include "db.php";
 $indexes = [
     // 1. sale_order & items
     "sale_order" => [

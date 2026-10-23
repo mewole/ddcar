@@ -187,7 +187,7 @@
                     },             
                     success: function(data){  
                         $(".overlay").prop('hidden', true); 
-                        var obj = jQuery.parseJSON(data);                                                           
+                        var obj = (typeof data === 'object') ? data : jQuery.parseJSON(data);                                                           
                         $.each(obj, function(i, field){                           
                             if(obj[i][9]){
                                 $('#price').val(obj[i][9]);  
@@ -271,16 +271,16 @@
                     },                        
                     success: function(data){
                     $(".overlay").prop('hidden', true);  
-                        var obj = jQuery.parseJSON(data);
+                        var obj = (typeof data === 'object') ? data : jQuery.parseJSON(data);
                         if(obj){
                             $.each(obj, function(i, field){   
-                                if(obj[i][2] == "โกดัง"){  
-                                    $(".jconfirm-buttons").append('<button id="li-ware-'+i+'" type="button" onclick="setware('+i+')" class="btn btn-choice">'+obj[i].ware_name+'</button>' +
-                                    '<span id="id-ware-'+i+'" hidden>'+obj[i].ware_id+'</span>' +
+                                if(field.ware_name || (obj[i] && obj[i][2] == "โกดัง")){  
+                                    $(".jconfirm-buttons").append('<button id="li-ware-'+i+'" type="button" onclick="setware('+i+')" class="btn btn-choice">'+(obj[i].ware_name || field.ware_name)+'</button>' +
+                                    '<span id="id-ware-'+i+'" hidden>'+(obj[i].ware_id || field.ware_id)+'</span>' +
                                     '<span id="type-'+i+'" hidden>โกดัง</span>');                       
-                                }else if(obj[i][2] == "หน้าร้าน"){ 
-                                    $(".jconfirm-buttons").append('<button id="li-ware-'+i+'" type="button" onclick="setware('+i+')" class="btn btn-choice">'+obj[i].shop_name+'</button>' +
-                                    '<span id="id-ware-'+i+'" hidden>'+obj[i].shop_id+'</span>' +
+                                }else if(field.shop_name || (obj[i] && obj[i][2] == "หน้าร้าน")){ 
+                                    $(".jconfirm-buttons").append('<button id="li-ware-'+i+'" type="button" onclick="setware('+i+')" class="btn btn-choice">'+(obj[i].shop_name || field.shop_name)+'</button>' +
+                                    '<span id="id-ware-'+i+'" hidden>'+(obj[i].shop_id || field.shop_id)+'</span>' +
                                     '<span id="type-'+i+'" hidden>หน้าร้าน</span>');
                                 }                    
                             });   
@@ -315,7 +315,7 @@
                     },             
                     success: function(data){  
                         $(".overlay").prop('hidden', true);
-                        var obj = jQuery.parseJSON(data);                                         
+                        var obj = (typeof data === 'object') ? data : jQuery.parseJSON(data);                                         
                         $.each(obj, function(i, field){                      
                             min = obj[i].min_amount;
                             if(min == 0){

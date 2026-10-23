@@ -1,7 +1,7 @@
 <?php
-require_once "db.php";
 include_once "auth_guard.php";
 require_login();
+require_once "db.php";
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 @mysqli_report(MYSQLI_REPORT_OFF);

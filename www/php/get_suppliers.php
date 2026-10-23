@@ -1,13 +1,12 @@
 <?php
+include_once "auth_guard.php";
+require_login();
 /**
  * get_suppliers.php
  * คืนค่ารายชื่อร้านค้า/ซัพพลายเออร์ทั้งหมดในระบบ สำหรับ Autocomplete และ Datalist
  */
 header('Content-Type: application/json; charset=utf-8');
 include "db.php";
-include_once "auth_guard.php";
-require_login();
-
 $suppliers = [];
 
 $sql = "SELECT DISTINCT supplier_name AS name FROM (

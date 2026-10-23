@@ -1,8 +1,8 @@
-<?php  
-    include "db.php";
+<?php
 include_once "auth_guard.php";
 require_login();
-    $input  = $_POST['JSON'];
+include "db.php";
+$input  = $_POST['JSON'];
     $obj = json_decode($input,true);    
 
     mysqli_begin_transaction($conn);

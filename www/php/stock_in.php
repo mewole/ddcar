@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
 require_login();
-    @mysqli_report(MYSQLI_REPORT_OFF);
+include "db.php";
+@mysqli_report(MYSQLI_REPORT_OFF);
 
     $input = isset($_POST['JSON']) ? trim($_POST['JSON']) : '';
     $obj = json_decode($input, true);  	

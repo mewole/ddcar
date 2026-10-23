@@ -1,8 +1,7 @@
 <?php
-include "db.php";
 include_once "auth_guard.php";
 require_login();
-
+include "db.php";
 header('Content-Type: application/json; charset=utf-8');
 
 $tf_id = isset($_POST['tf_id']) ? intval($_POST['tf_id']) : 0;

@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
-require_login();
-    $cost = 0;
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";
+$cost = 0;
 
     $sql = "SELECT * FROM warehouse WHERE amount > '0'"; 
     $result = mysqli_query($conn, $sql);   

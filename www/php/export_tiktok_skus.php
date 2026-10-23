@@ -1,11 +1,11 @@
 <?php
+include_once "auth_guard.php";
+require_login();
 /**
  * DDCar - Export TikTok SKUs for Batch Editing
  * Exports a CSV file formatted for TikTok Shop Seller Center Batch Edit
  * Includes UTF-8 BOM for seamless Thai display in Excel on Windows.
  */
-include_once "auth_guard.php";
-require_login();
 require_once "db.php";
 
 $filter_status = isset($_GET['status']) ? trim($_GET['status']) : 'unmapped';

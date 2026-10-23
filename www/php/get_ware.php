@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
 require_login();
-    $output = array();   
+include "db.php";
+$output = array();   
 
     $query = "SELECT ware_id,ware_name FROM warehouse_detail ORDER BY ware_id ASC";
     $result = mysqli_query($conn, $query);

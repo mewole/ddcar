@@ -382,6 +382,214 @@
       });
     }
 
+    function appendCollapse(index){
+      if($("#detail-"+index).length){
+        // Already appended, Bootstrap collapse handles toggle
+      }else{
+        $.ajax({
+          type: "POST",
+          url: "php/get_bill_info.php",
+          data: {'bill_id': index},
+          beforeSend: function(){
+            EasyLoading.show({ text: "กำลังโหลดข้อมูลบิล..." });
+          },
+          success: function(data){
+            EasyLoading.hide();
+            var obj = (typeof data === 'object') ? data : jQuery.parseJSON(data);
+            if(!obj || obj.length === 0) return;
+
+            var branchName = (obj[0].type == "โกดัง") 
+              ? (obj[0][20] ? obj[0][20].ware_name : 'โกดัง') 
+              : (obj[0][20] ? obj[0][20].shop_name : 'หน้าร้าน');
+            var txt = (obj[0].date_time || '').split(" ");
+            var txt2 = (txt[0] || '').split("-");
+            var dateStr = (txt2.length === 3) ? (txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2) + " " + (txt[1] || '').substr(0,5)) : (obj[0].date_time || '');
+            var commentStr = (obj[0].comment && obj[0].comment.trim() !== '') ? (' | <span class="text-danger">หมายเหตุ: ' + obj[0].comment + '</span>') : '';
+            var canAdmin = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
+
+            var html = '<div class="collapse" id="detail-' + index + '">' +
+              '<div class="card card-body bg-light border-primary mb-3">' +
+                '<div class="row mb-2 pb-2 border-bottom">' +
+                  '<div class="col-md-6 text-left">' +
+                    '<h5 class="text-primary mb-1"><i class="fas fa-file-invoice mr-1"></i> บิลเลขที่: <b>' + obj[0].order_number + '</b></h5>' +
+                    '<div class="text-muted small"><i class="fas fa-user mr-1"></i> ลูกค้า: <strong class="text-dark">' + obj[0].cus_name + '</strong> | ประเภท: <span class="badge badge-info">' + obj[0].payment_type + '</span></div>' +
+                  '</div>' +
+                  '<div class="col-md-6 text-right">' +
+                    '<div class="text-muted small"><i class="fas fa-warehouse mr-1"></i> สาขา: <strong class="text-dark">' + branchName + '</strong> | ผู้บันทึก: ' + obj[0].user_name + '</div>' +
+                    '<div class="text-muted small"><i class="far fa-clock mr-1"></i> ' + dateStr + commentStr + '</div>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="table-responsive bg-white rounded border">' +
+                  '<table class="table table-sm table-hover mb-0">' +
+                    '<thead class="thead-dark">' +
+                      '<tr>' +
+                        '<th class="text-center" style="width: 5%;">#</th>' +
+                        '<th class="text-center" style="width: 15%;">รหัสสินค้า</th>' +
+                        '<th class="text-left" style="width: 45%;">ชื่อสินค้า</th>' +
+                        '<th class="text-center" style="width: 10%;">จำนวน</th>' +
+                        '<th class="text-right" style="width: 12%;">ราคา/หน่วย</th>' +
+                        '<th class="text-right" style="width: 13%;">รวม (บาท)</th>' +
+                      '</tr>' +
+                    '</thead>' +
+                    '<tbody>';
+
+            $.each(obj, function(i, field){
+              var price = parseFloat(field.prod_price) || 0;
+              var amt = parseFloat(field.prod_amount) || 0;
+              var itemTotal = price * amt;
+              html += '<tr id="item-' + field.item_id + '">' +
+                '<td class="text-center">' + (i + 1) + '</td>' +
+                '<td class="text-center font-weight-bold">' + field.prod_code + '</td>' +
+                '<td class="text-left"><span class="hover-prod-preview text-primary font-weight-bold" data-prod-id="' + field.prod_id + '" data-prod-code="' + field.prod_code + '" style="cursor:pointer;">' + field.prod_name + '</span></td>' +
+                '<td class="text-center font-weight-bold" id="amt-' + field.prod_id + '">' + amt + '</td>' +
+                '<td class="text-right">' + price.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</td>' +
+                '<td class="text-right font-weight-bold" id="itemsum-' + field.prod_id + '">' + itemTotal.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</td>' +
+              '</tr>';
+            });
+
+            var subTotal = parseFloat(obj[0].sum_price) || 0;
+            var dis = parseFloat(obj[0].total_discount) || 0;
+            var grandTotal = parseFloat(obj[0].total_price) || 0;
+            var getPrice = parseFloat(obj[0].get_price) || 0;
+            var chng = parseFloat(obj[0].chng) || 0;
+
+            html += '</tbody>' +
+                  '</table>' +
+                '</div>' +
+                '<div class="row mt-3 pt-2">' +
+                  '<div class="col-md-6">' +
+                    '<div class="d-flex flex-wrap gap-2">' +
+                      '<button class="btn btn-primary mr-2 mb-2" onclick="printRecep(' + index + ')"><i class="fas fa-receipt mr-1"></i> พิมพ์ใบเสร็จ (80mm)</button>' +
+                      '<button class="btn btn-info mr-2 mb-2" onclick="printA4(' + index + ')"><i class="fas fa-print mr-1"></i> พิมพ์ใบส่งของ (A4)</button>' +
+                      (canAdmin ? ('<button class="btn btn-danger mb-2" onclick="delete_bill(' + index + ', ' + obj[0].branch_id + ', \'' + obj[0].type + '\', \'' + obj[0].payment_type + '\', ' + grandTotal + ', ' + (obj[0].credit_id || 0) + ')"><i class="fas fa-trash-alt mr-1"></i> ยกเลิกบิล</button>') : '') +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="col-md-6 text-right">' +
+                    '<div class="small text-muted">รวมเป็นเงิน: <span id="sum-' + index + '" class="font-weight-bold text-dark">' + subTotal.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</span> บาท</div>' +
+                    (dis > 0 ? ('<div class="small text-danger">ส่วนลด: -' + dis.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' บาท</div>') : '') +
+                    '<div class="h5 font-weight-bold text-success mt-1">ยอดสุทธิ: <span id="total-' + index + '">' + grandTotal.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</span> บาท</div>' +
+                    (getPrice > 0 ? ('<div class="small text-muted">รับเงิน: ' + getPrice.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' | ทอน: ' + chng.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' บาท</div>') : '') +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+
+            $("#bill-" + index).append(html);
+            $("#detail-" + index).collapse('show');
+            if (typeof initHoverPreview === 'function') initHoverPreview();
+          },
+          error: function(xhr, status, err){
+            EasyLoading.hide();
+            $.alert('ไม่สามารถโหลดข้อมูลบิลได้: ' + err);
+          }
+        });
+      }
+    }
+
+    function appendCollapses(index){
+      if($("#details-"+index).length){
+        // Already appended
+      }else{
+        $.ajax({
+          type: "POST",
+          url: "php/get_bill_info.php",
+          data: {'bill_id': index},
+          beforeSend: function(){
+            EasyLoading.show({ text: "กำลังโหลดข้อมูลบิล..." });
+          },
+          success: function(data){
+            EasyLoading.hide();
+            var obj = (typeof data === 'object') ? data : jQuery.parseJSON(data);
+            if(!obj || obj.length === 0) return;
+
+            var branchName = (obj[0].type == "โกดัง") 
+              ? (obj[0][20] ? obj[0][20].ware_name : 'โกดัง') 
+              : (obj[0][20] ? obj[0][20].shop_name : 'หน้าร้าน');
+            var txt = (obj[0].date_time || '').split(" ");
+            var txt2 = (txt[0] || '').split("-");
+            var dateStr = (txt2.length === 3) ? (txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2) + " " + (txt[1] || '').substr(0,5)) : (obj[0].date_time || '');
+            var commentStr = (obj[0].comment && obj[0].comment.trim() !== '') ? (' | <span class="text-danger">หมายเหตุ: ' + obj[0].comment + '</span>') : '';
+            var canAdmin = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
+
+            var html = '<div class="collapse" id="details-' + index + '">' +
+              '<div class="card card-body bg-light border-primary mb-3">' +
+                '<div class="row mb-2 pb-2 border-bottom">' +
+                  '<div class="col-md-6 text-left">' +
+                    '<h5 class="text-primary mb-1"><i class="fas fa-file-invoice mr-1"></i> บิลเลขที่: <b>' + obj[0].order_number + '</b></h5>' +
+                    '<div class="text-muted small"><i class="fas fa-user mr-1"></i> ลูกค้า: <strong class="text-dark">' + obj[0].cus_name + '</strong> | ประเภท: <span class="badge badge-info">' + obj[0].payment_type + '</span></div>' +
+                  '</div>' +
+                  '<div class="col-md-6 text-right">' +
+                    '<div class="text-muted small"><i class="fas fa-warehouse mr-1"></i> สาขา: <strong class="text-dark">' + branchName + '</strong> | ผู้บันทึก: ' + obj[0].user_name + '</div>' +
+                    '<div class="text-muted small"><i class="far fa-clock mr-1"></i> ' + dateStr + commentStr + '</div>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="table-responsive bg-white rounded border">' +
+                  '<table class="table table-sm table-hover mb-0">' +
+                    '<thead class="thead-dark">' +
+                      '<tr>' +
+                        '<th class="text-center" style="width: 5%;">#</th>' +
+                        '<th class="text-center" style="width: 15%;">รหัสสินค้า</th>' +
+                        '<th class="text-left" style="width: 45%;">ชื่อสินค้า</th>' +
+                        '<th class="text-center" style="width: 10%;">จำนวน</th>' +
+                        '<th class="text-right" style="width: 12%;">ราคา/หน่วย</th>' +
+                        '<th class="text-right" style="width: 13%;">รวม (บาท)</th>' +
+                      '</tr>' +
+                    '</thead>' +
+                    '<tbody>';
+
+            $.each(obj, function(i, field){
+              var price = parseFloat(field.prod_price) || 0;
+              var amt = parseFloat(field.prod_amount) || 0;
+              var itemTotal = price * amt;
+              html += '<tr id="item-' + field.item_id + '">' +
+                '<td class="text-center">' + (i + 1) + '</td>' +
+                '<td class="text-center font-weight-bold">' + field.prod_code + '</td>' +
+                '<td class="text-left"><span class="hover-prod-preview text-primary font-weight-bold" data-prod-id="' + field.prod_id + '" data-prod-code="' + field.prod_code + '" style="cursor:pointer;">' + field.prod_name + '</span></td>' +
+                '<td class="text-center font-weight-bold" id="amt-' + field.prod_id + '">' + amt + '</td>' +
+                '<td class="text-right">' + price.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</td>' +
+                '<td class="text-right font-weight-bold" id="itemsum-' + field.prod_id + '">' + itemTotal.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</td>' +
+              '</tr>';
+            });
+
+            var subTotal = parseFloat(obj[0].sum_price) || 0;
+            var dis = parseFloat(obj[0].total_discount) || 0;
+            var grandTotal = parseFloat(obj[0].total_price) || 0;
+            var getPrice = parseFloat(obj[0].get_price) || 0;
+            var chng = parseFloat(obj[0].chng) || 0;
+
+            html += '</tbody>' +
+                  '</table>' +
+                '</div>' +
+                '<div class="row mt-3 pt-2">' +
+                  '<div class="col-md-6">' +
+                    '<div class="d-flex flex-wrap gap-2">' +
+                      '<button class="btn btn-primary mr-2 mb-2" onclick="printRecep(' + index + ')"><i class="fas fa-receipt mr-1"></i> พิมพ์ใบเสร็จ (80mm)</button>' +
+                      '<button class="btn btn-info mr-2 mb-2" onclick="printA4(' + index + ')"><i class="fas fa-print mr-1"></i> พิมพ์ใบส่งของ (A4)</button>' +
+                      (canAdmin ? ('<button class="btn btn-danger mb-2" onclick="delete_bill(' + index + ', ' + obj[0].branch_id + ', \'' + obj[0].type + '\', \'' + obj[0].payment_type + '\', ' + grandTotal + ', ' + (obj[0].credit_id || 0) + ')"><i class="fas fa-trash-alt mr-1"></i> ยกเลิกบิล</button>') : '') +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="col-md-6 text-right">' +
+                    '<div class="small text-muted">รวมเป็นเงิน: <span id="sum-' + index + '" class="font-weight-bold text-dark">' + subTotal.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</span> บาท</div>' +
+                    (dis > 0 ? ('<div class="small text-danger">ส่วนลด: -' + dis.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' บาท</div>') : '') +
+                    '<div class="h5 font-weight-bold text-success mt-1">ยอดสุทธิ: <span id="total-' + index + '">' + grandTotal.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</span> บาท</div>' +
+                    (getPrice > 0 ? ('<div class="small text-muted">รับเงิน: ' + getPrice.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' | ทอน: ' + chng.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' บาท</div>') : '') +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+
+            $("#bills-" + index).append(html);
+            $("#details-" + index).collapse('show');
+            if (typeof initHoverPreview === 'function') initHoverPreview();
+          },
+          error: function(xhr, status, err){
+            EasyLoading.hide();
+            $.alert('ไม่สามารถโหลดข้อมูลบิลได้: ' + err);
+          }
+        });
+      }
+    }
+
     function printA4(index){
       arr_a4 = [];		 
       var text = ""     

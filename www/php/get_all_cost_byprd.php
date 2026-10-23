@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
-require_login();
-    $key = $_POST['keyword'];
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";
+$key = $_POST['keyword'];
     $cost = 0;
 
     $sql = "SELECT * FROM warehouse WHERE amount > '0'"; 

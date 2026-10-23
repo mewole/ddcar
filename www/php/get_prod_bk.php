@@ -1,5 +1,7 @@
 <?php
-    include "db.php";    
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";    
 
     if(isset($_POST['qr'])){
         $qr = $_POST['qr'];    

@@ -1,8 +1,8 @@
 <?php
-    include "db.php";
 include_once "auth_guard.php";
 require_login();
-    $output = array();    
+include "db.php";
+$output = array();    
 
     $query = "SELECT * FROM online_shop ORDER BY online_id ASC";
     $result = mysqli_query($conn, $query);

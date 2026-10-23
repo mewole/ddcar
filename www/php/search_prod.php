@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_login();
 /**
  * search_prod.php
  * ค้นหาสินค้าจากชื่อหรือรหัสสินค้า (ต้นฉบับเสถียร รองรับทุกหน้าในระบบ)
@@ -10,9 +12,8 @@ if (!ob_start("ob_gzhandler")) {
 header('Content-Type: application/json; charset=utf-8');
 
 include "db.php";
-include_once "auth_guard.php";
-require_login();
-$is_owner_or_admin = (isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], ['เจ้าของร้าน', 'แอดมิน']));
+$user_role = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : (isset($_REQUEST['user_role']) ? $_REQUEST['user_role'] : '');
+$is_owner_or_admin = in_array($user_role, ['เจ้าของร้าน', 'แอดมิน']);
 include_once "folder_helper.php";
 
 $data = isset($_POST['phrase']) ? trim(mysqli_real_escape_string($conn, $_POST['phrase'])) : '';

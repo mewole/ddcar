@@ -93,8 +93,8 @@
                 return;
             }
 
-            // Admin & Owner only menu check
-            if (item.adminOwnerOnly && !isOwnerOrAdmin) {
+            // Admin & Owner only menu check (keep nav-admin accessible)
+            if (item.adminOwnerOnly && !isOwnerOrAdmin && item.id !== 'nav-admin') {
                 return;
             }
 

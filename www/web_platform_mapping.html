@@ -1159,14 +1159,28 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       return '';
     }
 
+    function getPlatformIconClass(channelName) {
+      var ch = (channelName || '').toLowerCase();
+      if (ch.indexOf('tiktok') !== -1) return 'fab fa-tiktok';
+      if (ch.indexOf('shopee') !== -1) return 'fas fa-shopping-bag';
+      if (ch.indexOf('lazada') !== -1) return 'fas fa-shopping-cart';
+      return 'fas fa-box';
+    }
+
     function formatPlatformTitleHtml(item) {
       var name = item.platform_name || '';
       var sku = item.platform_sku || '';
       var id = item.id || 0;
       var channelName = item.channel_name || 'Platform';
       var badgeColor = item.badge_color || '#0284c7';
-      var imgSrc = item.image_url || item.matched_img || '';
+      // ONLY accept genuine CDN images starting with http:// or https:// for platform image
+      var platformImg = (item.image_url && (item.image_url.startsWith('http://') || item.image_url.startsWith('https://'))) ? item.image_url : '';
       var platformUrl = getPlatformProductUrl(item);
+      var matchedImg = item.matched_img || '';
+      var matchedName = item.matched_prod_name || '';
+      var targetSku = item.target_sku || '';
+      var totalStock = item.total_stock || 0;
+      var isMapped = (item.status === 'mapped');
 
       var baseName = name;
       var varText = '';
@@ -1186,7 +1200,12 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
               '         data-badge-color="' + escapeHtml(badgeColor) + '" ' +
               '         data-sku="' + escapeHtml(sku) + '" ' +
               '         data-var="' + escapeHtml(varText) + '" ' +
-              '         data-img="' + escapeHtml(imgSrc) + '" ' +
+              '         data-platform-img="' + escapeHtml(platformImg) + '" ' +
+              '         data-matched-img="' + escapeHtml(matchedImg) + '" ' +
+              '         data-matched-name="' + escapeHtml(matchedName) + '" ' +
+              '         data-target-sku="' + escapeHtml(targetSku) + '" ' +
+              '         data-total-stock="' + totalStock + '" ' +
+              '         data-is-mapped="' + (isMapped ? '1' : '0') + '" ' +
               '         data-url="' + escapeHtml(platformUrl) + '" ' +
               '         title="ชี้เพื่อดูชื่อความยาวทั้งหมดและรูปภาพตามแพลตฟอร์ม">' +
               escapeHtml(baseName || sku) +
@@ -1262,12 +1281,13 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       return html;
     }
 
-    // Global Floating Popover on Hover (with Product Image + Full Length Title + Link)
+    // Global Floating Popover on Hover (with Product Image + Full Length Title + Link + Mapped Product Preview)
     var popoverHideTimeout = null;
 
     $(document).on('mouseenter', '.platform-hover-title, .platform-img-thumb-wrap', function() {
       clearTimeout(popoverHideTimeout);
-      var $el = $(this).closest('.mapping-card').find('.platform-hover-title');
+      var $card = $(this).closest('.mapping-card');
+      var $el = $card.find('.platform-hover-title');
       if ($el.length === 0) $el = $(this);
 
       var fullName = $el.attr('data-full-name') || $el.text();
@@ -1275,7 +1295,12 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       var badgeColor = $el.attr('data-badge-color') || '#0284c7';
       var sku = $el.attr('data-sku') || '';
       var varText = $el.attr('data-var') || '';
-      var imgSrc = $el.attr('data-img') || '';
+      var platformImg = $el.attr('data-platform-img') || '';
+      var matchedImg = $el.attr('data-matched-img') || '';
+      var matchedName = $el.attr('data-matched-name') || '';
+      var targetSku = $el.attr('data-target-sku') || '';
+      var totalStock = $el.attr('data-total-stock') || '0';
+      var isMapped = ($el.attr('data-is-mapped') === '1');
       var productUrl = $el.attr('data-url') || '';
 
       var $pop = $('#platform-title-floating-popover');
@@ -1298,13 +1323,15 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       contentHtml += '</div>';
 
       contentHtml += '<div class="d-flex align-items-start mb-2">';
-      if (imgSrc) {
-        contentHtml += '  <div class="mr-3 flex-shrink-0">';
-        contentHtml += '    <img src="' + escapeHtml(imgSrc) + '" class="rounded shadow" style="width: 84px; height: 84px; object-fit: cover; border: 2px solid #38bdf8; background: #1e293b;" onerror="this.onerror=null; this.src=\'img/logo.jpg\';">';
+      if (platformImg) {
+        contentHtml += '  <div class="mr-3 flex-shrink-0 text-center">';
+        contentHtml += '    <img src="' + escapeHtml(platformImg) + '" class="rounded shadow" style="width: 84px; height: 84px; object-fit: cover; border: 2px solid #38bdf8; background: #1e293b;" onerror="this.onerror=null; this.src=\'img/logo.jpg\';">';
+        contentHtml += '    <div class="text-center mt-1" style="font-size:0.65rem; color:#38bdf8;">รูปจากร้านค้า</div>';
         contentHtml += '  </div>';
       } else {
-        contentHtml += '  <div class="mr-3 flex-shrink-0 d-flex align-items-center justify-content-center rounded" style="width: 84px; height: 84px; background: rgba(255,255,255,0.06); border: 1.5px dashed rgba(56, 189, 248, 0.35); color: #94a3b8; font-size: 0.72rem; text-align: center; padding: 4px;">';
-        contentHtml += '    <div><i class="fas fa-image fa-2x mb-1 text-info opacity-50"></i><br><span style="color:#cbd5e1;">(รอรูปจากร้าน)</span></div>';
+        contentHtml += '  <div class="mr-3 flex-shrink-0 d-flex flex-column align-items-center justify-content-center rounded" style="width: 84px; height: 84px; background: rgba(255,255,255,0.06); border: 1.5px dashed rgba(56, 189, 248, 0.35); color: #94a3b8; font-size: 0.72rem; text-align: center; padding: 4px;">';
+        contentHtml += '    <i class="' + getPlatformIconClass(channelName) + ' fa-2x mb-1 text-info opacity-75"></i>';
+        contentHtml += '    <span style="color:#cbd5e1; font-size:0.65rem; line-height:1.2;">รอรูปจากร้าน<br>(กดเปิดดูด้านบน)</span>';
         contentHtml += '  </div>';
       }
       contentHtml += '  <div class="flex-grow-1">';
@@ -1324,6 +1351,27 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
         contentHtml += '</div>';
       }
 
+      // Warehouse product preview in popover if mapped
+      if (isMapped && (matchedName || targetSku)) {
+        contentHtml += '<div class="mt-2 pt-2" style="border-top: 1px dashed rgba(255,255,255,0.2);">';
+        contentHtml += '  <div class="d-flex align-items-center justify-content-between mb-1">';
+        contentHtml += '    <span class="badge badge-success px-2 py-0" style="font-size:0.72rem;"><i class="fas fa-check-circle mr-1"></i>จับคู่กับสต็อก DDCAR แล้ว</span>';
+        contentHtml += '    <span class="small text-white-50">ตัดสต็อก: <strong class="text-white">' + escapeHtml(targetSku) + '</strong></span>';
+        contentHtml += '  </div>';
+        contentHtml += '  <div class="d-flex align-items-center p-2 rounded" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(16, 185, 129, 0.35);">';
+        if (matchedImg) {
+          contentHtml += '    <img src="' + escapeHtml(matchedImg) + '" class="rounded mr-2" style="width: 44px; height: 44px; object-fit: cover; border: 1px solid #10b981;" onerror="this.style.display=\'none\';">';
+        } else {
+          contentHtml += '    <div class="rounded mr-2 d-flex align-items-center justify-content-center text-muted" style="width: 44px; height: 44px; background: rgba(255,255,255,0.1);"><i class="fas fa-boxes text-white opacity-50"></i></div>';
+        }
+        contentHtml += '    <div style="min-width: 0;">';
+        contentHtml += '      <div class="font-weight-bold text-white small text-truncate" style="max-width: 320px;">' + escapeHtml(matchedName) + '</div>';
+        contentHtml += '      <div class="small" style="color: #6ee7b7; font-size:0.72rem;">รหัสคลัง: <code>' + escapeHtml(targetSku) + '</code> | คงเหลือ: <strong>' + totalStock + '</strong> ชิ้น</div>';
+        contentHtml += '    </div>';
+        contentHtml += '  </div>';
+        contentHtml += '</div>';
+      }
+
       $pop.html(contentHtml);
 
       var rect = this.getBoundingClientRect();
@@ -1334,7 +1382,8 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
       }
       if (left < 10) left = 10;
 
-      var approxHeight = imgSrc ? 200 : 150;
+      var approxHeight = platformImg ? 220 : 170;
+      if (isMapped) approxHeight += 60;
       var top = rect.top - approxHeight - 12;
       var isBelow = false;
       if (top < 15) {
@@ -1473,20 +1522,23 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
         html += '<div class="mapping-card ' + cardClass + '" id="card-row-' + item.id + '" data-id="' + item.id + '">';
         html += '<div class="row align-items-center">';
 
-        var imgSrc = item.image_url || item.matched_img || '';
+        // Only genuine CDN URL for platform thumbnail
+        var platformImg = (item.image_url && (item.image_url.startsWith('http://') || item.image_url.startsWith('https://'))) ? item.image_url : '';
 
         // Col 1: Platform Info
         html += '<div class="col-lg-4 col-md-5 mb-2 mb-md-0">';
         html += '  <div class="d-flex align-items-start">';
         
-        // Thumbnail Image
-        if (imgSrc) {
+        // Thumbnail Image (Platform side strictly shows real platform photo or clear placeholder)
+        if (platformImg) {
           html += '    <div class="platform-img-thumb-wrap mr-2 flex-shrink-0" style="width: 52px; height: 52px; border-radius: 8px; overflow: hidden; border: 1.5px solid #e2e8f0; background: #f8fafc; cursor: pointer;" title="ชี้เพื่อดูรูปภาพและชื่อเต็ม">' +
-                  '      <img src="' + escapeHtml(imgSrc) + '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src=\'img/logo.jpg\';">' +
+                  '      <img src="' + escapeHtml(platformImg) + '" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.onerror=null; this.src=\'img/logo.jpg\';">' +
                   '    </div>';
         } else {
-          html += '    <div class="platform-img-thumb-wrap mr-2 flex-shrink-0 text-center" style="width: 52px; height: 52px; border-radius: 8px; border: 1.5px dashed #cbd5e1; background: #f8fafc; display: flex; align-items: center; justify-content: center;" title="ยังไม่มีรูปภาพ">' +
-                  '      <i class="fas fa-image text-muted" style="font-size: 1.15rem; opacity: 0.45;"></i>' +
+          var platIcon = getPlatformIconClass(item.channel_name);
+          html += '    <div class="platform-img-thumb-wrap mr-2 flex-shrink-0 text-center" style="width: 52px; height: 52px; border-radius: 8px; border: 1.5px dashed ' + (item.badge_color || '#cbd5e1') + '; background: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;" title="ยังไม่มีรูปภาพจากร้านแพลตฟอร์มนี้ (ชี้เพื่อดูรายละเอียด)">' +
+                  '      <i class="' + platIcon + '" style="font-size: 1.25rem; color: ' + (item.badge_color || '#64748b') + ';"></i>' +
+                  '      <span style="font-size: 0.6rem; color: #64748b; font-weight: 600; line-height: 1; margin-top: 2px;">รอรูป</span>' +
                   '    </div>';
         }
 
@@ -1540,12 +1592,22 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
         html += '      <div class="autocomplete-dropdown" id="dropdown-' + item.id + '"></div>';
         html += '    </div>';
 
-        // Matched details preview
+        // Matched details preview (Warehouse product side with actual product photo)
         if (item.matched_prod_name) {
-          html += '    <div class="d-flex align-items-center justify-content-between mt-1 px-1">';
-          html += '      <div class="small text-truncate text-muted" style="max-width: 250px;">' + escapeHtml(item.matched_prod_name) + '</div>';
           var stockClass = item.total_stock > 0 ? 'stock-chip-ok' : 'stock-chip-low';
-          html += '      <span class="stock-chip ' + stockClass + '">สต็อก: ' + item.total_stock + ' ชิ้น</span>';
+          html += '    <div class="d-flex align-items-center justify-content-between mt-2 p-1 px-2 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">';
+          html += '      <div class="d-flex align-items-center" style="min-width: 0;">';
+          if (item.matched_img) {
+            html += '        <img src="' + escapeHtml(item.matched_img) + '" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; margin-right: 8px; flex-shrink: 0;" onerror="this.style.display=\'none\';" title="รูปสินค้าในคลัง DDCAR">';
+          } else {
+            html += '        <div class="mr-2 flex-shrink-0 text-center rounded" style="width: 36px; height: 36px; background: #e2e8f0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-boxes text-muted" style="font-size: 0.9rem;"></i></div>';
+          }
+          html += '        <div style="min-width: 0;">';
+          html += '          <div class="small font-weight-bold text-truncate text-dark" style="max-width: 210px;" title="' + escapeHtml(item.matched_prod_name) + '"><i class="fas fa-warehouse text-success mr-1"></i>' + escapeHtml(item.matched_prod_name) + '</div>';
+          html += '          <div class="small text-muted" style="font-size: 0.72rem;">รหัสคลัง: <code class="text-primary font-weight-bold">' + escapeHtml(item.target_sku || '') + '</code></div>';
+          html += '        </div>';
+          html += '      </div>';
+          html += '      <span class="stock-chip ' + stockClass + ' ml-2 flex-shrink-0">สต็อก: ' + item.total_stock + ' ชิ้น</span>';
           html += '    </div>';
         }
         html += '  </div>';
@@ -2457,11 +2519,14 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
         },
         dataType: 'json',
         success: function(res) {
-          if (res && res.success) {
+          if (res && (res.success || res.items)) {
             ttItemsData = res.items || [];
             updateTTKpis(res.kpi);
             renderTikTokCards(ttItemsData);
-            renderTTPagination(res.total_filtered, res.page, res.limit);
+            var total = (res.pagination && res.pagination.total_filtered !== undefined) ? res.pagination.total_filtered : (res.total_filtered || 0);
+            var page = (res.pagination && res.pagination.page !== undefined) ? res.pagination.page : (res.page || 1);
+            var limit = (res.pagination && res.pagination.limit !== undefined) ? res.pagination.limit : (res.limit || 25);
+            renderTTPagination(total, page, limit);
           } else {
             $('#tt-cards-container').html('<div class="alert alert-warning">ไม่สามารถโหลดข้อมูลสินค้า TikTok ได้</div>');
           }
@@ -2474,14 +2539,17 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
 
     function updateTTKpis(kpi) {
       if (!kpi) return;
-      $('#tt-cnt-unmapped').text(kpi.unmapped || 0);
-      $('#tt-cnt-mapped').text(kpi.mapped || 0);
-      $('#tt-cnt-total').text(kpi.total || 0);
-      $('#txt-hdr-tt-unmapped').text(kpi.unmapped || 0);
-      $('#txt-banner-tt-cnt').text(kpi.unmapped || 0);
+      var total = parseInt(kpi.total) || 0;
+      var mapped = parseInt(kpi.mapped) || 0;
+      var unmapped = parseInt(kpi.unmapped) || 0;
+      $('#tt-cnt-unmapped').text(unmapped);
+      $('#tt-cnt-mapped').text(mapped);
+      $('#tt-cnt-total').text(total);
+      $('#txt-hdr-tt-unmapped').text(unmapped);
+      $('#txt-banner-tt-cnt').text(unmapped);
 
-      var pct = kpi.percent || 0;
-      $('#tt-progress-text').text(kpi.mapped + ' / ' + kpi.total + ' รายการ (' + pct + '%)');
+      var pct = (kpi.percent !== undefined && kpi.percent !== null) ? kpi.percent : (total > 0 ? Math.round((mapped / total) * 100) : 0);
+      $('#tt-progress-text').text(mapped + ' / ' + total + ' รายการ (' + pct + '%)');
       $('#tt-progress-bar').css('width', pct + '%');
     }
 
@@ -2506,7 +2574,8 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
 
       items.forEach(function(item) {
         var isMapped = (item.status === 'mapped');
-        var imgSrc = item.image_url || item.current_img || '';
+        var platformImg = (item.image_url && item.image_url.startsWith('http')) ? item.image_url : '';
+        var imgSrc = platformImg || (isMapped ? item.current_img : '');
 
         html += '<div class="tt-card ' + (isMapped ? 'is-done' : '') + '" id="tt-card-' + item.id + '">';
         html += '  <div class="row align-items-center">';
@@ -2520,8 +2589,9 @@ KK-SET-01	ชุดกระจกมองข้าง D-Max คู่"></texta
           html += '        <img src="' + escapeHtml(imgSrc) + '" alt="" onerror="this.onerror=null; this.src=\'img/logo.jpg\';">';
           html += '      </div>';
         } else {
-          html += '      <div class="tt-img-wrap mr-3 d-flex align-items-center justify-content-center text-muted" title="ยังไม่มีรูป">';
-          html += '        <i class="fas fa-image fa-2x opacity-40"></i>';
+          html += '      <div class="tt-img-wrap mr-3 d-flex flex-column align-items-center justify-content-center text-muted" style="background:#f8fafc; border: 1.5px dashed #cbd5e1;" title="ยังไม่มีรูปภาพจาก TikTok">';
+          html += '        <i class="fab fa-tiktok fa-lg mb-1 opacity-50 text-dark"></i>';
+          html += '        <span style="font-size:0.6rem; color:#64748b;">รอรูป</span>';
           html += '      </div>';
         }
 

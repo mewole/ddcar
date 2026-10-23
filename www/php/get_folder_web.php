@@ -1,10 +1,9 @@
 <?php
-    ini_set('memory_limit', '512M');
-    include "db.php";
 include_once "auth_guard.php";
 require_login();
-    
-    // 1. รับค่าและตัดเว้นวรรค
+ini_set('memory_limit', '512M');
+    include "db.php";
+// 1. รับค่าและตัดเว้นวรรค
     $parent      = isset($_POST['parent']) ? trim(mysqli_real_escape_string($conn, $_POST['parent'])) : 'car';
     $order_input = isset($_POST['order_by']) ? $_POST['order_by'] : 'ASC';
     $order_by    = (strtoupper($order_input) === 'DESC') ? 'DESC' : 'ASC';

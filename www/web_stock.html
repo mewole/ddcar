@@ -260,9 +260,10 @@
 
 			$(document).off('click', '.btn-open-adjust').on('click', '.btn-open-adjust', function(e) {
 				e.preventDefault();
-				var pid = $(this).data('prod-id');
-				var pname = $(this).data('prod-name');
-				var pcode = $(this).data('prod-code');
+				var $btn = $(this).closest('.btn-open-adjust');
+				var pid = $btn.attr('data-prod-id') || $btn.data('prod-id');
+				var pname = $btn.attr('data-prod-name') || $btn.data('prod-name') || $('#p-' + pid).text();
+				var pcode = $btn.attr('data-prod-code') || $btn.data('prod-code') || '';
 				var pimg = $('#img-' + pid).attr('src') || 'img/no_img.png';
 				openAdjustStockModal(pid, pname, pcode, pimg);
 			});
@@ -446,7 +447,7 @@
 					msg +
 					(canViewCost() ? '<div id="supplier-badge-' + prod_id + '" class="supplier-badge-wrap"></div>' : '') +
 					'<button type="button" class="btn btn-sm btn-outline-danger btn-block mt-3 font-weight-bold btn-open-adjust" id="btn-adj-'+prod_id+'" title="ตัดของชำรุด/ของหาย/ปรับสต๊อกโดยตรง">' +
-						'<i class="fas fa-minus-circle mr-1"></i> ปรับลด / ตัดสต๊อก' +
+						'<i class="fas fa-minus-circle mr-1" style="pointer-events: none;"></i> ปรับลด / ตัดสต๊อก' +
 					'</button>' +
 				'</div>'
 			);
@@ -465,6 +466,9 @@
 				.data('prod-name', name);
 
 			$card.find('#btn-adj-' + prod_id)
+				.attr('data-prod-id', prod_id)
+				.attr('data-prod-name', name)
+				.attr('data-prod-code', code)
 				.data('prod-id', prod_id)
 				.data('prod-name', name)
 				.data('prod-code', code);
@@ -1848,34 +1852,45 @@
 				success: function(res) {
 					$('#adj-place-select').empty();
 					var validOptions = 0;
+					var firstStockedVal = '';
 					if (res && res.length > 0) {
 						$.each(res, function(i, item) {
 							var placeType = item.type || (item.ware_name ? 'ware' : 'shop');
 							var placeName = (placeType === 'ware') ? (item.ware_name || 'โกดัง ' + item.id) : (item.shop_name || 'หน้าร้าน ' + item.id);
 							var amt = parseInt(item.amount, 10) || 0;
-							if (amt > 0) {
-								validOptions++;
-								var optLabel = (placeType === 'ware' ? '🏬 โกดัง: ' : '🏪 หน้าร้าน: ') + placeName + ' (คงเหลือ ' + amt + ' ชิ้น)';
-								var $opt = $('<option></option>')
-									.val(placeType + '-' + item.id)
-									.text(optLabel)
-									.data('place-type', placeType)
-									.data('place-id', item.id)
-									.data('place-name', placeName)
-									.data('amount', amt);
-								$('#adj-place-select').append($opt);
+							var valStr = placeType + '-' + item.id;
+							validOptions++;
+							if (amt > 0 && !firstStockedVal) {
+								firstStockedVal = valStr;
 							}
+							var optLabel = (placeType === 'ware' ? '🏬 โกดัง: ' : '🏪 หน้าร้าน: ') + placeName + (amt > 0 ? (' (คงเหลือ ' + amt + ' ชิ้น)') : ' (คงเหลือ 0 ชิ้น)');
+							var $opt = $('<option></option>')
+								.val(valStr)
+								.text(optLabel)
+								.attr('data-place-type', placeType)
+								.attr('data-place-id', item.id)
+								.attr('data-place-name', placeName)
+								.attr('data-amount', amt)
+								.data('place-type', placeType)
+								.data('place-id', item.id)
+								.data('place-name', placeName)
+								.data('amount', amt);
+							if (amt <= 0) {
+								$opt.css('color', '#94a3b8');
+							}
+							$('#adj-place-select').append($opt);
 						});
 					}
 
 					if (validOptions === 0) {
-						$('#adj-place-select').append('<option value="">-- ไม่มีสินค้าคงเหลือในระบบสำหรับตัดสต๊อก --</option>');
-						$('#adj-current-stock-info').html('<span class="text-danger font-weight-bold">0 ชิ้น (ไม่มีสินค้าให้ตัด)</span>');
+						$('#adj-place-select').append('<option value="">-- ไม่พบสถานที่ในระบบ --</option>');
+						$('#adj-current-stock-info').html('<span class="text-danger font-weight-bold">-</span>');
 						$('#adj-qty').prop('disabled', true).val(0);
 						$('#btn-submit-adjust').prop('disabled', true);
 					} else {
-						$('#adj-qty').prop('disabled', false).val(1);
-						$('#btn-submit-adjust').prop('disabled', false);
+						if (firstStockedVal) {
+							$('#adj-place-select').val(firstStockedVal);
+						}
 						updateAdjustStockCalculations();
 					}
 				},
@@ -1887,8 +1902,19 @@
 
 		function updateAdjustStockCalculations() {
 			var $selected = $('#adj-place-select option:selected');
-			var maxAmt = parseInt($selected.data('amount'), 10) || 0;
+			var maxAmt = parseInt($selected.attr('data-amount') !== undefined ? $selected.attr('data-amount') : $selected.data('amount'), 10) || 0;
 			var qty = parseInt($('#adj-qty').val(), 10) || 1;
+
+			if (maxAmt <= 0) {
+				$('#adj-current-stock-info').html('<span class="text-danger font-weight-bold">0 ชิ้น (ไม่มีสินค้าให้ตัด)</span>');
+				$('#adj-after-stock-info').html('<span class="text-muted">-</span>');
+				$('#adj-qty').prop('disabled', true).val(0);
+				$('#btn-submit-adjust').prop('disabled', true);
+				return;
+			}
+
+			$('#adj-qty').prop('disabled', false);
+			$('#btn-submit-adjust').prop('disabled', false);
 
 			if (qty < 1) qty = 1;
 			if (qty > maxAmt && maxAmt > 0) qty = maxAmt;
@@ -1939,10 +1965,10 @@
 			var prodId = $('#adj-modal-prod-id').val();
 			var prodName = $('#adj-modal-prod-name').text();
 			var $selected = $('#adj-place-select option:selected');
-			var placeType = $selected.data('place-type');
-			var placeId = $selected.data('place-id');
-			var placeName = $selected.data('place-name');
-			var currentAmt = parseInt($selected.data('amount'), 10) || 0;
+			var placeType = $selected.attr('data-place-type') || $selected.data('place-type');
+			var placeId = $selected.attr('data-place-id') || $selected.data('place-id');
+			var placeName = $selected.attr('data-place-name') || $selected.data('place-name');
+			var currentAmt = parseInt($selected.attr('data-amount') !== undefined ? $selected.attr('data-amount') : $selected.data('amount'), 10) || 0;
 			var qty = parseInt($('#adj-qty').val(), 10) || 0;
 			var reason = $('#adj-reason').val().trim();
 			var userId = localStorage.getItem('user_id') || 1;

@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
@@ -7,16 +9,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 require_once "db.php";
-include_once "auth_guard.php";
-require_login();
-header("Content-Type: application/json; charset=utf-8");
-
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true) ?: $_POST;
 
 $channel_code = isset($data['channel_code']) ? mysqli_real_escape_string($conn, trim($data['channel_code'])) : '';
 $products = isset($data['products']) && is_array($data['products']) ? $data['products'] : [];
 $source = isset($data['source']) ? mysqli_real_escape_string($conn, trim($data['source'])) : 'chrome_extension';
+
+// Allow Chrome extension sync calls without requiring browser session cookies
+$is_ext = (!empty($_SERVER['HTTP_X_EXTENSION_REQUEST']) || 
+           strpos($source, 'extension') !== false || 
+           strpos($source, 'catalog') !== false || 
+           strpos($source, 'page') !== false);
+if (!$is_ext && !is_logged_in()) {
+    }
+header("Content-Type: application/json; charset=utf-8");
 
 if (empty($channel_code)) {
     echo json_encode(["success" => false, "message" => "กรุณาระบุ channel_code"]);
@@ -94,9 +101,8 @@ foreach ($products as $p) {
             $auto_pid = intval($p_row['prod_id']);
             $auto_target = $p_row['prod_code'];
             $auto_status = 'mapped';
-            if (empty($img) && !empty($p_row['img'])) {
-                $img = mysqli_real_escape_string($conn, $p_row['img']);
-            }
+            // Do NOT copy local warehouse img into platform image_url
+            // Platform image_url must only store genuine marketplace CDN URLs
         }
 
         $ins_sql = "INSERT INTO platform_sku_mapping 

@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_login();
 /**
  * get_low_stock.php
  * รายงานสินค้าใกล้หมด / ต่ำกว่าจุดสั่งซื้อซ้ำ (Reorder Point / min_amount)
@@ -10,10 +12,9 @@ if (!ob_start("ob_gzhandler")) {
 ini_set('display_errors', 0);
 error_reporting(0);
 include "db.php";
-include_once "auth_guard.php";
 include_once "folder_helper.php";
 
-require_login(); // บังคับว่าต้องล็อกอินก่อนดูรายการสินค้าใกล้หมด
+// บังคับว่าต้องล็อกอินก่อนดูรายการสินค้าใกล้หมด
 $is_owner_or_admin = (isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], ['เจ้าของร้าน', 'แอดมิน']));
 
 header('Content-Type: application/json; charset=utf-8');

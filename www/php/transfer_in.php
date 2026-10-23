@@ -1,8 +1,8 @@
-<?php 
-    include "db.php";
+<?php
 include_once "auth_guard.php";
-require_login(); 
-    $input  = $_POST['JSON'];
+require_login();
+include "db.php";
+$input  = $_POST['JSON'];
     $obj = json_decode($input,true);
     $shop_id  = $_POST['shop_id'];
     $dt  = $_POST['date'];

@@ -1,9 +1,23 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Headers: Content-Type, X-Extension-Request, Authorization");
 require_once "db.php";
 include_once "auth_guard.php";
-require_login();
+
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true) ?: $_POST;
+if (isset($_POST['payload'])) {
+    $data = json_decode($_POST['payload'], true);
+}
+$sync_source = isset($data['source']) ? trim($data['source']) : 'chrome_extension';
+
+$is_ext = (!empty($_SERVER['HTTP_X_EXTENSION_REQUEST']) || 
+           strpos($sync_source, 'extension') !== false || 
+           strpos($sync_source, 'order') !== false || 
+           strpos($sync_source, 'page') !== false);
+if (!$is_ext && !is_logged_in()) {
+    require_login();
+}
 header("Content-Type: application/json; charset=utf-8");
 
 // Ensure Tables Exist with matching collation
@@ -151,9 +165,6 @@ foreach ($orders as $ord) {
                     $d_row = mysqli_fetch_assoc($chk_direct);
                     $prod_id = intval($d_row['prod_id']);
                     $target_sku = mysqli_real_escape_string($conn, $d_row['prod_code']);
-                    if (empty($p_img) && !empty($d_row['img'])) {
-                        $p_img = mysqli_real_escape_string($conn, $d_row['img']);
-                    }
                     $match_status = 'mapped';
                     mysqli_query($conn, "INSERT IGNORE INTO platform_sku_mapping 
                         (channel_code, platform_sku, platform_name, image_url, product_url, mapping_type, prod_id, target_sku, status)

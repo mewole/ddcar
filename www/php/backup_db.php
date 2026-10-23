@@ -1,4 +1,6 @@
 <?php
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน']);
 /**
  * backup_db.php
  * ระบบสำรองฐานข้อมูล MySQL อัตโนมัติ (Automated Backup & Retention Policy)
@@ -8,12 +10,9 @@ ini_set('memory_limit', '512M');
 set_time_limit(600);
 
 include "db.php";
-include_once "auth_guard.php";
-
 // หากไม่ได้รันผ่าน Command Line (CLI) บนเครื่องเซิร์ฟเวอร์ ให้บังคับตรวจสอบสิทธิ์เจ้าของร้าน/แอดมินเท่านั้น
 if (php_sapi_name() !== 'cli') {
-    require_role(['เจ้าของร้าน', 'แอดมิน']);
-}
+    }
 
 $backup_dir = __DIR__ . '/../_backup_db';
 if (!is_dir($backup_dir)) {

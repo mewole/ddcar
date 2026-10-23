@@ -1,5 +1,7 @@
 <?php
-    include "db.php";   
+include_once "auth_guard.php";
+require_role(['เจ้าของร้าน', 'แอดมิน']);
+include "db.php";   
     $name  = $_POST['name_prod'];    
     $code  = $_POST['code'];   
     $parent  = $_POST['parent'];

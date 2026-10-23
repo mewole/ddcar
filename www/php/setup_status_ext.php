@@ -1,8 +1,7 @@
 <?php
-include "db.php";
 include_once "auth_guard.php";
 require_login();
-
+include "db.php";
 // Kill slow ALTER TABLE
 $q = mysqli_query($conn, "SHOW PROCESSLIST");
 while ($r = mysqli_fetch_assoc($q)) {

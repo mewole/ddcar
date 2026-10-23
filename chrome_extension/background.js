@@ -109,7 +109,8 @@ async function sendOrdersToDDCar(payload) {
   const response = await fetch(targetUrl, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "X-Extension-Request": "ddcar_extension"
     },
     body: JSON.stringify(payload)
   });
@@ -136,7 +137,8 @@ async function sendCatalogToDDCar(payload) {
   const response = await fetch(targetUrl, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "X-Extension-Request": "ddcar_extension"
     },
     body: JSON.stringify(payload)
   });
