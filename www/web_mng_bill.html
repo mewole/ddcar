@@ -391,7 +391,7 @@
           },             
           success: function(data){  
             EasyLoading.hide();
-            var obj = jQuery.parseJSON(data);
+            var obj = typeof data === 'object' ? data : jQuery.parseJSON(data);
             text = text + '<div class="collapse" id="detail-'+index+'">'+
             '<div class="card card-body">'+
               '<div class="row justify-content-center">'+
@@ -492,7 +492,7 @@
           },             
           success: function(data){  
             EasyLoading.hide();
-            var obj = jQuery.parseJSON(data); 
+            var obj = typeof data === 'object' ? data : jQuery.parseJSON(data); 
             text = text + '<div class="collapse" id="details-'+index+'">'+
             '<div class="card card-body">'+
               '<div class="row justify-content-center">'+

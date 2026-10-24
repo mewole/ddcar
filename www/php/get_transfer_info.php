@@ -3,7 +3,7 @@ include_once "auth_guard.php";
 require_login();
 
 include "db.php";
-header("Content-Type: application/json; charset=UTF-8");
+header("Content-Type: text/html; charset=UTF-8");
 mysqli_set_charset($conn, "utf8");
 
 $imp_id = isset($_REQUEST['imp_id']) ? mysqli_real_escape_string($conn, $_REQUEST['imp_id']) : '';
