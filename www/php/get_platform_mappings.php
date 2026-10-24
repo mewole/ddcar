@@ -17,6 +17,11 @@ $offset = ($page - 1) * $limit;
 
 $where = ["1=1"];
 
+// Task 2: Hide corrupted items by default
+if ($status !== 'hidden') {
+    $where[] = "m.status != 'hidden'";
+}
+
 if ($channel !== 'all' && !empty($channel)) {
     $where[] = "m.channel_code = '$channel'";
 }
@@ -25,6 +30,8 @@ if ($status === 'unmapped') {
     $where[] = "m.status = 'unmapped'";
 } elseif ($status === 'mapped') {
     $where[] = "m.status = 'mapped'";
+} elseif ($status === 'hidden') {
+    $where[] = "m.status = 'hidden'";
 }
 
 if (!empty($search)) {

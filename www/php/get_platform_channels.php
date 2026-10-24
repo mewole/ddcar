@@ -6,7 +6,7 @@ require_once "db.php";
 header("Content-Type: application/json; charset=utf-8");
 
 $sql = "SELECT c.*,
-        (SELECT COUNT(*) FROM platform_sku_mapping WHERE channel_code = c.channel_code) as total_items,
+        (SELECT COUNT(*) FROM platform_sku_mapping WHERE channel_code = c.channel_code AND status != 'hidden') as total_items,
         (SELECT COUNT(*) FROM platform_sku_mapping WHERE channel_code = c.channel_code AND status = 'unmapped') as unmapped_items,
         (SELECT COUNT(*) FROM platform_sku_mapping WHERE channel_code = c.channel_code AND status = 'mapped') as mapped_items
         FROM platform_channels c

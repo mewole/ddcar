@@ -32,6 +32,13 @@ foreach ($items as $entry) {
         continue;
     }
 
+    // Task 2: Junk Filter - Skip corrupt items
+    $is_json = (strpos($platform_sku, '{') === 0 || strpos($platform_name, '{') === 0);
+    $is_question = (strpos($platform_sku, '????') !== false || strpos($platform_name, '????') !== false);
+    if ($is_json || $is_question) {
+        continue;
+    }
+
     $prod_id = 0;
     $target_sku = '';
     $bundle_json = null;

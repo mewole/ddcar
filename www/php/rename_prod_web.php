@@ -43,8 +43,8 @@ if (empty($name_prod)) {
 }
 
 $server_role = $_SESSION['user_role'] ?? $role;
-$can_edit_cost = ($server_role === 'แอดมิน' || $server_role === 'เจ้าของร้าน');
-$can_edit_sku  = ($server_role === 'แอดมิน' || $server_role === 'เจ้าของร้าน');
+$can_edit_cost = in_array($server_role, ['แอดมิน', 'เจ้าของร้าน', 'ผู้ดูแลระบบ']);
+$can_edit_sku  = in_array($server_role, ['แอดมิน', 'เจ้าของร้าน', 'ผู้ดูแลระบบ']);
 
 // ตรวจสอบรหัสสินค้าเดิม
 $old_code = '';

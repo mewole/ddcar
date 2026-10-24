@@ -40,11 +40,32 @@ $updated = 0;
 $inserted = 0;
 
 foreach ($products as $p) {
-    $sku = mysqli_real_escape_string($conn, trim($p['platform_sku'] ?? ''));
-    $name = mysqli_real_escape_string($conn, trim($p['platform_name'] ?? ''));
+    $raw_sku = trim($p['platform_sku'] ?? '');
+    $raw_name = trim($p['platform_name'] ?? '');
+    $raw_item_id = trim($p['item_id'] ?? '');
+
+    // Task 2: Junk Filter - Reject raw JSON, ????, or missing both SKU and name
+    $is_json = (strpos($raw_sku, '{') === 0 || strpos($raw_name, '{') === 0);
+    $is_question = (strpos($raw_sku, '????') !== false || strpos($raw_name, '????') !== false);
+    $is_empty = empty($raw_sku) && empty($raw_name) && empty($raw_item_id);
+
+    if ($is_json || $is_question || $is_empty) {
+        $reason = $is_json ? 'Raw JSON payload rejected' : ($is_question ? 'Corrupt encoding (????) rejected' : 'Empty SKU and name rejected');
+        @file_put_contents(__DIR__ . '/error_queue_log.json', json_encode([
+            'timestamp' => date('Y-m-d H:i:s'),
+            'channel' => $channel_code,
+            'reason' => $reason,
+            'sku' => mb_substr($raw_sku, 0, 100),
+            'name' => mb_substr($raw_name, 0, 100)
+        ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+        continue;
+    }
+
+    $sku = mysqli_real_escape_string($conn, $raw_sku);
+    $name = mysqli_real_escape_string($conn, $raw_name);
     $img = mysqli_real_escape_string($conn, trim($p['image_url'] ?? ''));
     $url = mysqli_real_escape_string($conn, trim($p['product_url'] ?? ''));
-    $item_id = mysqli_real_escape_string($conn, trim($p['item_id'] ?? ''));
+    $item_id = mysqli_real_escape_string($conn, $raw_item_id);
 
     if (empty($sku) && !empty($item_id)) {
         $sku = "(ไม่พบ Seller SKU) ID " . $item_id;

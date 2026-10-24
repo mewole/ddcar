@@ -266,13 +266,35 @@
 				}
 			});
 
-			// เปิดหน้าต่างจัดการรหัสสินค้าต้องแก้ (Feature 2.1)
+			// N8: เปิดแผงการ์ดจัดการรหัสสินค้าต้องแก้แบบ Inline บนหน้าสต็อก (แทน Modal)
 			$('#btn-show-invalid-skus').on('click', function () {
-				$('#InvalidSkuModal').modal('show');
-				renderInvalidSkusTable(window.invalidSkuFilter || 'all', $('#filter-invalid-sku-search').val());
+				var $panel = $('#inline-invalid-skus-section');
+				if ($panel.is(':visible')) {
+					$panel.slideUp();
+				} else {
+					$panel.slideDown();
+					renderInlineInvalidCards(window.invalidSkuFilter || 'all', $('#inline-invalid-search').val());
+					$('html, body').animate({
+						scrollTop: $panel.offset().top - 70
+					}, 350);
+				}
 			});
 
-			// ตัวกรองและค้นหาใน InvalidSkuModal
+			$('#btn-close-inline-invalid').on('click', function() {
+				$('#inline-invalid-skus-section').slideUp();
+			});
+
+			// ตัวกรองและค้นหาในแผง Inline Cards
+			$('#inline-invalid-search').on('input keyup', function () {
+				renderInlineInvalidCards(window.invalidSkuFilter || 'all', $(this).val());
+			});
+
+			$(document).on('change', 'input[name="inline_invalid_filter"]', function () {
+				window.invalidSkuFilter = $(this).val();
+				renderInlineInvalidCards(window.invalidSkuFilter, $('#inline-invalid-search').val());
+			});
+
+			// รองรับตัวกรองใน InvalidSkuModal เดิม (เผื่อกรณีเรียกใช้งานย้อนหลัง)
 			$('#filter-invalid-sku-search').on('input keyup', function () {
 				renderInvalidSkusTable(window.invalidSkuFilter || 'all', $(this).val());
 			});
@@ -384,14 +406,17 @@
 						$('#wrap-invalid-sku-card').show();
 						$('#badge-invalid-sku-count').text(res.total);
 						$('#modal-invalid-total-badge').text(res.total);
+						$('#inline-invalid-total-badge').text(res.total);
 						$('#modal-cleanable-count-badge').text('แก้ไขอัตโนมัติได้: ' + res.auto_cleanable);
 						$('#modal-manual-count-badge').text('ต้องตั้งใหม่: ' + res.needs_manual);
 						$('.cnt-all').text(res.total);
 						$('.cnt-clean').text(res.auto_cleanable);
+						$('.cnt-cleanable').text(res.auto_cleanable);
 						$('.cnt-manual').text(res.needs_manual);
 					} else {
 						window.invalidSkusList = [];
 						$('#wrap-invalid-sku-card').hide();
+						$('#inline-invalid-skus-section').hide();
 					}
 				},
 				error: function() {
@@ -410,14 +435,17 @@
 			});
 			$('#badge-invalid-sku-count').text(total);
 			$('#modal-invalid-total-badge').text(total);
+			$('#inline-invalid-total-badge').text(total);
 			$('#modal-cleanable-count-badge').text('แก้ไขอัตโนมัติได้: ' + clean);
 			$('#modal-manual-count-badge').text('ต้องตั้งใหม่: ' + manual);
 			$('.cnt-all').text(total);
 			$('.cnt-clean').text(clean);
+			$('.cnt-cleanable').text(clean);
 			$('.cnt-manual').text(manual);
 
 			if (total === 0) {
 				$('#wrap-invalid-sku-card').slideUp();
+				$('#inline-invalid-skus-section').slideUp();
 				$('#InvalidSkuModal').modal('hide');
 				$.alert({
 					title: '🎉 ยอดเยี่ยมมาก!',
@@ -574,20 +602,193 @@
 					},
 					cancel: { text: 'ยกเลิก' }
 				}
-			});
 		});
 
-		$(document).on('click', '.btn-open-edit-from-invalid', function() {
-			var pid = $(this).data('id');
-			var name = decodeURIComponent($(this).data('name') || '');
-			var code = decodeURIComponent($(this).data('code') || '');
-			var sug = $(this).data('suggested') || '';
-			$('#InvalidSkuModal').modal('hide');
-			$('#EditModal').modal('show');
-			edit_prod(pid, name, code);
-			if (sug) {
-				$('#btn-apply-suggested-sku').show().data('suggested', sug).html('<i class="fas fa-magic mr-1"></i>ใช้รหัสแนะนำ: <strong>' + sug + '</strong>');
+		// ==================== N8: Inline Invalid SKU Cards ====================
+		function renderInlineInvalidCards(filterType, searchQuery) {
+			var $container = $('#inline-invalid-cards-container');
+			$container.empty();
+
+			var items = window.invalidSkusList || [];
+			var q = (searchQuery || '').trim().toLowerCase();
+
+			var filtered = items.filter(function(item) {
+				if (filterType === 'cleanable' && !item.can_auto_clean) return false;
+				if (filterType === 'manual' && item.can_auto_clean) return false;
+				if (q) {
+					var name = (item.prod_name || '').toLowerCase();
+					var code = (item.prod_code || '').toLowerCase();
+					var sug = (item.suggested_sku || '').toLowerCase();
+					if (name.indexOf(q) === -1 && code.indexOf(q) === -1 && sug.indexOf(q) === -1) {
+						return false;
+					}
+				}
+				return true;
+			});
+
+			if (filtered.length === 0) {
+				$container.html('<div class="col-12 text-center py-5 text-muted"><i class="fas fa-check-circle fa-2x text-success mb-2"></i><div class="font-weight-bold">ไม่พบรหัสสินค้าที่ตรงกับเงื่อนไขการค้นหา</div></div>');
+				return;
 			}
+
+			var canEditSku = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน' || localStorage.user_role === 'ผู้ดูแลระบบ');
+
+			filtered.forEach(function(item) {
+				var imgSrc = item.img ? item.img : 'img/no_img.png';
+				var safeName = typeof escapeHtml === 'function' ? escapeHtml(item.prod_name) : item.prod_name;
+				var safeIssues = typeof escapeHtml === 'function' ? escapeHtml(item.issues) : item.issues;
+
+				var sugBlock = '';
+				if (item.can_auto_clean) {
+					sugBlock = '<div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:#f0fdf4; border:1px solid #bbf7d0;">' +
+						'<div>' +
+							'<span class="small text-success font-weight-bold d-block"><i class="fas fa-magic mr-1"></i>รหัสแนะนำ:</span>' +
+							'<strong class="text-success" style="font-family:monospace; font-size:0.95rem;">' + item.suggested_sku + '</strong>' +
+						'</div>' +
+						'<button type="button" class="btn btn-sm btn-outline-success font-weight-bold py-1 px-2 btn-fill-suggested" data-id="' + item.prod_id + '" data-suggested="' + item.suggested_sku + '" title="ใส่รหัสแนะนำลงในช่องกรอกด้านล่าง">' +
+							'<i class="fas fa-arrow-down mr-1"></i>ใช้รหัสแนะนำ' +
+						'</button>' +
+					'</div>';
+				} else {
+					sugBlock = '<div class="p-2 mb-2 rounded" style="background:#fffbeb; border:1px solid #fef3c7;">' +
+						'<span class="small text-warning font-weight-bold d-block"><i class="fas fa-exclamation-circle mr-1"></i>คำแนะนำ:</span>' +
+						'<span class="small text-dark">' + (item.manual_reason || 'กรุณาตั้งรหัสใหม่โดยใช้ A-Z, 0-9 และขีด (-)') + '</span>' +
+					'</div>';
+				}
+
+				var cardHtml = '<div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3" id="inline-invalid-card-' + item.prod_id + '">' +
+					'<div class="card h-100 border shadow-sm" style="border-radius:10px; border-color:#fecdd3 !important;">' +
+						'<div class="card-header bg-light d-flex justify-content-between align-items-center py-2 px-3">' +
+							'<span class="badge badge-danger px-2 py-1"><i class="fas fa-exclamation-triangle mr-1"></i>' + safeIssues + '</span>' +
+							'<span class="small text-muted font-weight-bold">ID: #' + item.prod_id + '</span>' +
+						'</div>' +
+						'<div class="card-body p-3 d-flex flex-column justify-content-between">' +
+							'<div>' +
+								'<div class="d-flex align-items-start mb-2">' +
+									'<img src="' + imgSrc + '" style="width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid #ddd;" class="mr-2 flex-shrink-0" onerror="this.src=\'img/no_img.png\'">' +
+									'<div style="min-width:0;">' +
+										'<div class="font-weight-bold text-dark text-truncate" title="' + safeName + '" style="font-size:0.92rem;">' + safeName + '</div>' +
+										'<div class="small text-muted mt-1">ราคา: ฿' + (item.price || 0).toLocaleString() + '</div>' +
+									'</div>' +
+								'</div>' +
+								'<div class="mb-2 p-2 rounded bg-light border">' +
+									'<div class="small text-muted mb-1 font-weight-bold">รหัสเดิม:</div>' +
+									'<div>' + formatInvalidCodeHtml(item.prod_code) + '</div>' +
+								'</div>' +
+								sugBlock +
+							'</div>' +
+							'<div class="mt-2 pt-2 border-top">' +
+								'<label class="small font-weight-bold text-dark mb-1">รหัสใหม่ที่ต้องการบันทึก:</label>' +
+								'<div class="input-group input-group-sm mb-2">' +
+									'<input type="text" class="form-control font-weight-bold text-uppercase txt-inline-new-sku" id="txt-inline-sku-' + item.prod_id + '" value="' + (item.can_auto_clean ? item.suggested_sku : '') + '" placeholder="รหัสใหม่ (A-Z, 0-9, -)" style="font-family:monospace;">' +
+								'</div>' +
+								'<button type="button" class="btn btn-sm btn-success btn-block font-weight-bold btn-save-inline-sku" data-id="' + item.prod_id + '" data-name="' + encodeURIComponent(item.prod_name) + '" ' + (canEditSku ? '' : 'disabled title="เฉพาะแอดมินหรือเจ้าของร้านเท่านั้น"') + '>' +
+									'<i class="fas fa-save mr-1"></i> บันทึก' +
+								'</button>' +
+							'</div>' +
+						'</div>' +
+					'</div>' +
+				'</div>';
+
+				$container.append(cardHtml);
+			});
+		}
+
+		// ปุ่ม "ใช้รหัสแนะนำ" -> เติมรหัสลงในช่อง input บนการ์ดใบนั้นๆ เท่านั้น (Single-item fill, no bulk replace)
+		$(document).on('click', '.btn-fill-suggested', function() {
+			var pid = $(this).data('id');
+			var sug = $(this).data('suggested');
+			$('#txt-inline-sku-' + pid).val(sug).focus();
+		});
+
+		// ปุ่ม "บันทึก" บนการ์ดแต่ละใบ (Single-item confirm & save, Admin/Owner only)
+		$(document).on('click', '.btn-save-inline-sku', function() {
+			var pid = $(this).data('id');
+			var rawName = decodeURIComponent($(this).data('name') || '');
+			var newSku = ($('#txt-inline-sku-' + pid).val() || '').trim().toUpperCase();
+
+			var role = localStorage.user_role;
+			if (role !== "แอดมิน" && role !== "เจ้าของร้าน" && role !== "ผู้ดูแลระบบ") {
+				$.alert({ title: '⚠️ สิทธิ์ไม่เพียงพอ', content: 'เฉพาะแอดมินและเจ้าของร้านเท่านั้นที่มีสิทธิ์แก้ไขรหัสสินค้า', type: 'red' });
+				return;
+			}
+
+			if (!newSku) {
+				$.alert({ title: '⚠️ ข้อมูลไม่ครบ', content: 'กรุณาระบุรหัสสินค้าใหม่ที่ต้องการบันทึก', type: 'red' });
+				$('#txt-inline-sku-' + pid).focus();
+				return;
+			}
+
+			if (!/^[A-Z0-9\-]+$/.test(newSku)) {
+				$.alert({ title: '⚠️ รูปแบบรหัสไม่ถูกต้อง', content: 'รหัสสินค้าต้องประกอบด้วยตัวอักษรภาษาอังกฤษตัวพิมพ์ใหญ่ (A-Z), ตัวเลข (0-9) หรือขีดกลาง (-) เท่านั้น ห้ามมีเว้นวรรคหรือภาษาไทย', type: 'red' });
+				$('#txt-inline-sku-' + pid).focus();
+				return;
+			}
+
+			$.confirm({
+				title: 'ยืนยันเปลี่ยนรหัสสินค้า',
+				content: 'ต้องการเปลี่ยนรหัสสินค้า <strong>' + rawName + '</strong><br>เป็นรหัส: <strong class="text-primary">' + newSku + '</strong> หรือไม่?<br><br><small class="text-muted">• ระบบจะอัปเดตตารางจับคู่ SKU แพลตฟอร์มให้อัตโนมัติ<br>• บันทึกประวัติรหัสเดิมเพื่อให้ค้นหาย้อนหลังได้</small>',
+				buttons: {
+					confirm: {
+						text: 'ยืนยันบันทึก',
+						btnClass: 'btn-success',
+						action: function() {
+							EasyLoading.show({ text: "กำลังบันทึกรหัสสินค้า..." });
+							$.ajax({
+								url: "php/rename_prod_web.php",
+								type: "POST",
+								data: {
+									prod_id: pid,
+									name_prod: rawName,
+									code: newSku,
+									role: localStorage.user_role,
+									user_name: localStorage.user_name
+								},
+								success: function(resp) {
+									EasyLoading.hide();
+									if (resp === "success") {
+										// Smoothly remove card
+										$('#inline-invalid-card-' + pid).fadeOut(300, function() {
+											$(this).remove();
+										});
+
+										// Update in-memory list
+										window.invalidSkusList = window.invalidSkusList.filter(function(x) { return x.prod_id != pid; });
+										updateInvalidCounters();
+
+										// Update search card if open in main-ctn
+										var $card = $("#div-" + pid);
+										if ($card.length) {
+											var $codeBadge = $card.find('.prod-code-badge');
+											if ($codeBadge.length) {
+												$codeBadge.find('.code-text').text(newSku);
+											}
+										}
+										$("#i-" + pid).data('prod-code', newSku);
+
+										$.alert({
+											title: '✅ บันทึกรหัสสินค้าสำเร็จ',
+											content: 'เปลี่ยนรหัสเป็น <strong>' + newSku + '</strong> สำเร็จเรียบร้อยแล้ว<br><small class="text-muted">• อัปเดตตารางจับคู่ SKU แพลตฟอร์มแล้ว<br>• บันทึกประวัติในระบบแล้ว</small>',
+											type: 'green'
+										});
+									} else if (resp === "invalid_sku") {
+										$.alert({ title: '⚠️ รูปแบบรหัสไม่ถูกต้อง', content: 'รหัสสินค้าต้องประกอบด้วยตัวอักษร A-Z, 0-9 และขีด (-) เท่านั้น', type: 'red' });
+									} else if (resp === "duplicate_sku") {
+										$.alert({ title: '⚠️ รหัสสินค้าซ้ำ', content: 'รหัส ' + newSku + ' มีอยู่ในระบบแล้ว กรุณาใช้รหัสอื่น', type: 'red' });
+									} else {
+										$.alert({ title: '⚠️ พบข้อผิดพลาด', content: 'ไม่สามารถบันทึกได้ (' + resp + ')', type: 'red' });
+									}
+								},
+								error: function() {
+									EasyLoading.hide();
+									$.alert({ title: '⚠️ ข้อผิดพลาดเครือข่าย', content: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', type: 'red' });
+								}
+							});
+						}
+					},
+					cancel: { text: 'ยกเลิก' }
+				}
+			});
 		});
 		// ==================== End SKU Hygiene Guard ====================
 
@@ -1336,6 +1537,43 @@
             </div>
 	</div>
     </div>
+
+    <!-- N8: Inline Invalid SKU Cards Section (SKU Hygiene Guard) -->
+    <div id="inline-invalid-skus-section" class="container-fluid px-3 py-3 mb-4 rounded border shadow-sm" style="display:none; background:#ffffff; border-color:#fecdd3 !important; max-width: 1400px; margin: 20px auto 10px auto;">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <div class="d-flex align-items-center">
+          <span class="mr-2" style="font-size: 1.5rem;">⚠️</span>
+          <div>
+            <h5 class="font-weight-bold text-danger mb-0">
+              รายการสินค้าที่รหัสผิดปกติ (SKU Hygiene Guard)
+              <span class="badge badge-danger ml-2" id="inline-invalid-total-badge" style="font-size: 0.9rem;">0</span>
+            </h5>
+            <small class="text-muted">แก้ไขรหัสสินค้าที่มีช่องว่าง, ภาษาไทย, หรืออักขระพิเศษบนการ์ดแต่ละใบได้โดยตรง (จำกัดสิทธิ์แอดมิน/เจ้าของร้าน ยืนยันทีละรายการเพื่อความปลอดภัย)</small>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap align-items-center mt-2 mt-md-0" style="gap: 8px;">
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" id="inline-invalid-filter-group">
+            <label class="btn btn-sm btn-outline-secondary active">
+              <input type="radio" name="inline_invalid_filter" value="all" checked> ทั้งหมด (<span class="cnt-all">0</span>)
+            </label>
+            <label class="btn btn-sm btn-outline-success">
+              <input type="radio" name="inline_invalid_filter" value="cleanable"> รหัสแนะนำอัตโนมัติ (<span class="cnt-cleanable">0</span>)
+            </label>
+            <label class="btn btn-sm btn-outline-warning">
+              <input type="radio" name="inline_invalid_filter" value="manual"> ต้องตั้งใหม่ (<span class="cnt-manual">0</span>)
+            </label>
+          </div>
+          <input type="text" id="inline-invalid-search" class="form-control form-control-sm" placeholder="ค้นหาชื่อ/รหัส..." style="width: 180px;">
+          <button type="button" class="btn btn-sm btn-outline-danger font-weight-bold" id="btn-close-inline-invalid" title="ปิดแผงรายการนี้">
+            <i class="fas fa-times mr-1"></i> ปิด
+          </button>
+        </div>
+      </div>
+      <div id="inline-invalid-cards-container" class="row justify-content-start">
+        <!-- Rendered via renderInlineInvalidCards() -->
+      </div>
+    </div>
+
     <div id="detail-ctn" class="container-fullwidth" style="margin-top: 2%; margin-bottom: 2%;" hidden>
       <div id="append-ctn" class="row threejumbo justify-content-center">
         <!-- <div class="jumbotron text-center jumbo-left">

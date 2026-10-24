@@ -49,8 +49,29 @@ if (!empty($raw_text) && empty($items)) {
 }
 
 foreach ($items as $item) {
-    $sku = mysqli_real_escape_string($conn, trim($item['sku'] ?? ''));
-    $name = mysqli_real_escape_string($conn, trim($item['name'] ?? ''));
+    $raw_sku = trim($item['sku'] ?? '');
+    $raw_name = trim($item['name'] ?? '');
+
+    // Task 2: Junk Filter - Reject raw JSON, ????, or missing both SKU and name
+    $is_json = (strpos($raw_sku, '{') === 0 || strpos($raw_name, '{') === 0);
+    $is_question = (strpos($raw_sku, '????') !== false || strpos($raw_name, '????') !== false);
+    $is_empty = empty($raw_sku) && empty($raw_name);
+
+    if ($is_json || $is_question || $is_empty) {
+        $reason = $is_json ? 'Raw JSON payload rejected' : ($is_question ? 'Corrupt encoding (????) rejected' : 'Empty SKU and name rejected');
+        @file_put_contents(__DIR__ . '/error_queue_log.json', json_encode([
+            'timestamp' => date('Y-m-d H:i:s'),
+            'channel' => $channel_code,
+            'reason' => $reason,
+            'sku' => mb_substr($raw_sku, 0, 100),
+            'name' => mb_substr($raw_name, 0, 100)
+        ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX);
+        $skipped++;
+        continue;
+    }
+
+    $sku = mysqli_real_escape_string($conn, $raw_sku);
+    $name = mysqli_real_escape_string($conn, $raw_name);
 
     if (empty($sku)) continue;
 
