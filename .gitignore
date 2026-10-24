@@ -6,3 +6,7 @@ node_modules
 android/.gradle/
 android/app/build/
 android/build/
+*.sql.gz
+*.sql
+_secure_backups/*.sql.gz
+_secure_backups/*.sql
