@@ -3,271 +3,225 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Home</title>
-  <!-- Bootstrap Import -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
-  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
-  <script type="text/javascript" src="js/config.js"></script>
-  
-  <script type="text/javascript" src="js/jquery-confirm.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
-  <script src="cordova.js"></script>
-  <script type="text/javascript" src="js/scanqr.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script> 
- 
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
+  <title>สรุปยอดขายและกำไร - DDCAR</title>
+  <!-- Local Assets -->
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/svg-with-js.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
   <link rel="stylesheet" href="css/loading.css">
+  <link rel="stylesheet" href="css/duDatepicker.css">
+
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
+  <script type="text/javascript" src="js/jquery-confirm.js"></script>
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script defer src="js/fontawesome-all.js"></script>
+  <script type="text/javascript" src="js/config.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
+  <script src="js/duDatepicker.js"></script>
 
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
 
-  <!-- DatePicker -->
-  <link rel="stylesheet" href="css/duDatepicker.css">
-  <script src="js/duDatepicker.js"></script>
-
   <style>
-    hr{
-      margin-top: 0;
-    } 
-    ul {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
+    .salesum-header-card {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-radius: 14px;
+      padding: 16px;
+      color: #ffffff;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
     }
-    #title{
-      color: #666;
-      letter-spacing: 1px;
-      font-weight: bold;
+    .date-filter-bar {
+      position: fixed;
+      top: calc(56px + var(--safe-top));
+      left: 0;
+      right: 0;
+      z-index: 1010;
+      background: #ffffff;
+      padding: 10px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
-    .nopd{
-      padding-left: 0;
-      padding-right: 0;
-    }       
   </style>
 
   <script>
-    $(document).ready(function(){
-      if(localStorage.bell){
-          $('.dot').prop('hidden',false);
-      }  
-      $('#datepicker').duDatepicker(({format: 'dd/mm/yy', theme: 'red', cancelBtn: true, maxDate: "today"})).on('datechanged', function(e){
-        console.log(e.date);
-        $("#date").text(e.date);
-        $("#date_row").prop('hidden', false);
-        var txt = e.date.split("/");
-        var date = "20" + txt[2] + "-" + txt[1] + "-" + txt[0];
-        localStorage.myD = '';
-        items = "";
-        net = profit = 0;        
-        search_date(date);
+    var currentDateStr = "";
 
-        $("#row-title").css("margin-top", "7.5em");
-        $("#title-hr").css("margin-top", "9.3em");
-        $("#in-ctn").css("height", "calc(100vh - (7.5em + 150px))");
+    $(document).ready(function(){
+      if (localStorage.bell) {
+        $('.dot').prop('hidden', false);
+      }  
+
+      $('#datepicker').duDatepicker({format: 'dd/mm/yy', theme: 'red', cancelBtn: true, maxDate: "today"}).on('datechanged', function(e){
+        $("#date-display").text(e.date);
+        var txt = e.date.split("/");
+        var dateFormatted = "20" + txt[2] + "-" + txt[1] + "-" + txt[0];
+        currentDateStr = dateFormatted;
+        search_date(dateFormatted);
       });
 
-      margin = $("#navs-menu").outerHeight()*2;
-      $("#ctn-btm").css('padding-bottom', margin);
-      margin = $("#ctn-btm").outerHeight();
-      $("#big-ctn").css('margin-bottom', margin);
-
-      if(localStorage.myD){
-        var retrievedObject = localStorage.getItem('myD');
-        var data = JSON.parse(retrievedObject)
-        items = data[0].html
-        net = data[0].net
-        profit = data[0].profit        
-        $('#net').text(net);
-        $('#profit').text(profit);
-        $('#myUL').append(items)
-      }else{
-        var d = new Date($.now());
-        var datetime = d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate(); 
-        search_date(datetime);
-      }
+      var d = new Date();
+      var month = (d.getMonth() + 1);
+      if (month < 10) month = '0' + month;
+      var day = d.getDate();
+      if (day < 10) day = '0' + day;
+      var todayStr = d.getFullYear() + "-" + month + "-" + day;
+      var displayStr = day + "/" + month + "/" + String(d.getFullYear()).substr(2);
       
+      $("#date-display").text(displayStr);
+      currentDateStr = todayStr;
+      search_date(todayStr);
     });
 
-    var items = "";
-    var net = profit = 0;
     function search_date(datetime){
-      $('#myUL').empty();
+      if (window.showOverlay) window.showOverlay();
+      $('#myUL').html('<div class="text-center p-4 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-2 text-danger"></i><br>กำลังคำนวณยอดขาย...</div>');
+
       $.ajax({
         type: "POST",
-        url:localStorage.pathServer + "php/get_shift_bill.php",
-        data:{'date':datetime},
-        beforeSend: function(){
-            $(".overlay").prop('hidden', false);
-        },                       
+        url: localStorage.pathServer + "php/get_shift_bill.php",
+        data: {'date': datetime},
+        timeout: 6500,
         success: function(data){ 
-          $(".overlay").prop('hidden', true);  
-          var obj = jQuery.parseJSON(data);
-          if(obj){
-            //var net = 0,profit = 0;
-            $.each(obj, function(i, field){ 
-              if(field.total_price == 0){
-                  sum = 0;
-              }else{
-                  sum = field.total_price - field.count;
-              } 
-              items = items + '<li class="mgemo5"><div class="row" onclick="bill_info('+field.order_id+')">'+
-                '<div class="col-2 text-center nopd">'+
-                  '<p>'+(i+1)+'</p>'+
-                '</div>'+
-                '<div class="col-4 text-center nopd">'+
-                  '<p>'+field.order_number+'</p>'+
-                '</div>'+
-                '<div class="col-2 text-center nopd">'+
-                  '<p>'+field.user_name+'</p>'+
-                '</div>'+
-                '<div class="col-2 text-center nopd">'+
-                  '<p>'+field.total_price+'</p>'+
-                '</div>'+
-                '<div class="col-2 text-center nopd">'+
-                  '<p>'+sum+'</p>'+
-                '</div>'+
-                '</div></li>'            
-              $('#myUL').append('<li class="mgemo5"><div class="row" onclick="bill_info('+field.order_id+')">'+
-                '<div class="col-2 text-center nopd">'+
-                  '<p>'+(i+1)+'</p>'+
-                '</div>'+
-                '<div class="col-4 text-center nopd">'+
-                  '<p>'+field.order_number+'</p>'+
-                '</div>'+
-                '<div class="col-2 text-center nopd">'+
-                  '<p>'+field.user_name+'</p>'+
-                '</div>'+
-                '<div class="col-2 text-center nopd">'+
-                  '<p>'+field.total_price+'</p>'+
-                '</div>'+
-                '<div class="col-2 text-center nopd">'+
-                  '<p>'+sum+'</p>'+
-                '</div>'+
-                '</div></li>');
-                net += parseFloat(field.total_price);
-                profit += parseFloat(sum)
-            });             
-            $('#net').text(net);
-            $('#profit').text(profit);
-          }                                
-        }               
+          if (window.hideOverlay) window.hideOverlay();
+          var obj = window.safeParseJSON(data);
+          
+          var net = 0;
+          var profit = 0;
+          var htmlArr = [];
+
+          if (obj && Array.isArray(obj) && obj.length > 0) {
+            for (var i = 0; i < obj.length; i++) {
+              var field = obj[i];
+              var total = parseFloat(field.total_price) || 0;
+              var count = parseFloat(field.count) || 0;
+              var margin = (total === 0) ? 0 : (total - count);
+
+              net += total;
+              profit += margin;
+
+              var safeOrder = $('<div>').text(field.order_number || '-').html();
+              var safeUser = $('<div>').text(field.user_name || '-').html();
+
+              htmlArr.push(
+                '<div class="report-item-card" onclick="window.location=\'bill_info.html?id=' + field.order_id + '\'">' +
+                  '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                    '<span class="badge badge-light border" style="font-size: 13px; font-weight: 700; color: #da251c; background: #fff1f2;">' + safeOrder + '</span>' +
+                    '<span class="small text-muted"><i class="fas fa-user-circle mr-1"></i>' + safeUser + '</span>' +
+                  '</div>' +
+                  '<div class="d-flex justify-content-between align-items-center pt-1" style="border-top: 1px dashed #f1f5f9;">' +
+                    '<div>' +
+                      '<span style="font-size: 11px; color: #64748b;">ยอดรวม: </span>' +
+                      '<span style="font-weight: 700; font-size: 15px; color: #0f172a;">฿' + total.toLocaleString() + '</span>' +
+                    '</div>' +
+                    '<div>' +
+                      '<span style="font-size: 11px; color: #16a34a; font-weight: 600;">กำไร: </span>' +
+                      '<span style="font-weight: 700; font-size: 15px; color: #16a34a;">฿' + margin.toLocaleString() + '</span>' +
+                      '<i class="fas fa-chevron-right fa-xs text-muted ml-2"></i>' +
+                    '</div>' +
+                  '</div>' +
+                '</div>'
+              );
+            }
+          }
+
+          $('#net-sum').text('฿' + net.toLocaleString());
+          $('#profit-sum').text('฿' + profit.toLocaleString());
+          $('#bill-count-badge').text((obj && Array.isArray(obj) ? obj.length : 0) + ' บิล');
+
+          if (htmlArr.length === 0) {
+            $('#myUL').html('<div class="text-center p-4 text-muted"><i class="fas fa-receipt fa-2x mb-2"></i><br>ไม่มีรายการขายในวันที่เลือก</div>');
+          } else {
+            $('#myUL').html(htmlArr.join(''));
+          }
+        },
+        error: function() {
+          if (window.hideOverlay) window.hideOverlay();
+          $('#myUL').html('<div class="text-center p-4 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>ไม่สามารถโหลดสรุปยอดขายได้</div>');
+        }
       });
     }
-
-    function bill_info(arg){
-      json = [];
-      item = {}
-      item["html"] = items;
-      item["net"] = net;
-      item["profit"] = profit;      
-      json.push(item);
-      localStorage.setItem("myD",JSON.stringify(json));
-      
-      window.location = 'bill_info.html?id='+arg;
-    }
-
-
   </script>
 </head>
 
 <body>
-  <!-- Loading --> 
-  <div class="overlay" hidden><div class="loading"></div></div> 
+  <!-- Loading -->
+  <div class="overlay" hidden><div class="loading"></div></div>  
 
-  <!-- End big container -->
   <div id="big-ctn" class="container-fullwidth justify-content-center">
     <!-- Nav menu top -->
-    <div class="row navs align-items-center mgem1o5 fixed-top">
-      <div class="col-2 text-center" onclick="window.location ='index.html';">
+    <div class="row navs align-items-center fixed-top justify-content-center">
+      <div id="col-back" class="col-2 text-center" onclick="window.location ='index.html?menu=3';">
         <i id="i-back" class="fas fa-angle-left"></i>
       </div>
       <div class="col-8 text-center">
-        <h5 id="h5-title">สรุปรายการขาย</h5>
+        <h5 id="h5-title">สรุปยอดขาย & กำไร</h5>
       </div>
-      <div class="col-1 text-right" onclick="$('#datepicker').trigger('click');">
-        <i class="far fa-calendar-alt" style="color: white; font-size: 120%; margin-top: 2px;"></i>
-      </div>
-    </div>
-
-    <div id="date_row" class="row mgem1o5 fixed-top" style="margin-top: 4.5em;" hidden>
-      <button id="datepicker" hidden></button>
-      <div class="col-12 text-center">
-        <h5 id="date"></h5>
+      <div class="col-2 text-center" onclick="$('#datepicker').trigger('click');" style="cursor: pointer;">
+        <i class="far fa-calendar-alt text-white" style="font-size: 18px;"></i>
       </div>
     </div>
 
-    <div id="row-title" class="row fixed-top" style="margin-top: 4.5em;">
-      <div id="title" class="col-2 text-center">ที่</div>
-      <div id="title" class="col-4 text-center">เลขที่</div>
-      <div id="title" class="col-2 text-center nopd">ผู้ทำรายการ</div>
-      <div id="title" class="col-2 text-center nopd">รวม</div> 
-      <div id="title" class="col-2 text-center nopd">กำไร</div> 
-    </div><hr id="title-hr" class="mgem1" style="margin-top: 6.3em; width: 98%;">
-
-    <div id="in-ctn" class="container-fullwidth" style="margin-top: 0!important; height: calc(100vh - (4.5em + 150px));">
-      <ul id="myUL"> 
-       
-      </ul>
-    </div>  
-  </div> 
-  <!-- End big container -->
-
-  <div id="ctn-btm" class="container fixed-bottom" style="background: #f3f3f3; margin-bottom: 2%">
-    <div class="row">
-        <div class="col-12 text-center">
-            <h5 class="h5-title" style="font-size: 130%;">รวม :
-                <span  style="color: black;"id="net">0</span>
-            </h5>
+    <!-- Date selector bar -->
+    <div class="date-filter-bar">
+      <div class="d-flex justify-content-between align-items-center">
+        <div style="font-weight: 600; font-size: 14px; color: #0f172a;">
+          <i class="far fa-calendar-alt text-danger mr-1"></i> ประจำวันที่: <span id="date-display" class="badge badge-light border text-danger ml-1" style="font-size: 13px;"></span>
         </div>
-        <div class="col-12 text-center">
-          <h5 class="h5-title" style="font-size: 130%;">กำไร :
-              <span  style="color: red;"id="profit">0</span>
-          </h5>
+        <button id="datepicker" class="btn btn-outline-danger btn-sm" style="border-radius: 8px;">
+          <i class="fas fa-calendar-day mr-1"></i> เปลี่ยนวัน
+        </button>
       </div>
     </div>
-  </div>
+
+    <!-- Main scroll container -->
+    <div id="in-ctn" class="container" style="margin-top: calc(118px + var(--safe-top)) !important; padding: 10px 16px calc(80px + var(--safe-bottom)); min-height: calc(100vh - 120px);">
+      <!-- Summary metrics card -->
+      <div class="salesum-header-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span style="font-size: 13px; color: #94a3b8; font-weight: 500;">สรุปผลประกอบการรายวัน</span>
+          <span id="bill-count-badge" class="badge badge-secondary" style="font-size: 11px;">0 บิล</span>
+        </div>
+        <div class="row text-center pt-1">
+          <div class="col-6" style="border-right: 1px solid rgba(255,255,255,0.1);">
+            <div style="font-size: 12px; color: #cbd5e1;">ยอดขายรวม (Net)</div>
+            <div id="net-sum" style="font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">฿0</div>
+          </div>
+          <div class="col-6">
+            <div style="font-size: 12px; color: #86efac;">กำไรสุทธิ (Profit)</div>
+            <div id="profit-sum" style="font-size: 20px; font-weight: 800; color: #4ade80; letter-spacing: -0.5px;">฿0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shift bills list -->
+      <div id="myUL">
+        <!-- Rendered items -->
+      </div>
+    </div>
+  </div>     
 
   <!-- Nav menu bottom -->
-  <div id="navs-menu" class="row fixed-bottom navs">
-    <div class="col-3 text-center" onclick="window.location = 'index.html?menu=3';">
+  <div class="fixed-bottom">
+    <div class="nav-bottom-item" onclick="window.location ='index.html?menu=3';">
       <i id="i-home" class="fas fa-home menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="window.location = 'bell.html';">
+    <div class="nav-bottom-item" onclick="window.location = 'bell.html';">
       <div class="dot" hidden></div>
       <i id="i-bell" class="fas fa-bell menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="scan();">
+    <div class="nav-bottom-item" onclick="scan();">
       <i id="i-qrcode" class="fas fa-qrcode menu"></i>
     </div>
-    <div class="col-3 text-center" onclick="window.location = 'other.html';">
-      <i id="i-bars" class="fa fa-bars menu"></i>
+    <div class="nav-bottom-item" onclick="window.location = 'other.html';">
+      <i id="i-bars" class="fas fa-bars menu"></i>
     </div>
   </div>
-  <!-- End Nav menu bottom -->
-  <script>
-    //Touch animation
-    $(".mbtn").on("touchstart", function() {
-      $(this).addClass('mbtn-touch');
-    });
-    $(".mbtn").on("touchend", function() {
-      $(this).removeClass('mbtn-touch');
-    });
-    /*$(function () {
-      var viewer = ImageViewer();
-      $('#img').click(function () {
-          alert("click");
-          var imgSrc = this.src;
-          viewer.show(imgSrc);
-      });
-    });*/
-  </script>
 </body>
 
 </html>

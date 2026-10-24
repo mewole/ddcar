@@ -1,13 +1,18 @@
 /**
  * DD ACCESSORIES (DDCAR) - Unified Capacitor Cross-Platform Bridge
  * Bridges Capacitor 8 native plugins with web and legacy Cordova APIs.
- * Supports: Camera, Gallery, App Lifecycle (Back Button & Exit), Screen Orientation, Status Bar, and Printing.
+ * Supports: Camera, Gallery, App Lifecycle (Back Button & Exit), Screen Orientation, Status Bar, Browser/APK Download, and Printing.
  */
 
 (function (window) {
     'use strict';
 
     var DDBridge = {};
+
+    // Global AJAX safety: set default 15s timeout if jQuery is present
+    if (typeof window.$ !== 'undefined' && typeof window.$.ajaxSetup === 'function') {
+        window.$.ajaxSetup({ timeout: 15000 });
+    }
 
     // 1. Helper: Check if running inside Capacitor native shell
     DDBridge.isNative = function () {
@@ -159,7 +164,7 @@
                 var base64 = dataUrl.split(',')[1] || '';
                 if (typeof onSuccess === 'function') onSuccess(base64);
             };
-            reader.onerror = function (err) {
+            reader.onerror = function () {
                 if (typeof onFail === 'function') onFail('FileReader error');
             };
             reader.readAsDataURL(file);
@@ -168,36 +173,82 @@
     };
 
     // 3. APP LIFECYCLE (Back Button & Exit App)
+    var _customBackHandler = null;
+
     DDBridge.setupBackButton = function (onBackPressed) {
-        var AppPlugin = window.Capacitor?.Plugins?.App;
-        if (AppPlugin) {
-            AppPlugin.addListener('backButton', function (status) {
-                if (typeof onBackPressed === 'function') {
-                    onBackPressed(status);
-                } else if (!status.canGoBack) {
-                    AppPlugin.exitApp();
-                } else {
-                    window.history.back();
-                }
-            });
+        _customBackHandler = onBackPressed;
+    };
+
+    function handleDefaultBack() {
+        // 1. If custom handler is set, use it
+        if (typeof _customBackHandler === 'function') {
+            _customBackHandler({ canGoBack: window.history.length > 1 });
             return;
         }
 
-        // Fallback: Cordova backbutton event
-        document.addEventListener('backbutton', function (e) {
-            if (typeof onBackPressed === 'function') {
-                onBackPressed({ canGoBack: false });
-            } else if (typeof navigator !== 'undefined' && navigator.app && typeof navigator.app.exitApp === 'function') {
-                navigator.app.exitApp();
+        // 2. Check if jquery-confirm dialog is open
+        if (window.$ && window.$('.jconfirm').length > 0) {
+            try {
+                if (window.jconfirm && window.jconfirm.instances && window.jconfirm.instances.length > 0) {
+                    var lastInstance = window.jconfirm.instances[window.jconfirm.instances.length - 1];
+                    if (lastInstance && typeof lastInstance.close === 'function') {
+                        lastInstance.close();
+                        return;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // 3. Check if in-page search container is active
+        var searchCtn = document.getElementById('search-ctn');
+        if (searchCtn && !searchCtn.hidden && searchCtn.style.display !== 'none') {
+            searchCtn.hidden = true;
+            var bigCtn = document.getElementById('big-ctn');
+            if (bigCtn) bigCtn.hidden = false;
+            return;
+        }
+
+        // 4. Current page check
+        var pagePath = window.location.pathname || '';
+        var currentPage = pagePath.substring(pagePath.lastIndexOf('/') + 1).toLowerCase() || 'index.html';
+
+        if (currentPage === 'index.html' || currentPage === '' || currentPage === 'login.html') {
+            // Confirm exit
+            if (window.$ && typeof window.$.confirm === 'function') {
+                window.$.confirm({
+                    title: 'ออกจากแอพพลิเคชัน',
+                    content: 'คุณต้องการออกจากแอพ DDCAR ใช่หรือไม่?',
+                    backgroundDismiss: true,
+                    buttons: {
+                        confirm: {
+                            text: 'ออก',
+                            btnClass: 'btn-danger',
+                            action: function () {
+                                DDBridge.exitApp();
+                            }
+                        },
+                        cancel: {
+                            text: 'ยกเลิก',
+                            action: function () {}
+                        }
+                    }
+                });
             } else {
-                window.history.back();
+                DDBridge.exitApp();
             }
-        }, false);
-    };
+        } else {
+            // Normal page back
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location = 'index.html';
+            }
+        }
+    }
 
     DDBridge.exitApp = function () {
         var AppPlugin = window.Capacitor?.Plugins?.App;
-        if (AppPlugin) {
+        if (AppPlugin && typeof AppPlugin.exitApp === 'function') {
             AppPlugin.exitApp();
             return;
         }
@@ -247,7 +298,6 @@
 
     // 6. PRINTER
     DDBridge.printHtml = function (htmlContent, options, callback) {
-        // Try Cordova printer plugin first if available
         if (window.cordova?.plugins?.printer?.print) {
             window.cordova.plugins.printer.print(htmlContent, options || { duplex: 'none', border: false }, function (res) {
                 if (typeof callback === 'function') callback(res);
@@ -255,7 +305,6 @@
             return;
         }
 
-        // Web / Android WebView Print via Hidden iframe
         var iframe = document.getElementById('ddbridge-print-iframe');
         if (!iframe) {
             iframe = document.createElement('iframe');
@@ -281,7 +330,6 @@
             }, 400);
         } catch (e) {
             console.error('[DDBridge] Print error:', e);
-            // Fallback popup window
             var win = window.open('', '_blank');
             if (win) {
                 win.document.write(htmlContent);
@@ -296,24 +344,19 @@
         }
     };
 
-    // 7. LIFECYCLE HELPER: DDBridge.ready
-    DDBridge.ready = function (callback) {
-        if (typeof callback !== 'function') return;
-        if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-            if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                setTimeout(callback, 0);
-            } else {
-                document.addEventListener('DOMContentLoaded', callback);
-            }
-        } else if (window.cordova) {
-            document.addEventListener('deviceready', callback, false);
-        } else {
-            if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                setTimeout(callback, 0);
-            } else {
-                document.addEventListener('DOMContentLoaded', callback);
+    // 7. DOWNLOAD / OPEN EXTERNAL URL (APK Install Support)
+    DDBridge.openUrl = async function (url) {
+        if (!url) return;
+        var BrowserPlugin = window.Capacitor?.Plugins?.Browser;
+        if (BrowserPlugin && typeof BrowserPlugin.open === 'function') {
+            try {
+                await BrowserPlugin.open({ url: url });
+                return;
+            } catch (e) {
+                console.warn('[DDBridge] Browser plugin open failed:', e);
             }
         }
+        window.open(url, '_system');
     };
 
     // 8. APP INFO & VERSION
@@ -322,8 +365,8 @@
         var info = {
             name: 'ddcar',
             id: 'com.gitmew.ddcar',
-            build: '1',
-            version: '2.0.2'
+            build: '4',
+            version: '2.1.0'
         };
 
         if (AppPlugin && typeof AppPlugin.getInfo === 'function') {
@@ -343,6 +386,21 @@
         return info;
     };
 
+    // Helper: Compare semantic versions (returns 1 if v1 > v2, -1 if v1 < v2, 0 if equal)
+    DDBridge.compareVersions = function (v1, v2) {
+        if (!v1 || !v2) return 0;
+        var p1 = String(v1).replace(/^v/i, '').split('.').map(function (n) { return parseInt(n, 10) || 0; });
+        var p2 = String(v2).replace(/^v/i, '').split('.').map(function (n) { return parseInt(n, 10) || 0; });
+        var maxLen = Math.max(p1.length, p2.length);
+        for (var i = 0; i < maxLen; i++) {
+            var num1 = p1[i] || 0;
+            var num2 = p2[i] || 0;
+            if (num1 > num2) return 1;
+            if (num1 < num2) return -1;
+        }
+        return 0;
+    };
+
     // 9. IN-APP UPDATE CHECKER
     DDBridge.checkUpdate = async function (options) {
         options = options || {};
@@ -350,12 +408,12 @@
         if (!serverUrl) return;
 
         var info = await DDBridge.getAppInfo();
-        var currentVersion = info.version || '1.0';
+        var currentVersion = info.version || '2.1.0';
 
         var checkApi = serverUrl + 'php/get_lastV.php';
         fetch(checkApi)
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
                 if (!data || !data[0]) return;
                 var serverVersion = data[0].version;
                 var downloadUrl = data[0].url || (serverUrl + 'ddcar-latest.apk');
@@ -364,18 +422,19 @@
                     downloadUrl = serverUrl + 'ddcar-latest.apk';
                 }
 
-                if (serverVersion && serverVersion !== currentVersion) {
-                    if (typeof $ !== 'undefined' && typeof $.confirm === 'function') {
-                        $.confirm({
+                // Only prompt if serverVersion is strictly newer than currentVersion
+                if (serverVersion && DDBridge.compareVersions(serverVersion, currentVersion) > 0) {
+                    if (typeof window.$ !== 'undefined' && typeof window.$.confirm === 'function') {
+                        window.$.confirm({
                             title: '📢 มีการอัปเดตเวอร์ชันใหม่',
                             content: 'พบเวอร์ชันใหม่ (v' + serverVersion + ')<br>เวอร์ชันในเครื่อง: (v' + currentVersion + ')<br><br>ต้องการดาวน์โหลดไฟล์ติดตั้งเพื่ออัปเดตตอนนี้เลยหรือไม่?',
                             backgroundDismiss: false,
                             buttons: {
                                 download: {
                                     text: 'ดาวน์โหลดเลย',
-                                    btnClass: 'btn-success',
+                                    btnClass: 'btn-danger',
                                     action: function () {
-                                        window.open(downloadUrl, '_system');
+                                        DDBridge.openUrl(downloadUrl);
                                     }
                                 },
                                 cancel: {
@@ -388,10 +447,43 @@
                     }
                 }
             })
-            .catch(function(err) {
+            .catch(function (err) {
                 console.warn('[DDBridge] checkUpdate error:', err);
             });
     };
+
+    // 10. LIFECYCLE INITIALIZER & AUTO BACK-BUTTON BINDING
+    DDBridge.ready = function (callback) {
+        var onReady = function () {
+            // Setup global back button listener
+            var AppPlugin = window.Capacitor?.Plugins?.App;
+            if (AppPlugin && typeof AppPlugin.addListener === 'function') {
+                try {
+                    AppPlugin.removeAllListeners();
+                } catch (e) {}
+                AppPlugin.addListener('backButton', function () {
+                    handleDefaultBack();
+                });
+            } else {
+                document.addEventListener('backbutton', function () {
+                    handleDefaultBack();
+                }, false);
+            }
+
+            if (typeof callback === 'function') {
+                callback();
+            }
+        };
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(onReady, 0);
+        } else {
+            document.addEventListener('DOMContentLoaded', onReady);
+        }
+    };
+
+    // Auto-init on script load
+    DDBridge.ready();
 
     // Expose to window
     window.DDBridge = DDBridge;

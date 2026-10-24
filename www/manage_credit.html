@@ -3,344 +3,307 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Home</title>
-  <!-- Bootstrap Import -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
-  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
-  <script type="text/javascript" src="js/config.js"></script>
-  
-  <script type="text/javascript" src="js/jquery-confirm.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
-  <script src="cordova.js"></script>
-  <script type="text/javascript" src="js/scanqr.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
- 
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
+  <title>รายงานเครดิตลูกค้า - DDCAR</title>
+  <!-- Local Assets -->
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/svg-with-js.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
   <link rel="stylesheet" href="css/loading.css">
 
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
+  <script type="text/javascript" src="js/jquery-confirm.js"></script>
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script defer src="js/fontawesome-all.js"></script>
+  <script type="text/javascript" src="js/config.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
+
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
 
-  <!-- DatePicker -->
-  <link rel="stylesheet" href="css/duDatepicker.css">
-  <script src="js/duDatepicker.js"></script>
-
   <style>
-    hr{
-      margin-top: 0;
+    .credit-summary-card {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 14px;
+      padding: 16px;
+      color: #ffffff;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
     }
-    .mbtn-credit{
-      background-color: #da4646;
-      border: 1px solid #da4646;
-      height: 95%;
-      width: 85%;
-      font-weight: bold;
-      font-size: 120%;
-      color: white;
-      letter-spacing: 1px;
-      border-radius: 5px;
-      box-shadow: 0 1px 2px  #de5a5a, 0 1px 1px #de5a5a;
-    } 
-    .yellow{
-        color: #ffbb33;
+    .credit-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      transition: all 0.15s ease;
+      cursor: pointer;
     }
-    .red{
-      color: #d63232;
+    .credit-card:active {
+      background: #f8fafc;
+      transform: scale(0.99);
     }
-    .green{
-      color: #3dd12a;
+    .badge-overdue {
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 6px;
     }
-    #title{
-      color: #666;
-    } 
-    .nopd{
-      padding-right: 0;
-      padding-left: 0;
-    } 
-    ul {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
+    .badge-near {
+      background: #fef3c7;
+      color: #d97706;
+      border: 1px solid #fde68a;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 6px;
     }
-    #title{
-      color: #666;
-      letter-spacing: 1px;
-      font-weight: bold;
-    }     
+    .badge-normal {
+      background: #dcfce7;
+      color: #16a34a;
+      border: 1px solid #bbf7d0;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+    .credit-amount {
+      font-weight: 700;
+      color: #da251c;
+      font-size: 16px;
+      letter-spacing: -0.3px;
+    }
   </style>
 
   <script>
-    $(document).ready(function(){
-      if(localStorage.bell){
-          $('.dot').prop('hidden',false);
-      }      
-      $.ajax({
-        type: "GET",
-        url:localStorage.pathServer + "php/get_credit.php",          
-        beforeSend: function(){
-            $(".overlay").prop('hidden', false);
-        },                       
-        success: function(data){ 
-          $(".overlay").prop('hidden', true);  
-          var obj = jQuery.parseJSON(data);          
-          if(obj){           
-            var d = new Date($.now());
-            $.each(obj, function(i, field){
-              var txt = field.date_time.split(" ");
-              var date = txt[0].split("-");
-              var credit_id = field.credit_id;
-              var cus = field.cus_name;              
-              var total = field.credit_price;
-              var cus_id = field.cus_id;                    
-              var last_d = new Date(d.getFullYear(),d.getMonth()+1, 0).getDate();              
-              var cd = last_d - d.getDate();
-              if(d.getMonth()+1 != date[1]){
-                cd = "เลย";
-              }
-              if(cd <= 3 && cd > 1){
-                $('#myUL').append('<li class="mgemo5"><div id="cus-1" class="row" onclick="show_credit('+credit_id+',\''+cd+'\')">'+
-                  '<div class="col-1 text-right"><i class="fas fa-circle yellow"></i></div>' +
-                  '<div class="col-5 text-center">'+cus+'</div>'+
-                  '<div class="col-3 text-center">'+cd+' วัน</div>'+
-                  '<div class="col-3 text-center">'+total+'</div>'+
-                  '</div><hr style="margin-top: 4%"></li>');   
-              }else if(cd <= 1 || cd == "เลย"){
-                $('#myUL').append('<li class="mgemo5"><div id="cus-1" class="row" onclick="show_credit('+credit_id+',\''+cd+'\')">'+
-                  '<div class="col-1 text-right"><i class="fas fa-circle red"></i></div>' +
-                  '<div class="col-5 text-center">'+cus+'</div>'+
-                  '<div class="col-3 text-center">'+cd+' วัน</div>'+
-                  '<div class="col-3 text-center">'+total+'</div>'+
-                  '</div><hr style="margin-top: 4%"></li>');  
-              }else{
-                $('#myUL').append('<li class="mgemo5"><div id="cus-1" class="row" onclick="show_credit('+credit_id+',\''+cd+'\')">'+
-                  '<div class="col-1 text-right"><i class="fas fa-circle green"></i></div>' +
-                  '<div class="col-5 text-center">'+cus+'</div>'+
-                  '<div class="col-3 text-center">'+cd+' วัน</div>'+
-                  '<div class="col-3 text-center">'+total+'</div>'+
-                  '</div><hr style="margin-top: 4%"></li>');  
-              }                                       
-            });                
-          }                                
-        }               
-      });
+    var creditList = [];
 
-      if(localStorage.myS){
-        var retrievedObject = localStorage.getItem('myS');
-        var data = JSON.parse(retrievedObject)
-        items = data[0].html        
-        show_search()
-        $("#myS").prop('hidden', false);
-        $("#myUL").prop('hidden', true);
-        $("#i-back").attr("onclick","showUL()");
-        $('#myS').append(items)
+    $(document).ready(function() {
+      if (localStorage.bell) {
+        $('.dot').prop('hidden', false);
       }
+      loadCreditData();
+
+      $('#search_credit').on('input', function() {
+        filterCreditList($(this).val());
+      });
     });
 
-    $(document).keydown(function(objEvent) {
-      if (objEvent.keyCode == 13) {  //enter pressed
-        objEvent.preventDefault();           
-        search();        
-      }         
-    })
+    function loadCreditData() {
+      if (window.showOverlay) window.showOverlay();
+      else $('.overlay').prop('hidden', false).show();
 
-    function show_credit(arg,arg2){
-      if(!$("#myS").prop('hidden')){        
-        json = [];
-        item = {}
-        item["html"] = items;        
-        json.push(item);
-        localStorage.setItem("myS",JSON.stringify(json));
-      }
-      
-      window.location = 'show_credit.html?credit_id='+arg+'&cd='+arg2;
-    }
+      $('#credit-list-ctn').html('<div class="text-center p-4 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-2 text-danger"></i><br>กำลังโหลดรายการเครดิต...</div>');
 
-    function show_search(){
-      if($("#search_row").is(':visible')){
-        $("#search_row").prop('hidden', true);
-
-        $("#row-title").css("margin-top", "4.5em");
-        $("#title-hr").css("margin-top", "6.3em");
-        $("#in-ctn").css("height", "calc(100vh - (4.5em + 120px))");
-      }else{
-        $("#search_row").prop('hidden', false);
-
-        $("#row-title").css("margin-top", "8.5em");
-        $("#title-hr").css("margin-top", "10.3em");
-        $("#in-ctn").css("height", "calc(100vh - (8.9em + 120px))");
-      }
-    }
-
-    var val;
-    function search(){
-      if($('#search_credit').val() == ""){
-        return 0;
-      }
-      localStorage.myS = '';
-      items = "";
-      $('#search_credit').blur();
-      val = $('#search_credit').val();   
-      $("#myS").prop('hidden', false);
-      $("#myUL").prop('hidden', true);     
-      $("#myS").empty();
-      $("#i-back").attr("onclick","showUL()");
-      get_credit_s();
-    }
-
-    function showUL(){
-      localStorage.myS = '';
-      $("#myS").prop('hidden', true);
-      $("#myUL").prop('hidden', false);
-      $("#i-back").attr("onclick","window.location = 'index.html';");
-      show_search();
-    }
-
-    var items = "";
-    function get_credit_s(){
       $.ajax({
-        type: "POST",
-        url:localStorage.pathServer + "php/get_credit.php",
-        data: {'value':val},
-        beforeSend: function(){
-            $(".overlay").prop('hidden', false);
-        },                       
-        success: function(data){ 
-          $(".overlay").prop('hidden', true);  
-          var obj = jQuery.parseJSON(data);         
-          if(obj){           
-            var d = new Date($.now());
-            $.each(obj, function(i, field){
-              var txt = field.date_time.split(" ");
-              var date = txt[0].split("-");
-              var credit_id = field.credit_id;
-              var cus = field.cus_name;              
-              var total = field.credit_price;
-              var cus_id = field.cus_id;                    
-              var last_d = new Date(d.getFullYear(),d.getMonth()+1, 0).getDate();              
-              var cd = last_d - d.getDate();
-              if(d.getMonth()+1 != date[1]){
-                cd = "เลย";
-              } 
-              if(cd <= 3 && cd > 1){
-                items = items + '<li class="mgemo5"><div id="cus-1" class="row" onclick="show_credit('+credit_id+',\''+cd+'\')">'+
-                  '<div class="col-1 text-right"><i class="fas fa-circle yellow"></i></div>' +
-                  '<div class="col-5 text-center">'+cus+'</div>'+
-                  '<div class="col-3 text-center">'+cd+' วัน</div>'+
-                  '<div class="col-3 text-center">'+total+'</div>'+
-                  '</div><hr style="margin-top: 4%"></li>'
-                $('#myS').append('<li class="mgemo5"><div id="cus-1" class="row" onclick="show_credit('+credit_id+',\''+cd+'\')">'+
-                  '<div class="col-1 text-right"><i class="fas fa-circle yellow"></i></div>' +
-                  '<div class="col-5 text-center">'+cus+'</div>'+
-                  '<div class="col-3 text-center">'+cd+' วัน</div>'+
-                  '<div class="col-3 text-center">'+total+'</div>'+
-                  '</div><hr style="margin-top: 4%"></li>');   
-              }else if(cd <= 1 || cd == "เลย"){
-                items = items + '<li class="mgemo5"><div id="cus-1" class="row" onclick="show_credit('+credit_id+',\''+cd+'\')">'+
-                  '<div class="col-1 text-right"><i class="fas fa-circle red"></i></div>' +
-                  '<div class="col-5 text-center">'+cus+'</div>'+
-                  '<div class="col-3 text-center">'+cd+' วัน</div>'+
-                  '<div class="col-3 text-center">'+total+'</div>'+
-                  '</div><hr style="margin-top: 4%"></li>'
-                $('#myS').append('<li class="mgemo5"><div id="cus-1" class="row" onclick="show_credit('+credit_id+',\''+cd+'\')">'+
-                  '<div class="col-1 text-right"><i class="fas fa-circle red"></i></div>' +
-                  '<div class="col-5 text-center">'+cus+'</div>'+
-                  '<div class="col-3 text-center">'+cd+' วัน</div>'+
-                  '<div class="col-3 text-center">'+total+'</div>'+
-                  '</div><hr style="margin-top: 4%"></li>');  
-              }else{
-                items = items + '<li class="mgemo5"><div id="cus-1" class="row" onclick="show_credit('+credit_id+',\''+cd+'\')">'+
-                  '<div class="col-1 text-right"><i class="fas fa-circle green"></i></div>' +
-                  '<div class="col-5 text-center">'+cus+'</div>'+
-                  '<div class="col-3 text-center">'+cd+' วัน</div>'+
-                  '<div class="col-3 text-center">'+total+'</div>'+
-                  '</div><hr style="margin-top: 4%"></li>'
-                $('#myS').append('<li class="mgemo5"><div id="cus-1" class="row" onclick="show_credit('+credit_id+',\''+cd+'\')">'+
-                  '<div class="col-1 text-right"><i class="fas fa-circle green"></i></div>' +
-                  '<div class="col-5 text-center">'+cus+'</div>'+
-                  '<div class="col-3 text-center">'+cd+' วัน</div>'+
-                  '<div class="col-3 text-center">'+total+'</div>'+
-                  '</div><hr style="margin-top: 4%"></li>');  
-              }                                        
-            });                 
-          }                                
-        }               
-      });     
+        type: "GET",
+        url: localStorage.pathServer + "php/get_credit.php",
+        cache: false,
+        success: function(data) {
+          if (window.hideOverlay) window.hideOverlay();
+          else $('.overlay').prop('hidden', true).hide();
+
+          var obj = window.safeParseJSON(data);
+          creditList = Array.isArray(obj) ? obj : [];
+          updateSummaryMetrics(creditList);
+          renderCreditCards(creditList);
+        },
+        error: function(xhr, status, err) {
+          if (window.hideOverlay) window.hideOverlay();
+          else $('.overlay').prop('hidden', true).hide();
+
+          $('#credit-list-ctn').html(
+            '<div class="text-center p-4 text-danger">' +
+              '<i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>' +
+              '<strong>ไม่สามารถดึงข้อมูลเครดิตได้</strong><br>' +
+              '<span class="small text-muted mb-3 d-block">เซิร์ฟเวอร์ตอบสนองช้า หรือเครือข่ายขัดข้อง</span>' +
+              '<button class="btn btn-outline-danger btn-sm mt-2 px-3" onclick="loadCreditData()"><i class="fas fa-redo-alt mr-1"></i> ลองใหม่อีกครั้ง</button>' +
+            '</div>'
+          );
+        }
+      });
+    }
+
+    function updateSummaryMetrics(list) {
+      var totalDebt = 0;
+      var overdueCount = 0;
+      var d = new Date();
+      var currentMonth = d.getMonth() + 1;
+
+      for (var i = 0; i < list.length; i++) {
+        var price = parseFloat(list[i].credit_price) || 0;
+        totalDebt += price;
+
+        var dt = list[i].date_time || '';
+        var parts = dt.split(' ')[0].split('-');
+        var month = parseInt(parts[1], 10);
+        if (month !== currentMonth && price > 0) {
+          overdueCount++;
+        }
+      }
+
+      $('#total-debt-sum').text('฿' + totalDebt.toLocaleString());
+      $('#total-items-badge').text(list.length + ' รายการ');
+      $('#overdue-badge').text(overdueCount + ' รายเกินกำหนด');
+    }
+
+    function renderCreditCards(list) {
+      var $ctn = $('#credit-list-ctn');
+      if (!list || list.length === 0) {
+        $ctn.html('<div class="text-center p-4 text-muted"><i class="fas fa-check-circle fa-2x mb-2 text-success"></i><br>ไม่พบรายการค้างชำระ</div>');
+        return;
+      }
+
+      var d = new Date();
+      var lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      var todayDate = d.getDate();
+      var curMonth = d.getMonth() + 1;
+
+      // Slice to 250 items if super long to keep UI buttery smooth, user can search for specific
+      var maxRender = Math.min(list.length, 300);
+      var htmlArr = [];
+
+      for (var i = 0; i < maxRender; i++) {
+        var field = list[i];
+        var creditId = field.credit_id;
+        var cusName = field.cus_name || 'ลูกค้าทั่วไป';
+        var safeCus = $('<div>').text(cusName).html();
+        var price = parseFloat(field.credit_price) || 0;
+        var dt = field.date_time || '';
+        var parts = dt.split(' ')[0].split('-');
+        var dateFormatted = parts.length === 3 ? (parts[2] + '/' + parts[1] + '/' + parts[0].substr(2)) : dt;
+
+        var month = parseInt(parts[1], 10);
+        var cd = lastDay - todayDate;
+        var badgeHtml = "";
+        var cdParam = cd;
+
+        if (month !== curMonth) {
+          cdParam = "เลย";
+          badgeHtml = "<span class='badge-overdue'><i class='fas fa-exclamation-circle fa-xs mr-1'></i>เกินกำหนด</span>";
+        } else if (cd <= 3 && cd > 1) {
+          badgeHtml = "<span class='badge-near'><i class='fas fa-clock fa-xs mr-1'></i>เหลือ " + cd + " วัน</span>";
+        } else if (cd <= 1) {
+          badgeHtml = "<span class='badge-overdue'><i class='fas fa-exclamation-circle fa-xs mr-1'></i>ใกล้ครบ (" + cd + " วัน)</span>";
+        } else {
+          badgeHtml = "<span class='badge-normal'><i class='fas fa-check-circle fa-xs mr-1'></i>ปกติ (" + cd + " วัน)</span>";
+        }
+
+        htmlArr.push(
+          "<div class='credit-card' onclick='show_credit(" + creditId + ", \"" + cdParam + "\");'>" +
+            "<div class='d-flex align-items-center justify-content-between mb-1'>" +
+              "<div style='font-weight: 600; color: #0f172a; font-size: 15px;' class='text-truncate pr-2'>" +
+                "<i class='fas fa-user-circle text-muted mr-1'></i> " + safeCus +
+              "</div>" +
+              "<div>" + badgeHtml + "</div>" +
+            "</div>" +
+            "<div class='d-flex align-items-center justify-content-between pt-1' style='border-top: 1px dashed #f1f5f9;'>" +
+              "<div class='small text-muted'><i class='far fa-calendar-alt mr-1'></i>" + dateFormatted + "</div>" +
+              "<div class='credit-amount'>฿" + price.toLocaleString() + " <i class='fas fa-chevron-right fa-xs text-muted ml-1'></i></div>" +
+            "</div>" +
+          "</div>"
+        );
+      }
+
+      if (list.length > maxRender) {
+        htmlArr.push("<div class='text-center p-2 text-muted small'>แสดง " + maxRender + " จากทั้งหมด " + list.length + " รายการ (ใช้ช่องค้นหาเพื่อค้นหาเฉพาะบุคคล)</div>");
+      }
+
+      $ctn.html(htmlArr.join(''));
+    }
+
+    function filterCreditList(query) {
+      if (!query || query.trim() === '') {
+        renderCreditCards(creditList);
+        return;
+      }
+      var q = query.trim().toLowerCase();
+      var filtered = creditList.filter(function(item) {
+        var name = (item.cus_name || '').toLowerCase();
+        var dt = (item.date_time || '').toLowerCase();
+        return name.indexOf(q) !== -1 || dt.indexOf(q) !== -1;
+      });
+      renderCreditCards(filtered);
+    }
+
+    function show_credit(credit_id, cd) {
+      window.location = 'show_credit.html?credit_id=' + credit_id + '&cd=' + encodeURIComponent(cd);
     }
   </script>
 </head>
 
 <body>
   <!-- Loading -->
-  <div class="overlay" hidden><div class="loading"></div></div> 
+  <div class="overlay" hidden><div class="loading"></div></div>
 
-  <!-- big container -->
-  <div id="big-ctn" class="container justify-content-center">
+  <div id="big-ctn" class="container-fullwidth justify-content-center">
     <!-- Nav menu top -->
-    <div class="row navs align-items-center mgem1o5 fixed-top">
-      <div id="i-back" class="col-2 text-center" onclick="window.location = 'index.html';">
-        <i  class="fas fa-angle-left"></i>
+    <div class="row navs align-items-center fixed-top justify-content-center">
+      <div id="col-back" class="col-2 text-center" onclick="window.location = 'index.html?menu=3';">
+        <i id="i-back" class="fas fa-angle-left"></i>
       </div>
       <div class="col-8 text-center">
-        <h5 id="h5-title">รายการเครดิต</h5>
+        <h5 id="h5-title">รายงานเครดิตลูกค้า</h5>
       </div>
-      <div class="col-1 text-right" onclick="show_search();">
-        <i class="fas fa-search" style="color: white; font-size: 120%; margin-top: 2px;"></i>
+      <div class="col-2 text-center" onclick="loadCreditData();" style="cursor: pointer;">
+        <i class="fas fa-sync-alt text-white" style="font-size: 16px;"></i>
       </div>
-    </div>   
-
-    <div id="search_row" class="row mgem1o5 fixed-top" style="margin-top: 4.5em; padding-left: 1.5em; padding-right: 1.5em;" hidden>
-      <div class="col-12">
-        <input id="search_credit" type="search" class="form-control form-control-lg text-center" placeholder="ค้นหาลูกค้า/ตัวเลขเดือน">
-      </div>      
     </div>
 
-    <div id="row-title" class="row fixed-top" style="margin-top: 4.5em;">
-      <div class="col-1"></div>
-      <div id="title" class="col-5 text-center nopd">ลูกค้า</div>
-      <div id="title" class="col-3 text-center nopd">วางบิล</div>
-      <div id="title" class="col-3 text-center nopd">รวม</div>
-    </div><hr id="title-hr" class="mgem1" style="margin-top: 6.3em; width: 98%;">
+    <!-- Search Bar fixed under navbar -->
+    <div style="position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; z-index: 1010; background: #ffffff; padding: 10px 16px; border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+      <div style="position: relative;">
+        <i class="fas fa-search" style="position: absolute; left: 14px; top: 12px; color: #94a3b8; font-size: 14px;"></i>
+        <input id="search_credit" type="search" class="form-control" placeholder="ค้นหาชื่อลูกค้า หรือ วันที่..." style="padding-left: 36px; border-radius: 10px; height: 38px; font-size: 14px; background: #f8fafc; border-color: #e2e8f0;">
+      </div>
+    </div>
 
-    <div id="in-ctn" class="container-fullwidth" style="margin-top: 0!important; height: calc(100vh - (4.5em + 120px));">
-      <ul id="myUL"> </ul> 
-      <ul id="myS" hidden> </ul>
-    </div>  
+    <!-- Main scroll area -->
+    <div id="in-ctn" class="container" style="margin-top: calc(118px + var(--safe-top)) !important; padding: 10px 16px calc(80px + var(--safe-bottom)); min-height: calc(100vh - 120px);">
+      <!-- Summary Card -->
+      <div class="credit-summary-card">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span style="font-size: 13px; color: #94a3b8; font-weight: 500;">ยอดหนี้ค้างชำระทั้งหมด</span>
+          <span id="total-items-badge" class="badge badge-secondary" style="font-size: 11px;">0 รายการ</span>
+        </div>
+        <div id="total-debt-sum" style="font-size: 24px; font-weight: 800; color: #f87171; letter-spacing: -0.5px;">฿0</div>
+        <div class="mt-2 pt-2 d-flex justify-content-between align-items-center" style="border-top: 1px solid rgba(255,255,255,0.1);">
+          <span style="font-size: 12px; color: #cbd5e1;"><i class="fas fa-exclamation-triangle text-warning mr-1"></i> สถานะเครดิต</span>
+          <span id="overdue-badge" class="badge badge-danger" style="font-size: 11px;">0 รายเกินกำหนด</span>
+        </div>
+      </div>
+
+      <!-- Rendered list of cards -->
+      <div id="credit-list-ctn">
+        <!-- Rendered items -->
+      </div>
+    </div>
+
+    <!-- Nav menu bottom -->
+    <div class="fixed-bottom">
+      <div class="nav-bottom-item" onclick="window.location ='index.html?menu=3';">
+        <i id="i-home" class="fas fa-home menu"></i>
+      </div>
+      <div class="nav-bottom-item" onclick="window.location = 'bell.html';">
+        <div class="dot" hidden></div>
+        <i id="i-bell" class="fas fa-bell menu"></i>
+      </div>
+      <div class="nav-bottom-item" onclick="scan();">
+        <i id="i-qrcode" class="fas fa-qrcode menu"></i>
+      </div>
+      <div class="nav-bottom-item" onclick="window.location = 'other.html';">
+        <i id="i-bars" class="fas fa-bars menu"></i>
+      </div>
+    </div>
   </div>
-  <!-- End big container -->
-
-  <!-- Nav menu bottom -->
-  <div class="row fixed-bottom navs">
-    <div class="col-3 text-center" onclick="window.location = 'index.html?menu=3';">
-      <i id="i-home" class="fas fa-home menu"></i>
-    </div>
-    <div class="col-3 text-center" onclick="window.location = 'bell.html';">
-      <div class="dot" hidden></div>
-      <i id="i-bell" class="fas fa-bell menu"></i>
-    </div>
-    <div class="col-3 text-center" onclick="scan();">
-      <i id="i-qrcode" class="fas fa-qrcode menu"></i>
-    </div>
-    <div class="col-3 text-center" onclick="window.location = 'other.html';">
-      <i id="i-bars" class="fa fa-bars menu"></i>
-    </div>
-  </div>
-  <!-- End Nav menu bottom -->
-  <script>
-    //Touch animation
-    $(".mbtn").on("touchstart", function() {
-      $(this).addClass('mbtn-touch');
-    });
-    $(".mbtn").on("touchend", function() {
-      $(this).removeClass('mbtn-touch');
-    });
-  </script>
 </body>
 
 </html>

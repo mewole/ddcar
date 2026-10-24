@@ -2,107 +2,181 @@
 <html>
 
 <head>
-  <!-- <meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; 
-               style-src 'self' 'unsafe-inline'; 
-               script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
-               connect-src * 'self' http: https:;"> -->
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Home</title>
-  <!-- Bootstrap Import -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
-  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
-  
-  <script type="text/javascript" src="js/jquery-confirm.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
-  <script src="cordova.js"></script>
-  <script type="text/javascript" src="js/scanqr.js"></script>
-  <script type="text/javascript" src="js/config.js"></script>
-  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
+  <title>DDCAR - เมนูหลัก</title>
+  <!-- Local Assets -->
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/svg-with-js.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
   <link rel="stylesheet" href="css/loading.css">
 
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
+  <script type="text/javascript" src="js/jquery-confirm.js"></script>
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script defer src="js/fontawesome-all.js"></script>
+  <script type="text/javascript" src="js/scanqr.js"></script>
+  <script type="text/javascript" src="js/config.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
+
   <!-- Font -->
-  <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Prompt:400,600,700&display=swap" rel="stylesheet">
   <style>
-    .scroll{
-      height: calc(100vh - 180px);
-      overflow-x: hidden !important;
-      overflow-y: auto; 
-      margin-bottom: 1.5em;
-      margin-top: 1em;
+    body {
+      background-color: #ffffff !important;
     }
 
-    div[id *= "tabs"]{
-      font-size: 100%
+    .tab-segment {
+      background: #f1f5f9;
+      border-radius: 14px;
+      padding: 4px;
+      margin: 12px 16px 8px;
+      display: flex;
+    }
+
+    .tab-segment-item {
+      flex: 1;
+      text-align: center;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-segment-item.active {
+      background: #ffffff;
+      color: #da251c !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .action-tile {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+      transition: all 0.15s ease;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .action-tile:active {
+      transform: scale(0.98);
+      background: #fef2f2;
+      border-color: #da251c;
+    }
+
+    .action-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      margin-right: 16px;
+      flex-shrink: 0;
+    }
+
+    .action-icon-red {
+      background: #fef2f2;
+      color: #da251c;
+    }
+
+    .action-icon-dark {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    .action-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .action-desc {
+      font-size: 12px;
+      color: #64748b;
+      margin: 0;
+    }
+
+    .action-arrow {
+      margin-left: auto;
+      color: #cbd5e1;
+      font-size: 1.1rem;
+    }
+
+    .btn-choice {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      color: #0f172a;
+      font-weight: 600;
+      margin-bottom: 8px;
+      transition: background 0.15s;
+    }
+    .btn-choice:active {
+      background: #fef2f2;
+      border-color: #da251c;
+      color: #da251c;
     }
   </style>
+
   <script>
     $(document).ready(function() {
-
-      if(sessionStorage.menu != ""){
-        //Back from function
-        $("#tabs-"+sessionStorage.menu).trigger('click');
-      }else if(sessionStorage.menu == undefined){
-        $("#tabs-main").trigger('click');
+      if(sessionStorage.menu && sessionStorage.menu !== ""){
+        tabs(sessionStorage.menu);
+      } else {
+        tabs('main');
       }
       
-      if(localStorage.user_role == "เจ้าของร้าน" || localStorage.user_role == "แอดมิน"){
-        $('#tabs-admin').prop('hidden',false);         
-      }else if(localStorage.user_role == "พนักงาน"){
-        $("#tabs-main").trigger('click');
-        $('#tabs-admin').prop('hidden',true);
-        $('#tabs-log').prop('hidden',true);          
-      }else if(localStorage.user_role == "ดูคลังสินค้า"){
-        $("#tabs-main").trigger('click');
-        $('#tabs-admin').prop('hidden',true);
-        $('#tabs-log').prop('hidden',true);
-        $("#btn_sale").attr('disabled',true);
-        $("#btn_import").attr('disabled',true);
-        $("#btn_export").attr('disabled',true);
-        $("#btn_qrimport").attr('disabled',true);        
+      if(localStorage.user_role == "พนักงาน"){
+        tabs('main');
+        $('#tabs-admin').prop('hidden', true);
+        $('#tabs-log').prop('hidden', true);          
+      } else if(localStorage.user_role == "ดูคลังสินค้า"){
+        tabs('main');
+        $('#tabs-admin').prop('hidden', true);
+        $('#tabs-log').prop('hidden', true);
+        $("#tile_sale").css({'pointer-events': 'none', 'opacity': '0.5'});
+        $("#tile_import").css({'pointer-events': 'none', 'opacity': '0.5'});
+        $("#tile_export").css({'pointer-events': 'none', 'opacity': '0.5'});
+        $("#tile_qrimport").css({'pointer-events': 'none', 'opacity': '0.5'});
+      } else {
+        // แอดมิน, เจ้าของร้าน, หรืออื่นๆ: แสดงทุกแท็บ
+        $('#tabs-admin').prop('hidden', false);
+        $('#tabs-log').prop('hidden', false);
       }
-           
 
       localStorage.stack_folder = "";
       localStorage.img = "";
     });
 
-    function doresize() {
-      switch (window.orientation) {
-        case 90: case -90:
-          $("#admin").css('max-height',  $(window).height()-180);
-          $("#main").css('max-height',  $(window).height()-180);
-          $("#log").css('max-height',  $(window).height()-180);
-          console.log($(window).height());
-          break;
-        default:
-          $("#admin").css('max-height',  $(window).height()-180);
-          $("#main").css('max-height',  $(window).height()-180);
-          $("#log").css('max-height',  $(window).height()-180);
-          break;
-      }
-    }
-    window.addEventListener('resize', doresize);
-
     function onLoad(){
       getConfig();
       if(!localStorage.user_id){                      
-        
         window.location = 'login.html';
+        return;
       }
          
       $.ajax({ 
         type: "GET",
-        url:localStorage.pathServer + "php/get_bell.php",
+        url: localStorage.pathServer + "php/get_bell.php",
         beforeSend: function(){
             $(".overlay").prop('hidden', false);
         },                       
@@ -110,277 +184,340 @@
           $(".overlay").prop('hidden', true); 
           if(data == "alert"){           
             localStorage.bell = 1;
-            $('.dot').prop('hidden',false);
-          }else if(data == "normal"){           
+            $('.dot').prop('hidden', false);
+          } else if(data == "normal"){           
             localStorage.bell = "";
-            $('.dot').prop('hidden',true);
+            $('.dot').prop('hidden', true);
           }                            
+        },
+        error: function() {
+          $(".overlay").prop('hidden', true);
         }               
       });     
 
       var d = new Date($.now());
-      var last_d = new Date(d.getFullYear(),d.getMonth()+1, 0).getDate();
+      var last_d = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
       var cd = last_d - d.getDate();           
       if(cd == 0){
         if(localStorage.last_m == 1){
           return 0;
         }  
         $.confirm({
-          title: 'แจ้งเตือน',
-          content: 'สิ้นเดือนแล้ว กรุณาเข้าไปจัดการรายการเครดิต รายการ->รายการเครดิต',
+          title: 'แจ้งเตือนสิ้นเดือน',
+          content: 'สิ้นเดือนแล้ว กรุณาเข้าไปตรวจสอบและจัดการรายการเครดิตลูกค้า',
           backgroundDismiss: true,
           buttons: {
               formSubmit: {
-              text: 'ตกลง',
-              btnClass: 'btn-regis',
-              action: function () {
-              }
+                text: 'ตกลง',
+                btnClass: 'btn-danger'
               }
           }
         });
         localStorage.last_m = 1;
-      }else{
+      } else {
         localStorage.last_m = 0;
       }  
     }
 
     function tabs(arg){
-      arr = ['admin', 'main', 'log'];
-      if($("#tabs-"+arg).hasClass('tabs')){
-        return 0;
-      }else{
-        // Get from
-        for(var j = 0; j < 3; j++){
-          if($("#tabs-"+arr[j]).hasClass('tabs')){
-            from = arr[j];
-          }
+      var arr = ['admin', 'main', 'log'];
+      arr.forEach(function(item) {
+        if(item === arg) {
+          $("#tabs-" + item).addClass('active');
+          $("#" + item).prop('hidden', false);
+        } else {
+          $("#tabs-" + item).removeClass('active');
+          $("#" + item).prop('hidden', true);
         }
-        // Clear old tabs , Add class, Remove class
-        for(var i = 0; i < 3; i++){
-          if(arr[i] != arg){
-            $("#tabs-"+arr[i]).removeClass('tabs');
-            $("#tabs-"+arr[i]).addClass('non');
-            $("div #"+arr[i]).prop('hidden', true);
-          }
-        }$("#tabs-"+arg).addClass('tabs'); $("#tabs-"+arg).removeClass('non'); $("div #"+arg).prop('hidden', false);
-      }
+      });
       sessionStorage.menu = arg;
     }
 
-    function disactive(arg) {
-      nav_menu = ['home', 'bell', 'qrcode', 'bars'];
-      for (i = 0; i < 4; i++) {
-        if (nav_menu[i] != arg) {
-          if ($("#i-" + nav_menu[i]).hasClass('active')) $("#i-" + nav_menu[i]).removeClass('active');
-        }
-      }
-    }
-
-    function menu(arg) {
-      // Animate
-      disactive(arg);
-      $("#i-" + arg).fadeOut(100).fadeIn(100, function() {
-        $("#i-" + arg).addClass('active');
-      });
-
-      /*if(arg == "bars"){
-        window.location = "show_prod.html";
-      }*/
-    }
-
-    DDBridge.ready(function() {
-      DDBridge.setFullscreen();
-      DDBridge.setupBackButton(function() {
-        DDBridge.exitApp();
-      });
-    });
-
     function scan_import(){
-      $("style").append('.jconfirm .jconfirm-box{max-height: 420px;}');
       $.confirm({
-        title: 'หน้าร้าน/โกดัง',
-        content: '<hr style="width: 80%; margin-bottom: 0;">',
+        title: 'เลือกหน้าร้าน / โกดัง',
+        content: 'กำลังดึงรายชื่อคลัง...',
         backgroundDismiss: true,
         onOpenBefore: function () {
-          $(".jconfirm-buttons .btn-default").remove();
-          //ajax and apeend
+          var self = this;
+          self.buttons.formSubmit?.hide();
           $.ajax({
               type: "GET",
-              url:localStorage.pathServer + "php/get_ware_shop.php",     
+              url: localStorage.pathServer + "php/get_ware_shop.php",     
               beforeSend: function(){
                   $(".overlay").prop('hidden', false);
               },                        
               success: function(data){
-              $(".overlay").prop('hidden', true);  
-                  var obj = jQuery.parseJSON(data);
-                  if(obj){
-                      $.each(obj, function(i, field){   
-                          if(obj[i][2] == "โกดัง"){  
-                              $(".jconfirm-buttons").append('<button id="li-ware-'+i+'" type="button" onclick="setware('+i+')" class="btn btn-choice">'+obj[i].ware_name+'</button>' +
-                              '<span id="id-ware-'+i+'" hidden>'+obj[i].ware_id+'</span>' +
-                              '<span id="type-'+i+'" hidden>โกดัง</span>');                       
-                          }else if(obj[i][2] == "หน้าร้าน"){ 
-                              $(".jconfirm-buttons").append('<button id="li-ware-'+i+'" type="button" onclick="setware('+i+')" class="btn btn-choice">'+obj[i].shop_name+'</button>' +
-                              '<span id="id-ware-'+i+'" hidden>'+obj[i].shop_id+'</span>' +
-                              '<span id="type-'+i+'" hidden>หน้าร้าน</span>');
-                          }                    
-                      });   
-                  }else{
-                      $(".jconfirm-buttons").append("กรุณาเพิ่มหน้าร้าน/โกดังก่อนทำรายการ");     
-                  }                                                      
+                $(".overlay").prop('hidden', true);  
+                var obj;
+                try {
+                  obj = (typeof data === 'object') ? data : jQuery.parseJSON(data);
+                } catch(e) { obj = []; }
+
+                if(obj && obj.length > 0){
+                    var btnHtml = '<div style="max-height: 280px; overflow-y: auto;">';
+                    $.each(obj, function(i, field){   
+                        if(field[2] == "โกดัง" || field.type == "โกดัง"){  
+                            btnHtml += '<button type="button" onclick="setware(\'โกดัง\', \'' + (field.ware_id || field.id) + '\')" class="btn-choice"><i class="fas fa-warehouse text-danger" style="margin-right: 8px;"></i> ' + (field.ware_name || field.name) + '</button>';
+                        } else { 
+                            btnHtml += '<button type="button" onclick="setware(\'หน้าร้าน\', \'' + (field.shop_id || field.id) + '\')" class="btn-choice"><i class="fas fa-store text-danger" style="margin-right: 8px;"></i> ' + (field.shop_name || field.name) + '</button>';
+                        }                    
+                    });
+                    btnHtml += '</div>';
+                    self.setContent(btnHtml);
+                } else {
+                    self.setContent("กรุณาเพิ่มหน้าร้าน/โกดังก่อนทำรายการ");     
+                }                                                      
+              },
+              error: function() {
+                $(".overlay").prop('hidden', true);
+                self.setContent("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้");
               }               
           });               
         },
-        onDestroy: function () {
-          $("style").append('.jconfirm .jconfirm-box{margin-bottom: 5%;}');
-          $("style").append('.jconfirm .jconfirm-box{max-height: 100%;}');
+        buttons: {
+          close: {
+            text: 'ยกเลิก',
+            action: function () {}
+          }
         }             
       });      
     }
     
-    function setware(arg) {      
-      type = $("#type-" + arg).text();     
-      ware_id = $("#id-ware-" + arg).text();  
-      document.elementFromPoint(0, 0).click();
-      scan('index',type,ware_id);      
+    function setware(type, ware_id) {      
+      if (window.jconfirm && window.jconfirm.instances) {
+        window.jconfirm.instances.forEach(function(inst) { try { inst.close(); } catch(e){} });
+      }
+      scan('index', type, ware_id);      
     }
   </script>
 </head>
 
 <body onload="onLoad();">
-   <!-- Loading -->
-   <div class="overlay" hidden><div class="loading"></div></div>
+  <!-- Loading -->
+  <div class="overlay" hidden><div class="loading"></div></div>
 
-  
-  
   <div id="big-ctn" class="container-fullwidth justify-content-center">
     <!-- Nav menu top -->
-    <div class="row navs align-items-center">
-      <div class="col-2 text-center" onclick="page_back()">
-        <i id="i-back" class="fas fa-angle-left" hidden></i>
-      </div>
+    <div class="row navs align-items-center fixed-top justify-content-center">
+      <div class="col-2 text-center"></div>
       <div class="col-8 text-center">
-        <h5 id="h5-title">หน้าแรก</h5>
+        <h5 id="h5-title"><img src="img/logo.jpg" alt="Logo" class="app-header-logo"> DDCAR</h5>
+      </div>
+      <div class="col-2 text-center"></div>
+    </div>
+
+    <!-- Segmented Tabs -->
+    <div style="margin-top: calc(60px + var(--safe-top));">
+      <div class="tab-segment">
+        <div id="tabs-main" class="tab-segment-item active" onclick="tabs('main');">
+          <i class="fas fa-th-large" style="margin-right: 4px;"></i> หน้าหลัก
+        </div>
+        <div id="tabs-log" class="tab-segment-item" onclick="tabs('log');">
+          <i class="fas fa-file-alt" style="margin-right: 4px;"></i> รายงาน
+        </div>
+        <div id="tabs-admin" class="tab-segment-item" onclick="tabs('admin');">
+          <i class="fas fa-cog" style="margin-right: 4px;"></i> จัดการระบบ
+        </div>
       </div>
     </div>
-    <div class="row navs justify-content-center menu" style="background: #fafafa !important;">
-      <div id="tabs-admin" class="col-3 text-center tabs" onclick="tabs('admin');">แอดมิน</div>
-      <div id="tabs-main" class="col-3 text-center non" onclick="tabs('main');">ฟังชั่น</div>
-      <div id="tabs-log" class="col-3 text-center non" onclick="tabs('log');">รายการ</div>
-    </div><br>
-    <!-- Admin -->
-    <div id="admin" class="scroll container-fullwidth">
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button id="mng-member" class="mbtn" onclick="window.location ='web_admin_user.html';">จัดการผู้ใช้งาน</button>
-        </div>
-      </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button id="add-cus" class="mbtn" onclick="window.location ='web_customer.html';">จัดการลูกค้า</button>
-        </div>
-      </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button id="add-prod" class="mbtn" onclick="window.location ='select_folder.html?from=add';">จัดการสินค้า</button>
-        </div>
-      </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button id="add-ware" class="mbtn" onclick="window.location ='web_warehouse.html';">หน้าร้าน / โกดัง</button>
-        </div>
-      </div>
+
+    <!-- Content scroll area -->
+    <div id="in-ctn" class="container" style="margin-top: 6px; padding: 10px 16px;">
       
-    </div>
-    <!-- Main -->
-    <div id="main" class="scroll container-fullwidth" hidden>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button id="btn_sale" class="mbtn" onclick="window.location = 'sale.html';">ขาย</button>
+      <!-- Tab 1: Main Functions -->
+      <div id="main">
+        <div id="tile_sale" class="action-tile" onclick="window.location = 'sale.html';">
+          <div class="action-icon-box action-icon-red">
+            <i class="fas fa-cash-register"></i>
+          </div>
+          <div>
+            <div class="action-title">ขายสินค้า (POS)</div>
+            <p class="action-desc">เปิดบิลขายหน้าร้าน / สแกนคิดเงิน</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div id="tile_stock" class="action-tile" onclick="window.location = 'stock.html';">
+          <div class="action-icon-box action-icon-dark">
+            <i class="fas fa-search"></i>
+          </div>
+          <div>
+            <div class="action-title">เช็คสต๊อกสินค้า</div>
+            <p class="action-desc">ค้นหาจำนวนและตำแหน่งจัดเก็บในคลัง</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div id="tile_import" class="action-tile" onclick="window.location = 'import.html';">
+          <div class="action-icon-box action-icon-red">
+            <i class="fas fa-arrow-down"></i>
+          </div>
+          <div>
+            <div class="action-title">นำสินค้าเข้าสต๊อก</div>
+            <p class="action-desc">รับของเข้าโกดังและหน้าร้าน</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div id="tile_export" class="action-tile" onclick="window.location = 'export.html';">
+          <div class="action-icon-box action-icon-dark">
+            <i class="fas fa-arrow-up"></i>
+          </div>
+          <div>
+            <div class="action-title">เบิกสินค้าออกโกดัง</div>
+            <p class="action-desc">โอนย้ายสต๊อกและเบิกสินค้าออก</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div id="tile_qrimport" class="action-tile" onclick="scan_import();">
+          <div class="action-icon-box action-icon-red">
+            <i class="fas fa-qrcode"></i>
+          </div>
+          <div>
+            <div class="action-title">สแกนสินค้าเข้าด่วน</div>
+            <p class="action-desc">สแกน QR โอนย้ายเข้าคลังอัตโนมัติ</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
         </div>
       </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button class="mbtn" onclick="window.location = 'stock.html';">เช็คสต๊อก</button>
+
+      <!-- Tab 2: Reports / Log -->
+      <div id="log" hidden>
+        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'manage_bill.html';">
+          <div class="action-icon-box action-icon-red">
+            <i class="fas fa-receipt"></i>
+          </div>
+          <div>
+            <div class="action-title">รายงานประวัติบิลขาย</div>
+            <p class="action-desc">ค้นหาและพิมพ์บิลย้อนหลัง</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div class="action-tile" onclick="localStorage.myD = ''; window.location = 'manage_salesum.html';">
+          <div class="action-icon-box action-icon-dark">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div>
+            <div class="action-title">รายงานสรุปยอดขาย</div>
+            <p class="action-desc">ดูยอดขายรายวันและสรุปกำไร</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'manage_import.html';">
+          <div class="action-icon-box action-icon-red">
+            <i class="fas fa-arrow-down"></i>
+          </div>
+          <div>
+            <div class="action-title">รายงานสินค้าเข้า</div>
+            <p class="action-desc">ประวัติการนำเข้าของแต่ละรอบ</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'manage_export.html';">
+          <div class="action-icon-box action-icon-dark">
+            <i class="fas fa-arrow-up"></i>
+          </div>
+          <div>
+            <div class="action-title">รายงานสินค้าออก</div>
+            <p class="action-desc">ประวัติการเบิกสินค้าออกโกดัง</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div class="action-tile" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'manage_transfer_in.html';">
+          <div class="action-icon-box action-icon-red">
+            <i class="fas fa-exchange-alt"></i>
+          </div>
+          <div>
+            <div class="action-title">รายงานการโอนย้ายสินค้า</div>
+            <p class="action-desc">ประวัติย้ายของระหว่างสาขา/โกดัง</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div class="action-tile" onclick="localStorage.myS = ''; window.location = 'manage_credit.html';">
+          <div class="action-icon-box action-icon-dark">
+            <i class="fas fa-credit-card"></i>
+          </div>
+          <div>
+            <div class="action-title">รายงานเครดิตลูกค้า</div>
+            <p class="action-desc">เช็คยอดค้างชำระและการวางบิล</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
         </div>
       </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button id="btn_import" class="mbtn" onclick="window.location = 'import.html';">สินค้าเข้า</button>
+
+      <!-- Tab 3: Admin -->
+      <div id="admin" hidden>
+        <div class="action-tile" onclick="window.location ='customer.html';">
+          <div class="action-icon-box action-icon-red">
+            <i class="fas fa-users"></i>
+          </div>
+          <div>
+            <div class="action-title">จัดการข้อมูลลูกค้า</div>
+            <p class="action-desc">เพิ่ม/แก้ไข รายชื่อลูกค้าและเครดิต</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div class="action-tile" onclick="window.location ='select_folder.html?from=add';">
+          <div class="action-icon-box action-icon-dark">
+            <i class="fas fa-box-open"></i>
+          </div>
+          <div>
+            <div class="action-title">จัดการข้อมูลสินค้า</div>
+            <p class="action-desc">เพิ่มสินค้าใหม่และโฟลเดอร์หมวดหมู่</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div class="action-tile" onclick="window.location ='warehouse.html';">
+          <div class="action-icon-box action-icon-red">
+            <i class="fas fa-warehouse"></i>
+          </div>
+          <div>
+            <div class="action-title">จัดการหน้าร้าน / โกดัง</div>
+            <p class="action-desc">ตั้งค่าชื่อคลังและจุดจัดเก็บ</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
+        </div>
+
+        <div class="action-tile" onclick="window.location ='member.html';">
+          <div class="action-icon-box action-icon-dark">
+            <i class="fas fa-user-shield"></i>
+          </div>
+          <div>
+            <div class="action-title">จัดการบัญชีผู้ใช้งาน</div>
+            <p class="action-desc">สิทธิ์การเข้าถึงของพนักงานและแอดมิน</p>
+          </div>
+          <i class="fas fa-chevron-right action-arrow"></i>
         </div>
       </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button id="btn_export" class="mbtn" onclick="window.location = 'export.html';">สินค้าออกโกดัง</button>
-        </div>
-      </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button id="btn_qrimport" class="mbtn" onclick="scan_import()">สแกนสินค้าเข้า</button>
-        </div>
-      </div>
-    </div>
-    <!-- Log -->
-    <div id="log" class="scroll container-fullwidth" hidden>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button class="mbtn" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'web_mng_bill.html';">รายงานบิล</button>
-        </div>
-      </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button class="mbtn" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'web_mng_import_warehouse.html';">รายงานสินค้าเข้าโกดัง</button>
-        </div>
-      </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button class="mbtn" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'web_mng_import.html';">รายงานสินค้าเข้าหน้าร้าน</button>
-        </div>
-      </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button class="mbtn" onclick="localStorage.myS = ''; localStorage.myD = ''; window.location = 'web_mng_transfer.html';">รายงานการโอนย้ายสินค้า</button>
-        </div>
-      </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button class="mbtn" onclick="localStorage.myD = ''; window.location = 'web_mng_sale.html';">รายงานสรุปยอดขาย</button>
-        </div>
-      </div>
-      <div class="row justify-content-center mgem1o5">
-        <div class="col-9 text-center">
-          <button class="mbtn" onclick="localStorage.myS = ''; window.location = 'web_credit.html';">รายงานเครดิตลูกค้า</button>
-        </div>
-      </div>
+
     </div>
   </div>
-    <!-- Nav menu bottom -->
-    <div class="row fixed-bottom navs">
-      <div class="col-3 text-center" onclick="return 0;">
-        <i id="i-home" class="fas fa-home menu active"></i>
-      </div>
-      <div class="col-3 text-center" onclick="window.location = 'bell.html';">
-        <div class="dot" hidden></div>
-        <i id="i-bell" class="fas fa-bell menu"></i>
-      </div>
-      <div class="col-3 text-center" onclick="scan('index');">
-        <i id="i-qrcode" class="fas fa-qrcode menu"></i>
-      </div>
-      <div class="col-3 text-center" onclick="window.location = 'other.html';">
-        <i class="fa fa-bars menu"></i>
-      </div>
-    </div><br>
+
+  <!-- Nav menu bottom -->
+  <div class="fixed-bottom">
+    <div class="nav-bottom-item" onclick="return 0;">
+      <i id="i-home" class="fas fa-home menu active"></i>
+    </div>
+    <div class="nav-bottom-item" onclick="window.location = 'bell.html';">
+      <div class="dot" hidden></div>
+      <i id="i-bell" class="fas fa-bell menu"></i>
+    </div>
+    <div class="nav-bottom-item" onclick="scan('index');">
+      <i id="i-qrcode" class="fas fa-qrcode menu"></i>
+    </div>
+    <div class="nav-bottom-item" onclick="window.location = 'other.html';">
+      <i id="i-bars" class="fas fa-bars menu"></i>
+    </div>
   </div>
-  
-  <script>
-    //Touch animation
-    $(".mbtn").on("touchstart", function() {
-      $(this).addClass('mbtn-touch');
-    });
-    $(".mbtn").on("touchend", function() {
-      $(this).removeClass('mbtn-touch');
-    });
-  </script>
 </body>
 
 </html>

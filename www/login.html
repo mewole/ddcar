@@ -3,33 +3,47 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Home</title>
-    <!-- Bootstrap Import -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
-    
-    <script type="text/javascript" src="js/jquery-confirm.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-    <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
-    <script src="cordova.js"></script>
-    <script type="text/javascript" src="js/config.js"></script>
-    <script type="text/javascript" src="js/capacitor-bridge.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
+    <title>เข้าสู่ระบบ - DDCAR</title>
+    <!-- Local Assets -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/svg-with-js.css">
     <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/jquery-confirm.css">
     <link rel="stylesheet" href="css/loading.css">
 
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
+    <script type="text/javascript" src="js/jquery-confirm.js"></script>
+    <script type="text/javascript" src="js/popper.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script defer src="js/fontawesome-all.js"></script>
+    <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/capacitor-bridge.js"></script>
+
     <!-- Font -->
-    <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Prompt:400,600,700&display=swap" rel="stylesheet">
 
     <style>
-        .pdlr {
-            padding-left: 10%;
-            padding-right: 10%;
+        body {
+            background-color: #ffffff !important;
+        }
+        .login-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 32px 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            max-width: 360px;
+            margin: 30px auto;
+        }
+        .logo-img {
+            width: 140px;
+            height: auto;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 14px rgba(218, 37, 28, 0.12);
         }
     </style>
 
@@ -45,8 +59,8 @@
             }, 1000);
         });
        
-       $(document).keydown(function(objEvent) {
-            if (objEvent.keyCode == 13) {  //enter pressed
+        $(document).keydown(function(objEvent) {
+            if (objEvent.keyCode == 13) {
                 objEvent.preventDefault();
                 var $this = $(objEvent.target);
                 var i_enter = parseFloat($this.attr('data-index'));                      
@@ -56,13 +70,13 @@
                     $('[data-index="' + (i_enter+1).toString() + '"]').focus();
                 }                       
             }         
-        })
+        });
 
         function login(){
             getConfig();
             var path = localStorage.pathServer;
-            var name = $('#name').val();
-            var pass = $('#pass').val();
+            var name = $('#name').val().trim();
+            var pass = $('#pass').val().trim();
 
             if(name && pass){
                 $.ajax({
@@ -79,19 +93,22 @@
                         $(".overlay").prop('hidden', true);
                         if(data == "fail"){
                             $.confirm({
-                                title: 'พบข้อผิดพลาด',
-                                content: 'ชื่อหรือรหัสผ่านไม่ถูกต้อง',
+                                title: 'เข้าสู่ระบบไม่สำเร็จ',
+                                content: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง',
                                 backgroundDismiss: true,
                                 buttons: {
                                     formSubmit: {
                                         text: 'ตกลง',
-                                        btnClass: 'btn-regis'
+                                        btnClass: 'btn-danger'
                                     }
                                 }
                             });
                         } else {
                             var obj = jQuery.parseJSON(data);
+                            var savedPath = localStorage.pathServer;
                             localStorage.clear();
+                            if (savedPath) localStorage.pathServer = savedPath;
+                            
                             $.each(obj, function(i, field){                            
                                 localStorage.user_name = name;
                                 localStorage.user_id = field.user_id;
@@ -101,61 +118,74 @@
                             });                      
                         }
                     },
-                    // *** จุดที่แก้: ต้องใส่ (xhr, status, error) เพื่อรับตัวแปร xhr เข้ามาใช้งาน ***
                     error: function(xhr, status, error){
                         $(".overlay").prop('hidden', true);
                         console.error("AJAX Error:", status, error);
-                        if (typeof xhr !== 'undefined' && xhr.responseText) {
-                            console.error("Response Text:", xhr.responseText);
-                        }
-                        alert("ไม่สามารถเชื่อมต่อ Server ได้ (Status: " + status + ")");
+                        $.confirm({
+                            title: 'ข้อผิดพลาดการเชื่อมต่อ',
+                            content: 'ไม่สามารถเชื่อมต่อ Server ได้ในขณะนี้ กรุณาตรวจสอบสัญญาณอินเทอร์เน็ตหรือเครือข่ายร้าน',
+                            backgroundDismiss: true,
+                            buttons: {
+                                formSubmit: {
+                                    text: 'ตกลง',
+                                    btnClass: 'btn-danger'
+                                }
+                            }
+                        });
                     }                            
                 });  
             } else {
-                alert("กรุณากรอกชื่อและรหัสผ่าน");
+                $.confirm({
+                    title: 'แจ้งเตือน',
+                    content: 'กรุณากรอกชื่อและรหัสผ่านให้ครบถ้วน',
+                    backgroundDismiss: true,
+                    buttons: {
+                        formSubmit: {
+                            text: 'ตกลง',
+                            btnClass: 'btn-danger'
+                        }
+                    }
+                });
             }          
         }
-
     </script>
 </head>
 
 <body>
-     <!-- Loading -->
+    <!-- Loading -->
     <div class="overlay" hidden><div class="loading"></div></div>
 
-    
-    <br>
+    <!-- Nav menu top -->
+    <div class="row navs align-items-center fixed-top justify-content-center">       
+        <div class="col-12 text-center">
+            <h5 id="h5-title"><img src="img/logo.jpg" alt="Logo" class="app-header-logo"> DDCAR MOTOR SPORT</h5>
+        </div>       
+    </div>
 
-    <!-- End big container -->
+    <!-- Main Content Container -->
     <div id="big-ctn" class="container justify-content-center">
-        <!-- Nav menu top -->
-        <div class="row navs align-items-center mgem1o5 fixed-top">       
-            <div class="col-12 text-center">
-                <h5 id="h5-title">เข้าระบบ</h5>
-            </div>       
-        </div>
-        <!-- Register -->
-        <div id="in-ctn" class="container">
-            <div class="row justify-content-center mgem1">
-                <div class="col-10 justify-content-center text-center">
-                    <label>ชื่อ</label>
-                    <input id="name" type="text" class="w3-input" autofocus data-index="1">
+        <div id="in-ctn" class="container text-center" style="margin-top: calc(70px + var(--safe-top));">
+            <div class="login-card">
+                <img src="img/logo.jpg" alt="DD Logo" class="logo-img">
+                
+                <h5 style="font-weight: 700; color: #0f172a; margin-bottom: 24px; letter-spacing: 0.5px;">เข้าสู่ระบบจัดการ</h5>
+                
+                <div class="form-group text-left" style="margin-bottom: 18px;">
+                    <label for="name">ชื่อผู้ใช้งาน</label>
+                    <input id="name" type="text" class="w3-input" placeholder="ระบุชื่อผู้ใช้" autofocus data-index="1">
                 </div>
-            </div>
-            <div class="row justify-content-center mgem2">
-                <div class="col-10  text-center">
-                    <label>พาสเวิร์ด</label>
-                    <input id="pass" type="password" class="w3-input" data-index="2">
+
+                <div class="form-group text-left" style="margin-bottom: 24px;">
+                    <label for="pass">รหัสผ่าน</label>
+                    <input id="pass" type="password" class="w3-input" placeholder="ระบุรหัสผ่าน" data-index="2">
                 </div>
-            </div>
-            <div class="row mgem1o5">
-                <div class="col-12 text-center">
-                    <button class="mbtn" onclick="login();">เข้าสู่ระบบ</button>
-                </div>
+
+                <button class="mbtn" onclick="login();">
+                    <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i> เข้าสู่ระบบ
+                </button>
             </div>
         </div>
     </div>
-    <!-- End big container -->
 </body>
 
 </html>

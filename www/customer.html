@@ -3,177 +3,290 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Home</title>
-  <!-- Bootstrap Import -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
-  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
-  
-  <script type="text/javascript" src="js/jquery-confirm.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
-  <script src="cordova.js"></script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover">
+  <title>จัดการข้อมูลลูกค้า - DDCAR</title>
+  <!-- Local Assets -->
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/svg-with-js.css">
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/jquery-confirm.css">
   <link rel="stylesheet" href="css/loading.css">
+
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <script type="text/javascript" src="js/jquery-ui.min.js"></script>
+  <script type="text/javascript" src="js/jquery.easing.1.3.min.js"></script>
+  <script type="text/javascript" src="js/jquery-confirm.js"></script>
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script defer src="js/fontawesome-all.js"></script>
+  <script type="text/javascript" src="js/config.js"></script>
+  <script type="text/javascript" src="js/capacitor-bridge.js"></script>
 
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
 
   <style>
-    #title {
-      color: #666666;
-      letter-spacing: 1px;
-      font-weight: bold;
+    .customer-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      transition: all 0.15s ease;
     }
-    .no-pd {
-      padding-right: 0px;
-      padding-left: 0px;
+    .customer-card:active {
+      background: #f8fafc;
+      transform: scale(0.99);
     }
-    hr{
-      margin-top: 0;
+    .customer-name {
+      font-weight: 600;
+      color: #0f172a;
+      font-size: 15px;
+      margin: 0;
+    }
+    .customer-tel {
+      font-size: 13px;
+      color: #64748b;
+      margin: 2px 0 0 0;
+    }
+    .action-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+      border: none;
+    }
+    .type-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #fee2e2;
+      color: #b91c1c;
+      margin-left: 6px;
     }
   </style>
 
   <script>
+    var customerList = [];
+
     $(document).ready(function () { 
-      $.ajax({
-        type: "GET",
-        url:localStorage.pathServer + "php/get_cus.php",
-        beforeSend: function(){
-            $(".overlay").prop('hidden', false);
-        },
-        success: function(data){  
-          $(".overlay").prop('hidden', true);
-          var obj = jQuery.parseJSON(data);
-          if(obj){
-            $.each(obj, function(i, field){                   
-              $('#in-ctn').append( "<div id='cus-"+i+"' class='row justify-content-center'>" +              
-                "<div class='col-2 text-center'>" +
-                  "<i class='fa fa-trash-alt i-del' onclick='edit_del("+obj[i].cus_id+","+i+");' style='color: #666666;' hidden></i>" +
-                  "<i class='fa fa-edit i-edit' onclick='edit_cus("+obj[i].cus_id+");' style='color: #666666;' hidden></i>" +
-                "</div>" +
-                "<div class='col-5 text-center' onclick='show_cus("+obj[i].cus_id+");'>" +
-                  "<p id='cus_name-"+i+"'>"+obj[i].cus_name+"</p>" +
-                "</div>" +
-                "<div class='col-5 text-center nopd' onclick='show_cus("+obj[i].cus_id+");'>" +
-                  "<p>"+obj[i].cus_tel+"</p>" +
-                "</div>" +
-                "</div><hr id='hr-"+i+" class='mgem1'>");                                               
-            });   
-          }                                
-        }               
+      loadCustomers();
+
+      $('#search-customer').on('input', function() {
+        filterCustomers($(this).val());
+      });
+
+      // Delegated events for delete & edit
+      $(document).on('click', '.btn-act-del', function(e) {
+        e.stopPropagation();
+        var id = $(this).closest('.customer-card').data('id');
+        var name = $(this).closest('.customer-card').data('name');
+        deleteCustomer(id, name);
+      });
+
+      $(document).on('click', '.btn-act-edit', function(e) {
+        e.stopPropagation();
+        var id = $(this).closest('.customer-card').data('id');
+        editCustomer(id);
+      });
+
+      $(document).on('click', '.customer-main-tap', function() {
+        var id = $(this).closest('.customer-card').data('id');
+        showCustomer(id);
       });
     });
 
-    function disactive(arg) {
-      nav_menu = ['home', 'add', 'edit', 'del'];
-      for (i = 0; i < 4; i++) {
-        if (nav_menu[i] != arg) {
-          if ($("#i-" + nav_menu[i]).hasClass('active')) $("#i-" + nav_menu[i]).removeClass('active');
+    function loadCustomers() {
+      if (window.showOverlay) window.showOverlay();
+      else $('.overlay').prop('hidden', false).show();
+
+      $('#in-ctn-list').html('<div class="text-center p-4 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-2 text-danger"></i><br>กำลังโหลดข้อมูลลูกค้า...</div>');
+
+      $.ajax({
+        type: "GET",
+        url: localStorage.pathServer + "php/get_cus.php",
+        cache: false,
+        success: function(data){  
+          if (window.hideOverlay) window.hideOverlay();
+          else $('.overlay').prop('hidden', true).hide();
+
+          var obj = window.safeParseJSON(data);
+          customerList = Array.isArray(obj) ? obj : [];
+          // Filter out completely empty rows
+          customerList = customerList.filter(function(c) { return c && (c.cus_name || c.cus_id); });
+          renderCustomers(customerList);
+        },
+        error: function(xhr, status, err) {
+          if (window.hideOverlay) window.hideOverlay();
+          else $('.overlay').prop('hidden', true).hide();
+
+          $('#in-ctn-list').html(
+            '<div class="text-center p-4 text-danger">' +
+              '<i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>' +
+              '<strong>ไม่สามารถดึงข้อมูลลูกค้าได้</strong><br>' +
+              '<span class="small text-muted mb-3 d-block">เซิร์ฟเวอร์ตอบสนองช้า หรือเครือข่ายขัดข้อง</span>' +
+              '<button class="btn btn-outline-danger btn-sm mt-2 px-3" onclick="loadCustomers()"><i class="fas fa-redo-alt mr-1"></i> ลองใหม่อีกครั้ง</button>' +
+            '</div>'
+          );
         }
-      }
+      });
     }
 
-    function disac(arg){
-      if ($("#i-" + arg).hasClass('active')) $("#i-" + arg).removeClass('active');
+    function renderCustomers(list) {
+      var $ctn = $('#in-ctn-list');
+      if (!list || list.length === 0) {
+        $ctn.html('<div class="text-center p-4 text-muted"><i class="fas fa-user-slash fa-2x mb-2"></i><br>ไม่พบรายชื่อลูกค้า</div>');
+        return;
+      }
+
+      var isEditActive = $('#i-edit').hasClass('active');
+      var isDelActive = $('#i-del').hasClass('active');
+      var actionDisplay = (isEditActive || isDelActive) ? 'flex' : 'none';
+
+      var htmlArr = [];
+      for (var i = 0; i < list.length; i++) {
+        var item = list[i];
+        var cusId = item.cus_id || '';
+        var rawName = item.cus_name || 'ลูกค้าทั่วไป';
+        var safeName = $('<div>').text(rawName).html();
+        var cusTel = item.cus_tel ? ('<i class="fas fa-phone fa-xs mr-1 text-muted"></i> ' + $('<div>').text(item.cus_tel).html()) : '<span class="text-muted">ไม่มีเบอร์โทร</span>';
+        var typeBadge = item.cus_type ? ('<span class="type-badge">' + $('<div>').text(item.cus_type).html() + '</span>') : '';
+
+        htmlArr.push(
+          "<div id='cus-" + cusId + "' class='customer-card' data-id='" + cusId + "' data-name='" + safeName + "'>" +
+            "<div class='action-col' style='display: " + actionDisplay + "; gap: 6px; margin-right: 10px;'>" +
+              "<button class='action-icon-btn btn-act-del' style='background: #fee2e2; color: #dc2626; display: " + (isDelActive ? "inline-flex" : "none") + ";'>" +
+                "<i class='fa fa-trash-alt'></i>" +
+              "</button>" +
+              "<button class='action-icon-btn btn-act-edit' style='background: #e0f2fe; color: #0284c7; display: " + (isEditActive ? "inline-flex" : "none") + ";'>" +
+                "<i class='fa fa-edit'></i>" +
+              "</button>" +
+            "</div>" +
+            "<div class='customer-main-tap' style='flex: 1; min-width: 0; cursor: pointer;'>" +
+              "<div class='customer-name text-truncate'>" + safeName + typeBadge + "</div>" +
+              "<div class='customer-tel'>" + cusTel + "</div>" +
+            "</div>" +
+            "<div class='customer-main-tap' style='padding-left: 8px; color: #cbd5e1; cursor: pointer;'>" +
+              "<i class='fas fa-chevron-right'></i>" +
+            "</div>" +
+          "</div>"
+        );
+      }
+      $ctn.html(htmlArr.join(''));
+    }
+
+    function filterCustomers(query) {
+      if (!query || query.trim() === '') {
+        renderCustomers(customerList);
+        return;
+      }
+      var q = query.trim().toLowerCase();
+      var filtered = customerList.filter(function(c) {
+        var name = (c.cus_name || '').toLowerCase();
+        var tel = (c.cus_tel || '').toLowerCase();
+        return name.indexOf(q) !== -1 || tel.indexOf(q) !== -1;
+      });
+      renderCustomers(filtered);
+    }
+
+    function disactive(arg) {
+      var nav_menu = ['home', 'add', 'edit', 'del'];
+      for (var i = 0; i < nav_menu.length; i++) {
+        if (nav_menu[i] != arg) {
+          $("#i-" + nav_menu[i]).removeClass('active');
+        }
+      }
     }
 
     function menu(arg) {
-      // Animate
-      disactive(arg);
-      console.log(arg);
-      if($("#i-"+arg).hasClass('active')){
-        console.log("i-"+arg+"hasClass('active')");
-        $("#i-"+arg).removeClass('active');
-      }else{
-        $("#i-" + arg).fadeOut(150).fadeIn(100, function() {
-          $("#i-" + arg).addClass('active');
-        });
+      if (arg == "add") {
+        window.location = "customer_add.html";
+        return;
       }
 
-      if(arg == "add"){
-        goto = "customer_add.html";        
-        window.location = goto;
-      }else if(arg == "edit"){
-        // show edit all
-        if ($(".i-edit").is(":visible")) {
-          $(".i-del").attr('hidden', true);
-          $(".i-edit").attr('hidden', true);
-          disac("edit");
-        } else {
-          $(".i-del").attr('hidden', true);
-          $(".i-edit").attr('hidden', false);
-        }
-      }else if (arg == "del") {
-        // show trash all 
-        if($(".i-del").is(":visible")){
-          $(".i-edit").attr('hidden', true);
-          $(".i-del").attr('hidden', true);
-          disac("del");
-        }else{
-          $(".i-edit").attr('hidden', true);
-          $(".i-del").attr('hidden', false);
+      if ($("#i-" + arg).hasClass('active')) {
+        $("#i-" + arg).removeClass('active');
+        $('.action-col').hide();
+        $('.btn-act-del').hide();
+        $('.btn-act-edit').hide();
+      } else {
+        disactive(arg);
+        $("#i-" + arg).addClass('active');
+        if (arg == "edit") {
+          $('.action-col').show();
+          $('.btn-act-del').hide();
+          $('.btn-act-edit').css('display', 'inline-flex');
+        } else if (arg == "del") {
+          $('.action-col').show();
+          $('.btn-act-edit').hide();
+          $('.btn-act-del').css('display', 'inline-flex');
         }
       }
     }
 
-    function show_cus(arg){
-      goto = "customer_show.html?cus="+arg;      
-      window.location = goto;
+    function showCustomer(id){
+      window.location = "customer_show.html?cus=" + id;
     }
 
-    function edit_cus(arg) {
-      goto = "customer_show.html?cus=" + arg + "&edit=true";      
-      window.location = goto;
+    function editCustomer(id) {
+      window.location = "customer_show.html?cus=" + id + "&edit=true";
     }
 
-    function edit_del(arg,i) {   
+    function deleteCustomer(id, name) {   
       $.confirm({
-          title: 'ลบรายการ',
-          content: 'ต้องการลบ '+name+' หรือไม่',
-          backgroundDismiss: true,
-          buttons: {
-            formSubmit: {
-              text: 'ตกลง',
-              btnClass: 'btn-danger',
-              action: function () {
-                  $.ajax({
-                    type: "POST",
-                    url:localStorage.pathServer + "php/delete_cus.php",           
-                    data: {'cus_id' : arg},     
-                    beforeSend: function(){
-                      $(".overlay").prop('hidden', false);
-                    },           
-                    success: function(data){  
-                      $(".overlay").prop('hidden', true);  
-                      if(data == "success"){
-                        $("#cus-"+i).remove(); 
-                        $("#hr-"+i).remove();
-                      }else{
-                        $.confirm({
-                          title: 'พบข้อผิดพลาด',
-                          content: 'ลองอีกครั้ง',
-                          backgroundDismiss: true,
-                          buttons: {
-                            formSubmit: {
-                              text: 'ตกลง',
-                              btnClass: 'btn-regis',
-                              action: function () {
-                              }
-                            }
-                          }
-                        });
-                      }          
-                    }               
+        title: 'ยืนยันการลบลูกค้า',
+        content: 'ต้องการลบข้อมูลลูกค้า "' + name + '" หรือไม่?',
+        backgroundDismiss: true,
+        buttons: {
+          confirm: {
+            text: 'ลบข้อมูล',
+            btnClass: 'btn-danger',
+            action: function () {
+              if (window.showOverlay) window.showOverlay();
+              $.ajax({
+                type: "POST",
+                url: localStorage.pathServer + "php/delete_cus.php",           
+                data: {'cus_id' : id},           
+                success: function(data){  
+                  if (window.hideOverlay) window.hideOverlay();
+                  if(data == "success"){
+                    $("#cus-" + id).fadeOut(200, function() { $(this).remove(); });
+                    customerList = customerList.filter(function(c) { return c.cus_id != id; });
+                  } else {
+                    $.confirm({
+                      title: 'พบข้อผิดพลาด',
+                      content: 'ไม่สามารถลบข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+                      backgroundDismiss: true,
+                      buttons: { ok: { text: 'ตกลง', btnClass: 'btn-dark' } }
+                    });
+                  }          
+                },
+                error: function() {
+                  if (window.hideOverlay) window.hideOverlay();
+                  $.confirm({
+                    title: 'ข้อผิดพลาด',
+                    content: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้',
+                    backgroundDismiss: true,
+                    buttons: { ok: { text: 'ตกลง', btnClass: 'btn-dark' } }
                   });
-              }
-            },ยกเลิก: function () {}
-          }  
+                }
+              });
+            }
+          },
+          cancel: {
+            text: 'ยกเลิก',
+            action: function () {}
+          }
+        }  
       });                         
     }
   </script>
@@ -185,35 +298,45 @@
 
   <div id="big-ctn" class="container-fullwidth justify-content-center">
     <!-- Nav menu top -->
-    <div class="row navs align-items-center mgem1o5 fixed-top">
-      <div class="col-2 text-center" onclick="window.location = 'index.html';">
+    <div class="row navs align-items-center fixed-top justify-content-center">
+      <div id="col-back" class="col-2 text-center" onclick="window.location = 'index.html';">
         <i id="i-back" class="fas fa-angle-left"></i>
       </div>
       <div class="col-8 text-center">
-        <h5 id="h5-title">ลูกค้า</h5>
+        <h5 id="h5-title">รายชื่อลูกค้า</h5>
+      </div>
+      <div class="col-2 text-center" onclick="window.location = 'customer_add.html';" style="cursor: pointer;">
+        <i class="fas fa-user-plus text-white" style="font-size: 18px;"></i>
       </div>
     </div>
 
-    <div class="row fixed-top" style="margin-top: 4.5em;">
-      <div class="col-2"></div>
-      <div id="title" class="col-5 text-center">ชื่อลูกค้า</div>
-      <div id="title" class="col-5 text-center nopd">เบอร์โทร</div> 
-    </div><hr class="mgem1" style="margin-top: 6.3em; width: 98%;">
-
-    <div id="in-ctn" class="container-fullwidth" style="margin-top: 1.5em !important; height: calc(100vh - (4em + 100px)) !important;">
-      <!-- Show -->
+    <!-- Search Bar fixed under navbar -->
+    <div style="position: fixed; top: calc(56px + var(--safe-top)); left: 0; right: 0; z-index: 1010; background: #ffffff; padding: 10px 16px; border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+      <div style="position: relative;">
+        <i class="fas fa-search" style="position: absolute; left: 14px; top: 12px; color: #94a3b8; font-size: 14px;"></i>
+        <input id="search-customer" type="search" class="form-control" placeholder="ค้นหาชื่อลูกค้า หรือ เบอร์โทร..." style="padding-left: 36px; border-radius: 10px; height: 38px; font-size: 14px; background: #f8fafc; border-color: #e2e8f0;">
+      </div>
     </div>
-    <div class="row fixed-bottom navs">
-      <div class="col-3 text-center" onclick="window.location = 'index.html';">
+
+    <!-- Content area -->
+    <div id="in-ctn" class="container" style="margin-top: calc(118px + var(--safe-top)) !important; padding: 10px 16px calc(80px + var(--safe-bottom)); min-height: calc(100vh - 120px);">
+      <div id="in-ctn-list">
+        <!-- Rendered list -->
+      </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="fixed-bottom">
+      <div class="nav-bottom-item" onclick="window.location = 'index.html';">
         <i id="i-home" class="fas fa-home menu"></i>
       </div>
-      <div class="col-3 text-center" onclick="menu('add')">
+      <div class="nav-bottom-item" onclick="menu('add')">
         <i id="i-add" class="fas fa-plus menu"></i>
       </div>
-      <div class="col-3 text-center" onclick="menu('edit')">
+      <div class="nav-bottom-item" onclick="menu('edit')">
         <i id="i-edit" class="fas fa-edit menu"></i>
       </div>
-      <div class="col-3 text-center" onclick="menu('del')">
+      <div class="nav-bottom-item" onclick="menu('del')">
         <i id="i-del" class="fa fa-trash-alt menu"></i>
       </div>
     </div>

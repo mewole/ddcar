@@ -341,44 +341,12 @@
           },
           success: function(data){
             EasyLoading.hide();
-            var obj = (typeof data === 'object') ? data : jQuery.parseJSON(data);
-            if(!obj || obj.length === 0) return;
-
-            var branchName = (obj[0].type == "โกดัง") 
-              ? (obj[0][20] ? obj[0][20].ware_name : 'โกดัง') 
-              : (obj[0][20] ? obj[0][20].shop_name : 'หน้าร้าน');
-            var txt = (obj[0].date_time || '').split(" ");
-            var txt2 = (txt[0] || '').split("-");
-            var dateStr = (txt2.length === 3) ? (txt2[2] + "/" + txt2[1] + "/" + txt2[0].substr(2) + " " + (txt[1] || '').substr(0,5)) : (obj[0].date_time || '');
-            var commentStr = (obj[0].comment && obj[0].comment.trim() !== '') ? (' | <span class="text-danger">หมายเหตุ: ' + obj[0].comment + '</span>') : '';
-            var canAdmin = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
-
-            var html = '<div class="collapse" id="detail-' + index + '">' +
-              '<div class="card card-body bg-light border-primary mb-3">' +
-                '<div class="row mb-2 pb-2 border-bottom">' +
-                  '<div class="col-md-6 text-left">' +
-                    '<h5 class="text-primary mb-1"><i class="fas fa-file-invoice mr-1"></i> บิลเลขที่: <b>' + obj[0].order_number + '</b></h5>' +
-                    '<div class="text-muted small"><i class="fas fa-user mr-1"></i> ลูกค้า: <strong class="text-dark">' + obj[0].cus_name + '</strong> | ประเภท: <span class="badge badge-info">' + obj[0].payment_type + '</span></div>' +
-                  '</div>' +
-                  '<div class="col-md-6 text-right">' +
-                    '<div class="text-muted small"><i class="fas fa-warehouse mr-1"></i> สาขา: <strong class="text-dark">' + branchName + '</strong> | ผู้บันทึก: ' + obj[0].user_name + '</div>' +
-                    '<div class="text-muted small"><i class="far fa-clock mr-1"></i> ' + dateStr + commentStr + '</div>' +
-                  '</div>' +
-                '</div>' +
-                '<div class="table-responsive bg-white rounded border">' +
-                  '<table class="table table-sm table-hover mb-0">' +
-                    '<thead class="thead-dark">' +
-                      '<tr>' +
-                        '<th class="text-center" style="width: 5%;">#</th>' +
-                        '<th class="text-center" style="width: 15%;">รหัสสินค้า</th>' +
-                        '<th class="text-left" style="width: 45%;">ชื่อสินค้า</th>' +
-                        '<th class="text-center" style="width: 10%;">จำนวน</th>' +
-                        '<th class="text-right" style="width: 12%;">ราคา/หน่วย</th>' +
-                        '<th class="text-right" style="width: 13%;">รวม (บาท)</th>' +
-                      '</tr>' +
-                    '</thead>' +
-                    '<tbody>';
-
+            var obj = typeof data === 'object' ? data : jQuery.parseJSON(data);
+            text = text + '<div class="collapse" id="detail-'+index+'">'+
+            '<div class="card card-body">'+
+              '<div class="row justify-content-center">'+
+                  '<h3 style="text-decoration: underline;">รายการ</h3>'+
+              '</div>'            
             $.each(obj, function(i, field){
               var price = parseFloat(field.prod_price) || 0;
               var amt = parseFloat(field.prod_amount) || 0;
@@ -447,8 +415,65 @@
           },
           success: function(data){
             EasyLoading.hide();
-            var obj = (typeof data === 'object') ? data : jQuery.parseJSON(data);
-            if(!obj || obj.length === 0) return;
+            var obj = typeof data === 'object' ? data : jQuery.parseJSON(data); 
+            text = text + '<div class="collapse" id="details-'+index+'">'+
+            '<div class="card card-body">'+
+              '<div class="row justify-content-center">'+
+                  '<h3 style="text-decoration: underline;">รายการ</h3>'+
+              '</div>'
+            $.each(obj, function(i, field){
+              sum = field.prod_price*field.prod_amount
+              text = text + 
+              '<div id="item-'+field.prod_id+'" class="row justify-content-center">'+
+                '<div class="col-1 text-center items">'+(i+1)+'</div>'+
+                '<div id="amt-'+field.prod_id+'" class="col-1 text-center items">'+field.prod_amount+'</div>'+
+                '<div class="col-6 text-center items"><span class="hover-prod-preview" data-prod-id="'+field.prod_id+'" data-prod-code="'+(field.prod_code||'')+'">'+field.prod_name+'</span></div>'+
+                '<div class="col-1 text-center items">'+field.prod_price+'</div>'+
+                '<div id="itemsum-'+field.prod_id+'" class="col-1 text-center items">'+sum+'</div>'+
+                '<div class="col-2 text-center items">'+
+                  '<button onclick="init_restore('+index+','+field.prod_id+','+field.prod_price+','+field.prod_amount+','+obj[0].branch_id+',\''+obj[0].type+'\',\''+obj[0].payment_type+'\','+obj[0].credit_id+','+field.prod_price+')" class="btn btn-info" data-toggle="modal" data-target="#reModal" style="color: white;">คืนสินค้า</button>'+
+                '</div>'+
+              '</div>'
+            });
+            text = text + 
+            '<hr style="width: 50%; margin: auto; margin-top: 1em;">'+
+            '<div class="row" style="margin-top: 1em;">'+
+                '<div class="col-4 text-right"><h5>หมายเหตุ</h5></div>'+
+                '<div class="col-4 text-right">'+obj[0].comment+'<h6></h6></div>'+
+            '</div>'+
+            '<div class="row">'+
+                '<div class="col-4 text-right"><h4>รวม</h4></div>'+
+                '<div class="col-4 text-right"><h4 id="sum-'+index+'">'+obj[0].sum_price+'</h4></div>'+
+            '</div>'+
+            '<div class="row">'+
+                '<div class="col-4 text-right"><h4>ลด</h4></div>'+
+                '<div class="col-4 text-right"><h4>'+obj[0].total_discount+'</h4></div>'+
+            '</div>'+
+            '<div class="row">'+
+                '<div class="col-4 text-right"><h4>สุทธิ</h4></div>'+
+                '<div class="col-4 text-right"><h4 id="total-'+index+'">'+obj[0].total_price+'</h4></div>'+
+            '</div>'+
+            '<div class="row">'+
+                '<div class="col-4 text-right"><h4>รับ / ทอน</h4></div>'+
+                '<div class="col-4 text-right"><h4>'+obj[0].get_price+'</h4></div>'+
+                '<div class="col-4 text-center"><h4>'+obj[0].chng+'</h4></div>'+
+            '</div>'+
+            '<div class="row justify-content-center" style="margin-top: 1em;">'+
+                '<div class="col-4 text-right">'+
+                  '<button class="btn btn-lg btn-warning" data-toggle="modal" data-target="#printModal" style="color: white;">พิมพ์รายการ  <i class="fas fa-print"></i></button>'+
+                '</div>'+
+                '<div class="col-4 text-left">'+
+                  '<button class="btn btn-lg btn-danger" style="color: white;" onclick="delete_bill('+index+','+obj[0].branch_id+',\''+obj[0].type+'\',\''+obj[0].payment_type+'\','+obj[0].total_price+','+obj[0].credit_id+')">ลบรายการ <i class="fas fa-trash"></i></button>'+
+                '</div>'+               
+            '</div>'+
+          '</div>'+
+        '</div>';
+        }               
+        });      
+      
+        $("#bills-"+index).append(text);
+        $("#btn-a4").attr('onclick', 'printA4('+index+")");
+        $("#btn-recep").attr('onclick', 'printRecep('+index+")");
 
             var branchName = (obj[0].type == "โกดัง") 
               ? (obj[0][20] ? obj[0][20].ware_name : 'โกดัง') 
