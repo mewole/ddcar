@@ -143,7 +143,9 @@
 			if(localStorage.ware_id_im && localStorage.type_im){
                 setware(localStorage.ware_id_im, localStorage.ware_name_im || '', localStorage.type_im);
             } else if(localStorage.ware_id_im){
-                $('#btn-b').text(localStorage.ware_name_im || 'เลือกโกดัง/หน้าร้าน');
+                setware(localStorage.ware_id_im, localStorage.ware_name_im || 'หน้าร้าน', 'หน้าร้าน');
+            } else {
+                setware(6, 'หน้าร้าน', 'หน้าร้าน');
             }
 
 			if(localStorage.arr_prod){     
@@ -578,9 +580,11 @@
 						$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(' + w.id + ',\'' + w.name.replace(/'/g, "\\'") + '\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>' + w.name + '</a>');
 					});
 
-					// Restore saved selection
+					// Restore saved selection or default to หน้าร้าน
 					if (localStorage.ware_id_im && localStorage.type_im) {
 						setware(localStorage.ware_id_im, localStorage.ware_name_im || '', localStorage.type_im);
+					} else {
+						setware(6, 'หน้าร้าน', 'หน้าร้าน');
 					}
 				},
 				error: function(xhr, status, err){
@@ -596,6 +600,11 @@
 					$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(3,\'โกดังC\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>โกดังC</a>');
 					$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(4,\'โกดังD\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>โกดังD</a>');
 					$b.append('<a class="dropdown-item py-2 px-3 font-weight-bold" href="javascript:void(0)" onclick="setware(5,\'พระราม 5\',\'โกดัง\')"><i class="fas fa-box text-warning mr-2"></i>พระราม 5</a>');
+					if (localStorage.ware_id_im && localStorage.type_im) {
+						setware(localStorage.ware_id_im, localStorage.ware_name_im || '', localStorage.type_im);
+					} else {
+						setware(6, 'หน้าร้าน', 'หน้าร้าน');
+					}
 				}               
 			}); 	
 		}
