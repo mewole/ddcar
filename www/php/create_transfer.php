@@ -50,10 +50,17 @@ try {
     }
     $tf_number = $prefix . "-" . str_pad($count, 5, "0", STR_PAD_LEFT);
 
+    if ($direction === 'ware_to_ware' && $from_id === $to_id) {
+        throw new Exception("ห้ามเลือกโกดังต้นทางและโกดังปลายทางเป็นโกดังเดียวกัน");
+    }
+
     // Map shop_id and branch_id (ware_id)
     if ($direction == 'shop_to_ware') {
         $shop_id = $from_id;
         $branch_id = $to_id;
+    } elseif ($direction == 'ware_to_ware') {
+        $shop_id = $from_id; // stores source ware_id
+        $branch_id = $to_id; // stores destination ware_id
     } else { // ware_to_shop
         $branch_id = $from_id;
         $shop_id = $to_id;
@@ -94,6 +101,21 @@ try {
 
             // Deduct immediately from origin shop
             $upOrig = mysqli_query($conn, "UPDATE shop SET amount = amount - $amt WHERE shop_id = '$from_id' AND prod_id = '$prod_id'");
+            if (!$upOrig) {
+                throw new Exception("ไม่สามารถตัดสต๊อกต้นทางได้: " . mysqli_error($conn));
+            }
+        } elseif ($direction == 'ware_to_ware') {
+            $chkStock = mysqli_query($conn, "SELECT amount FROM warehouse WHERE ware_id = '$from_id' AND prod_id = '$prod_id'");
+            $curAmt = 0;
+            if ($chkStock && mysqli_num_rows($chkStock) > 0) {
+                $curAmt = intval(mysqli_fetch_assoc($chkStock)['amount']);
+            }
+            if ($curAmt < $amt) {
+                throw new Exception("สินค้า ID: $prod_id มีจำนวนในโกดังต้นทางไม่พอ (มี $curAmt, ต้องการโอน $amt)");
+            }
+
+            // Deduct immediately from origin warehouse
+            $upOrig = mysqli_query($conn, "UPDATE warehouse SET amount = amount - $amt WHERE ware_id = '$from_id' AND prod_id = '$prod_id'");
             if (!$upOrig) {
                 throw new Exception("ไม่สามารถตัดสต๊อกต้นทางได้: " . mysqli_error($conn));
             }

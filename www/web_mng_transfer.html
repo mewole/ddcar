@@ -32,7 +32,7 @@
     <!-- Font -->
     <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
     <!-- Main -->
-    <link href="css/untitled.css?v=3.6" rel="stylesheet">
+    <link href="css/untitled.css?v=3.7" rel="stylesheet">
     <!-- Product Hover Preview -->
     <link rel="stylesheet" href="css/hover_preview.css">
     <script src="js/hover_preview.js"></script>
@@ -141,8 +141,8 @@
                 statusBadge = '<span class="badge badge-success px-2 py-1"><i class="fa fa-check-circle mr-1"></i>เข้าสต๊อกแล้ว</span>' + recvInfo;
               }
               var tfNo = field.tf_number ? field.tf_number : ('#' + no);
-              var routeIcon = field.direction === 'ware_to_shop' ? '📦 ➜ 🏪' : '🏪 ➜ 📦';
-              var routeStr = '<span class="text-secondary mr-1">' + routeIcon + '</span> ' + (field.source_name || 'โกดัง') + ' ➜ ' + (field.dest_name || 'หน้าร้าน');
+              var routeIcon = field.direction === 'ware_to_shop' ? '📦 ➜ 🏪' : (field.direction === 'ware_to_ware' ? '📦 ➜ 📦' : '🏪 ➜ 📦');
+              var routeStr = '<span class="text-secondary mr-1">' + routeIcon + '</span> ' + (field.source_name || '-') + ' ➜ ' + (field.dest_name || '-');
 
               $('#myUL').append('<li id="ipt-'+field.tf_id+'">' +
               '<div class="row justify-content-center ipt-even align-items-center" data-toggle="collapse" href="#detail-'+field.tf_id+'" role="button" aria-expanded="false" aria-controls="detail-'+field.tf_id+'" onclick="appendCollapse('+field.tf_id+');">'+
@@ -215,8 +215,8 @@
                 statusBadge = '<span class="badge badge-success px-2 py-1"><i class="fa fa-check-circle mr-1"></i>เข้าสต๊อกแล้ว</span>' + recvInfo;
               }
               var tfNo = field.tf_number ? field.tf_number : ('#' + no);
-              var routeIcon = field.direction === 'ware_to_shop' ? '📦 ➜ 🏪' : '🏪 ➜ 📦';
-              var routeStr = '<span class="text-secondary mr-1">' + routeIcon + '</span> ' + (field.source_name || 'โกดัง') + ' ➜ ' + (field.dest_name || 'หน้าร้าน');
+              var routeIcon = field.direction === 'ware_to_shop' ? '📦 ➜ 🏪' : (field.direction === 'ware_to_ware' ? '📦 ➜ 📦' : '🏪 ➜ 📦');
+              var routeStr = '<span class="text-secondary mr-1">' + routeIcon + '</span> ' + (field.source_name || '-') + ' ➜ ' + (field.dest_name || '-');
 
               $('#myS').append('<li id="ipts-'+field.tf_id+'">' +
               '<div class="row justify-content-center ipt-even align-items-center" data-toggle="collapse" href="#details-'+field.tf_id+'" role="button" aria-expanded="false" aria-controls="details-'+field.tf_id+'" onclick="appendCollapses('+field.tf_id+');">'+
@@ -339,7 +339,7 @@
               var receiverTxt = obj[0].receiver_name ? (obj[0].receiver_name + ' (เมื่อ ' + (obj[0].receive_time || '-') + ')') : '<span class="text-muted">-</span>';
               var stBadge = obj[0].status === 'pending' ? '<span class="badge badge-warning">รอตรวจรับ</span>' : (obj[0].status === 'rejected' ? '<span class="badge badge-danger">ปฏิเสธรับ/ส่งคืน</span>' : '<span class="badge badge-success">ตรวจรับเข้าสต๊อกแล้ว</span>');
               
-              var routeStr = (obj[0].source_name || 'โกดัง') + ' ➜ ' + (obj[0].dest_name || 'หน้าร้าน');
+              var routeStr = (obj[0].source_name || '-') + ' ➜ ' + (obj[0].dest_name || '-');
               var successBanner = '';
               if (obj[0].status === 'received') {
                 successBanner = '<div class="alert alert-success text-center font-weight-bold py-2 my-2"><i class="fa fa-check-circle fa-lg mr-2"></i> สินค้าได้เข้าสต๊อก ' + (obj[0].dest_name || 'ปลายทาง') + ' เรียบร้อยแล้ว (ตรวจรับเมื่อ ' + (obj[0].receive_time || '-') + ')</div>';
@@ -448,7 +448,7 @@
               var receiverTxt = obj[0].receiver_name ? (obj[0].receiver_name + ' (เมื่อ ' + (obj[0].receive_time || '-') + ')') : '<span class="text-muted">-</span>';
               var stBadge = obj[0].status === 'pending' ? '<span class="badge badge-warning">รอตรวจรับ</span>' : (obj[0].status === 'rejected' ? '<span class="badge badge-danger">ปฏิเสธรับ/ส่งคืน</span>' : '<span class="badge badge-success">ตรวจรับเข้าสต๊อกแล้ว</span>');
               
-              var routeStr = (obj[0].source_name || 'โกดัง') + ' ➜ ' + (obj[0].dest_name || 'หน้าร้าน');
+              var routeStr = (obj[0].source_name || '-') + ' ➜ ' + (obj[0].dest_name || '-');
               var successBanner = '';
               if (obj[0].status === 'received') {
                 successBanner = '<div class="alert alert-success text-center font-weight-bold py-2 my-2"><i class="fa fa-check-circle fa-lg mr-2"></i> สินค้าได้เข้าสต๊อก ' + (obj[0].dest_name || 'ปลายทาง') + ' เรียบร้อยแล้ว (ตรวจรับเมื่อ ' + (obj[0].receive_time || '-') + ')</div>';
@@ -831,6 +831,6 @@
         </div>	       
     </div>
     <!-- Central Navbar Script -->
-    <script src="js/navbar.js?v=3.6"></script>
+    <script src="js/navbar.js?v=3.7"></script>
 </body>
 </html>

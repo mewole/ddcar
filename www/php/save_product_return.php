@@ -25,8 +25,9 @@ if (empty($data['items']) || !is_array($data['items'])) {
     exit;
 }
 
-$user_name = $_SESSION['user_name'] ?? ($data['user_name'] ?? 'พนักงาน');
-$user_role = $_SESSION['user_role'] ?? ($data['role'] ?? 'พนักงาน');
+$user_name = $_SESSION['user_name'] ?? 'พนักงาน';
+$user_role = $_SESSION['user_role'] ?? 'พนักงาน';
+$is_admin_user = in_array($user_role, ['เจ้าของร้าน', 'แอดมิน', 'ผู้ดูแลระบบ']);
 
 $bill_id            = !empty($data['bill_id']) ? intval($data['bill_id']) : null;
 $bill_number        = trim($data['bill_number'] ?? '');
@@ -50,6 +51,17 @@ $orig_bill_amt      = floatval($data['original_bill_amount'] ?? 0);
 $correct_amt        = floatval($data['correct_amount'] ?? 0);
 $diff_amt           = floatval($data['diff_amount'] ?? 0);
 $diff_vat           = floatval($data['diff_vat'] ?? 0);
+
+// กฎเหล็ก Task 5: การคืนเงินผ่านแพลตฟอร์ม ต้องมี Order SN หรือ Platform Refund ID
+if ($refund_type === 'คืนเงินผ่านแพลตฟอร์ม') {
+    if (empty($order_sn) && empty($platform_refund_id)) {
+        echo json_encode([
+            'success' => false,
+            'error'   => 'การคืนเงินผ่านแพลตฟอร์ม จำเป็นต้องระบุเลขคำสั่งซื้อ (Order SN) หรือรหัสคำขอคืนเงินของแพลตฟอร์ม (Platform Refund ID)'
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+}
 
 // กฎเหล็ก Phase 1: ถ้าไม่มีเลขอ้างอิงบิลเดิม บันทึกสต๊อกได้อย่างเดียว แต่ห้ามคืนเงินและห้ามออกใบลดหนี้
 if (empty($bill_id) && empty($bill_number) && empty($order_sn)) {
@@ -112,21 +124,22 @@ try {
     }
     $return_type_category = ($has_stock && $has_quarantine) ? 'ผสม' : ($has_quarantine ? 'แตกหัก_เสีย' : 'ขายได้');
 
+    $return_status = $is_admin_user ? 'สมบูรณ์' : 'รออนุมัติ';
+    $approved_by_val = $is_admin_user ? $user_name : null;
+
     // 3. บันทึกหัวเอกสาร product_return
     $stmt_ret = mysqli_prepare($conn, "INSERT INTO product_return 
         (return_code, bill_id, bill_number, order_sn, customer_id, customer_name, return_date, 
          actual_return_date, return_type, refund_type, total_refund_amount, is_vat, tax_id, 
          tax_address, original_bill_date, original_bill_amount, correct_amount, diff_amount, 
          diff_vat, credit_note_number, reason, created_by, approved_by, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'สมบูรณ์', NOW())");
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
-    $approved_by_val = ($user_role === 'เจ้าของร้าน' || $user_role === 'แอดมิน') ? $user_name : null;
-
-    mysqli_stmt_bind_param($stmt_ret, "sissssssssdssssddddssss",
+    mysqli_stmt_bind_param($stmt_ret, "sissssssssdssssddddsssss",
         $return_code, $bill_id, $bill_number, $order_sn, $customer_id, $customer_name, $return_date,
         $actual_return_date, $return_type_category, $refund_type, $total_refund, $is_vat, $tax_id,
         $tax_address, $orig_bill_date, $orig_bill_amt, $correct_amt, $diff_amt,
-        $diff_vat, $cn_number, $reason, $user_name, $approved_by_val
+        $diff_vat, $cn_number, $reason, $user_name, $approved_by_val, $return_status
     );
 
     if (!mysqli_stmt_execute($stmt_ret)) {
@@ -188,69 +201,78 @@ try {
         mysqli_stmt_close($stmt_item);
 
         // 4.2 จัดการสต๊อกตามการตัดสินใจ 2 ทาง
-                if ($branch_type === 'หน้าร้าน' && ($branch_id === 1 || $branch_id === 0)) {
+        if ($branch_type === 'หน้าร้าน' && ($branch_id === 1 || $branch_id === 0)) {
             $branch_id = 6; // Shop ID for หน้าร้าน is 6 in shop_detail
         }
 
         if ($destination === 'stock') {
-            // ทางที่ 1: ขายได้ -> คืนเข้าสต๊อกขายปกติ
-            if ($branch_type === 'โกดัง') {
-                $q_stk = mysqli_query($conn, "SELECT amount FROM warehouse WHERE ware_id = '$branch_id' AND prod_id = '$pid' LIMIT 1");
-                if ($q_stk && mysqli_num_rows($q_stk) > 0) {
-                    mysqli_query($conn, "UPDATE warehouse SET amount = amount + $qty WHERE ware_id = '$branch_id' AND prod_id = '$pid'");
+            // ทางที่ 1: ขายได้ -> ถ้าเป็นแอดมิน คืนเข้าสต๊อกขายปกติทันที (ถ้าเป็นพนักงาน กักสต๊อกไว้จนกว่าแอดมินจะอนุมัติ)
+            if ($is_admin_user) {
+                if ($branch_type === 'โกดัง') {
+                    $q_stk = mysqli_query($conn, "SELECT amount FROM warehouse WHERE ware_id = '$branch_id' AND prod_id = '$pid' LIMIT 1");
+                    if ($q_stk && mysqli_num_rows($q_stk) > 0) {
+                        mysqli_query($conn, "UPDATE warehouse SET amount = amount + $qty WHERE ware_id = '$branch_id' AND prod_id = '$pid'");
+                    } else {
+                        mysqli_query($conn, "INSERT INTO warehouse (ware_id, prod_id, amount) VALUES ('$branch_id', '$pid', '$qty')");
+                    }
                 } else {
-                    mysqli_query($conn, "INSERT INTO warehouse (ware_id, prod_id, amount) VALUES ('$branch_id', '$pid', '$qty')");
-                }
-            } else {
-                $q_stk = mysqli_query($conn, "SELECT amount FROM shop WHERE shop_id = '$branch_id' AND prod_id = '$pid' LIMIT 1");
-                if ($q_stk && mysqli_num_rows($q_stk) > 0) {
-                    mysqli_query($conn, "UPDATE shop SET amount = amount + $qty WHERE shop_id = '$branch_id' AND prod_id = '$pid'");
-                } else {
-                    mysqli_query($conn, "INSERT INTO shop (shop_id, prod_id, amount) VALUES ('$branch_id', '$pid', '$qty')");
+                    $q_stk = mysqli_query($conn, "SELECT amount FROM shop WHERE shop_id = '$branch_id' AND prod_id = '$pid' LIMIT 1");
+                    if ($q_stk && mysqli_num_rows($q_stk) > 0) {
+                        mysqli_query($conn, "UPDATE shop SET amount = amount + $qty WHERE shop_id = '$branch_id' AND prod_id = '$pid'");
+                    } else {
+                        mysqli_query($conn, "INSERT INTO shop (shop_id, prod_id, amount) VALUES ('$branch_id', '$pid', '$qty')");
+                    }
                 }
             }
 
         } elseif ($destination === 'quarantine') {
-            // ทางที่ 2: แตกหัก/เสีย -> เข้า “คลังรอเคลม” (ไม่เพิ่มสต๊อกขาย) และสร้างใบค้างเคลมซัพพลายเออร์
-            $q_cseq = mysqli_query($conn, "SELECT claim_code FROM product_claim_supplier 
-                                           WHERE claim_code LIKE '$claim_prefix%' 
-                                           ORDER BY id DESC LIMIT 1 FOR UPDATE");
-            $next_cseq = 1;
-            if ($q_cseq && $r_cseq = mysqli_fetch_assoc($q_cseq)) {
-                $last_c = $r_cseq['claim_code'];
-                $cparts = explode('-', $last_c);
-                if (isset($cparts[1])) {
-                    $next_cseq = intval($cparts[1]) + 1;
+            // ทางที่ 2: แตกหัก/เสีย -> ถ้าเป็นแอดมิน เข้าคลังรอเคลมทันที (ถ้าเป็นพนักงาน รอแอดมินอนุมัติ)
+            if ($is_admin_user) {
+                $q_cseq = mysqli_query($conn, "SELECT claim_code FROM product_claim_supplier 
+                                               WHERE claim_code LIKE '$claim_prefix%' 
+                                               ORDER BY id DESC LIMIT 1 FOR UPDATE");
+                $next_cseq = 1;
+                if ($q_cseq && $r_cseq = mysqli_fetch_assoc($q_cseq)) {
+                    $last_c = $r_cseq['claim_code'];
+                    $cparts = explode('-', $last_c);
+                    if (isset($cparts[1])) {
+                        $next_cseq = intval($cparts[1]) + 1;
+                    }
                 }
-            }
-            $claim_code = sprintf("%s%05d", $claim_prefix, $next_cseq + $claim_created_count);
+                $claim_code = sprintf("%s%05d", $claim_prefix, $next_cseq + $claim_created_count);
 
-            if (empty($sup_name)) {
-                $sup_name = 'ไม่ระบุซัพพลายเออร์';
-            }
+                if (empty($sup_name)) {
+                    $sup_name = 'ไม่ระบุซัพพลายเออร์';
+                }
 
-            $stmt_clm = mysqli_prepare($conn, "INSERT INTO product_claim_supplier
-                (claim_code, return_id, return_code, prod_id, prod_code, prod_name, qty, supplier_name, claim_date, status, result_action, damage_images, notes, branch_id, branch_type, created_by, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'รอส่งเคลม', 'รอผล', ?, ?, ?, ?, ?, NOW())");
-            mysqli_stmt_bind_param($stmt_clm, "sisississssiss",
-                $claim_code, $return_id, $return_code, $pid, $pcode, $pname, $qty, $sup_name, $actual_return_date, $images_json, $item_reason, $branch_id, $branch_type, $user_name
-            );
-            if (!mysqli_stmt_execute($stmt_clm)) {
-                throw new Exception("บันทึกรายการเคลมซัพพลายเออร์ไม่สำเร็จ: " . mysqli_stmt_error($stmt_clm));
+                $stmt_clm = mysqli_prepare($conn, "INSERT INTO product_claim_supplier
+                    (claim_code, return_id, return_code, prod_id, prod_code, prod_name, qty, supplier_name, claim_date, status, result_action, damage_images, notes, branch_id, branch_type, created_by, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'รอส่งเคลม', 'รอผล', ?, ?, ?, ?, ?, NOW())");
+                mysqli_stmt_bind_param($stmt_clm, "sisississssiss",
+                    $claim_code, $return_id, $return_code, $pid, $pcode, $pname, $qty, $sup_name, $actual_return_date, $images_json, $item_reason, $branch_id, $branch_type, $user_name
+                );
+                if (!mysqli_stmt_execute($stmt_clm)) {
+                    throw new Exception("บันทึกรายการเคลมซัพพลายเออร์ไม่สำเร็จ: " . mysqli_stmt_error($stmt_clm));
+                }
+                mysqli_stmt_close($stmt_clm);
+                $claim_created_count++;
             }
-            mysqli_stmt_close($stmt_clm);
-            $claim_created_count++;
         }
     }
 
     mysqli_commit($conn);
 
+    $msg = $is_admin_user 
+        ? "บันทึกเอกสารรับคืนสินค้า $return_code สำเร็จเรียบร้อย" . ($claim_created_count > 0 ? " (ส่งเข้าคลังรอเคลม $claim_created_count รายการ)" : "")
+        : "บันทึกคำขอรับคืนสินค้า $return_code เรียบร้อยแล้ว (สถานะ: รออนุมัติจากผู้ดูแลระบบ)";
+
     echo json_encode([
         'success'            => true,
         'return_code'        => $return_code,
+        'status'             => $return_status,
         'credit_note_number' => $cn_number,
         'claim_count'        => $claim_created_count,
-        'message'            => "บันทึกเอกสารรับคืนสินค้า $return_code สำเร็จเรียบร้อย" . ($claim_created_count > 0 ? " (ส่งเข้าคลังรอเคลม $claim_created_count รายการ)" : "")
+        'message'            => $msg
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {

@@ -55,6 +55,12 @@ try {
             if (!$upS) {
                 throw new Exception("ไม่สามารถคืนสต๊อกกลับเข้าหน้าร้านได้: " . mysqli_error($conn));
             }
+        } elseif ($direction == 'ware_to_ware') {
+            // Origin was warehouse ($shop_id): return stock to source warehouse
+            $upW = mysqli_query($conn, "UPDATE warehouse SET amount = amount + $amt WHERE ware_id = '$shop_id' AND prod_id = '$prod_id'");
+            if (!$upW) {
+                throw new Exception("ไม่สามารถคืนสต๊อกกลับเข้าโกดังต้นทางได้: " . mysqli_error($conn));
+            }
         } else { // ware_to_shop
             // Origin was warehouse ($ware_id): return stock to warehouse
             $upW = mysqli_query($conn, "UPDATE warehouse SET amount = amount + $amt WHERE ware_id = '$ware_id' AND prod_id = '$prod_id'");

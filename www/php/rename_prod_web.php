@@ -1,17 +1,5 @@
 <?php
 include_once "auth_guard.php";
-
-// Allow fallback authentication from client request parameters if session is empty
-if (!is_logged_in()) {
-    $uid = !empty($_POST['user_id']) ? intval($_POST['user_id']) : (!empty($_REQUEST['user_id']) ? intval($_REQUEST['user_id']) : 0);
-    $urole = !empty($_POST['role']) ? trim($_POST['role']) : (!empty($_REQUEST['role']) ? trim($_REQUEST['role']) : '');
-    if ($uid > 0) {
-        $_SESSION['user_id'] = $uid;
-        $_SESSION['user_name'] = !empty($_POST['user_name']) ? trim($_POST['user_name']) : (!empty($_REQUEST['user_name']) ? trim($_REQUEST['user_name']) : 'พนักงาน');
-        $_SESSION['user_role'] = !empty($urole) ? $urole : 'พนักงาน';
-    }
-}
-
 require_staff_or_admin();
 
 include "db.php";
@@ -23,7 +11,9 @@ $raw_code  = trim($_POST['code'] ?? '');
 $code      = strtoupper(str_replace(' ', '', $raw_code));
 $img       = $_POST['img'] ?? null;
 
-$role         = trim($_POST['role'] ?? ($_SESSION['user_role'] ?? 'พนักงาน'));
+$server_role = $_SESSION['user_role'] ?? 'พนักงาน';
+$can_edit_cost = in_array($server_role, ['แอดมิน', 'เจ้าของร้าน', 'ผู้ดูแลระบบ']);
+$can_edit_sku  = in_array($server_role, ['แอดมิน', 'เจ้าของร้าน', 'ผู้ดูแลระบบ']);
 $cost         = (isset($_POST['cost']) && $_POST['cost'] !== '') ? floatval($_POST['cost']) : null;
 $price_s      = (isset($_POST['price_s']) && $_POST['price_s'] !== '') ? floatval($_POST['price_s']) : null;
 $price_w      = (isset($_POST['price_w']) && $_POST['price_w'] !== '') ? floatval($_POST['price_w']) : null;
@@ -34,17 +24,12 @@ if (!$prod_id) {
     exit;
 }
 
-// ถ้าไม่ได้ส่งชื่อสินค้ามา ให้ใช้ชื่อเดิมในฐานข้อมูล (กรณีอัปเดตเฉพาะรหัสสินค้าอย่างรวดเร็ว)
 if (empty($name_prod)) {
     $q_name = mysqli_query($conn, "SELECT prod_name FROM product WHERE prod_id = '$prod_id' LIMIT 1");
     if ($q_name && $r_name = mysqli_fetch_assoc($q_name)) {
         $name_prod = $r_name['prod_name'] ?? '';
     }
 }
-
-$server_role = $_SESSION['user_role'] ?? $role;
-$can_edit_cost = in_array($server_role, ['แอดมิน', 'เจ้าของร้าน', 'ผู้ดูแลระบบ']);
-$can_edit_sku  = in_array($server_role, ['แอดมิน', 'เจ้าของร้าน', 'ผู้ดูแลระบบ']);
 
 // ตรวจสอบรหัสสินค้าเดิม
 $old_code = '';

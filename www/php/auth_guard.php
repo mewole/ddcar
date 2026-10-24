@@ -112,89 +112,31 @@ function is_extension_authenticated() {
  * ตรวจสอบว่าผู้ใช้งานเข้าสู่ระบบแล้วหรือไม่
  */
 function is_logged_in() {
-    // 1. Chrome Extension Token
+    // 1. Chrome Extension Token (เฉพาะ endpoints ที่อนุญาต)
     if (is_extension_authenticated()) {
         return true;
     }
 
-    // 2. Active PHP Session
+    // 2. Active PHP Session เท่านั้น
     if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
         return true;
     }
 
-    // 3. Client / Mobile App user identification (sent in $_REQUEST or headers)
-    $req_uid = 0;
-    if (isset($_REQUEST['user_id']) && is_numeric($_REQUEST['user_id'])) {
-        $req_uid = (int)$_REQUEST['user_id'];
-    } elseif (isset($_SERVER['HTTP_X_USER_ID']) && is_numeric($_SERVER['HTTP_X_USER_ID'])) {
-        $req_uid = (int)$_SERVER['HTTP_X_USER_ID'];
-    }
-
-    if ($req_uid > 0) {
-        global $conn;
-        if (isset($conn) && $conn) {
-            $clean_uid = mysqli_real_escape_string($conn, (string)$req_uid);
-            $q = mysqli_query($conn, "SELECT user_id, user_name, user_role FROM user WHERE user_id = '$clean_uid' LIMIT 1");
-            if ($q && ($u = mysqli_fetch_assoc($q))) {
-                $_SESSION['user_id'] = (int)$u['user_id'];
-                $_SESSION['user_name'] = $u['user_name'];
-                $_SESSION['user_role'] = $u['user_role'];
-                return true;
-            }
-        }
-        $_SESSION['user_id'] = $req_uid;
-        if (!empty($_REQUEST['user_role'])) {
-            $_SESSION['user_role'] = $_REQUEST['user_role'];
-        }
-        return true;
-    }
-
-    // 4. Determine if current script is a mutation (write/update/delete)
-    $current_script = basename($_SERVER['SCRIPT_FILENAME'] ?? $_SERVER['PHP_SELF'] ?? '');
-    $mutation_scripts = [
-        'save_order.php', 'save_stock_adjustment.php', 'stock_in.php', 'transfer_in.php',
-        'create_transfer.php', 'confirm_transfer.php', 'reject_transfer.php', 'rename_transfer.php',
-        'delete_bill.php', 'delete_user.php', 'delete_transfer.php', 'delete_transfer_to.php',
-        'delete_import.php', 'delete_warehouse.php', 'backup_db.php', 'update_prod.php',
-        'update_user.php', 'rename_user.php', 'add_user.php', 'add_product.php',
-        'save_platform_orders.php', 'import_platform_skus.php'
-    ];
-    $is_mutation = in_array($current_script, $mutation_scripts) ||
-                    strpos($current_script, 'delete_') === 0 ||
-                    strpos($current_script, 'save_') === 0 ||
-                    strpos($current_script, 'update_') === 0 ||
-                    strpos($current_script, 'insert_') === 0 ||
-                    strpos($current_script, 'add_') === 0 ||
-                    strpos($current_script, 'clear_') === 0 ||
-                    strpos($current_script, 'backup_') === 0;
-
-    if ($is_mutation) {
-        return false;
-    }
-
-    // 5. Read-only queries (reports, details, product search, etc.)
-    // Allow read-only access for app / web requests
-    $_SESSION['user_id'] = 33;
-    $_SESSION['user_name'] = 'ผู้ดูสต็อก (Guest/Read-only)';
-    $_SESSION['user_role'] = 'ผู้ดูสต็อก';
-    return true;
+    return false;
 }
 
 /**
- * ดึง User ID ของผู้ใช้ปัจจุบัน
+ * ดึง User ID ของผู้ใช้ปัจจุบัน (จาก Session เท่านั้น)
  */
 function get_current_user_id() {
     if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
         return (int)$_SESSION['user_id'];
     }
-    if (isset($_REQUEST['user_id']) && is_numeric($_REQUEST['user_id'])) {
-        return (int)$_REQUEST['user_id'];
-    }
     return 0;
 }
 
 /**
- * ดึง Role ของผู้ใช้ปัจจุบัน ('เจ้าของร้าน', 'ผู้ดูแลระบบ', 'พนักงาน', 'ผู้ดูสต็อก')
+ * ดึง Role ของผู้ใช้ปัจจุบัน (จาก Session เท่านั้น)
  */
 function get_current_user_role() {
     if (is_extension_authenticated()) {
@@ -203,24 +145,7 @@ function get_current_user_role() {
     if (isset($_SESSION['user_role']) && !empty($_SESSION['user_role'])) {
         return $_SESSION['user_role'];
     }
-    if (isset($_REQUEST['user_role']) && !empty($_REQUEST['user_role'])) {
-        return $_REQUEST['user_role'];
-    }
-    
-    $uid = get_current_user_id();
-    if ($uid > 0) {
-        global $conn;
-        if (isset($conn) && $conn) {
-            $clean_uid = mysqli_real_escape_string($conn, (string)$uid);
-            $q = mysqli_query($conn, "SELECT user_role FROM user WHERE user_id = '$clean_uid' LIMIT 1");
-            if ($q && ($r = mysqli_fetch_assoc($q))) {
-                $_SESSION['user_role'] = $r['user_role'];
-                return $r['user_role'];
-            }
-        }
-    }
-
-    return 'ผู้ดูสต็อก';
+    return '';
 }
 
 /**

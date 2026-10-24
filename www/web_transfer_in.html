@@ -35,7 +35,7 @@
 
   <!-- Fonts & Main Styles -->
   <link href="https://fonts.googleapis.com/css?family=Prompt:300,400,500,600,700" rel="stylesheet">
-  <link href="css/untitled.css?v=3.6" rel="stylesheet">
+  <link href="css/untitled.css?v=3.7" rel="stylesheet">
   <link rel="stylesheet" href="css/hover_preview.css">
   <script src="js/hover_preview.js"></script>
   <script type="text/javascript" src="js/config.js"></script>
@@ -202,8 +202,11 @@
               <label class="direction-badge active mr-2" id="lbl-dir-shop-to-ware" onclick="setDirection('shop_to_ware')">
                 <input type="radio" name="transfer_direction" value="shop_to_ware" checked> 🏪 หน้าร้าน ➜ 📦 โกดัง
               </label>
-              <label class="direction-badge" id="lbl-dir-ware-to-shop" onclick="setDirection('ware_to_shop')">
+              <label class="direction-badge mr-2" id="lbl-dir-ware-to-shop" onclick="setDirection('ware_to_shop')">
                 <input type="radio" name="transfer_direction" value="ware_to_shop"> 📦 โกดัง ➜ 🏪 หน้าร้าน
+              </label>
+              <label class="direction-badge" id="lbl-dir-ware-to-ware" onclick="setDirection('ware_to_ware')">
+                <input type="radio" name="transfer_direction" value="ware_to_ware"> 📦 โกดัง ➜ 📦 โกดัง
               </label>
             </div>
           </div>
@@ -530,13 +533,11 @@
 
     function setDirection(dir) {
       currentDirection = dir;
-      if (dir === 'shop_to_ware') {
-        $('#lbl-dir-shop-to-ware').addClass('active');
-        $('#lbl-dir-ware-to-shop').removeClass('active');
-      } else {
-        $('#lbl-dir-ware-to-shop').addClass('active');
-        $('#lbl-dir-shop-to-ware').removeClass('active');
-      }
+      $('#lbl-dir-shop-to-ware').toggleClass('active', dir === 'shop_to_ware');
+      $('#lbl-dir-ware-to-shop').toggleClass('active', dir === 'ware_to_shop');
+      $('#lbl-dir-ware-to-ware').toggleClass('active', dir === 'ware_to_ware');
+      $('input[name="transfer_direction"][value="' + dir + '"]').prop('checked', true);
+
       updateLocationDropdowns();
       if (currentSelectedProd) {
         checkCurrentStock(currentSelectedProd.prod_id);
@@ -548,7 +549,7 @@
       var $selDest = $('#sel-dest').empty();
 
       if (currentDirection === 'shop_to_ware') {
-        // Source: หน้าร้าน (shop_id: 6)
+        // Source: หน้าร้าน
         allLocations.forEach(function(loc) {
           if (loc.shop_id) {
             $selSource.append('<option value="' + loc.shop_id + '" data-type="shop">' + (loc.shop_name || 'หน้าร้าน') + '</option>');
@@ -560,6 +561,26 @@
             $selDest.append('<option value="' + loc.ware_id + '" data-type="ware">' + (loc.ware_name || 'โกดัง') + '</option>');
           }
         });
+      } else if (currentDirection === 'ware_to_ware') {
+        // Source: โกดังต่างๆ
+        allLocations.forEach(function(loc) {
+          if (loc.ware_id) {
+            $selSource.append('<option value="' + loc.ware_id + '" data-type="ware">' + (loc.ware_name || 'โกดัง') + '</option>');
+          }
+        });
+        // Dest: โกดังต่างๆ
+        allLocations.forEach(function(loc) {
+          if (loc.ware_id) {
+            $selDest.append('<option value="' + loc.ware_id + '" data-type="ware">' + (loc.ware_name || 'โกดัง') + '</option>');
+          }
+        });
+        // ป้องกัน default destination ซ้ำกับ source
+        if ($selSource.val() === $selDest.val()) {
+          var destOptions = $selDest.find('option');
+          if (destOptions.length > 1) {
+            $(destOptions[1]).prop('selected', true);
+          }
+        }
       } else {
         // Source: โกดังต่างๆ
         allLocations.forEach(function(loc) {
@@ -933,6 +954,10 @@
       var destName = $('#sel-dest option:selected').text();
       var fromId = $('#sel-source').val();
       var toId = $('#sel-dest').val();
+      if (currentDirection === 'ware_to_ware' && fromId === toId) {
+        $.alert({ title: '⚠️ เลือกสถานที่ผิดพลาด', content: 'ห้ามเลือกโกดังต้นทางและโกดังปลายทางเป็นโกดังเดียวกัน', type: 'red' });
+        return;
+      }
       var comment = $('#transfer-comment').val();
 
       $.confirm({
@@ -1332,7 +1357,7 @@
               ? '<span class="text-success font-weight-bold"><i class="fa fa-user-check mr-1"></i> ผู้ตรวจรับ: ' + (tf.receiver_name || '-') + ' (ตรวจรับเข้าสต๊อกเมื่อ: ' + (tf.receive_time || tf.date_time) + ')</span>'
               : '<span class="text-danger font-weight-bold"><i class="fa fa-ban mr-1"></i> เหตุผลที่ส่งคืน: ' + (tf.reject_reason || '-') + '</span>';
 
-            var routeIcon = tf.direction === 'ware_to_shop' ? '📦 ➜ 🏪' : '🏪 ➜ 📦';
+            var routeIcon = tf.direction === 'ware_to_shop' ? '📦 ➜ 🏪' : (tf.direction === 'ware_to_ware' ? '📦 ➜ 📦' : '🏪 ➜ 📦');
 
             var card = '<div class="card p-3 mb-2 border shadow-sm" style="background: ' + (isReceived ? '#f0fdf4' : '#fef2f2') + '; border-color: ' + (isReceived ? '#bbf7d0' : '#fecaca') + ' !important; border-radius: 8px;">' +
               '<div class="d-flex justify-content-between align-items-center flex-wrap mb-1">' +
@@ -1669,6 +1694,6 @@
   </script>
 
   <!-- Central Dynamic Navbar Script -->
-  <script src="js/navbar.js?v=3.6"></script>
+  <script src="js/navbar.js?v=3.7"></script>
 </body>
 </html>

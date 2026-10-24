@@ -50,7 +50,7 @@ try {
 
         if ($amt <= 0) continue;
 
-        if ($direction == 'shop_to_ware') {
+        if ($direction == 'shop_to_ware' || $direction == 'ware_to_ware') {
             // Destination is warehouse ($ware_id)
             $checkW = mysqli_query($conn, "SELECT amount FROM warehouse WHERE ware_id = '$ware_id' AND prod_id = '$prod_id'");
             if ($checkW && mysqli_num_rows($checkW) > 0) {
@@ -59,7 +59,7 @@ try {
                 $upW = mysqli_query($conn, "INSERT INTO warehouse (amount, ware_id, prod_id) VALUES ('$amt', '$ware_id', '$prod_id')");
             }
             if (!$upW) {
-                throw new Exception("ไม่สามารถเพิ่มสต๊อกเข้าโกดังได้: " . mysqli_error($conn));
+                throw new Exception("ไม่สามารถเพิ่มสต๊อกเข้าโกดังปลายทางได้: " . mysqli_error($conn));
             }
         } else { // ware_to_shop
             // Destination is shop ($shop_id)

@@ -53,9 +53,10 @@ if ($res) {
                                         WHERE ri.return_id = '$ret_id'
                                         ORDER BY ri.id ASC");
         $items = [];
+        $is_admin_viewer = in_array($_SESSION['user_role'] ?? '', ['เจ้าของร้าน', 'ผู้ดูแลระบบ', 'แอดมิน']);
         if ($q_items) {
             while ($it = mysqli_fetch_assoc($q_items)) {
-                $items[] = [
+                $item_data = [
                     'id'            => intval($it['id']),
                     'prod_id'       => intval($it['prod_id']),
                     'prod_code'     => $it['prod_code'],
@@ -63,12 +64,15 @@ if ($res) {
                     'img'           => $it['img'] ?: 'img/no_img.png',
                     'qty'           => intval($it['qty']),
                     'unit_price'    => floatval($it['unit_price']),
-                    'cost'          => floatval($it['cost']),
                     'destination'   => $it['destination'],
                     'branch_type'   => $it['branch_type'],
                     'damage_reason' => $it['damage_reason'],
                     'damage_images' => json_decode($it['damage_images'] ?? '[]', true)
                 ];
+                if ($is_admin_viewer) {
+                    $item_data['cost'] = floatval($it['cost']);
+                }
+                $items[] = $item_data;
             }
         }
         $row['items'] = $items;

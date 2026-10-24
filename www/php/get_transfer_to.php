@@ -22,12 +22,14 @@ $baseSelect = "SELECT
                 t.shop_id,
                 t.branch_id,
                 w.ware_name,
+                w_src.ware_name AS src_ware_name,
                 s.shop_name,
                 u.user_name AS sender_name,
                 (SELECT COUNT(*) FROM transfer_record_item WHERE tf_id = t.tf_id) AS item_count
                FROM transfer_record t 
                LEFT JOIN warehouse_detail w ON t.branch_id = w.ware_id 
-               LEFT JOIN shop_detail s ON t.shop_id = s.shop_id 
+               LEFT JOIN warehouse_detail w_src ON (t.direction = 'ware_to_ware' AND t.shop_id = w_src.ware_id)
+               LEFT JOIN shop_detail s ON (t.direction != 'ware_to_ware' AND t.shop_id = s.shop_id) 
                LEFT JOIN user u ON t.user = u.user_id ";
 
 if(isset($_POST['date'])){
@@ -83,7 +85,10 @@ if($result && mysqli_num_rows($result) > 0){
         if(empty($row['status'])){
             $row['status'] = 'received';
         }
-        if($row['direction'] == 'ware_to_shop'){
+        if($row['direction'] == 'ware_to_ware'){
+            $row['source_name'] = !empty($row['src_ware_name']) ? $row['src_ware_name'] : ('โกดัง ' . $row['shop_id']);
+            $row['dest_name'] = !empty($row['ware_name']) ? $row['ware_name'] : ('โกดัง ' . $row['branch_id']);
+        } elseif($row['direction'] == 'ware_to_shop'){
             $row['source_name'] = !empty($row['ware_name']) ? $row['ware_name'] : 'โกดัง';
             $row['dest_name'] = !empty($row['shop_name']) ? $row['shop_name'] : 'หน้าร้าน';
         } else {

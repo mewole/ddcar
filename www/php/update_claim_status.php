@@ -21,8 +21,8 @@ if ($claim_id <= 0 || empty($action)) {
     exit;
 }
 
-$user_name = $_SESSION['user_name'] ?? ($data['user_name'] ?? 'พนักงาน');
-$user_role = $_SESSION['user_role'] ?? ($data['role'] ?? 'พนักงาน');
+$user_name = $_SESSION['user_name'] ?? 'พนักงาน';
+$user_role = $_SESSION['user_role'] ?? 'พนักงาน';
 
 // ดึงข้อมูลรายการเคลมปัจจุบัน
 $q_clm = mysqli_query($conn, "SELECT * FROM product_claim_supplier WHERE id = '$claim_id' LIMIT 1");
