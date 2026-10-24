@@ -98,11 +98,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 2. Trigger Sync Now
+  // 2. Trigger Sync Now (ปิดชั่วคราวตามมติเจ้าของร้านและนักวิเคราะห์ จนกว่า Phase 3 จะเสร็จ)
   btnSyncNow.addEventListener("click", () => {
-    btnGotoOrders.style.display = "none";
+    showStatus("⚠️ ปิดรับคำสั่งซื้อชั่วคราวเพื่อเตรียมอัปเกรด Phase 3 ป้องกันข้อมูลซ้ำ", "#d97706");
+    return;
 
-    if (!currentTabInfo) {
       // Find open tab based on selected dropdown
       const selectedChannel = selChannel.value;
       let targetPattern = "*://seller.shopee.co.th/*";

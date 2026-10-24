@@ -32,7 +32,7 @@
     <!-- Font -->
     <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
     <!-- Main -->
-    <link href="css/untitled.css" rel="stylesheet">
+    <link href="css/untitled.css?v=3.6" rel="stylesheet">
     <!-- Product Hover Preview -->
     <link rel="stylesheet" href="css/hover_preview.css">
     <script src="js/hover_preview.js"></script>
@@ -132,9 +132,10 @@
                   no = 1
               }
               var supName = field.supplier_name || field.source_from;
-              var sourceTxt = supName && supName.trim() !== ''
+              var isValidSup = supName && supName.trim() !== '' && supName.trim() !== '-';
+              var sourceTxt = isValidSup
                 ? '<span class="badge badge-primary font-weight-bold px-2 py-1" style="font-size: 0.88rem;"><i class="fas fa-store mr-1"></i>' + supName + '</span>'
-                : '<span class="text-muted" style="font-size: 0.88rem;">-</span>';
+                : '<span class="badge badge-light border text-muted px-2 py-1" style="font-size: 0.82rem;">ไม่ระบุ</span>';
               if (field.ref_invoice && field.ref_invoice.trim() !== '') {
                 sourceTxt += '<div class="text-muted font-weight-normal mt-1" style="font-size: 0.8rem;"><i class="fas fa-file-invoice mr-1 text-success"></i>' + field.ref_invoice + '</div>';
               }
@@ -198,9 +199,10 @@
                   no = 1
               }
               var supName = field.supplier_name || field.source_from;
-              var sourceTxt = supName && supName.trim() !== ''
+              var isValidSup = supName && supName.trim() !== '' && supName.trim() !== '-';
+              var sourceTxt = isValidSup
                 ? '<span class="badge badge-primary font-weight-bold px-2 py-1" style="font-size: 0.88rem;"><i class="fas fa-store mr-1"></i>' + supName + '</span>'
-                : '<span class="text-muted" style="font-size: 0.88rem;">-</span>';
+                : '<span class="badge badge-light border text-muted px-2 py-1" style="font-size: 0.82rem;">ไม่ระบุ</span>';
               if (field.ref_invoice && field.ref_invoice.trim() !== '') {
                 sourceTxt += '<div class="text-muted font-weight-normal mt-1" style="font-size: 0.8rem;"><i class="fas fa-file-invoice mr-1 text-success"></i>' + field.ref_invoice + '</div>';
               }
@@ -291,7 +293,7 @@
               EasyLoading.hide();
               var obj = jQuery.parseJSON(data); 
               var firstRow = (obj && obj.length > 0) ? obj[0] : {};
-              var supHeader = (firstRow.supplier_name || firstRow.source_from || '-');
+              var supHeader = (firstRow.supplier_name && firstRow.supplier_name.trim() !== '' && firstRow.supplier_name !== '-') ? firstRow.supplier_name : (firstRow.source_from && firstRow.source_from.trim() !== '' && firstRow.source_from !== '-' ? firstRow.source_from : 'ไม่ระบุ');
               var firstRow = (obj && obj.length > 0) ? obj[0] : {};
               var refHeader = firstRow.ref_invoice ? (' | บิลร้าน: <b class="text-success">' + firstRow.ref_invoice + '</b>') : '';
               text = text + '<div class="collapse" id="detail-'+index+'">'+
@@ -372,7 +374,7 @@
               EasyLoading.hide();
               var obj = (typeof data === 'string') ? JSON.parse(data) : data; 
               var firstRow = (obj && obj.length > 0) ? obj[0] : {};
-              var supHeader = (firstRow.supplier_name || firstRow.source_from || '-');
+              var supHeader = (firstRow.supplier_name && firstRow.supplier_name.trim() !== '' && firstRow.supplier_name !== '-') ? firstRow.supplier_name : (firstRow.source_from && firstRow.source_from.trim() !== '' && firstRow.source_from !== '-' ? firstRow.source_from : 'ไม่ระบุ');
               var firstRow = (obj && obj.length > 0) ? obj[0] : {};
               var refHeader = firstRow.ref_invoice ? (' | บิลร้าน: <b class="text-success">' + firstRow.ref_invoice + '</b>') : '';
               text = text + '<div class="collapse" id="details-'+index+'">'+
@@ -450,7 +452,7 @@
           var d = (dt[0] || '').split("-");
           var date = (d.length === 3) ? (d[2] + "/" + d[1] + "/" + d[0]) : dt[0];
           var firstRow = (obj && obj.length > 0) ? obj[0] : {};
-          var sup = (firstRow.supplier_name || firstRow.source_from || '-');
+          var sup = (firstRow.supplier_name && firstRow.supplier_name.trim() !== '' && firstRow.supplier_name !== '-') ? firstRow.supplier_name : (firstRow.source_from && firstRow.source_from.trim() !== '' && firstRow.source_from !== '-' ? firstRow.source_from : 'ไม่ระบุ');
           var ref = obj[0].ref_invoice ? obj[0].ref_invoice : '';
           var wareName = obj[0].ware_name || 'โกดัง';
           var canViewCost = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
@@ -566,7 +568,7 @@
           var d = (dt[0] || '').split("-");
           var date = (d.length === 3) ? (d[2] + "/" + d[1] + "/" + d[0]) : dt[0];
           var firstRow = (obj && obj.length > 0) ? obj[0] : {};
-          var sup = (firstRow.supplier_name || firstRow.source_from || '-');
+          var sup = (firstRow.supplier_name && firstRow.supplier_name.trim() !== '' && firstRow.supplier_name !== '-') ? firstRow.supplier_name : (firstRow.source_from && firstRow.source_from.trim() !== '' && firstRow.source_from !== '-' ? firstRow.source_from : 'ไม่ระบุ');
           var ref = obj[0].ref_invoice ? obj[0].ref_invoice : '-';
           var wareName = obj[0].ware_name || 'โกดัง';
           var canViewCost = (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน");
@@ -812,7 +814,7 @@
         --->
     </div>
     <!-- Central Navbar Script -->
-    <script src="js/navbar.js?v=3.5"></script>
+    <script src="js/navbar.js?v=3.6"></script>
 </body>
 
 </html>

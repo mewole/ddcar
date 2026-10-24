@@ -28,7 +28,7 @@
     <!-- Font -->
     <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet">
     <!-- Main -->
-    <link href="css/untitled.css" rel="stylesheet">
+    <link href="css/untitled.css?v=3.6" rel="stylesheet">
     <!-- Product Hover Preview -->
     <link rel="stylesheet" href="css/hover_preview.css">
     <script src="js/hover_preview.js"></script>
@@ -240,68 +240,14 @@
       start_s += 30;
     }
 
-    function init_restore(bill_id,prod_id,price,total_amt,b_id,type,pay,c_id,price){
-      $("#btn-ok").attr('onclick','restore('+bill_id+','+prod_id+','+price+','+total_amt+','+b_id+',\''+type+'\',\''+pay+'\','+c_id+','+price+')')
+        function init_restore(bill_id,prod_id,price,total_amt,b_id,type,pay,c_id,price){
+      // ปิดระบบคืนสินค้าเดิม ให้ใช้ระบบรับคืน/เคลมสินค้า RT26-xxxxx ตาม Phase 1
+      window.location.href = "web_return_claim.html?bill_id=" + bill_id;
     }
 
     function restore(bill_id,prod_id,price,total_amt,b_id,type,pay,c_id,price){
-      amt = $("#in-amt").val()
-      if(total_amt < amt || amt == ""){
-        $.confirm({
-            title: 'แจ้งเตือน',
-            content: 'จำนวนคืนสินค้าเกินจำนวนสินค้าทั้งหมดหรือไม่ได้กรอกจำนวนคืนสินค้า',
-            backgroundDismiss: true,
-            buttons: {
-                formSubmit: {
-                text: 'ตกลง',
-                btnClass: 'btn-danger',
-                action: function () {
-                }
-                }
-            }
-        });
-        return 0;
-      }
-      dis = parseInt(price) * amt     
-      $.ajax({
-        type: "POST",
-        url:"php/restore_product.php",    
-        data:{'bill_id' : bill_id , 'prod_id' : prod_id , 'sum' : dis , 'b_id' : b_id , 'type' : type , 'pay' : pay , 'credit_id': c_id , 'amt' : amt},              
-        beforeSend: function(){
-          EasyLoading.show({                           
-            text: "กำลังโหลด"
-          });
-        },             
-        success: function(data){  
-          EasyLoading.hide();
-          if(data != "fail"){
-            amt_prod = parseInt($("#amt-"+prod_id).text()) - amt
-            itemsum = amt_prod * price
-            sum = parseInt($("#sum-"+bill_id).html()) - dis
-            total = parseInt($("#total-"+bill_id).html()) - dis
-
-            $("#amt-"+prod_id).text(amt_prod)
-            $("#sum-"+bill_id).html(sum)
-            $("#total-"+bill_id).html(total)
-            $("#itemsum-"+prod_id).text(itemsum)
-            $("#reModal").modal('hide');
-          }else{
-            $.confirm({
-                title: 'พบข้อผิดพลาด',
-                content: 'ลองอีกครั้ง',
-                backgroundDismiss: true,
-                buttons: {
-                    formSubmit: {
-                    text: 'ตกลง',
-                    btnClass: 'btn-regis',
-                    action: function () {
-                    }
-                    }
-                }
-            });
-          }
-        }               
-      });
+      // ปิดระบบคืนสินค้าเดิม ให้ใช้ระบบรับคืน/เคลมสินค้า RT26-xxxxx ตาม Phase 1
+      window.location.href = "web_return_claim.html?bill_id=" + bill_id;
     }
 
     function delete_bill(bill_id, b_id, type, pay, total, c_id){
@@ -461,6 +407,8 @@
                     '<div class="d-flex flex-wrap gap-2">' +
                       '<button class="btn btn-primary mr-2 mb-2" onclick="printRecep(' + index + ')"><i class="fas fa-receipt mr-1"></i> พิมพ์ใบเสร็จ (80mm)</button>' +
                       '<button class="btn btn-info mr-2 mb-2" onclick="printA4(' + index + ')"><i class="fas fa-print mr-1"></i> พิมพ์ใบส่งของ (A4)</button>' +
+                      '<a href="web_return_claim.html?order_number=' + encodeURIComponent(obj[0].order_number) + '" class="btn btn-warning mr-2 mb-2 text-dark font-weight-bold"><i class="fas fa-undo-alt mr-1"></i> รับคืน / เคลมสินค้า (RT)</a>' +
+                      '<a href="web_return_claim.html?bill_id=' + obj[0].order_number + '" class="btn btn-outline-warning mr-2 mb-2 font-weight-bold" target="_blank" title="เปิดหน้าต่างรับคืนสินค้าสำหรับบิลนี้"><i class="fas fa-undo-alt mr-1"></i> รับคืนสินค้า (RT)</a>' +
                       (canAdmin ? ('<button class="btn btn-danger mb-2" onclick="delete_bill(' + index + ', ' + obj[0].branch_id + ', \'' + obj[0].type + '\', \'' + obj[0].payment_type + '\', ' + grandTotal + ', ' + (obj[0].credit_id || 0) + ')"><i class="fas fa-trash-alt mr-1"></i> ยกเลิกบิล</button>') : '') +
                     '</div>' +
                   '</div>' +
@@ -1232,6 +1180,6 @@
       </div>
     </div>
     <!-- Central Navbar Script -->
-    <script src="js/navbar.js?v=3.5"></script>
+    <script src="js/navbar.js?v=3.6"></script>
 </body>
 </html>

@@ -19,22 +19,35 @@ if (session_status() === PHP_SESSION_NONE) {
     $is_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') 
              || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 
-    // ยืดอายุ Session เป็น 30 วัน เพื่อให้พนักงานหน้าร้านใช้งานต่อเนื่องได้ทั้งวันโดยไม่หลุด
-    ini_set('session.gc_maxlifetime', 86400 * 30);
+    // กำหนดอายุ Session ให้หมดอายุเที่ยงคืน (Midnight Expiry) ของทุกวัน
+    $seconds_until_midnight = strtotime('tomorrow midnight') - time();
+    if ($seconds_until_midnight < 300) {
+        $seconds_until_midnight = 300; // ขั้นต่ำ 5 นาที
+    }
+
+    ini_set('session.gc_maxlifetime', $seconds_until_midnight);
 
     if (PHP_VERSION_ID >= 70300) {
         session_set_cookie_params([
-            'lifetime' => 86400 * 30, // 30 วัน
+            'lifetime' => $seconds_until_midnight,
             'path'     => '/',
             'secure'   => $is_https,
             'httponly' => true,
             'samesite' => 'Lax'
         ]);
     } else {
-        session_set_cookie_params(86400 * 30, '/', '', $is_https, true);
+        session_set_cookie_params($seconds_until_midnight, '/', '', $is_https, true);
     }
 
     session_start();
+
+    // Inactivity Timeout: หากไม่มีการใช้งานต่อเนื่องเกิน 30 นาที ให้ออกจากระบบอัตโนมัติ (สำหรับเครื่องใช้ร่วมกันหน้าร้าน)
+    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1800)) {
+        session_unset();
+        session_destroy();
+        session_start();
+    }
+    $_SESSION['last_activity'] = time();
 }
 
 /**
@@ -219,6 +232,22 @@ function require_admin_or_owner() {
         exit;
     }
     return $role;
+}
+
+/**
+ * ฟังก์ชันตรวจสอบสิทธิ์ผู้บริหารแบบ Boolean
+ */
+function is_admin_or_owner() {
+    $role = get_current_user_role();
+    return ($role === 'เจ้าของร้าน' || $role === 'แอดมิน');
+}
+
+/**
+ * ฟังก์ชันตรวจสอบสิทธิ์พนักงาน/ผู้บริหารแบบ Boolean
+ */
+function is_staff_or_admin() {
+    $role = get_current_user_role();
+    return ($role === 'เจ้าของร้าน' || $role === 'แอดมิน' || $role === 'พนักงาน');
 }
 
 /**

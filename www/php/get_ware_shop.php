@@ -1,4 +1,7 @@
 <?php
+include_once "auth_guard.php";
+require_login();
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");

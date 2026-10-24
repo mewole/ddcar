@@ -8,16 +8,8 @@
     // Session Guard (except login pages)
     var currentPath = window.location.pathname.split('/').pop() || 'index.html';
     if (!currentPath.includes('login') && !localStorage.user_id) {
-        // หากใช้งานบนเครือข่ายภายในร้าน (100.*, 192.168.*, localhost) ฟื้นฟูสิทธิ์การทำงานอัตโนมัติ ไม่ให้การทำงานหน้าร้านสะดุด
-        var isInternal = (location.hostname === '100.77.57.16' || location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.indexOf('192.168.') === 0 || location.hostname.indexOf('100.') === 0);
-        if (isInternal) {
-            localStorage.user_id = (localStorage.user_id && localStorage.user_id !== '1') ? localStorage.user_id : '33';
-            localStorage.user_name = localStorage.user_name || 'Jet';
-            localStorage.user_role = localStorage.user_role || 'เจ้าของร้าน';
-        } else {
-            window.location = 'web_login.html';
-            return;
-        }
+        window.location = 'web_login.html';
+        return;
     }
 
     var menuItems = [
@@ -35,6 +27,7 @@
             roles: ['all'],
             subItems: [
                 { label: 'รายงานบิล', icon: 'fa fa-file-invoice-dollar', href: 'web_mng_bill.html' },
+                { label: 'รับคืน / เคลมสินค้า (RT)', icon: 'fa fa-undo-alt', href: 'web_return_claim.html' },
                 { label: 'รายงานสินค้าเข้าหน้าร้าน', icon: 'fa fa-store', href: 'web_mng_import.html' },
                 { label: 'รายงานการโอนย้ายสินค้า', icon: 'fa fa-exchange-alt', href: 'web_mng_transfer.html' },
                 { label: 'รายงานการปรับ/ตัดสต๊อก', icon: 'fa fa-clipboard-check', href: 'web_mng_adjust.html' },
@@ -73,6 +66,7 @@
             case 'web_admin_user.html': return 'จัดการผู้ใช้งานและสิทธิ์';
                         case 'web_platform_mapping.html': return 'ศูนย์จับคู่สินค้าออนไลน์ & สต็อกหลังบ้าน';
             case 'web_qrprint.html': return 'พิมพ์คิวอาร์โค้ดสินค้า';
+            case 'web_return_claim.html': return 'ศูนย์รับคืนและเคลมสินค้า';
             case 'web_mng_bill.html': return 'รายงานบิล';
             case 'web_credit.html': return 'รายงานเครดิตลูกค้า';
             case 'web_pending_vat.html': return 'ติดตามใบกำกับภาษีซื้อ (Pending VAT)';
@@ -153,7 +147,7 @@
         var navbarHtml = '<nav class="navbar navbar-expand-lg navbar-dark navbar-ddcar">' +
             '<div class="container-fluid px-0">' +
                 '<a class="navbar-brand d-flex align-items-center" href="web_select.html">' +
-                    '<div class="brand-badge mr-2"><img src="img/logo.jpg" alt="DD Accessories" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<i class=\\\'fa fa-car-side\\\'></i>\';"></div>' +
+                    '<div class="brand-badge mr-2" style="width:40px;height:40px;min-width:40px;min-height:40px;max-width:40px;max-height:40px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#fff;overflow:hidden;flex-shrink:0;"><img src="img/logo.jpg" alt="DD Accessories" style="width:100%;height:100%;max-width:40px;max-height:40px;object-fit:contain;border-radius:6px;display:block;" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<i class=\\\'fa fa-car-side\\\'></i>\';"></div>' +
                     '<div class="brand-text">' +
                         '<div class="brand-title">DD Accessories</div>' +
                         '<div class="brand-subtitle">' + pageTitle + '</div>' +
@@ -206,21 +200,46 @@
     window.canViewCostVal = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
 
     // Global logout helper (ทำลาย Session ทั้งบน Server และ Browser)
-    window.ddcarLogout = function () {
-        if (window.confirm ? confirm('คุณต้องการออกจากระบบหรือไม่?') : true) {
+    window.ddcarLogout = function (silent) {
+        var proceed = silent ? true : (window.confirm ? confirm('คุณต้องการออกจากระบบหรือไม่?') : true);
+        if (proceed) {
             try {
                 fetch('php/logout.php', { method: 'POST', credentials: 'same-origin' }).finally(function() {
                     localStorage.clear();
                     sessionStorage.clear();
-                    window.location = 'web_login.html';
+                    window.location = silent ? 'web_login.html?reason=idle_timeout' : 'web_login.html';
                 });
             } catch(e) {
                 localStorage.clear();
                 sessionStorage.clear();
-                window.location = 'web_login.html';
+                window.location = silent ? 'web_login.html?reason=idle_timeout' : 'web_login.html';
             }
         }
     };
+
+    // ==========================================
+    // Phase 0: Client-side Inactivity Idle Timeout (30 นาที)
+    // ==========================================
+    var IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 นาที
+    var idleTimer = null;
+
+    function resetIdleTimer() {
+        if (idleTimer) clearTimeout(idleTimer);
+        var isLoginPage = window.location.pathname.includes('login');
+        if (localStorage.user_id && !isLoginPage) {
+            idleTimer = setTimeout(function () {
+                if (window.ddcarLogout) {
+                    alert('คุณไม่ได้ทำรายการต่อเนื่องเกิน 30 นาที ระบบได้นำคุณออกจากระบบอัตโนมัติเพื่อความปลอดภัยของข้อมูล');
+                    window.ddcarLogout(true);
+                }
+            }, IDLE_TIMEOUT_MS);
+        }
+    }
+
+    ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'].forEach(function (evt) {
+        window.addEventListener(evt, resetIdleTimer, { passive: true });
+    });
+    resetIdleTimer();
 
     // Global AJAX Handler: ป้องกันหน้าจอหมุนค้างเมื่อเกิดข้อผิดพลาดในการเชื่อมต่อ
     if (window.jQuery) {
@@ -252,9 +271,37 @@
                 }
             }
 
-            if (jqxhr && jqxhr.status === 401) {
-                // หากเซสชันหมดอายุจริงนอกเครือข่ายร้าน แจ้งเตือนแทนการลบข้อมูลทั้งหมดทิ้ง
-                console.warn('Session expired or unauthorized request to:', settings.url);
+            if (jqxhr && (jqxhr.status === 401 || (jqxhr.responseJSON && jqxhr.responseJSON.code === 'AUTH_REQUIRED'))) {
+                if (!window.__ddcar_auth_redirecting) {
+                    window.__ddcar_auth_redirecting = true;
+                    try {
+                        localStorage.removeItem('user_id');
+                        localStorage.removeItem('user_name');
+                        localStorage.removeItem('user_role');
+                    } catch(e) {}
+
+                    var redirectMsg = 'เซสชันการเข้าสู่ระบบหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง';
+                    if (window.$.confirm) {
+                        $.confirm({
+                            title: '🔒 กรุณาเข้าสู่ระบบใหม่',
+                            content: redirectMsg,
+                            type: 'orange',
+                            autoClose: 'loginNow|4000',
+                            buttons: {
+                                loginNow: {
+                                    text: 'เข้าสู่ระบบ',
+                                    btnClass: 'btn-warning',
+                                    action: function () {
+                                        window.location.href = 'web_login.html';
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        alert(redirectMsg);
+                        window.location.href = 'web_login.html';
+                    }
+                }
             }
         });
     }

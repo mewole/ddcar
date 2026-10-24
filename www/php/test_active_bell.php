@@ -1,4 +1,7 @@
 <?php
+include_once "auth_guard.php";
+require_admin_or_owner();
+
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 

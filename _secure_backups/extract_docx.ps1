@@ -1,7 +1,9 @@
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $targetFile = (Get-ChildItem -Path "C:\Users\user\Downloads" -Filter "*24-10-2026*.docx" | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
 Write-Host "Target file: $targetFile"
-$zip = [System.IO.Compression.ZipFile]::OpenRead($targetFile)
+$tempFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::Copy($targetFile, $tempFile, $true)
+$zip = [System.IO.Compression.ZipFile]::OpenRead($tempFile)
 $entry = $zip.GetEntry("word/document.xml")
 $stream = $entry.Open()
 $reader = New-Object System.IO.StreamReader($stream)

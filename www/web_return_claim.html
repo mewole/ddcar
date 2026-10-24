@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>ศูนย์รับคืนและเคลมสินค้า (Return & Supplier Claims) - DD ACCESSORIES</title>
+  
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/easy-loading.css">
+  <link rel="stylesheet" href="css/untitled.css?v=3.6">
+
+  <style>
+    body {
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .card-header {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      border-top-left-radius: 12px !important;
+      border-top-right-radius: 12px !important;
+    }
+    .nav-tabs .nav-link {
+      font-weight: 600;
+      color: #64748b;
+      border: none;
+      border-bottom: 3px solid transparent;
+      padding: 12px 20px;
+    }
+    .nav-tabs .nav-link.active {
+      color: #2563eb;
+      border-bottom: 3px solid #2563eb;
+      background: transparent;
+    }
+    .nav-tabs .nav-link:hover {
+      border-color: transparent transparent #cbd5e1 transparent;
+    }
+    .stat-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+    .stat-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+    .badge-dest-stock {
+      background-color: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+    .badge-dest-quarantine {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fca5a5;
+    }
+    .table-sm th, .table-sm td {
+      vertical-align: middle;
+    }
+    .img-thumb-preview {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+    }
+    .damage-preview-img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Central Navbar -->
+  <div id="navbar-container"></div>
+
+  <div class="container-fluid px-lg-5 mt-4">
+    <!-- Header Title & Subtitle -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="font-weight-bold mb-1 text-dark">
+          <i class="fas fa-undo-alt text-primary mr-2"></i>ศูนย์รับคืนและเคลมสินค้า (Return & Supplier Claims)
+        </h3>
+        <p class="text-muted small mb-0">
+          ระบบรับคืนสินค้าแยกเอกสาร RT26-xxxxx และติดตามการเคลมซัพพลายเออร์ (Phase A: มาตรฐาน 2 ทางเลือก คืนสต๊อกขาย / คลังรอเคลม)
+        </p>
+      </div>
+      <div class="mt-2 mt-md-0">
+        <a href="web_mng_bill.html" class="btn btn-outline-secondary btn-sm mr-2 font-weight-bold">
+          <i class="fas fa-receipt mr-1"></i> รายงานบิลขาย
+        </a>
+        <button type="button" class="btn btn-primary btn-sm font-weight-bold shadow-sm" onclick="switchTab('tab-create')">
+          <i class="fas fa-plus mr-1"></i> สร้างเอกสารรับคืน (RT)
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Stat Cards -->
+    <div class="row mb-4">
+      <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-lg-0">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small text-muted font-weight-bold">รับคืนในระบบทั้งหมด</div>
+              <div class="h3 font-weight-bold mb-0 text-dark" id="stat-total-returns">-</div>
+            </div>
+            <div class="p-3 bg-light rounded-circle text-primary">
+              <i class="fas fa-box-open fa-lg"></i>
+            </div>
+          </div>
+          <div class="small text-muted mt-2">เอกสารรหัส <span class="font-mono font-weight-bold">RT26-xxxxx</span></div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-lg-0">
+        <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small text-muted font-weight-bold">เคลมค้างรับ (ซัพพลายเออร์)</div>
+              <div class="h3 font-weight-bold mb-0 text-warning" id="stat-pending-claims">-</div>
+            </div>
+            <div class="p-3 bg-light rounded-circle text-warning">
+              <i class="fas fa-shipping-fast fa-lg"></i>
+            </div>
+          </div>
+          <div class="small text-muted mt-2">ส่งเคลมร้านแล้วแต่ยังไม่ได้ของ</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-lg-3 mb-3 mb-lg-0">
+        <div class="stat-card" style="border-left: 4px solid #ef4444;">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small text-muted font-weight-bold">รอส่งเคลมร้าน (ในคลังเคลม)</div>
+              <div class="h3 font-weight-bold mb-0 text-danger" id="stat-wait-send-claims">-</div>
+            </div>
+            <div class="p-3 bg-light rounded-circle text-danger">
+              <i class="fas fa-tools fa-lg"></i>
+            </div>
+          </div>
+          <div class="small text-muted mt-2">สินค้าเสีย รอแจ้งเคลมซัพพลายเออร์</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-lg-3">
+        <div class="stat-card" style="border-left: 4px solid #10b981;">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small text-muted font-weight-bold">ปิดงานเคลมสำเร็จ</div>
+              <div class="h3 font-weight-bold mb-0 text-success" id="stat-closed-claims">-</div>
+            </div>
+            <div class="p-3 bg-light rounded-circle text-success">
+              <i class="fas fa-check-circle fa-lg"></i>
+            </div>
+          </div>
+          <div class="small text-muted mt-2">ได้ของคืน หรือ รับเงิน/ลดหนี้แล้ว</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="mainReturnTabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="tab-create-link" data-toggle="tab" href="#tab-create" role="tab">
+          <i class="fas fa-edit mr-2 text-primary"></i>บันทึกรับคืนสินค้า (สร้าง RT)
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="tab-history-link" data-toggle="tab" href="#tab-history" role="tab" onclick="loadReturnsList()">
+          <i class="fas fa-list-alt mr-2 text-secondary"></i>ประวัติรับคืนสินค้า (RT Records)
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="tab-pending-link" data-toggle="tab" href="#tab-pending" role="tab" onclick="loadPendingClaims()">
+          <i class="fas fa-exclamation-triangle mr-2 text-danger"></i>หน้าเคลมค้างรับ (Pending Claims)
+          <span class="badge badge-danger ml-1" id="badge-pending-count" style="display:none;">0</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="tab-claims-link" data-toggle="tab" href="#tab-claims" role="tab" onclick="loadAllClaims()">
+          <i class="fas fa-clipboard-list mr-2 text-info"></i>ติดตามเคลมซัพพลายเออร์ทั้งหมด
+        </a>
+      </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="mainReturnTabsContent">
+
+      <!-- ==================== TAB 1: บันทึกรับคืนสินค้า (สร้าง RT) ==================== -->
+      <div class="tab-pane fade show active" id="tab-create" role="tabpanel">
+        <div class="card shadow-sm border-0">
+          <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+            <h5 class="font-weight-bold mb-0 text-dark">
+              <i class="fas fa-file-invoice text-primary mr-2"></i>แบบฟอร์มรับคืนสินค้าใหม่ (RT26-xxxxx)
+            </h5>
+            <span class="badge badge-light border text-muted">ไม่แก้ไขบิลเดิม 100%</span>
+          </div>
+          <div class="card-body p-4">
+            
+            <!-- Step 1: ค้นหาบิลเดิม หรือระบุว่าไม่มีเลขอ้างอิง -->
+            <div class="p-3 mb-4 rounded border bg-light">
+              <div class="row align-items-center">
+                <div class="col-12 col-md-6">
+                  <label class="small text-muted font-weight-bold mb-1">
+                    <i class="fas fa-search mr-1 text-primary"></i> 1. ค้นหาเลขอ้างอิงบิลเดิม หรือ เลขคำสั่งซื้อแพลตฟอร์ม
+                  </label>
+                  <div class="input-group">
+                    <input type="text" id="input-bill-search" class="form-control font-weight-bold" placeholder="เช่น S26-00042 หรือเลขออเดอร์ Shopee / Lazada / TikTok">
+                    <div class="input-group-append">
+                      <button class="btn btn-primary px-3 font-weight-bold" type="button" id="btn-fetch-bill" onclick="fetchBillForReturn()">
+                        <i class="fas fa-download mr-1"></i> ดึงข้อมูลบิล
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6 mt-3 mt-md-0">
+                  <div class="custom-control custom-checkbox pt-3">
+                    <input type="checkbox" class="custom-control-input" id="chk-no-ref-bill" onchange="toggleNoRefMode()">
+                    <label class="custom-control-label font-weight-bold text-dark" for="chk-no-ref-bill" style="cursor: pointer;">
+                      ไม่มีเลขอ้างอิงบิลเดิม (กรณีรับคืนของเก่าค้างสต๊อก / สินค้าเคลียร์ร้าน)
+                    </label>
+                  </div>
+                  <small class="text-danger d-block mt-1" id="hint-no-ref" style="display:none;">
+                    <i class="fas fa-exclamation-circle mr-1"></i> กติกา: ไม่มีเลขอ้างอิง สามารถบันทึกรับเข้าสต๊อกได้เท่านั้น แต่ไม่สามารถทำรายการคืนเงินและออกใบลดหนี้ได้
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bill & Customer Information Card -->
+            <div class="row mb-4">
+              <div class="col-12 col-md-3 mb-3 mb-md-0">
+                <label class="small text-muted font-weight-bold mb-1">วันที่รับคืนจริง (ลงย้อนหลังได้) *</label>
+                <input type="date" id="in-actual-return-date" class="form-control font-weight-bold text-primary">
+                <small class="text-muted">ใช้สำหรับเคลียร์ของค้างตามจริง</small>
+              </div>
+              <div class="col-12 col-md-3 mb-3 mb-md-0">
+                <label class="small text-muted font-weight-bold mb-1">ชื่อลูกค้า / ช่องทาง *</label>
+                <input type="text" id="in-customer-name" class="form-control font-weight-bold" placeholder="ชื่อลูกค้า">
+                <input type="hidden" id="in-customer-id" value="">
+              </div>
+              <div class="col-12 col-md-3 mb-3 mb-md-0">
+                <label class="small text-muted font-weight-bold mb-1">เบอร์โทรศัพท์ลูกค้า</label>
+                <input type="text" id="in-customer-tel" class="form-control" placeholder="เบอร์โทร (ถ้ามี)">
+              </div>
+              <div class="col-12 col-md-3">
+                <label class="small text-muted font-weight-bold mb-1">สาขาที่รับคืนเข้า</label>
+                <select id="in-branch-select" class="form-control font-weight-bold">
+                  <option value="shop_6" data-type="หน้าร้าน" data-id="6" selected>หน้าร้าน (DD MOTOR SPORT)</option>
+                  <option value="ware_1" data-type="โกดัง" data-id="1">โกดัง A</option>
+                  <option value="ware_2" data-type="โกดัง" data-id="2">โกดัง B</option>
+                  <option value="ware_3" data-type="โกดัง" data-id="3">โกดัง C</option>
+                  <option value="ware_4" data-type="โกดัง" data-id="4">โกดัง D</option>
+                  <option value="ware_5" data-type="โกดัง" data-id="5">พระราม 5</option>
+                </select>
+                <small id="lbl-orig-sold-branch" class="text-danger font-weight-bold d-block mt-1"></small>
+              </div>
+            </div>
+
+            <!-- Table of Items to Return -->
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="font-weight-bold text-dark mb-0">
+                  <i class="fas fa-boxes text-primary mr-1"></i> 2. รายการสินค้าที่รับคืน (ตัดสินใจ 2 ทาง: คืนสต๊อกขาย หรือ คลังรอเคลม)
+                </h6>
+                <div>
+                  <button type="button" class="btn btn-outline-secondary btn-sm mr-1 font-weight-bold" onclick="toggleSelectAllItems(true)"><i class="fas fa-check-square mr-1"></i>เลือกทั้งหมด</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm mr-2 font-weight-bold" onclick="toggleSelectAllItems(false)"><i class="fas fa-square mr-1"></i>ล้างการเลือก</button>
+                  <span id="btn-add-manual-item-wrap" style="display:none;">
+                    <button type="button" class="btn btn-outline-primary btn-sm font-weight-bold" onclick="openManualProductSelect()">
+                      <i class="fas fa-plus mr-1"></i> เลือกสินค้าจากคลัง DDShop
+                    </button>
+                  </span>
+                </div>
+              </div>
+
+              <div class="table-responsive bg-white rounded border">
+                <table class="table table-hover table-striped mb-0 table-sm" id="table-return-items">
+                  <thead class="thead-dark">
+                    <tr>
+                      <th style="width: 40px;" class="text-center">เลือก</th>
+                      <th style="width: 60px;" class="text-center">รูป</th>
+                      <th style="width: 15%;">รหัส SKU</th>
+                      <th style="width: 25%;">ชื่อสินค้า</th>
+                      <th style="width: 10%;" class="text-center">ซื้อเดิม / คืนได้</th>
+                      <th style="width: 10%;" class="text-center">จำนวนที่คืน *</th>
+                      <th style="width: 10%;" class="text-right">ราคา/หน่วย</th>
+                      <th style="width: 25%;">การจัดการสต๊อก (2 ทางเลือก)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-return-items">
+                    <tr>
+                      <td colspan="8" class="text-center py-4 text-muted">
+                        <i class="fas fa-search mr-1"></i> กรุณากรอกเลขที่บิลเดิมด้านบนแล้วกด "ดึงข้อมูลบิล" หรือเลือกติ๊ก "ไม่มีเลขอ้างอิงบิลเดิม"
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Refund & Accounting Decision Section -->
+            <div class="row">
+              <!-- Left Column: Reason and Refund Money Mode -->
+              <div class="col-12 col-lg-6 mb-3 mb-lg-0">
+                <div class="p-3 rounded border bg-light h-100">
+                  <h6 class="font-weight-bold text-dark mb-3">
+                    <i class="fas fa-money-bill-wave text-success mr-1"></i> 3. รูปแบบการคืนเงิน และเหตุผล
+                  </h6>
+
+                  <div class="form-group mb-3">
+                    <label class="small text-muted font-weight-bold mb-1">เหตุผลการรับคืน (ช่องพิมพ์อิสระ ไม่จำกัดประเภท) *</label>
+                    <textarea id="in-return-reason" class="form-control" rows="2" placeholder="เช่น ส่งผิดสี/ไซส์, สินค้าชำรุดจากการผลิต, ตีกลับจากขนส่ง ฯลฯ"></textarea>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-6">
+                      <label class="small text-muted font-weight-bold mb-1">รูปแบบการคืนเงิน *</label>
+                      <select id="in-refund-type" class="form-control font-weight-bold" onchange="calculateRefundTotals()">
+                        <option value="คืนเงินสด">คืนเงินสด</option>
+                        <option value="โอนเงิน">โอนเงินเข้าบัญชี</option>
+                        <option value="หักเครดิต">หักลดยอดเครดิตเดิม</option>
+                        <option value="เปลี่ยนสินค้า">เปลี่ยนเป็นสินค้าอื่น</option>
+                        <option value="คืนเงินผ่านแพลตฟอร์ม">คืนเงินผ่านแพลตฟอร์ม (Shopee / Lazada / TikTok)</option>
+                        <option value="ไม่คืนเงิน">ไม่คืนเงิน (รับคืนสต๊อกเฉยๆ)</option>
+                      </select>
+                    </div>
+                    <div class="col-6">
+                      <label class="small text-muted font-weight-bold mb-1">ยอดเงินคืนสุทธิ (บาท) *</label>
+                      <input type="number" step="0.01" min="0" id="in-total-refund-amount" class="form-control font-weight-bold text-right text-danger" placeholder="0.00">
+                    </div>
+                  </div>
+                  <div id="box-platform-refund" class="mt-2" style="display:none;">
+                    <label class="small text-primary font-weight-bold mb-1"><i class="fas fa-shopping-bag mr-1"></i>เลขคำขอคืนเงินของแพลตฟอร์ม (Return/Refund ID)</label>
+                    <input type="text" id="in-platform-refund-id" class="form-control form-control-sm" placeholder="เช่น 241024-REF-0012 (ไม่บังคับ)">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: VAT & Credit Note Information -->
+              <div class="col-12 col-lg-6">
+                <div class="p-3 rounded border bg-light h-100" id="box-vat-section">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="font-weight-bold text-dark mb-0">
+                      <i class="fas fa-file-invoice-dollar text-info mr-1"></i> 4. ภาษีมูลค่าเพิ่ม & ข้อมูลใบลดหนี้ (CN)
+                    </h6>
+                    <span id="badge-vat-status" class="badge badge-secondary px-2 py-1">บิลทั่วไป (ไม่มี VAT)</span>
+                  </div>
+
+                  <div id="vat-details-content" style="display:none;">
+                    <div class="alert alert-info py-2 px-3 small mb-2">
+                      <i class="fas fa-info-circle mr-1"></i> บิลนี้เป็นบิล VAT 7% ระบบจะสร้างรหัสใบลดหนี้ (CN26-xxxxx) ต่อเนื่อง และเก็บข้อมูลครบถ้วนตั้งแต่วันแรก
+                    </div>
+                    <div class="row small">
+                      <div class="col-6 mb-1">เลขผู้เสียภาษี: <span id="lbl-tax-id" class="font-weight-bold">-</span></div>
+                      <div class="col-6 mb-1">เลขที่บิลกำกับเดิม: <span id="lbl-orig-bill-no" class="font-weight-bold text-primary">-</span></div>
+                      <div class="col-6 mb-1">มูลค่าเดิมในบิล: <span id="lbl-orig-amount" class="font-weight-bold">0.00</span> บาท</div>
+                      <div class="col-6 mb-1">มูลค่าที่ถูกต้อง: <span id="lbl-correct-amount" class="font-weight-bold text-success">0.00</span> บาท</div>
+                      <div class="col-6">ผลต่างมูลค่า: <span id="lbl-diff-amount" class="font-weight-bold text-danger">0.00</span> บาท</div>
+                      <div class="col-6">VAT ของผลต่าง: <span id="lbl-diff-vat" class="font-weight-bold text-danger">0.00</span> บาท</div>
+                    </div>
+                  </div>
+
+                  <div id="vat-none-notice" class="text-muted small py-3 text-center">
+                    <i class="fas fa-file-alt fa-2x mb-2 text-secondary"></i><br>
+                    บิลเงินสดทั่วไป / บิลไม่มี VAT: ระบบจะออกเป็น <strong>"ใบรับคืนสินค้าภายใน"</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button Bar -->
+            <div class="mt-4 pt-3 border-top text-right">
+              <button type="button" class="btn btn-secondary px-4 mr-2" onclick="resetReturnForm()">
+                <i class="fas fa-redo mr-1"></i> ล้างข้อมูล
+              </button>
+              <button type="button" class="btn btn-success btn-lg px-5 font-weight-bold shadow-sm" id="btn-submit-return" onclick="submitProductReturn()">
+                <i class="fas fa-check-circle mr-2"></i> บันทึกเอกสารรับคืนสินค้า (สร้าง RT)
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 2: ประวัติรับคืนสินค้า (RT Records) ==================== -->
+      <div class="tab-pane fade" id="tab-history" role="tabpanel">
+        <div class="card shadow-sm border-0">
+          <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+            <h5 class="font-weight-bold mb-0 text-dark">
+              <i class="fas fa-history text-secondary mr-2"></i>ประวัติเอกสารรับคืนสินค้า (RT26-xxxxx)
+            </h5>
+            <button class="btn btn-sm btn-outline-secondary font-weight-bold" onclick="loadReturnsList()">
+              <i class="fas fa-sync-alt mr-1"></i> รีเฟรช
+            </button>
+          </div>
+          <div class="card-body p-4">
+            <!-- Filter Bar -->
+            <div class="row mb-3">
+              <div class="col-12 col-md-4 mb-2 mb-md-0">
+                <input type="text" id="filter-rt-search" class="form-control" placeholder="ค้นหาเลขที่ RT / เลขบิลเดิม / ชื่อลูกค้า..." onkeyup="filterReturnsTable()">
+              </div>
+              <div class="col-6 col-md-3">
+                <input type="date" id="filter-rt-start-date" class="form-control" onchange="loadReturnsList()">
+              </div>
+              <div class="col-6 col-md-3">
+                <input type="date" id="filter-rt-end-date" class="form-control" onchange="loadReturnsList()">
+              </div>
+              <div class="col-12 col-md-2 mt-2 mt-md-0 text-right">
+                <button class="btn btn-outline-primary btn-block font-weight-bold" onclick="loadReturnsList()">
+                  <i class="fas fa-filter mr-1"></i> ค้นหา
+                </button>
+              </div>
+            </div>
+
+            <!-- Table Returns -->
+            <div class="table-responsive bg-white rounded border">
+              <table class="table table-hover table-striped mb-0 table-sm" id="table-returns-list">
+                <thead class="thead-dark">
+                  <tr>
+                    <th style="width: 14%;">เลขที่เอกสาร RT</th>
+                    <th style="width: 12%;">วันที่รับคืนจริง</th>
+                    <th style="width: 14%;">อ้างอิงบิลเดิม</th>
+                    <th style="width: 20%;">ลูกค้า</th>
+                    <th style="width: 12%;" class="text-center">ประเภทการคืน</th>
+                    <th style="width: 14%;" class="text-right">ยอดเงินคืน (บาท)</th>
+                    <th style="width: 14%;" class="text-center">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-returns-list">
+                  <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                      <i class="fas fa-spinner fa-spin mr-1"></i> กำลังโหลดประวัติรับคืนสินค้า...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 3: หน้าเคลมค้างรับ (Pending Claims) ==================== -->
+      <div class="tab-pane fade" id="tab-pending" role="tabpanel">
+        <div class="card shadow-sm border-0">
+          <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="font-weight-bold mb-0 text-danger">
+                <i class="fas fa-hourglass-half text-danger mr-2"></i>หน้าเคลมค้างรับ (สินค้าที่ส่งเคลมแล้วแต่ยังไม่ได้ของ)
+              </h5>
+              <div class="small text-muted">จัดเรียงตามจำนวนวันค้างจากมากไปน้อย เพื่อให้ร้านเร่งติดตามซัพพลายเออร์ได้อย่างมีประสิทธิภาพ</div>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary font-weight-bold" onclick="loadPendingClaims()">
+              <i class="fas fa-sync-alt mr-1"></i> รีเฟรช
+            </button>
+          </div>
+          <div class="card-body p-4">
+            <div class="table-responsive bg-white rounded border">
+              <table class="table table-hover table-striped mb-0 table-sm" id="table-pending-claims">
+                <thead class="thead-dark">
+                  <tr>
+                    <th style="width: 13%;">รหัสเคลม</th>
+                    <th style="width: 50px;" class="text-center">รูป</th>
+                    <th style="width: 25%;">สินค้าที่เคลม</th>
+                    <th style="width: 8%;" class="text-center">จำนวน</th>
+                    <th style="width: 18%;">ร้านค้า (ซัพพลายเออร์)</th>
+                    <th style="width: 10%;">วันที่แจ้งเคลม</th>
+                    <th style="width: 10%;" class="text-center">ค้างกี่วัน</th>
+                    <th style="width: 16%;" class="text-center">การดำเนินการ</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-pending-claims">
+                  <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                      <i class="fas fa-spinner fa-spin mr-1"></i> กำลังโหลดรายการเคลมค้างรับ...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 4: ติดตามเคลมซัพพลายเออร์ทั้งหมด ==================== -->
+      <div class="tab-pane fade" id="tab-claims" role="tabpanel">
+        <div class="card shadow-sm border-0">
+          <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+            <h5 class="font-weight-bold mb-0 text-dark">
+              <i class="fas fa-clipboard-list text-info mr-2"></i>ประวัติการเคลมซัพพลายเออร์ทั้งหมด
+            </h5>
+            <div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
+              <label class="btn btn-outline-secondary active" onclick="filterClaimStatus('all')">
+                <input type="radio" name="claim_st" checked> ทั้งหมด
+              </label>
+              <label class="btn btn-outline-danger" onclick="filterClaimStatus('รอส่งเคลม')">
+                <input type="radio" name="claim_st"> รอส่งเคลม
+              </label>
+              <label class="btn btn-outline-warning" onclick="filterClaimStatus('ส่งเคลมแล้ว')">
+                <input type="radio" name="claim_st"> ส่งเคลมแล้ว
+              </label>
+              <label class="btn btn-outline-success" onclick="filterClaimStatus('ปิด')">
+                <input type="radio" name="claim_st"> ปิดแล้ว
+              </label>
+            </div>
+          </div>
+          <div class="card-body p-4">
+            <div class="table-responsive bg-white rounded border">
+              <table class="table table-hover table-striped mb-0 table-sm" id="table-all-claims">
+                <thead class="thead-dark">
+                  <tr>
+                    <th style="width: 12%;">รหัสเคลม</th>
+                    <th style="width: 12%;">อ้างอิง RT</th>
+                    <th style="width: 25%;">สินค้า</th>
+                    <th style="width: 7%;" class="text-center">จำนวน</th>
+                    <th style="width: 18%;">ซัพพลายเออร์</th>
+                    <th style="width: 12%;">สถานะ</th>
+                    <th style="width: 14%;" class="text-center">ผลการเคลม</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-all-claims">
+                  <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">กำลังโหลด...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal ดูรายละเอียดเอกสาร RT -->
+  <div class="modal fade" id="ReturnDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content shadow-lg border-0">
+        <div class="modal-header bg-dark text-white py-3">
+          <h5 class="modal-title font-weight-bold" id="detail-modal-title">เอกสารรับคืนสินค้า</h5>
+          <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+        <div class="modal-body p-4" id="detail-modal-body">
+          กำลังโหลดข้อมูล...
+        </div>
+        <div class="modal-footer py-2 bg-light">
+          <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">ปิด</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal บันทึกผลเคลมซัพพลายเออร์ (ส่งเคลมแล้ว / ปิดเคลม) -->
+  <div class="modal fade" id="ClaimActionModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content shadow-lg border-0">
+        <div class="modal-header py-3" id="claim-modal-header">
+          <h5 class="modal-title font-weight-bold" id="claim-modal-title">จัดการรายการเคลม</h5>
+          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+        <div class="modal-body p-4" id="claim-modal-body">
+          <!-- Dynamic Content -->
+        </div>
+        <div class="modal-footer py-2 bg-light">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary font-weight-bold px-4" id="btn-confirm-claim-action">ยืนยัน</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.6/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.0/jquery-confirm.min.js"></script>
+  <script src="js/easy-loading.js"></script>
+
+  <script>
+    // State Variables
+    window.currentLoadedBill = null;
+    window.returnFormItems = [];
+    window.allReturnsData = [];
+    window.pendingClaimsData = [];
+    window.allClaimsData = [];
+
+    $(document).ready(function() {
+      // เซ็ตวันที่ปัจจุบันในช่องวันที่รับคืนจริง
+      var today = new Date().toISOString().split('T')[0];
+      $('#in-actual-return-date').val(today);
+      $('#filter-rt-end-date').val(today);
+
+      // โหลดสถิติภาพรวม
+      loadSummaryStats();
+
+      // ตรวจสอบ Query Parameter ถ้าเปิดมาจากหน้าบิล เช่น ?bill_id=S26-00042
+      var urlParams = new URLSearchParams(window.location.search);
+      var queryBill = urlParams.get('bill_id') || urlParams.get('bill_number');
+      if (queryBill) {
+        $('#input-bill-search').val(queryBill);
+        fetchBillForReturn();
+      }
+    });
+
+    function switchTab(tabId) {
+      $('#mainReturnTabs a[href="#' + tabId + '"]').tab('show');
+    }
+
+    function toggleNoRefMode() {
+      var isNoRef = $('#chk-no-ref-bill').is(':checked');
+      if (isNoRef) {
+        $('#input-bill-search').prop('disabled', true).val('');
+        $('#btn-fetch-bill').prop('disabled', true);
+        $('#hint-no-ref').slideDown();
+        $('#btn-add-manual-item-wrap').show();
+        $('#in-refund-type').val('ไม่คืนเงิน').prop('disabled', true);
+        $('#in-total-refund-amount').val('0.00').prop('disabled', true);
+        $('#badge-vat-status').removeClass('badge-info').addClass('badge-secondary').text('บิลทั่วไป (ไม่มี VAT)');
+        $('#vat-details-content').hide();
+        $('#vat-none-notice').show();
+
+        window.currentLoadedBill = null;
+        window.returnFormItems = [];
+        renderReturnItemsTable();
+      } else {
+        $('#input-bill-search').prop('disabled', false);
+        $('#btn-fetch-bill').prop('disabled', false);
+        $('#hint-no-ref').slideUp();
+        $('#btn-add-manual-item-wrap').hide();
+        $('#in-refund-type').prop('disabled', false);
+        $('#in-total-refund-amount').prop('disabled', false);
+      }
+    }
+
+    function fetchBillForReturn() {
+      var kw = ($('#input-bill-search').val() || '').trim();
+      if (!kw) {
+        $.alert({ title: '⚠️ กรุณาระบุเลขอ้างอิง', content: 'พิมพ์เลขที่บิลขาย หรือเลขคำสั่งซื้อแพลตฟอร์ม', type: 'orange' });
+        return;
+      }
+
+      EasyLoading.show({ text: "กำลังค้นหาข้อมูลบิล..." });
+      $.ajax({
+        url: 'php/get_bill_details_for_return.php',
+        type: 'GET',
+        data: { keyword: kw },
+        dataType: 'json',
+        success: function(res) {
+          EasyLoading.hide();
+          if (res && res.success && res.found && res.bill) {
+            window.currentLoadedBill = res.bill;
+            populateBillToForm(res.bill);
+          } else {
+            $.alert({
+              title: '❌ ไม่พบบิล',
+              content: res.message || 'ไม่พบข้อมูลบิลขายหรือคำสั่งซื้อตามที่ค้นหา',
+              type: 'red'
+            });
+          }
+        },
+        error: function(err) {
+          EasyLoading.hide();
+          $.alert({ title: '⚠️ ข้อผิดพลาดเครือข่าย', content: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้', type: 'red' });
+        }
+      });
+    }
+
+    function populateBillToForm(bill) {
+      $('#in-customer-name').val(bill.customer_name || 'ลูกค้าทั่วไป');
+      $('#in-customer-id').val(bill.customer_id || '');
+      $('#in-customer-tel').val(bill.customer_tel || '');
+      $('#in-branch-select').val(bill.branch_type || 'หน้าร้าน');
+
+      // VAT Section
+      if (bill.is_vat) {
+        $('#badge-vat-status').removeClass('badge-secondary').addClass('badge-info').text('บิลมี VAT 7% (ออกใบลดหนี้ CN)');
+        $('#lbl-orig-bill-no').text(bill.bill_number || '-');
+        $('#lbl-orig-amount').text((bill.total_price || 0).toLocaleString('th-TH', {minimumFractionDigits: 2}));
+        $('#lbl-tax-id').text(bill.customer_tel || '0105559043513 (ค่าเริ่มต้น)');
+        $('#vat-details-content').slideDown();
+        $('#vat-none-notice').hide();
+      } else {
+        $('#badge-vat-status').removeClass('badge-info').addClass('badge-secondary').text('บิลทั่วไป (ไม่มี VAT)');
+        $('#vat-details-content').hide();
+        $('#vat-none-notice').slideDown();
+      }
+
+      // N3: Show original sold location
+      var origBranch = bill.branch_type || (bill.branch_id === 6 ? 'หน้าร้าน' : ('โกดัง ' + (bill.branch_id || '')));
+      $('#lbl-orig-sold-branch').text('📍 ตัดขายจาก: ' + origBranch);
+
+      // N4: Auto-detect platform orders
+      var isOnline = (bill.customer_name && (bill.customer_name.includes('Tiktok') || bill.customer_name.includes('TikTok') || bill.customer_name.includes('Shopee') || bill.customer_name.includes('Lazada'))) || (bill.order_sn && bill.order_sn.trim() !== '');
+      if (isOnline) {
+        $('#in-refund-type').val('คืนเงินผ่านแพลตฟอร์ม');
+        $('#box-platform-refund').slideDown();
+      } else {
+        $('#in-refund-type').val('คืนเงินสด');
+        $('#box-platform-refund').slideUp();
+      }
+
+      // Pro-rate discount ratio
+      var discountRatio = 1;
+      if (bill.sum_price > 0 && bill.total_discount > 0) {
+        discountRatio = Math.max(0, 1 - (bill.total_discount / bill.sum_price));
+      }
+
+      // N5: Populate Items - Default selected: false (พนักงานต้องติ๊กเลือกเอง)
+      window.returnFormItems = (bill.items || []).map(function(it) {
+        return {
+          item_id: it.item_id,
+          prod_id: it.prod_id,
+          prod_code: it.prod_code,
+          prod_name: it.prod_name,
+          img: it.img,
+          unit_price: it.unit_price,
+          cost: it.cost,
+          discount_ratio: discountRatio,
+          qty_sold: it.qty_sold,
+          qty_available: it.qty_available,
+          return_qty: it.qty_available > 0 ? 1 : 0,
+          destination: 'stock', // 'stock' or 'quarantine'
+          supplier_name: it.suggested_supplier || '',
+          damage_reason: '',
+          damage_images: [],
+          selected: false // N5: Default unselected
+        };
+      });
+
+      renderReturnItemsTable();
+      calculateRefundTotals();
+    }
+
+    function renderReturnItemsTable() {
+      var $tbody = $('#tbody-return-items');
+      $tbody.empty();
+
+      if (!window.returnFormItems || window.returnFormItems.length === 0) {
+        $tbody.html('<tr><td colspan="8" class="text-center py-4 text-muted">ไม่มีรายการสินค้า</td></tr>');
+        return;
+      }
+
+      window.returnFormItems.forEach(function(item, idx) {
+        var isQuarantine = (item.destination === 'quarantine');
+        var tr = $('<tr></tr>');
+
+        var isAvail = (item.qty_available > 0);
+        var chkBox = isAvail
+          ? '<input type="checkbox" class="chk-item" data-idx="' + idx + '" ' + (item.selected ? 'checked' : '') + ' onchange="toggleItemSelect(' + idx + ', this.checked)">'
+          : '<span class="badge badge-secondary" style="font-size:0.75rem;">คืนครบแล้ว</span>';
+        var imgThumb = '<img src="' + item.img + '" class="img-thumb-preview" onerror="this.src=\'img/no_img.png\'">';
+        var skuBadge = '<span class="badge badge-dark font-mono px-2 py-1">' + escapeHtml(item.prod_code) + '</span>';
+        var nameSpan = '<span class="font-weight-bold text-dark">' + escapeHtml(item.prod_name) + '</span>';
+        var qtyInfo = '<div class="small text-muted font-weight-bold">' + item.qty_sold + ' / <span class="' + (isAvail ? 'text-success' : 'text-danger') + '">' + item.qty_available + '</span></div>';
+        
+        var qtyInput = isAvail
+          ? '<input type="number" min="1" max="' + item.qty_available + '" class="form-control form-control-sm text-center font-weight-bold item-qty-input" value="' + item.return_qty + '" onchange="changeItemQty(' + idx + ', this.value)">'
+          : '<input type="number" class="form-control form-control-sm text-center font-weight-bold" value="0" disabled>';
+        var priceDisplay = '<div class="font-weight-bold text-dark">฿' + item.unit_price.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</div>';
+
+        // 2-Path Destination Toggle
+        var destToggle = 
+          '<div class="btn-group btn-group-toggle btn-group-sm mb-2" data-toggle="buttons">' +
+            '<label class="btn btn-outline-success font-weight-bold ' + (!isQuarantine ? 'active' : '') + '" onclick="setItemDestination(' + idx + ', \'stock\')">' +
+              '<input type="radio" name="dest_' + idx + '" ' + (!isQuarantine ? 'checked' : '') + '> 🟢 ขายได้ (คืนสต๊อก)' +
+            '</label>' +
+            '<label class="btn btn-outline-danger font-weight-bold ' + (isQuarantine ? 'active' : '') + '" onclick="setItemDestination(' + idx + ', \'quarantine\')">' +
+              '<input type="radio" name="dest_' + idx + '" ' + (isQuarantine ? 'checked' : '') + '> 🔴 แตกหัก (คลังรอเคลม)' +
+            '</label>' +
+          '</div>';
+
+        // Quarantine Sub-form (Supplier & Damage Reason)
+        var quarantineBox = '';
+        if (isQuarantine) {
+          quarantineBox = 
+            '<div class="p-2 rounded bg-light border border-danger small mt-1">' +
+              '<div class="mb-1">' +
+                '<label class="font-weight-bold text-danger mb-0"><i class="fas fa-truck mr-1"></i>เคลมร้านค้า (ซัพพลายเออร์):</label>' +
+                '<input type="text" class="form-control form-control-sm mt-1" placeholder="ระบุชื่อร้านค้า/ซัพพลายเออร์" value="' + escapeHtml(item.supplier_name) + '" onchange="changeItemSupplier(' + idx + ', this.value)">' +
+              '</div>' +
+              '<div class="mb-1">' +
+                '<label class="font-weight-bold text-muted mb-0"><i class="fas fa-exclamation-triangle mr-1"></i>อาการเสียหาย / ตำหนิ:</label>' +
+                '<input type="text" class="form-control form-control-sm mt-1" placeholder="เช่น แตกหักที่มุม, ไฟไม่ติด" value="' + escapeHtml(item.damage_reason) + '" onchange="changeItemDamageReason(' + idx + ', this.value)">' +
+              '</div>' +
+            '</div>';
+        }
+
+        tr.html(
+          '<td class="text-center align-middle">' + chkBox + '</td>' +
+          '<td class="text-center align-middle">' + imgThumb + '</td>' +
+          '<td class="align-middle">' + skuBadge + '</td>' +
+          '<td class="align-middle">' + nameSpan + '</td>' +
+          '<td class="text-center align-middle">' + qtyInfo + '</td>' +
+          '<td class="text-center align-middle">' + qtyInput + '</td>' +
+          '<td class="text-right align-middle">' + priceDisplay + '</td>' +
+          '<td class="align-middle">' + destToggle + quarantineBox + '</td>'
+        );
+
+        $tbody.append(tr);
+      });
+    }
+
+    function toggleItemSelect(idx, val) {
+      if (window.returnFormItems[idx]) {
+        window.returnFormItems[idx].selected = val;
+        calculateRefundTotals();
+      }
+    }
+
+    function toggleSelectAllItems(selectAll) {
+      if (window.returnFormItems) {
+        window.returnFormItems.forEach(function(it) {
+          if (it.qty_available > 0) {
+            it.selected = selectAll;
+          }
+        });
+        renderReturnItemsTable();
+        calculateRefundTotals();
+      }
+    }
+
+    function changeItemQty(idx, val) {
+      var num = parseInt(val) || 1;
+      if (window.returnFormItems[idx]) {
+        var avail = window.returnFormItems[idx].qty_available;
+        var max = (avail !== undefined && avail !== null) ? parseInt(avail) : 999;
+        if (max <= 0) {
+          window.returnFormItems[idx].return_qty = 0;
+          window.returnFormItems[idx].selected = false;
+        } else {
+          if (num > max && window.currentLoadedBill) {
+            num = max;
+          }
+          window.returnFormItems[idx].return_qty = Math.max(1, num);
+        }
+        renderReturnItemsTable();
+        calculateRefundTotals();
+      }
+    }
+
+    function setItemDestination(idx, dest) {
+      if (window.returnFormItems[idx]) {
+        window.returnFormItems[idx].destination = dest;
+        renderReturnItemsTable();
+      }
+    }
+
+    function changeItemSupplier(idx, val) {
+      if (window.returnFormItems[idx]) {
+        window.returnFormItems[idx].supplier_name = val;
+      }
+    }
+
+    function changeItemDamageReason(idx, val) {
+      if (window.returnFormItems[idx]) {
+        window.returnFormItems[idx].damage_reason = val;
+      }
+    }
+
+    function calculateRefundTotals() {
+      var sumRefund = 0;
+      window.returnFormItems.forEach(function(it) {
+        if (it.selected) {
+          var ratio = it.discount_ratio !== undefined ? it.discount_ratio : 1;
+          sumRefund += (it.unit_price * ratio * it.return_qty);
+        }
+      });
+
+      var refType = $('#in-refund-type').val();
+      if (refType === 'คืนเงินผ่านแพลตฟอร์ม') {
+        $('#box-platform-refund').slideDown();
+      } else {
+        $('#box-platform-refund').slideUp();
+      }
+      if (refType === 'ไม่คืนเงิน') {
+        sumRefund = 0;
+      }
+
+      $('#in-total-refund-amount').val(sumRefund.toFixed(2));
+
+      // Calculate Credit Note VAT figures if applicable
+      if (window.currentLoadedBill && window.currentLoadedBill.is_vat) {
+        var origTotal = window.currentLoadedBill.total_price || 0;
+        var diffAmount = sumRefund;
+        var correctAmount = Math.max(0, origTotal - diffAmount);
+        var diffVat = Math.round((diffAmount * 7 / 107) * 100) / 100;
+
+        $('#lbl-correct-amount').text(correctAmount.toLocaleString('th-TH', {minimumFractionDigits: 2}));
+        $('#lbl-diff-amount').text(diffAmount.toLocaleString('th-TH', {minimumFractionDigits: 2}));
+        $('#lbl-diff-vat').text(diffVat.toLocaleString('th-TH', {minimumFractionDigits: 2}));
+      }
+    }
+
+    function submitProductReturn() {
+      var selectedItems = window.returnFormItems.filter(function(x) { return x.selected; });
+      if (selectedItems.length === 0) {
+        $.alert({ title: '⚠️ ไม่มีสินค้าที่เลือก', content: 'กรุณาติ๊กเลือกสินค้าที่ต้องการรับคืนอย่างน้อย 1 รายการ', type: 'orange' });
+        return;
+      }
+
+      var customerName = ($('#in-customer-name').val() || '').trim();
+      var actualDate = $('#in-actual-return-date').val();
+      var reason = ($('#in-return-reason').val() || '').trim();
+
+      if (!customerName) {
+        $.alert({ title: '⚠️ กรุณาระบุชื่อลูกค้า', content: 'กรุณาระบุชื่อลูกค้าหรือช่องทาง', type: 'orange' });
+        $('#in-customer-name').focus();
+        return;
+      }
+      if (!actualDate) {
+        $.alert({ title: '⚠️ กรุณาระบุวันที่รับคืนจริง', content: 'กรุณาระบุวันที่รับคืนสินค้าจริง', type: 'orange' });
+        return;
+      }
+      if (!reason) {
+        $.alert({ title: '⚠️ กรุณาระบุเหตุผลการคืน', content: 'กรุณาพิมพ์เหตุผลการรับคืนสินค้า', type: 'orange' });
+        $('#in-return-reason').focus();
+        return;
+      }
+
+      // Check quarantine supplier requirements
+      for (var i = 0; i < selectedItems.length; i++) {
+        var it = selectedItems[i];
+        if (it.destination === 'quarantine' && !it.supplier_name.trim()) {
+          $.alert({
+            title: '⚠️ ระบุซัพพลายเออร์ที่เคลม',
+            content: 'สินค้า <strong>' + escapeHtml(it.prod_name) + '</strong> เลือกเข้าคลังรอเคลม กรุณาระบุชื่อร้านค้า/ซัพพลายเออร์ที่จะส่งเคลม',
+            type: 'orange'
+          });
+          return;
+        }
+      }
+
+      var payload = {
+        bill_id: window.currentLoadedBill ? window.currentLoadedBill.bill_id : null,
+        bill_number: window.currentLoadedBill ? window.currentLoadedBill.bill_number : '',
+        order_sn: window.currentLoadedBill ? window.currentLoadedBill.order_sn : '',
+        customer_id: $('#in-customer-id').val(),
+        customer_name: customerName,
+        actual_return_date: actualDate,
+        refund_type: $('#in-refund-type').val(),
+        platform_refund_id: ($('#in-platform-refund-id').val() || '').trim(),
+        total_refund_amount: parseFloat($('#in-total-refund-amount').val()) || 0,
+        reason: reason,
+        is_vat: (window.currentLoadedBill && window.currentLoadedBill.is_vat) ? 1 : 0,
+        tax_id: $('#lbl-tax-id').text(),
+        tax_address: window.currentLoadedBill ? window.currentLoadedBill.customer_addr : '',
+        original_bill_date: window.currentLoadedBill ? window.currentLoadedBill.date_time : '',
+        original_bill_amount: window.currentLoadedBill ? window.currentLoadedBill.total_price : 0,
+        correct_amount: parseFloat($('#lbl-correct-amount').text().replace(/,/g, '')) || 0,
+        diff_amount: parseFloat($('#lbl-diff-amount').text().replace(/,/g, '')) || 0,
+        diff_vat: parseFloat($('#lbl-diff-vat').text().replace(/,/g, '')) || 0,
+        user_name: localStorage.user_name || 'พนักงาน',
+        role: localStorage.user_role || 'พนักงาน',
+        items: selectedItems.map(function(it) {
+          var selOpt = $('#in-branch-select option:selected');
+          var bId = parseInt(selOpt.data('id')) || 6;
+          var bType = selOpt.data('type') || 'หน้าร้าน';
+          return {
+            prod_id: it.prod_id,
+            prod_code: it.prod_code,
+            prod_name: it.prod_name,
+            qty: it.return_qty,
+            unit_price: it.unit_price,
+            cost: it.cost,
+            destination: it.destination,
+            branch_id: bId,
+            branch_type: bType,
+            damage_reason: it.damage_reason,
+            supplier_name: it.supplier_name
+          };
+        })
+      };
+
+      $.confirm({
+        title: 'ยืนยันบันทึกเอกสารรับคืนสินค้า',
+        content: (function() {
+          var selOpt = $('#in-branch-select option:selected');
+          var bName = selOpt.text();
+          var origSold = window.currentLoadedBill ? (window.currentLoadedBill.branch_name || window.currentLoadedBill.branch_type || 'หน้าร้าน') : 'ไม่ระบุ';
+          var refTxt = $('#in-refund-type').val();
+          var totalAmt = parseFloat($('#in-total-refund-amount').val()) || 0;
+          return '<div class="alert alert-warning py-2 mb-3 text-center font-weight-bold" style="font-size:0.95rem;">' +
+                 '📍 ตัดขายจาก: <span class="text-danger">' + escapeHtml(origSold) + '</span> ➔ รับคืนเข้า: <span class="text-success">' + escapeHtml(bName) + '</span>' +
+                 '</div>' +
+                 '<div class="mb-2">จำนวนรายการรับคืน: <strong>' + selectedItems.length + ' รายการ</strong></div>' +
+                 '<div class="mb-2">รูปแบบการคืนเงิน: <strong>' + escapeHtml(refTxt) + '</strong></div>' +
+                 '<div class="mb-2">ยอดคืนสุทธิ: <strong class="text-danger">฿' + totalAmt.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</strong></div>' +
+                 '<small class="text-muted d-block mt-3">• ระบบจะสร้างเลขที่ RT26-xxxxx ต่อเนื่องอัตโนมัติ<br>• สต๊อกจะเพิ่มเฉพาะรายการที่เลือก "ขายได้"<br>• รายการ "แตกหัก" จะส่งเข้าคลังรอเคลม</small>';
+        })(),
+        buttons: {
+          confirm: {
+            text: 'ยืนยันบันทึก (สร้าง RT)',
+            btnClass: 'btn-success',
+            action: function() {
+              EasyLoading.show({ text: "กำลังบันทึกเอกสารรับคืนสินค้า..." });
+              $.ajax({
+                url: 'php/save_product_return.php',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                dataType: 'json',
+                success: function(resp) {
+                  EasyLoading.hide();
+                  if (resp && resp.success) {
+                    $.alert({
+                      title: '🎉 บันทึกสำเร็จ!',
+                      content: 'สร้างเอกสารรับคืนเลขที่ <strong>' + resp.return_code + '</strong> เรียบร้อยแล้ว' +
+                               (resp.credit_note_number ? '<br>ใบลดหนี้: <strong>' + resp.credit_note_number + '</strong>' : '') +
+                               (resp.claim_count > 0 ? '<br><span class="text-warning">ส่งเข้าคลังรอเคลม ' + resp.claim_count + ' รายการ</span>' : ''),
+                      type: 'green',
+                      buttons: {
+                        ok: {
+                          text: 'ตกลง',
+                          action: function() {
+                            resetReturnForm();
+                            loadSummaryStats();
+                            switchTab('tab-history');
+                          }
+                        }
+                      }
+                    });
+                  } else {
+                    $.alert({ title: '⚠️ เกิดข้อผิดพลาด', content: resp.error || 'ไม่สามารถบันทึกได้', type: 'red' });
+                  }
+                },
+                error: function(err) {
+                  EasyLoading.hide();
+                  $.alert({ title: '⚠️ ข้อผิดพลาดเครือข่าย', content: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้', type: 'red' });
+                }
+              });
+            }
+          },
+          cancel: { text: 'ยกเลิก' }
+        }
+      });
+    }
+
+    function resetReturnForm() {
+      $('#input-bill-search').val('');
+      $('#chk-no-ref-bill').prop('checked', false);
+      toggleNoRefMode();
+      $('#in-customer-name').val('');
+      $('#in-customer-id').val('');
+      $('#in-customer-tel').val('');
+      $('#in-return-reason').val('');
+      $('#in-refund-type').val('คืนเงินสด');
+      $('#in-total-refund-amount').val('0.00');
+      $('#vat-details-content').hide();
+      $('#vat-none-notice').show();
+      window.currentLoadedBill = null;
+      window.returnFormItems = [];
+      renderReturnItemsTable();
+    }
+
+    function loadSummaryStats() {
+      $.ajax({
+        url: 'php/get_supplier_claims.php?mode=pending_only',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (res && res.success && res.summary) {
+            $('#stat-pending-claims').text(res.summary.sent_pending);
+            $('#stat-wait-send-claims').text(res.summary.wait_send);
+            $('#stat-closed-claims').text(res.summary.closed_count);
+
+            if (res.summary.sent_pending > 0) {
+              $('#badge-pending-count').text(res.summary.sent_pending).show();
+            } else {
+              $('#badge-pending-count').hide();
+            }
+          }
+        }
+      });
+
+      $.ajax({
+        url: 'php/get_returns.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (res && res.success) {
+            $('#stat-total-returns').text(res.total || 0);
+          }
+        }
+      });
+    }
+
+    function loadReturnsList() {
+      var sd = $('#filter-rt-start-date').val();
+      var ed = $('#filter-rt-end-date').val();
+      var kw = $('#filter-rt-search').val();
+
+      var $tbody = $('#tbody-returns-list');
+      $tbody.html('<tr><td colspan="7" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin mr-1"></i> กำลังโหลดประวัติรับคืนสินค้า...</td></tr>');
+
+      $.ajax({
+        url: 'php/get_returns.php',
+        type: 'GET',
+        data: { start_date: sd, end_date: ed, keyword: kw },
+        dataType: 'json',
+        success: function(res) {
+          if (res && res.success) {
+            window.allReturnsData = res.data || [];
+            renderReturnsTable(window.allReturnsData);
+          } else {
+            $tbody.html('<tr><td colspan="7" class="text-center py-4 text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
+          }
+        },
+        error: function() {
+          $tbody.html('<tr><td colspan="7" class="text-center py-4 text-danger">ข้อผิดพลาดเครือข่าย</td></tr>');
+        }
+      });
+    }
+
+    function renderReturnsTable(data) {
+      var $tbody = $('#tbody-returns-list');
+      $tbody.empty();
+
+      if (!data || data.length === 0) {
+        $tbody.html('<tr><td colspan="7" class="text-center py-4 text-muted">ไม่พบประวัติเอกสารรับคืนสินค้า</td></tr>');
+        return;
+      }
+
+      data.forEach(function(row) {
+        var typeBadge = '<span class="badge badge-dest-stock px-2 py-1">ขายได้</span>';
+        if (row.return_type === 'แตกหัก_เสีย') {
+          typeBadge = '<span class="badge badge-dest-quarantine px-2 py-1">เข้าคลังรอเคลม</span>';
+        } else if (row.return_type === 'ผสม') {
+          typeBadge = '<span class="badge badge-warning text-dark px-2 py-1">ผสม (ขายได้+เคลม)</span>';
+        }
+
+        var cnTag = row.credit_note_number ? ('<br><span class="badge badge-info font-mono">CN: ' + row.credit_note_number + '</span>') : '';
+        var billRef = row.bill_number ? ('<span class="font-weight-bold text-primary">' + row.bill_number + '</span>') : (row.order_sn ? ('<span class="font-mono text-muted small">' + row.order_sn + '</span>') : '<span class="text-muted">(ไม่มีบิลเดิม)</span>');
+
+        var tr = '<tr>' +
+          '<td class="font-weight-bold font-mono text-dark">' + row.return_code + cnTag + '</td>' +
+          '<td>' + row.actual_return_date + '<br><small class="text-muted">บันทึก: ' + row.return_date + '</small></td>' +
+          '<td>' + billRef + '</td>' +
+          '<td class="font-weight-bold">' + escapeHtml(row.customer_name) + '</td>' +
+          '<td class="text-center">' + typeBadge + '</td>' +
+          '<td class="text-right font-weight-bold text-danger">฿' + (row.total_refund_amount || 0).toLocaleString('th-TH', {minimumFractionDigits: 2}) + '<br><small class="text-muted">' + row.refund_type + '</small></td>' +
+          '<td class="text-center">' +
+            '<button class="btn btn-sm btn-outline-primary py-0 px-2" onclick="viewReturnDetail(' + row.id + ')"><i class="fas fa-eye mr-1"></i>ดูรายการ</button>' +
+          '</td>' +
+        '</tr>';
+        $tbody.append(tr);
+      });
+    }
+
+    function viewReturnDetail(retId) {
+      var item = window.allReturnsData.find(function(x) { return x.id == retId; });
+      if (!item) return;
+
+      var itemsHtml = '';
+      (item.items || []).forEach(function(it, i) {
+        var branchTxt = (it.branch_type === 'หน้าร้าน') ? 'หน้าร้าน' : ('โกดัง ' + (it.branch_id || ''));
+        var destBadge = (it.destination === 'quarantine') 
+          ? '<span class="badge badge-danger">เข้าคลังรอเคลม (' + branchTxt + ')</span>' 
+          : '<span class="badge badge-success">คืนเข้าสต๊อกขาย (' + branchTxt + ')</span>';
+
+        itemsHtml += '<tr>' +
+          '<td class="text-center">' + (i + 1) + '</td>' +
+          '<td class="text-center font-mono font-weight-bold">' + it.prod_code + '</td>' +
+          '<td>' + escapeHtml(it.prod_name) + (it.damage_reason ? ('<br><small class="text-danger">ตำหนิ: ' + escapeHtml(it.damage_reason) + '</small>') : '') + '</td>' +
+          '<td class="text-center font-weight-bold">' + it.qty + '</td>' +
+          '<td class="text-right">฿' + it.unit_price.toLocaleString('th-TH', {minimumFractionDigits: 2}) + '</td>' +
+          '<td class="text-center">' + destBadge + '</td>' +
+        '</tr>';
+      });
+
+      var origRef = item.bill_number ? ('บิล ' + item.bill_number) : (item.order_sn ? ('ออเดอร์ ' + item.order_sn) : 'ไม่มีเลขอ้างอิง');
+
+      var html = 
+        '<div class="row mb-3">' +
+          '<div class="col-6"><strong>เลขที่รับคืน:</strong> <span class="font-mono text-primary font-weight-bold">' + item.return_code + '</span></div>' +
+          '<div class="col-6 text-right"><strong>วันที่รับคืนจริง:</strong> ' + item.actual_return_date + '</div>' +
+          '<div class="col-6 mt-1"><strong>ลูกค้า:</strong> ' + escapeHtml(item.customer_name) + '</div>' +
+          '<div class="col-6 mt-1 text-right"><strong>รูปแบบเงิน:</strong> ' + item.refund_type + ' (฿' + item.total_refund_amount.toLocaleString() + ')</div>' +
+          '<div class="col-6 mt-1"><strong>ตัดขายจาก:</strong> <span class="text-danger font-weight-bold">' + escapeHtml(origRef) + '</span></div>' +
+          '<div class="col-6 mt-1 text-right"><strong>สถานะเอกสาร:</strong> <span class="badge badge-info">' + escapeHtml(item.status || 'สมบูรณ์') + '</span></div>' +
+          '<div class="col-12 mt-2"><strong>เหตุผล:</strong> ' + escapeHtml(item.reason) + '</div>' +
+        '</div>' +
+        '<div class="table-responsive bg-light rounded border mb-3">' +
+          '<table class="table table-sm mb-0">' +
+            '<thead class="thead-dark"><tr><th class="text-center">#</th><th class="text-center">SKU</th><th>ชื่อสินค้า</th><th class="text-center">จำนวน</th><th class="text-right">ราคา</th><th class="text-center">สถานะ</th></tr></thead>' +
+            '<tbody>' + itemsHtml + '</tbody>' +
+          '</table>' +
+        '</div>' +
+        '<div class="small text-muted d-flex justify-content-between">' +
+          '<div>ผู้ทำรายการ: ' + (item.created_by || '-') + '</div>' +
+          '<div>เวลาบันทึก: ' + item.created_at + '</div>' +
+        '</div>';
+
+      $('#detail-modal-title').html('<i class="fas fa-file-invoice mr-2 text-primary"></i>รายละเอียดเอกสาร ' + item.return_code);
+      $('#detail-modal-body').html(html);
+      $('#ReturnDetailModal').modal('show');
+    }
+
+    function loadPendingClaims() {
+      var $tbody = $('#tbody-pending-claims');
+      $tbody.html('<tr><td colspan="8" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin mr-1"></i> กำลังโหลดรายการเคลมค้างรับ...</td></tr>');
+
+      $.ajax({
+        url: 'php/get_supplier_claims.php?mode=pending_only',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (res && res.success) {
+            window.pendingClaimsData = res.data || [];
+            renderPendingClaimsTable(window.pendingClaimsData);
+          } else {
+            $tbody.html('<tr><td colspan="8" class="text-center py-4 text-danger">เกิดข้อผิดพลาดในการโหลด</td></tr>');
+          }
+        },
+        error: function() {
+          $tbody.html('<tr><td colspan="8" class="text-center py-4 text-danger">ข้อผิดพลาดเครือข่าย</td></tr>');
+        }
+      });
+    }
+
+    function renderPendingClaimsTable(data) {
+      var $tbody = $('#tbody-pending-claims');
+      $tbody.empty();
+
+      if (!data || data.length === 0) {
+        $tbody.html('<tr><td colspan="8" class="text-center py-4 text-success"><i class="fas fa-check-circle mr-1"></i> ยอดเยี่ยม! ไม่มีรายการเคลมค้างรับที่รอของในขณะนี้</td></tr>');
+        return;
+      }
+
+      data.forEach(function(row) {
+        var daysBadge = '<span class="badge badge-warning px-2 py-1 font-weight-bold" style="font-size:0.85rem;">' + row.days_pending + ' วัน</span>';
+        if (row.days_pending >= 14) {
+          daysBadge = '<span class="badge badge-danger px-2 py-1 font-weight-bold" style="font-size:0.85rem;"><i class="fas fa-exclamation-triangle mr-1"></i>' + row.days_pending + ' วัน</span>';
+        }
+
+        var actBtns = 
+          '<div class="btn-group btn-group-sm">' +
+            '<button class="btn btn-success py-1 font-weight-bold" onclick="openClaimActionModal(' + row.id + ', \'resolve_received_goods\')" title="ได้รับสินค้าชิ้นใหม่คืนจากซัพพลายเออร์"><i class="fas fa-check mr-1"></i>ได้ของ</button>' +
+            '<button class="btn btn-info py-1 font-weight-bold" onclick="openClaimActionModal(' + row.id + ', \'resolve_refund\')" title="ได้เงินคืนหรือใบลดหนี้แทน"><i class="fas fa-coins mr-1"></i>ได้เงิน</button>' +
+            '<button class="btn btn-danger py-1 font-weight-bold" onclick="openClaimActionModal(' + row.id + ', \'resolve_unresolved\')" title="เคลมไม่ได้ ตัดเป็นของเสียหาย"><i class="fas fa-times mr-1"></i>เคลมไม่ได้</button>' +
+          '</div>';
+
+        var tr = '<tr>' +
+          '<td class="font-weight-bold font-mono text-dark">' + row.claim_code + '<br><small class="text-muted">' + (row.return_code || '-') + '</small></td>' +
+          '<td class="text-center"><img src="' + row.img + '" class="img-thumb-preview" onerror="this.src=\'img/no_img.png\'"></td>' +
+          '<td><span class="badge badge-dark font-mono">' + escapeHtml(row.prod_code) + '</span><br><span class="font-weight-bold">' + escapeHtml((row.prod_name && row.prod_name !== '0') ? row.prod_name : (row.prod_code || '-')) + '</span>' + (row.notes ? ('<div class="small text-danger">ตำหนิ: ' + escapeHtml(row.notes) + '</div>') : '') + '</td>' +
+          '<td class="text-center font-weight-bold" style="font-size: 1.1rem;">' + row.qty + '</td>' +
+          '<td class="font-weight-bold text-primary">' + escapeHtml(row.supplier_name) + (row.supplier_ref_no ? ('<br><small class="text-muted">เลขร้าน: ' + escapeHtml(row.supplier_ref_no) + '</small>') : '') + '</td>' +
+          '<td>' + row.claim_date + '</td>' +
+          '<td class="text-center">' + daysBadge + '</td>' +
+          '<td class="text-center">' + actBtns + '</td>' +
+        '</tr>';
+        $tbody.append(tr);
+      });
+    }
+
+    function openClaimActionModal(claimId, actionType) {
+      var item = window.pendingClaimsData.find(function(x) { return x.id == claimId; });
+      if (!item) return;
+
+      var title = '';
+      var body = '';
+      var btnClass = 'btn-primary';
+      var btnText = 'ยืนยัน';
+
+      if (actionType === 'resolve_received_goods') {
+        title = '🟢 ได้รับสินค้าคืนจากร้านค้า (ซัพพลายเออร์)';
+        btnClass = 'btn-success';
+        btnText = 'ยืนยันรับของเข้าสต๊อก';
+        body = 
+          '<div class="alert alert-success">' +
+            '<strong>ยืนยันการรับสินค้าคืน:</strong> ' + escapeHtml(item.prod_name) + ' (' + item.prod_code + ')<br>' +
+            'จำนวน: <strong>' + item.qty + ' ชิ้น</strong> จากร้านค้า: <strong>' + escapeHtml(item.supplier_name) + '</strong>' +
+          '</div>' +
+          '<p class="small text-muted mb-0"><i class="fas fa-check-circle mr-1 text-success"></i> ระบบจะนำสินค้าออกจากคลังรอเคลม และเพิ่มกลับเข้าสต๊อกขายปกติให้อัตโนมัติทันที</p>';
+
+      } else if (actionType === 'resolve_refund') {
+        title = '🔵 ได้เงินคืน / หักลดยอดหนี้แทน';
+        btnClass = 'btn-info';
+        btnText = 'ยืนยันปิดเคลมพร้อมยอดเงิน';
+        body = 
+          '<div class="alert alert-info">' +
+            '<strong>สินค้า:</strong> ' + escapeHtml(item.prod_name) + ' (' + item.qty + ' ชิ้น)<br>' +
+            'ซัพพลายเออร์: <strong>' + escapeHtml(item.supplier_name) + '</strong>' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label class="font-weight-bold">ยอดเงินที่ได้รับคืน หรือยอดลดหนี้ (บาท) *</label>' +
+            '<input type="number" step="0.01" min="0" id="modal-refund-amt" class="form-control font-weight-bold text-right text-success" value="' + (item.prod_cost * item.qty) + '">' +
+          '</div>' +
+          '<div class="form-group mb-0">' +
+            '<label class="small text-muted font-weight-bold">หมายเหตุเพิ่มเติม</label>' +
+            '<input type="text" id="modal-refund-notes" class="form-control" placeholder="เช่น โอนคืนเข้า บช. กสิกร / หักลดในบิลรับเข้าถัดไป">' +
+          '</div>';
+
+      } else if (actionType === 'resolve_unresolved') {
+        title = '🔴 เคลมไม่ได้ — ย้ายเป็น "ของเสียหาย"';
+        btnClass = 'btn-danger';
+        btnText = 'ยืนยันการจัดการของเสียหาย';
+        body = 
+          '<div class="alert alert-danger">' +
+            '<strong>สินค้า:</strong> ' + escapeHtml(item.prod_name) + ' (' + item.qty + ' ชิ้น)<br>' +
+            'ร้านค้าไม่รับเคลม / เคลมไม่ได้ ต้องเลือกวิธีจัดการต่อด้านล่าง' +
+          '</div>' +
+          '<div class="form-group">' +
+            '<label class="font-weight-bold mb-2">เลือกวิธีจัดการของเสียหาย (เจ้าของร้าน/แอดมินอนุมัติ) *</label>' +
+            '<div class="custom-control custom-radio mb-2">' +
+              '<input type="radio" id="radio-damage-sale" name="unres_choice" class="custom-control-input" value="ขายเซล" checked>' +
+              '<label class="custom-control-label font-weight-bold text-dark" for="radio-damage-sale">' +
+                '1. ส่งไปขายเซล (นำเข้าสู่คลัง "สินค้าเซล" ใน Phase 4)' +
+              '</label>' +
+            '</div>' +
+            '<div class="custom-control custom-radio">' +
+              '<input type="radio" id="radio-damage-trash" name="unres_choice" class="custom-control-input" value="ทุบทิ้ง">' +
+              '<label class="custom-control-label font-weight-bold text-danger" for="radio-damage-trash">' +
+                '2. ทุบทิ้ง (ตัดจำหน่ายสต๊อก + ถ่ายรูปความเสียหาย + แอดมินอนุมัติ)' +
+              '</label>' +
+            '</div>' +
+          '</div>' +
+          '<div class="form-group mb-0">' +
+            '<label class="small text-muted font-weight-bold">เหตุผลหรือหมายเหตุ</label>' +
+            '<input type="text" id="modal-unres-notes" class="form-control" placeholder="เหตุผลที่เคลมไม่ได้">' +
+          '</div>';
+      }
+
+      $('#claim-modal-title').text(title);
+      $('#claim-modal-body').html(body);
+      $('#btn-confirm-claim-action').attr('class', 'btn font-weight-bold px-4 ' + btnClass).text(btnText).off('click').on('click', function() {
+        executeClaimAction(claimId, actionType);
+      });
+
+      $('#ClaimActionModal').modal('show');
+    }
+
+    function executeClaimAction(claimId, actionType) {
+      var payload = {
+        claim_id: claimId,
+        action: actionType,
+        user_name: localStorage.user_name || 'พนักงาน',
+        role: localStorage.user_role || 'พนักงาน'
+      };
+
+      if (actionType === 'resolve_refund') {
+        payload.refund_amount = parseFloat($('#modal-refund-amt').val()) || 0;
+        payload.notes = $('#modal-refund-notes').val();
+      } else if (actionType === 'resolve_unresolved') {
+        payload.unresolved_action = $('input[name="unres_choice"]:checked').val() || 'ขายเซล';
+        payload.notes = $('#modal-unres-notes').val();
+      }
+
+      EasyLoading.show({ text: "กำลังบันทึก..." });
+      $.ajax({
+        url: 'php/update_claim_status.php',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        dataType: 'json',
+        success: function(resp) {
+          EasyLoading.hide();
+          $('#ClaimActionModal').modal('hide');
+          if (resp && resp.success) {
+            $.alert({
+              title: '✅ สำเร็จ',
+              content: resp.message || 'บันทึกเรียบร้อยแล้ว',
+              type: 'green',
+              buttons: {
+                ok: {
+                  action: function() {
+                    loadPendingClaims();
+                    loadSummaryStats();
+                  }
+                }
+              }
+            });
+          } else {
+            $.alert({ title: '⚠️ เกิดข้อผิดพลาด', content: resp.error || 'ไม่สามารถทำรายการได้', type: 'red' });
+          }
+        },
+        error: function(err) {
+          EasyLoading.hide();
+          $.alert({ title: '⚠️ ข้อผิดพลาดเครือข่าย', content: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้', type: 'red' });
+        }
+      });
+    }
+
+    function loadAllClaims() {
+      var $tbody = $('#tbody-all-claims');
+      $tbody.html('<tr><td colspan="7" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin mr-1"></i> กำลังโหลดรายการเคลม...</td></tr>');
+
+      $.ajax({
+        url: 'php/get_supplier_claims.php?status=' + (window.claimStatusFilter || 'all'),
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (res && res.success) {
+            window.allClaimsData = res.data || [];
+            renderAllClaimsTable(window.allClaimsData);
+          } else {
+            $tbody.html('<tr><td colspan="7" class="text-center py-4 text-danger">เกิดข้อผิดพลาด</td></tr>');
+          }
+        }
+      });
+    }
+
+    function filterClaimStatus(st) {
+      window.claimStatusFilter = st;
+      loadAllClaims();
+    }
+
+    function renderAllClaimsTable(data) {
+      var $tbody = $('#tbody-all-claims');
+      $tbody.empty();
+
+      if (!data || data.length === 0) {
+        $tbody.html('<tr><td colspan="7" class="text-center py-4 text-muted">ไม่พบข้อมูลการเคลม</td></tr>');
+        return;
+      }
+
+      data.forEach(function(row) {
+        var stBadge = '<span class="badge badge-secondary px-2 py-1">' + row.status + '</span>';
+        if (row.status === 'รอส่งเคลม') stBadge = '<span class="badge badge-danger px-2 py-1">รอส่งเคลม</span>';
+        else if (row.status === 'ส่งเคลมแล้ว') stBadge = '<span class="badge badge-warning px-2 py-1">ส่งเคลมแล้ว (รอผล)</span>';
+        else if (row.status === 'ปิด') stBadge = '<span class="badge badge-success px-2 py-1">ปิดเคลมแล้ว</span>';
+        else if (row.status === 'ยกเลิก-ทดสอบ') stBadge = '<span class="badge badge-secondary px-2 py-1">ยกเลิก-ทดสอบ</span>';
+
+        var resultTag = '<span class="text-muted">-</span>';
+        if (row.result_action === 'ได้ของคืน') resultTag = '<span class="badge badge-success">ได้ของคืน</span>';
+        else if (row.result_action === 'ได้เงินคืน') resultTag = '<span class="badge badge-info">ได้เงินคืน (฿' + row.refund_amount.toLocaleString() + ')</span>';
+        else if (row.result_action === 'ของเสียหาย_เคลมไม่ได้') resultTag = '<span class="badge badge-danger">' + (row.unresolved_action || 'ของเสียหาย') + '</span>';
+
+        var displayName = (row.prod_name && row.prod_name !== '0') ? row.prod_name : (row.prod_code || '-');
+        var tr = '<tr>' +
+          '<td class="font-mono font-weight-bold text-dark">' + row.claim_code + '</td>' +
+          '<td class="font-mono text-primary">' + (row.return_code || '-') + '</td>' +
+          '<td><span class="badge badge-dark font-mono">' + escapeHtml(row.prod_code) + '</span> ' + escapeHtml(displayName) + '</td>' +
+          '<td class="text-center font-weight-bold">' + row.qty + '</td>' +
+          '<td class="font-weight-bold">' + escapeHtml(row.supplier_name) + '</td>' +
+          '<td>' + stBadge + '<br><small class="text-muted">' + row.claim_date + '</small></td>' +
+          '<td class="text-center">' + resultTag + '</td>' +
+        '</tr>';
+        $tbody.append(tr);
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, function(s) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s];
+      });
+    }
+  </script>
+
+  <!-- Central Dynamic Navbar Component -->
+  <script src="js/navbar.js?v=3.6"></script>
+</body>
+</html>

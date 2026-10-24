@@ -16,8 +16,17 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: private, no-cache, no-store, must-revalidate');
 
 include "db.php";
-// ดึงเฉพาะรหัส ชื่อ และราคาขาย (ปลีก/ส่ง) ไม่ส่งต้นทุนออกไปเด็ดขาด
-$query = "SELECT prod_id, prod_name, prod_code, prod_price, prod_pricesend FROM product";     
+
+$user_role = get_current_user_role();
+$can_view_cost = in_array($user_role, ['เจ้าของร้าน', 'แอดมิน']);
+
+if ($can_view_cost) {
+    // แอดมินและเจ้าของร้านสามารถเห็นต้นทุนเดิมเพื่ออ้างอิงในการลงรับสินค้าเข้าได้
+    $query = "SELECT prod_id, prod_name, prod_code, prod_price, prod_pricesend, prod_cost, prod_cost as cost FROM product";
+} else {
+    // พนักงานและสิทธิ์ดูคลังสินค้า: ไม่ส่งต้นทุนออกไปเด็ดขาด (Blind Cost)
+    $query = "SELECT prod_id, prod_name, prod_code, prod_price, prod_pricesend FROM product";
+}
 $result = mysqli_query($conn, $query);
 
 $output = array();

@@ -34,7 +34,7 @@
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Prompt" rel="stylesheet"> 
   <!-- Main -->
-  <link href="css/untitled.css" rel="stylesheet">  
+  <link href="css/untitled.css?v=3.6" rel="stylesheet">  
 	
 	<style>
 		#back{
@@ -245,9 +245,41 @@
 			// รีเซ็ตค่าใน EditModal ทุกครั้งที่ปิด modal
 			$('#EditModal').on('hidden.bs.modal', function () {
 				$("#name-prod").val("");
-				$("#code-prod").val("");
+				$("#code-prod").val("").removeClass('is-invalid is-valid').prop('readonly', false);
+				$('#code-prod-hint').empty();
+				$('#btn-apply-suggested-sku').hide();
+				$('#save-edit').prop('disabled', false);
 				$("#fileSelect").val("");
 				$('#fileSelect[rel=popover]').popover('dispose');
+			});
+
+			// Real-time SKU Validation ใน EditModal
+			$('#code-prod').on('input keyup blur', function () {
+				checkCodeProdValidation();
+			});
+
+			$(document).on('click', '#btn-apply-suggested-sku', function () {
+				var sug = $(this).data('suggested');
+				if (sug) {
+					$('#code-prod').val(sug);
+					checkCodeProdValidation();
+				}
+			});
+
+			// เปิดหน้าต่างจัดการรหัสสินค้าต้องแก้ (Feature 2.1)
+			$('#btn-show-invalid-skus').on('click', function () {
+				$('#InvalidSkuModal').modal('show');
+				renderInvalidSkusTable(window.invalidSkuFilter || 'all', $('#filter-invalid-sku-search').val());
+			});
+
+			// ตัวกรองและค้นหาใน InvalidSkuModal
+			$('#filter-invalid-sku-search').on('input keyup', function () {
+				renderInvalidSkusTable(window.invalidSkuFilter || 'all', $(this).val());
+			});
+
+			$('input[name="invalid_filter"]').on('change', function () {
+				window.invalidSkuFilter = $(this).val();
+				renderInvalidSkusTable(window.invalidSkuFilter, $('#filter-invalid-sku-search').val());
 			});
 
 			// Delegated click handler สำหรับปุ่มแก้ไขและลบสินค้า (รองรับชื่อสินค้าที่มีเครื่องหมายคำพูด " หรือ ' ได้ 100%)
@@ -275,9 +307,289 @@
 					$('#low-stock-badge').text(res.data.length).show();
 				}
 			}, 'json');
+
+			// โหลดจำนวนและรายการรหัสสินค้าที่ต้องแก้ไข (SKU Hygiene Guard)
+			loadInvalidSkusBadge();
 		});
 
 		// Enter key handled directly on #input-search to prevent duplicate search calls
+
+		// ==================== SKU Hygiene Guard (Feature 2.1) ====================
+		window.invalidSkusList = [];
+		window.invalidSkuFilter = 'all';
+
+		function validateSkuString(str) {
+			var s = (str || '').trim();
+			if (!s) return { valid: false, issues: ['กรุณาระบุรหัสสินค้า (SKU)'], suggested: '' };
+
+			var issues = [];
+			if (/\s/.test(s)) issues.push('มีช่องว่าง');
+			if (/[a-z]/.test(s)) issues.push('มีตัวพิมพ์เล็ก (ต้องเป็น A-Z ตัวใหญ่)');
+			if (s.indexOf('.') !== -1) issues.push('มีจุด (.)');
+			if (s.indexOf('_') !== -1) issues.push('มีขีดล่าง (_)');
+			if (s.indexOf('/') !== -1) issues.push('มีเครื่องหมายทับ (/)');
+			if (/[\u0E00-\u0E7F]/.test(s)) issues.push('มีอักษรหรือสระภาษาไทย');
+
+			var isValid = /^[A-Z0-9-]+$/.test(s);
+			if (!isValid && issues.length === 0) issues.push('มีอักขระพิเศษที่ไม่อนุญาต');
+
+			var suggested = s.toUpperCase().replace(/\s+/g, '').replace(/[\u0E00-\u0E7F]/g, '').replace(/[._/]/g, '');
+			return {
+				valid: isValid,
+				issues: issues,
+				suggested: (/^[A-Z0-9-]+$/.test(suggested) && suggested.length > 0) ? suggested : ''
+			};
+		}
+
+		function checkCodeProdValidation() {
+			var canEditSku = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
+			if (!canEditSku) {
+				$('#code-prod').prop('readonly', true).addClass('bg-light');
+				$('#code-prod-hint').html('<div class="text-danger small font-weight-bold mt-1"><i class="fas fa-lock mr-1"></i>เฉพาะแอดมินและเจ้าของร้านเท่านั้นที่มีสิทธิ์แก้ไขรหัสสินค้า</div>');
+				$('#btn-apply-suggested-sku').hide();
+				return true;
+			}
+
+			$('#code-prod').prop('readonly', false).removeClass('bg-light');
+			var val = ($('#code-prod').val() || '').trim();
+			var res = validateSkuString(val);
+			if (res.valid) {
+				$('#code-prod').removeClass('is-invalid').addClass('is-valid');
+				$('#code-prod-hint').html('<div class="text-success small mt-1"><i class="fas fa-check-circle mr-1"></i>รหัสสินค้าถูกต้องตามมาตรฐาน (A-Z, 0-9, -)</div>');
+				$('#btn-apply-suggested-sku').hide();
+				$('#save-edit').prop('disabled', false);
+				return true;
+			} else {
+				$('#code-prod').removeClass('is-valid').addClass('is-invalid');
+				var errText = res.issues.length > 0 ? res.issues.join(', ') : 'รูปแบบไม่ถูกต้อง';
+				$('#code-prod-hint').html('<div class="text-danger small font-weight-bold mt-1"><i class="fas fa-times-circle mr-1"></i>ผิดมาตรฐาน: ' + errText + '</div>');
+				if (res.suggested) {
+					$('#btn-apply-suggested-sku').show().data('suggested', res.suggested).html('<i class="fas fa-magic mr-1"></i>ใช้รหัสแนะนำ: <strong>' + res.suggested + '</strong>');
+				} else {
+					$('#btn-apply-suggested-sku').hide();
+				}
+				$('#save-edit').prop('disabled', true);
+				return false;
+			}
+		}
+
+		function loadInvalidSkusBadge() {
+			$.ajax({
+				url: 'php/get_invalid_skus.php',
+				type: 'GET',
+				dataType: 'json',
+				success: function(res) {
+					if (res && res.success && res.total > 0) {
+						window.invalidSkusList = res.data || [];
+						$('#wrap-invalid-sku-card').show();
+						$('#badge-invalid-sku-count').text(res.total);
+						$('#modal-invalid-total-badge').text(res.total);
+						$('#modal-cleanable-count-badge').text('แก้ไขอัตโนมัติได้: ' + res.auto_cleanable);
+						$('#modal-manual-count-badge').text('ต้องตั้งใหม่: ' + res.needs_manual);
+						$('.cnt-all').text(res.total);
+						$('.cnt-clean').text(res.auto_cleanable);
+						$('.cnt-manual').text(res.needs_manual);
+					} else {
+						window.invalidSkusList = [];
+						$('#wrap-invalid-sku-card').hide();
+					}
+				},
+				error: function() {
+					$('#wrap-invalid-sku-card').hide();
+				}
+			});
+		}
+
+		function updateInvalidCounters() {
+			var total = window.invalidSkusList.length;
+			var clean = 0;
+			var manual = 0;
+			window.invalidSkusList.forEach(function(item) {
+				if (item.can_auto_clean) clean++;
+				else manual++;
+			});
+			$('#badge-invalid-sku-count').text(total);
+			$('#modal-invalid-total-badge').text(total);
+			$('#modal-cleanable-count-badge').text('แก้ไขอัตโนมัติได้: ' + clean);
+			$('#modal-manual-count-badge').text('ต้องตั้งใหม่: ' + manual);
+			$('.cnt-all').text(total);
+			$('.cnt-clean').text(clean);
+			$('.cnt-manual').text(manual);
+
+			if (total === 0) {
+				$('#wrap-invalid-sku-card').slideUp();
+				$('#InvalidSkuModal').modal('hide');
+				$.alert({
+					title: '🎉 ยอดเยี่ยมมาก!',
+					content: 'รหัสสินค้าทั้งหมดในระบบถูกต้องตามมาตรฐาน DDShop 100% แล้ว',
+					type: 'green'
+				});
+			}
+		}
+
+		function formatInvalidCodeHtml(code) {
+			if (!code) return '<span class="text-muted">(ว่างเปล่า)</span>';
+			var html = '';
+			for (var i = 0; i < code.length; i++) {
+				var ch = code[i];
+				if (ch === ' ') {
+					html += '<span class="badge badge-danger mx-1" title="ช่องว่าง" style="font-size: 0.75rem;">⎵</span>';
+				} else if (/[a-z]/.test(ch)) {
+					html += '<span class="text-danger font-weight-bold" title="ตัวพิมพ์เล็ก">' + ch + '</span>';
+				} else if (ch === '.' || ch === '_' || ch === '/') {
+					html += '<span class="badge badge-danger px-1" title="อักขระไม่อนุญาต">' + ch + '</span>';
+				} else if (/[\u0E00-\u0E7F]/.test(ch)) {
+					html += '<span class="badge badge-warning text-dark px-1" title="ภาษาไทย">' + ch + '</span>';
+				} else if (!/^[A-Z0-9-]$/.test(ch)) {
+					html += '<span class="badge badge-danger px-1" title="อักขระพิเศษ">' + ch + '</span>';
+				} else {
+					html += ch;
+				}
+			}
+			return '<code class="p-1 rounded bg-light border font-monospace text-dark">' + html + '</code>';
+		}
+
+		function renderInvalidSkusTable(filterType, searchQuery) {
+			var $tbody = $('#tbody-invalid-skus');
+			$tbody.empty();
+
+			var items = window.invalidSkusList || [];
+			var q = (searchQuery || '').trim().toLowerCase();
+
+			var filtered = items.filter(function(item) {
+				if (filterType === 'cleanable' && !item.can_auto_clean) return false;
+				if (filterType === 'manual' && item.can_auto_clean) return false;
+				if (q) {
+					var name = (item.prod_name || '').toLowerCase();
+					var code = (item.prod_code || '').toLowerCase();
+					var sug = (item.suggested_sku || '').toLowerCase();
+					if (name.indexOf(q) === -1 && code.indexOf(q) === -1 && sug.indexOf(q) === -1) {
+						return false;
+					}
+				}
+				return true;
+			});
+
+			if (filtered.length === 0) {
+				$tbody.html('<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-check-circle text-success mr-1"></i> ไม่พบรหัสสินค้าที่ตรงกับเงื่อนไขการค้นหา</td></tr>');
+				return;
+			}
+
+			var canEditSku = (localStorage.user_role === 'แอดมิน' || localStorage.user_role === 'เจ้าของร้าน');
+
+			filtered.forEach(function(item) {
+				var imgSrc = item.img ? item.img : 'img/no_img.png';
+				var sugHtml = '';
+				var actionHtml = '';
+
+				if (item.can_auto_clean) {
+					sugHtml = '<span class="badge badge-success px-2 py-1 font-monospace" style="font-size:0.85rem;"><i class="fas fa-magic mr-1"></i>' + item.suggested_sku + '</span>';
+					if (canEditSku) {
+						actionHtml += '<button class="btn btn-sm btn-success font-weight-bold py-1 px-2 btn-apply-sku-row mr-1" data-id="' + item.prod_id + '" data-suggested="' + item.suggested_sku + '" data-name="' + encodeURIComponent(item.prod_name) + '" title="คลิกเพื่อเปลี่ยนรหัสเป็นค่าแนะนำทันที">' +
+									  '<i class="fas fa-check mr-1"></i>ใช้รหัสแนะนำ</button>';
+					}
+				} else {
+					sugHtml = '<span class="badge badge-warning text-dark px-2 py-1 font-monospace">' + (item.suggested_sku || '-') + '</span>' +
+							  '<div class="small text-danger mt-1">' + (item.manual_reason || 'ต้องตั้งใหม่') + '</div>';
+				}
+
+				actionHtml += '<button class="btn btn-sm btn-outline-primary py-1 px-2 btn-open-edit-from-invalid" data-id="' + item.prod_id + '" data-name="' + encodeURIComponent(item.prod_name) + '" data-code="' + encodeURIComponent(item.prod_code) + '" data-suggested="' + (item.suggested_sku || '') + '">' +
+							  '<i class="fas fa-pen mr-1"></i>แก้ไข</button>';
+
+				var tr = '<tr>' +
+					'<td class="text-center align-middle">' +
+						'<img src="' + imgSrc + '" style="width: 42px; height: 42px; object-fit: contain; border-radius: 6px; border: 1px solid #ddd;" onerror="this.src=\'img/no_img.png\'">' +
+					'</td>' +
+					'<td class="align-middle font-weight-bold text-dark" style="font-size: 0.9rem;">' +
+						(typeof escapeHtml === 'function' ? escapeHtml(item.prod_name) : item.prod_name) +
+						'<div class="small text-muted">ID: #' + item.prod_id + ' | ราคา: ฿' + (item.price || 0).toLocaleString() + '</div>' +
+					'</td>' +
+					'<td class="align-middle">' + formatInvalidCodeHtml(item.prod_code) + '</td>' +
+					'<td class="align-middle"><span class="badge badge-danger px-2 py-1">' + (typeof escapeHtml === 'function' ? escapeHtml(item.issues) : item.issues) + '</span></td>' +
+					'<td class="align-middle">' + sugHtml + '</td>' +
+					'<td class="align-middle text-center">' + actionHtml + '</td>' +
+				'</tr>';
+				$tbody.append(tr);
+			});
+		}
+
+		$(document).on('click', '.btn-apply-sku-row', function() {
+			var pid = $(this).data('id');
+			var sug = $(this).data('suggested');
+			var rawName = decodeURIComponent($(this).data('name') || '');
+			if (localStorage.user_role !== "แอดมิน" && localStorage.user_role !== "เจ้าของร้าน") {
+				$.alert({ title: '⚠️ สิทธิ์ไม่เพียงพอ', content: 'เฉพาะแอดมินและเจ้าของร้านเท่านั้นที่มีสิทธิ์แก้ไขรหัสสินค้า', type: 'red' });
+				return;
+			}
+			$.confirm({
+				title: 'ยืนยันเปลี่ยนรหัสสินค้า',
+				content: 'ต้องการเปลี่ยนรหัสสินค้า <strong>' + rawName + '</strong> เป็น <strong>' + sug + '</strong> หรือไม่?<br><br><small class="text-muted">• ระบบจะอัปเดตตารางจับคู่ SKU แพลตฟอร์มให้อัตโนมัติ<br>• บันทึกประวัติรหัสเดิมเพื่อให้ค้นหาย้อนหลังได้</small>',
+				buttons: {
+					confirm: {
+						text: 'ยืนยันเปลี่ยนรหัส',
+						btnClass: 'btn-success',
+						action: function() {
+							EasyLoading.show({ text: "กำลังอัปเดตรหัสสินค้า..." });
+							$.ajax({
+								url: "php/rename_prod_web.php",
+								type: "POST",
+								data: {
+									prod_id: pid,
+									name_prod: rawName,
+									code: sug,
+									role: localStorage.user_role,
+									user_name: localStorage.user_name
+								},
+								success: function(resp) {
+									EasyLoading.hide();
+									if (resp === "success") {
+										window.invalidSkusList = window.invalidSkusList.filter(function(x) { return x.prod_id != pid; });
+										updateInvalidCounters();
+										renderInvalidSkusTable(window.invalidSkuFilter, $('#filter-invalid-sku-search').val());
+
+										var $card = $("#div-" + pid);
+										if ($card.length) {
+											var $codeBadge = $card.find('.prod-code-badge');
+											if ($codeBadge.length) {
+												$codeBadge.find('.code-text').text(sug);
+											}
+										}
+										$("#i-" + pid).data('prod-code', sug);
+
+										$.alert({
+											title: '✅ อัปเดตรหัสสินค้าสำเร็จ',
+											content: 'เปลี่ยนรหัสเป็น <strong>' + sug + '</strong> สำเร็จเรียบร้อยแล้ว<br><small class="text-muted">• อัปเดตตารางจับคู่ SKU แพลตฟอร์มแล้ว<br>• บันทึกประวัติในระบบแล้ว<br>⚠️ <strong>กรุณาพิมพ์ฉลากบาร์โค้ดใหม่</strong> และตรวจสอบ SKU บนแพลตฟอร์มให้ตรงกัน</small>',
+											type: 'green'
+										});
+									} else {
+										$.alert({ title: '⚠️ พบข้อผิดพลาด', content: 'ไม่สามารถบันทึกได้ (' + resp + ')', type: 'red' });
+									}
+								},
+								error: function(err) {
+									EasyLoading.hide();
+									$.alert({ title: '⚠️ ข้อผิดพลาดเครือข่าย', content: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', type: 'red' });
+								}
+							});
+						}
+					},
+					cancel: { text: 'ยกเลิก' }
+				}
+			});
+		});
+
+		$(document).on('click', '.btn-open-edit-from-invalid', function() {
+			var pid = $(this).data('id');
+			var name = decodeURIComponent($(this).data('name') || '');
+			var code = decodeURIComponent($(this).data('code') || '');
+			var sug = $(this).data('suggested') || '';
+			$('#InvalidSkuModal').modal('hide');
+			$('#EditModal').modal('show');
+			edit_prod(pid, name, code);
+			if (sug) {
+				$('#btn-apply-suggested-sku').show().data('suggested', sug).html('<i class="fas fa-magic mr-1"></i>ใช้รหัสแนะนำ: <strong>' + sug + '</strong>');
+			}
+		});
+		// ==================== End SKU Hygiene Guard ====================
 
   		function reposition(){
   		$("#main-ctn").css('margin-top', '15%');
@@ -575,6 +887,7 @@
 			$('#fileSelect[rel=popover]').popover('dispose');
 			$("#name-prod").val(name || "");
 			$("#code-prod").val(code || "");
+			checkCodeProdValidation();
 
 			// Pricing & Permission Setup
 			var canCost = (typeof window.canViewCost === 'function') ? window.canViewCost() : (localStorage.user_role == "แอดมิน" || localStorage.user_role == "เจ้าของร้าน");
@@ -687,6 +1000,18 @@
 			if (!code) {
 				alert("กรุณาระบุรหัสสินค้า (SKU)");
 				return;
+			}
+
+			if (localStorage.user_role === "แอดมิน" || localStorage.user_role === "เจ้าของร้าน") {
+				if (!/^[A-Z0-9\-]+$/.test(code)) {
+					$.alert({
+						title: '⚠️ รหัสสินค้าไม่ถูกต้อง',
+						content: 'รหัสสินค้าต้องประกอบด้วย A-Z, 0-9 และ - เท่านั้น (ห้ามมีช่องว่าง, ขีดล่าง, จุด, หรือภาษาไทย)',
+						type: 'red'
+					});
+					$('#code-prod').focus();
+					return;
+				}
 			}
 
 			// Step 3 Data Quality Guards:
@@ -818,6 +1143,12 @@
 									type: 'green'
 								});
 							}
+
+							// อัปเดตรายการรหัสสินค้าที่ต้องแก้ไขทันทีหากสินค้านี้เคยผิด
+							if (window.invalidSkusList && window.invalidSkusList.length > 0) {
+								window.invalidSkusList = window.invalidSkusList.filter(function(x) { return x.prod_id != prod_id; });
+								updateInvalidCounters();
+							}
 						}else{
 							var errMsg = 'ไม่สามารถบันทึกได้ (' + data + ')';
 							if (data === 'error_price_negative') {
@@ -825,7 +1156,9 @@
 							} else if (data === 'error_wholesale_higher') {
 								errMsg = 'ราคาส่งต้องไม่สูงกว่าราคาขายปลีก';
 							} else if (data === 'invalid_sku') {
-								errMsg = 'รูปแบบรหัส SKU ไม่ถูกต้อง';
+								errMsg = 'รูปแบบรหัส SKU ไม่ถูกต้อง (รับเฉพาะ A-Z, 0-9, -)';
+							} else if (data === 'duplicate_sku') {
+								errMsg = 'รหัสสินค้านี้ซ้ำกับสินค้าอื่นในระบบแล้ว';
 							}
 							$.confirm({
 								title: '⚠️ พบข้อผิดพลาด',
@@ -988,11 +1321,18 @@
                 </a>
             </div>
     	
-            <div class="col-12 col-md-4 col-lg-3 text-center my-2 my-lg-0">
+            <div class="col-12 col-md-4 col-lg-3 text-center my-2 my-lg-0" id="wrap-platform-mapping-col">
     		    <a href="web_platform_mapping.html" class="btn btn-lg btn-primary btn-block py-3 font-weight-bold text-white shadow-sm" style="font-size: 1.15rem; border-radius: 8px; background-color: #2563eb; border-color: #1d4ed8;">
                     <i class="fas fa-link mr-1"></i> จับคู่สินค้าออนไลน์
                     <span class="badge badge-danger ml-1" style="font-size: 0.85rem;">163</span>
                 </a>
+                <!-- Card / Button "รหัสสินค้าต้องแก้" (Feature 2.1) -->
+                <div id="wrap-invalid-sku-card" class="mt-2" style="display:none;">
+                    <button type="button" id="btn-show-invalid-skus" class="btn btn-block py-2 font-weight-bold shadow-sm d-flex align-items-center justify-content-between px-3" style="font-size: 0.95rem; border-radius: 8px; background: #fff1f2; border: 1.5px solid #f43f5e; color: #be123c;">
+                        <span><i class="fas fa-exclamation-triangle mr-2 text-danger"></i>รหัสสินค้าต้องแก้</span>
+                        <span id="badge-invalid-sku-count" class="badge badge-danger px-2 py-1" style="font-size: 0.85rem; border-radius: 12px;">0</span>
+                    </button>
+                </div>
             </div>
 	</div>
     </div>
@@ -1194,8 +1534,14 @@
 			<div class="modal-body">
 			  <div class="row mb-2">			
 				  <div class="col-4">
-				      <label class="small text-muted font-weight-bold mb-1">รหัสสินค้า (SKU ร้าน) *</label>
-				      <input id="code-prod" type="text" class="form-control text-center font-weight-bold text-primary">
+				      <div class="d-flex justify-content-between align-items-center mb-1">
+				          <label class="small text-muted font-weight-bold mb-0">รหัสสินค้า (SKU) *</label>
+				          <button type="button" id="btn-apply-suggested-sku" class="btn btn-xs btn-outline-success font-weight-bold py-0 px-1" style="font-size: 0.70rem; display: none;" title="คลิกเพื่อนำรหัสแนะนำมาใส่">
+				              <i class="fas fa-magic mr-1"></i>ใช้รหัสแนะนำ
+				          </button>
+				      </div>
+				      <input id="code-prod" type="text" class="form-control text-center font-weight-bold text-primary font-monospace" placeholder="เช่น ABC-123">
+				      <div id="code-prod-hint"></div>
 				  </div>
 				  <div class="col-8">
 				      <label class="small text-muted font-weight-bold mb-1">ชื่อสินค้า *</label>
@@ -1400,6 +1746,93 @@
 	            <i class="fas fa-check-circle mr-1"></i> ยืนยันตัดสต๊อก
 	          </button>
 	        </div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+	<!-- Modal รายการรหัสสินค้าต้องแก้ไข (SKU Hygiene Guard) -->
+	<div class="modal fade" id="InvalidSkuModal" tabindex="-1" role="dialog" aria-hidden="true">
+	  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" role="document">
+	    <div class="modal-content shadow-lg border-0">
+	      <div class="modal-header bg-warning text-dark py-3">
+	        <h5 class="modal-title font-weight-bold d-flex align-items-center">
+	          <i class="fas fa-exclamation-triangle mr-2 text-danger" style="font-size: 1.3rem;"></i>
+	          <span>รหัสสินค้าที่ต้องแก้ไขตามมาตรฐาน (SKU Hygiene Guard)</span>
+	          <span class="badge badge-danger ml-2 px-2 py-1" id="modal-invalid-total-badge" style="font-size: 0.9rem;">0</span>
+	        </h5>
+	        <button type="button" class="close text-dark" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body p-3 bg-light">
+	        <!-- Policy Notice Card -->
+	        <div class="alert alert-light border shadow-sm mb-3">
+	          <div class="d-flex justify-content-between align-items-center flex-wrap">
+	            <div>
+	              <strong><i class="fas fa-shield-alt text-primary mr-1"></i> กติการหัสสินค้า DDShop (มาตรฐานหลัก):</strong>
+	              <span class="text-muted">อนุญาตเฉพาะตัวอักษร <code>A-Z</code> (พิมพ์ใหญ่), <code>0-9</code> และ <code>-</code> เท่านั้น (ห้ามมีช่องว่าง, ขีดล่าง, จุด, เครื่องหมายทับ หรือภาษาไทย)</span>
+	            </div>
+	            <div class="mt-2 mt-md-0">
+	              <span class="badge badge-success px-2 py-1 mr-1" id="modal-cleanable-count-badge">แก้ไขอัตโนมัติได้: 0</span>
+	              <span class="badge badge-warning px-2 py-1" id="modal-manual-count-badge">ต้องตั้งใหม่: 0</span>
+	            </div>
+	          </div>
+	        </div>
+
+	        <!-- Filter & Search Toolbar -->
+	        <div class="row mb-3">
+	          <div class="col-12 col-md-6 mb-2 mb-md-0">
+	            <div class="input-group">
+	              <div class="input-group-prepend">
+	                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+	              </div>
+	              <input type="text" id="filter-invalid-sku-search" class="form-control" placeholder="พิมพ์ชื่อสินค้า หรือ รหัสเดิม เพื่อค้นหา...">
+	            </div>
+	          </div>
+	          <div class="col-12 col-md-6 text-md-right">
+	            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+	              <label class="btn btn-outline-secondary btn-sm active" id="lbl-filter-all">
+	                <input type="radio" name="invalid_filter" value="all" checked> ทั้งหมด (<span class="cnt-all">0</span>)
+	              </label>
+	              <label class="btn btn-outline-success btn-sm" id="lbl-filter-cleanable">
+	                <input type="radio" name="invalid_filter" value="cleanable"> แก้ไขอัตโนมัติได้ (<span class="cnt-clean">0</span>)
+	              </label>
+	              <label class="btn btn-outline-warning btn-sm" id="lbl-filter-manual">
+	                <input type="radio" name="invalid_filter" value="manual"> ต้องตั้งใหม่ (<span class="cnt-manual">0</span>)
+	              </label>
+	            </div>
+	          </div>
+	        </div>
+
+	        <!-- Table Container -->
+	        <div class="table-responsive bg-white rounded shadow-sm border" style="max-height: 520px; overflow-y: auto;">
+	          <table class="table table-hover table-striped mb-0" id="table-invalid-skus">
+	            <thead class="thead-dark sticky-top" style="z-index: 2;">
+	              <tr>
+	                <th style="width: 60px;" class="text-center">รูป</th>
+	                <th style="width: 25%;">ชื่อสินค้า</th>
+	                <th style="width: 20%;">รหัสเดิมที่ผิด</th>
+	                <th style="width: 18%;">ปัญหาที่พบ</th>
+	                <th style="width: 20%;">รหัสแนะนำ (Suggested)</th>
+	                <th style="width: 17%;" class="text-center">จัดการ</th>
+	              </tr>
+	            </thead>
+	            <tbody id="tbody-invalid-skus">
+	              <tr>
+	                <td colspan="6" class="text-center py-4 text-muted">
+	                  <i class="fas fa-spinner fa-spin mr-1"></i> กำลังโหลดรายการรหัสสินค้า...
+	                </td>
+	              </tr>
+	            </tbody>
+	          </table>
+	        </div>
+	      </div>
+	      <div class="modal-footer py-2 bg-white">
+	        <div class="small text-muted mr-auto">
+	          <i class="fas fa-info-circle mr-1 text-info"></i> เมื่อบันทึกรหัสใหม่ ระบบจะอัปเดตตารางจับคู่ SKU แพลตฟอร์ม และบันทึกประวัติรหัสเดิมให้อัตโนมัติ
+	        </div>
+	        <button type="button" class="btn btn-secondary px-4" data-dismiss="modal">ปิดหน้าต่าง</button>
 	      </div>
 	    </div>
 	  </div>
@@ -2154,6 +2587,6 @@
 
 </script>
     <!-- Central Navbar Script -->
-    <script src="js/navbar.js?v=3.5"></script>
+    <script src="js/navbar.js?v=3.6"></script>
 </body>
 </html>

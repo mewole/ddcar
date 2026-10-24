@@ -29,18 +29,52 @@ $price_s      = (isset($_POST['price_s']) && $_POST['price_s'] !== '') ? floatva
 $price_w      = (isset($_POST['price_w']) && $_POST['price_w'] !== '') ? floatval($_POST['price_w']) : null;
 $sync_history = isset($_POST['sync_history']) ? intval($_POST['sync_history']) : 0;
 
-if (!$prod_id || empty($name_prod)) {
+if (!$prod_id) {
     echo "fail";
     exit;
 }
 
-// If code is empty, retrieve existing code from database
+// ถ้าไม่ได้ส่งชื่อสินค้ามา ให้ใช้ชื่อเดิมในฐานข้อมูล (กรณีอัปเดตเฉพาะรหัสสินค้าอย่างรวดเร็ว)
+if (empty($name_prod)) {
+    $q_name = mysqli_query($conn, "SELECT prod_name FROM product WHERE prod_id = '$prod_id' LIMIT 1");
+    if ($q_name && $r_name = mysqli_fetch_assoc($q_name)) {
+        $name_prod = $r_name['prod_name'] ?? '';
+    }
+}
+
+$server_role = $_SESSION['user_role'] ?? $role;
+$can_edit_cost = ($server_role === 'แอดมิน' || $server_role === 'เจ้าของร้าน');
+$can_edit_sku  = ($server_role === 'แอดมิน' || $server_role === 'เจ้าของร้าน');
+
+// ตรวจสอบรหัสสินค้าเดิม
+$old_code = '';
+$q_cur = mysqli_query($conn, "SELECT prod_code, prod_cost FROM product WHERE prod_id = '$prod_id' LIMIT 1");
+if ($q_cur && $r_cur = mysqli_fetch_assoc($q_cur)) {
+    $old_code = $r_cur['prod_code'] ?? '';
+}
+
 if (empty($code)) {
-    $q_cur = mysqli_query($conn, "SELECT prod_code FROM product WHERE prod_id = '$prod_id' LIMIT 1");
-    if ($q_cur && $r_cur = mysqli_fetch_assoc($q_cur)) {
-        $code = !empty($r_cur['prod_code']) ? $r_cur['prod_code'] : ('SKU-' . $prod_id);
+    $code = !empty($old_code) ? $old_code : ('SKU-' . $prod_id);
+}
+
+// มติเจ้าของร้าน 24/10/2026: แก้รหัสสินค้าได้เฉพาะแอดมินและเจ้าของร้านเท่านั้น
+if ($old_code !== '' && $code !== $old_code) {
+    if (!$can_edit_sku) {
+        // พนักงานไม่มีสิทธิ์แก้รหัสสินค้า ให้คงรหัสเดิมไว้
+        $code = $old_code;
     } else {
-        $code = 'SKU-' . $prod_id;
+        // ตรวจสอบรูปแบบรหัสสินค้าใหม่: เฉพาะ A-Z, 0-9 และขีด (-) เท่านั้น ห้ามมีเว้นวรรค
+        if (!preg_match('/^[A-Z0-9\-]+$/', $code)) {
+            echo "invalid_sku";
+            exit;
+        }
+        // ตรวจสอบรหัสซ้ำกับสินค้าอื่น
+        $clean_c = mysqli_real_escape_string($conn, $code);
+        $q_dup = mysqli_query($conn, "SELECT prod_id FROM product WHERE prod_code = '$clean_c' AND prod_id != '$prod_id' LIMIT 1");
+        if ($q_dup && mysqli_num_rows($q_dup) > 0) {
+            echo "duplicate_sku";
+            exit;
+        }
     }
 }
 
@@ -59,9 +93,6 @@ if ($price_s !== null && $price_w !== null && $price_s > 0 && $price_w > 0 && $p
     exit;
 }
 
-// Role check: Only Admin and Owner can modify cost
-$server_role = $_SESSION['user_role'] ?? $role;
-$can_edit_cost = ($server_role === 'แอดมิน' || $server_role === 'เจ้าของร้าน');
 if ($cost !== null && !$can_edit_cost) {
     $cost = null; // Ignore cost update for unauthorized roles
 }
@@ -140,6 +171,31 @@ if ($executed) {
         @mysqli_query($conn, "UPDATE transfer_in_item SET tran_cost = '$cost' WHERE prod_id = '$prod_id'");
         @mysqli_query($conn, "UPDATE product_supplier_sku SET last_cost = '$cost' WHERE prod_id = '$prod_id'");
     }
+
+    // มติเจ้าของร้าน: เมื่อมีการเปลี่ยนรหัสสินค้า
+    if ($old_code !== '' && $code !== $old_code) {
+        $clean_old = mysqli_real_escape_string($conn, $old_code);
+        $clean_new = mysqli_real_escape_string($conn, $code);
+        $user_name_log = mysqli_real_escape_string($conn, $_SESSION['user_name'] ?? 'แอดมิน');
+
+        // 1. อัปเดตตารางจับคู่ SKU แพลตฟอร์มอัตโนมัติ
+        @mysqli_query($conn, "UPDATE platform_sku_mapping SET target_sku = '$clean_new' WHERE prod_id = '$prod_id' OR target_sku = '$clean_old'");
+
+        // 2. บันทึกประวัติการเปลี่ยนรหัสเดิม -> ใหม่ เพื่อให้ค้นหาย้อนหลังได้
+        @mysqli_query($conn, "CREATE TABLE IF NOT EXISTS sku_change_history (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            prod_id INT NOT NULL,
+            old_sku VARCHAR(100) NOT NULL,
+            new_sku VARCHAR(100) NOT NULL,
+            changed_by VARCHAR(100) DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            KEY idx_old_sku (old_sku),
+            KEY idx_new_sku (new_sku)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;");
+
+        @mysqli_query($conn, "INSERT INTO sku_change_history (prod_id, old_sku, new_sku, changed_by) VALUES ('$prod_id', '$clean_old', '$clean_new', '$user_name_log')");
+    }
+
     echo "success";
 } else {
     echo "fail";
