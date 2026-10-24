@@ -18,7 +18,7 @@ header('Cache-Control: private, no-cache, no-store, must-revalidate');
 include "db.php";
 
 $user_role = get_current_user_role();
-$can_view_cost = in_array($user_role, ['เจ้าของร้าน', 'แอดมิน']);
+$can_view_cost = in_array($user_role, ['เจ้าของร้าน', 'ผู้ดูแลระบบ', 'แอดมิน']);
 
 if ($can_view_cost) {
     // แอดมินและเจ้าของร้านสามารถเห็นต้นทุนเดิมเพื่ออ้างอิงในการลงรับสินค้าเข้าได้

@@ -36,7 +36,7 @@ if ($mode === 'zero') {
     if ($res) {
         while ($r = mysqli_fetch_assoc($res)) {
             if (!$is_owner_or_admin) {
-                $r['prod_cost'] = 0; // พนักงานทั่วไปไม่สามารถดูราคาทุนได้
+                unset($r['prod_cost'], $r['cost']);
             }
             $prod_list[] = $r;
             $pids[] = intval($r['prod_id']);
@@ -54,7 +54,7 @@ if ($mode === 'zero') {
     if ($res) {
         while ($r = mysqli_fetch_assoc($res)) {
             if (!$is_owner_or_admin) {
-                $r['prod_cost'] = 0; // พนักงานทั่วไปไม่สามารถดูราคาทุนได้
+                unset($r['prod_cost'], $r['cost']);
             }
             $prod_list[] = $r;
             $pids[] = intval($r['prod_id']);
@@ -108,12 +108,11 @@ if (!empty($pids)) {
                 $urgency = 'critical';
             }
 
-            $items[] = array(
+            $item_row = array(
                 'prod_id' => $pid,
                 'prod_code' => $p['prod_code'],
                 'prod_name' => $p['prod_name'],
                 'img' => '',
-                'prod_cost' => $p['prod_cost'],
                 'prod_price' => $p['prod_price'],
                 'prod_pricesend' => $p['prod_pricesend'],
                 'min_amount' => $min_amt,
@@ -125,6 +124,10 @@ if (!empty($pids)) {
                 'folder_path' => '',
                 'folder_chain' => array()
             );
+            if ($is_owner_or_admin && isset($p['prod_cost'])) {
+                $item_row['prod_cost'] = $p['prod_cost'];
+            }
+            $items[] = $item_row;
         }
     }
 

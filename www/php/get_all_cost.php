@@ -1,6 +1,6 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_admin_or_owner();
 
 include "db.php";
 $cost = 0;

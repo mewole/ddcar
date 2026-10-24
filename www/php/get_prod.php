@@ -81,9 +81,10 @@ $output = array();
                     $row['min_amount'] = $row1['amount'];
                 }else{
                     $row['min_amount'] = 0;
-                }
-            }
-        }             
+        $can_view_cost = in_array(get_current_user_role(), ['เจ้าของร้าน', 'ผู้ดูแลระบบ', 'แอดมิน']);
+        if (!$can_view_cost) {
+            unset($row['prod_cost'], $row['cost'], $row['supplier_last_cost']);
+        }
         $output[] = $row;  
       }   
     }

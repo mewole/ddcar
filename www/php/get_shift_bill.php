@@ -44,6 +44,13 @@ $output = array();
                 }
             }
         }
+        $can_view_cost = in_array(get_current_user_role(), ['เจ้าของร้าน', 'ผู้ดูแลระบบ', 'แอดมิน']);
+        if (!$can_view_cost) {
+            foreach ($orders as &$ord) {
+                unset($ord['count']);
+            }
+            unset($ord);
+        }
         $output = array_values($orders);
     }
     

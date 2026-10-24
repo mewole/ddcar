@@ -105,14 +105,14 @@ include "db.php";
 
         $res_prod = mysqli_query($conn, $q_prod);
         if ($res_prod && mysqli_num_rows($res_prod) > 0) {
+            $can_view_cost = in_array(get_current_user_role(), ['เจ้าของร้าน', 'ผู้ดูแลระบบ', 'แอดมิน']);
             while ($row = mysqli_fetch_assoc($res_prod)) {
                 $pid = $row['prod_id'];
                 $prod_ids[] = $pid;
-                $items[] = [
+                $entry = [
                     'prod_id' => $pid,
                     'prod_code' => $row['prod_code'] ? $row['prod_code'] : '-',
                     'prod_name' => $row['prod_name'],
-                    'prod_cost' => floatval($row['prod_cost']),
                     'img' => '',
                     'status' => $row['status'],
                     'min_amount' => intval($row['min_amount']),
@@ -122,9 +122,13 @@ include "db.php";
                     'shop_amount' => 0,
                     'total_amount' => 0,
                     'place' => '-',
-                    'best_supplier' => null,
-                    'best_cost' => null
+                    'best_supplier' => null
                 ];
+                if ($can_view_cost) {
+                    $entry['prod_cost'] = floatval($row['prod_cost']);
+                    $entry['best_cost'] = null;
+                }
+                $items[] = $entry;
             }
         }
 
@@ -231,7 +235,9 @@ include "db.php";
                 }
                 if (isset($supplier_map[$pid])) {
                     $it['best_supplier'] = $supplier_map[$pid]['source_from'];
-                    $it['best_cost'] = $supplier_map[$pid]['cost'];
+                    if ($can_view_cost) {
+                        $it['best_cost'] = $supplier_map[$pid]['cost'];
+                    }
                 }
             }
             unset($it);

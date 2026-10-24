@@ -24,8 +24,12 @@ if (!empty($imp_id)) {
               WHERE s.stock_id = '$imp_id'";
     $result = mysqli_query($conn, $query);
 
+    $can_view_cost = in_array(get_current_user_role(), ['เจ้าของร้าน', 'ผู้ดูแลระบบ', 'แอดมิน']);
     if ($result && mysqli_num_rows($result) > 0) {    
         while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {      
+            if (!$can_view_cost) {
+                unset($row['stock_cost'], $row['cost'], $row['prod_cost']);
+            }
             $output[] = $row;  
         }   
     }

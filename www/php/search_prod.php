@@ -14,7 +14,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 include "db.php";
 $user_role = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : (isset($_REQUEST['user_role']) ? $_REQUEST['user_role'] : '');
-$is_owner_or_admin = in_array($user_role, ['เจ้าของร้าน', 'แอดมิน']);
+$is_owner_or_admin = in_array($user_role, ['เจ้าของร้าน', 'ผู้ดูแลระบบ', 'แอดมิน']);
 include_once "folder_helper.php";
 
 $data = isset($_POST['phrase']) ? trim(mysqli_real_escape_string($conn, $_POST['phrase'])) : '';
@@ -51,7 +51,9 @@ if ($result && mysqli_num_rows($result) > 0) {
     $prod_ids = array();
     while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
         $row['img'] = '';
-        if (!$is_owner_or_admin) { $row['prod_cost'] = 0; }
+        if (!$is_owner_or_admin) {
+            unset($row['prod_cost'], $row['cost']);
+        }
         $raw_rows[$row['prod_id']] = $row;
         $prod_ids[] = $row['prod_id'];
     }

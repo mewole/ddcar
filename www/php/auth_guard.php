@@ -34,10 +34,48 @@ if (session_status() === PHP_SESSION_NONE) {
     }
 
     @session_start();
+
+    // 0.5 & Point 10: Server-side PHP Session Expiry (30 mins idle & Midnight daily reset)
+    if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
+        $now = time();
+        // 30 minutes idle check (1800 seconds)
+        if (isset($_SESSION['last_activity']) && ($now - $_SESSION['last_activity'] > 1800)) {
+            session_unset();
+            @session_destroy();
+            $curr_file = basename($_SERVER['SCRIPT_FILENAME'] ?? $_SERVER['PHP_SELF'] ?? '');
+            if ($curr_file !== 'login.php') {
+                header('HTTP/1.1 401 Unauthorized');
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success' => false,
+                    'error'   => 'Session Expired: หมดเวลาการเชื่อมต่อ (ไม่ใช้งานเกิน 30 นาที) กรุณาเข้าสู่ระบบใหม่',
+                    'code'    => 'SESSION_EXPIRED'
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+        }
+        // Midnight daily reset check
+        if (isset($_SESSION['login_date']) && $_SESSION['login_date'] !== date('Y-m-d')) {
+            session_unset();
+            @session_destroy();
+            $curr_file = basename($_SERVER['SCRIPT_FILENAME'] ?? $_SERVER['PHP_SELF'] ?? '');
+            if ($curr_file !== 'login.php') {
+                header('HTTP/1.1 401 Unauthorized');
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success' => false,
+                    'error'   => 'Session Expired: เซสชันหมดอายุข้ามวัน (เที่ยงคืน) กรุณาเข้าสู่ระบบใหม่',
+                    'code'    => 'SESSION_EXPIRED_MIDNIGHT'
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+        }
+        $_SESSION['last_activity'] = $now;
+    }
 }
 
 /**
- * ตรวจสอบ Token จาก Chrome Extension
+ * ตรวจสอบ Token จาก Chrome Extension (รองรับทั้ง Header และ Request query/post)
  */
 function is_extension_authenticated() {
     $allowed_scripts = [
@@ -45,14 +83,25 @@ function is_extension_authenticated() {
         'sync_platform_catalog.php',
         'save_platform_orders.php',
         'import_platform_skus.php',
-        'get_platform_mappings.php'
+        'get_platform_mappings.php',
+        'save_platform_mapping.php'
     ];
     $current_script = basename($_SERVER['SCRIPT_FILENAME'] ?? $_SERVER['PHP_SELF'] ?? '');
     if (!in_array($current_script, $allowed_scripts)) {
         return false;
     }
 
-    $token = isset($_SERVER['HTTP_X_EXTENSION_TOKEN']) ? trim($_SERVER['HTTP_X_EXTENSION_TOKEN']) : '';
+    $token = '';
+    if (isset($_SERVER['HTTP_X_EXTENSION_TOKEN'])) {
+        $token = trim($_SERVER['HTTP_X_EXTENSION_TOKEN']);
+    } elseif (isset($_REQUEST['token'])) {
+        $token = trim($_REQUEST['token']);
+    } elseif (isset($_POST['token'])) {
+        $token = trim($_POST['token']);
+    } elseif (isset($_GET['token'])) {
+        $token = trim($_GET['token']);
+    }
+
     if (!empty($token) && hash_equals(DDCAR_EXTENSION_TOKEN, $token)) {
         return true;
     }
@@ -216,7 +265,7 @@ function require_staff_or_admin() {
 function require_admin_or_owner() {
     require_login();
     $role = get_current_user_role();
-    if ($role !== 'ผู้ดูแลระบบ' && $role !== 'เจ้าของร้าน') {
+    if ($role !== 'ผู้ดูแลระบบ' && $role !== 'เจ้าของร้าน' && $role !== 'แอดมิน') {
         header('HTTP/1.1 403 Forbidden');
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode([
@@ -232,7 +281,7 @@ function require_admin_or_owner() {
 /**
  * บังคับสิทธิ์ตามรายการ Role ที่กำหนด
  */
-function require_role($allowed_roles = ['ผู้ดูแลระบบ', 'เจ้าของร้าน']) {
+function require_role($allowed_roles = ['ผู้ดูแลระบบ', 'เจ้าของร้าน', 'แอดมิน']) {
     require_login();
     if (is_string($allowed_roles)) {
         $allowed_roles = [$allowed_roles];

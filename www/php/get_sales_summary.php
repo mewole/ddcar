@@ -1,6 +1,6 @@
 <?php
 include_once "auth_guard.php";
-require_login();
+require_admin_or_owner();
 
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");

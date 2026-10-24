@@ -72,19 +72,24 @@ if ($res_bill && mysqli_num_rows($res_bill) > 0) {
             $last_supplier = $r_sup['source_from'];
         }
 
-        $items[] = [
+        $can_view_cost = in_array(get_current_user_role(), ['เจ้าของร้าน', 'ผู้ดูแลระบบ', 'แอดมิน']);
+
+        $item_entry = [
             'item_id'             => intval($item['item_id']),
             'prod_id'             => $pid,
             'prod_code'           => $item['prod_code'],
             'prod_name'           => $item['prod_name'],
             'img'                 => $item['img'] ?: 'img/no_img.png',
             'unit_price'          => floatval($item['prod_price']),
-            'cost'                => floatval($item['prod_cost']),
             'qty_sold'            => $qty_sold,
             'qty_returned_so_far' => $prev_returned,
             'qty_available'       => $qty_available,
             'suggested_supplier'  => $last_supplier
         ];
+        if ($can_view_cost) {
+            $item_entry['cost'] = floatval($item['prod_cost']);
+        }
+        $items[] = $item_entry;
     }
 
     // ตรวจสอบ VAT จากรูปแบบเลขที่บิล หรือหมายเหตุ
@@ -170,19 +175,23 @@ if ($chk_tbl && mysqli_num_rows($chk_tbl) > 0) {
                 }
                 $qty_avail_plat = max(0, $qty_sold - $prev_plat_ret);
 
-                $items[] = [
+                $can_view_cost = in_array(get_current_user_role(), ['เจ้าของร้าน', 'ผู้ดูแลระบบ', 'แอดมิน']);
+                $item_entry = [
                     'item_id'             => intval($item['item_id']),
                     'prod_id'             => $pid,
                     'prod_code'           => $item['target_sku'] ?: ($item['platform_sku'] ?: 'UNKNOWN'),
                     'prod_name'           => $item['prod_name'] ?: ($item['platform_name'] ?: 'สินค้าแพลตฟอร์ม'),
                     'img'                 => $item['img'] ?: 'img/no_img.png',
                     'unit_price'          => floatval($item['price']),
-                    'cost'                => floatval($item['prod_cost'] ?? 0),
                     'qty_sold'            => $qty_sold,
                     'qty_returned_so_far' => $prev_plat_ret,
                     'qty_available'       => $qty_avail_plat,
                     'suggested_supplier'  => $last_supplier
                 ];
+                if ($can_view_cost) {
+                    $item_entry['cost'] = floatval($item['prod_cost'] ?? 0);
+                }
+                $items[] = $item_entry;
             }
         }
 
@@ -200,7 +209,7 @@ if ($chk_tbl && mysqli_num_rows($chk_tbl) > 0) {
                 'customer_tel'         => '',
                 'customer_addr'        => '',
                 'payment_type'         => 'แพลตฟอร์ม (' . $plat['channel_code'] . ')',
-                'branch_id'            => 1,
+                'branch_id'            => 6,
                 'branch_type'          => 'หน้าร้าน',
                 'sum_price'            => floatval($plat['total_amount']),
             'total_discount'       => 0,

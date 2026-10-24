@@ -33,7 +33,7 @@ if (!$q_clm || mysqli_num_rows($q_clm) === 0) {
 $claim = mysqli_fetch_assoc($q_clm);
 $pid = intval($claim['prod_id']);
 $qty = intval($claim['qty']);
-$branch_id = intval($claim['branch_id'] ?: 1);
+$branch_id = intval($claim['branch_id'] ?: 6);
 $branch_type = $claim['branch_type'] ?: 'หน้าร้าน';
 
 mysqli_begin_transaction($conn);
@@ -106,7 +106,7 @@ try {
 
     } elseif ($action === 'resolve_unresolved') {
         // 4. เคลมไม่ได้: ย้ายเป็น "ของเสียหาย" → เลือก ส่งไปขายเซล หรือ ทุบทิ้ง (ต้องอนุมัติโดยแอดมิน/เจ้าของร้าน)
-        if ($user_role !== 'เจ้าของร้าน' && $user_role !== 'แอดมิน') {
+        if (!in_array($user_role, ['เจ้าของร้าน', 'ผู้ดูแลระบบ', 'แอดมิน'])) {
             throw new Exception("เฉพาะแอดมินและเจ้าของร้านเท่านั้นที่มีสิทธิ์ตัดสินใจจัดการของเสียหาย");
         }
 
